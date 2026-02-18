@@ -10,14 +10,12 @@ export interface TestUser {
   role: string;
 }
 
-let counter = 0;
-
 export function createTestUser(overrides: Partial<TestUser> = {}): TestUser {
-  counter++;
+  const uid = crypto.randomUUID().slice(0, 8);
   return {
-    id: `test-user-${counter}`,
-    email: `user${counter}@test.vlprs.gov.ng`,
-    name: `Test User ${counter}`,
+    id: `test-user-${uid}`,
+    email: `user-${uid}@test.vlprs.gov.ng`,
+    name: `Test User ${uid}`,
     role: 'viewer',
     ...overrides,
   };

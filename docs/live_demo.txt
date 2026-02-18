@@ -1450,3 +1450,1031 @@
 ❯                                                                                                                                               
 ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
   ⏵⏵ accept edits on (shift+tab to cycle) · esc to interrupt · ctrl+t to hide tasks                       Context left until auto-compact: 11%  
+
+
+
+
+
+
+==================================
+==================================
+==================================
+
+
+       6 const app = express();
+       7
+       8 // Security middleware
+       9 app.use(helmet());
+      10 app.use(cors());
+
+● Write(apps\server\src\index.ts)
+  ⎿  Wrote 1 lines to apps\server\src\index.ts
+      1 import app from './app';
+      2 import { pino } from 'pino';
+      3
+      4 const logger = pino({
+      5   transport: {
+      6     target: 'pino-pretty',
+      7     options: { colorize: true },
+      8   },
+      9 });
+
+● Now Task 4: Scaffold packages/shared and Task 4b: Scaffold packages/testing:
+
+● Bash(mkdir -p "C:/Users/DELL/Desktop/vlprs/packages/shared/src/schemas" "C:/Users/DELL/Desktop/vlprs/packages/shared/src/types"     
+      "C:/Users/DELL/Desktop/vlprs/packages…)
+  ⎿  Done
+
+● Write(packages\shared\package.json)
+  ⎿  Wrote 1 lines to packages\shared\package.json
+       1 {
+       2   "name": "shared",
+       3   "version": "0.1.0",
+       4   "private": true,
+       5   "type": "module",
+       6   "main": "./src/index.ts",
+       7   "types": "./src/index.ts",
+       8   "exports": {
+       9     ".": "./src/index.ts"
+      10   },
+
+● Write(packages\shared\tsconfig.json)
+  ⎿  Wrote 1 lines to packages\shared\tsconfig.json
+      1 {
+      2   "extends": "../../tsconfig.base.json",
+      3   "compilerOptions": {
+      4     "outDir": "./dist",
+      5     "rootDir": "./src",
+      6     "noEmit": true
+      7   },
+      8   "include": ["src"]
+      9 }
+
+● Write(packages\shared\vitest.config.ts)
+  ⎿  Wrote 1 lines to packages\shared\vitest.config.ts
+      1 import { defineConfig } from 'vitest/config';
+      2
+      3 export default defineConfig({
+      4   test: {
+      5     globals: true,
+      6   },
+      7 });
+
+● Write(packages\shared\src\schemas\emailSchema.ts)
+  ⎿  Wrote 1 lines to packages\shared\src\schemas\emailSchema.ts
+      1 import { z } from 'zod/v4';
+      2
+      3 export const emailSchema = z.email();
+
+● Write(packages\shared\src\constants\vocabulary.ts)
+  ⎿  Wrote 1 lines to packages\shared\src\constants\vocabulary.ts
+      1 /**
+      2  * Non-punitive vocabulary constants.
+      3  * VLPRS uses neutral, non-punitive language throughout the system.
+      4  * Populated from Story 1.5+.
+      5  */
+      6 export const VOCABULARY = {} as const;
+
+● Write(packages\shared\src\index.ts)
+  ⎿  Wrote 1 lines to packages\shared\src\index.ts
+      1 export { emailSchema } from './schemas/emailSchema';
+      2 export { VOCABULARY } from './constants/vocabulary';
+
+● Now packages/testing:
+
+● Write(packages\testing\package.json)
+  ⎿  Wrote 1 lines to packages\testing\package.json
+       1 {
+       2   "name": "testing",
+       3   "version": "0.1.0",
+       4   "private": true,
+       5   "type": "module",
+       6   "main": "./src/index.ts",
+       7   "types": "./src/index.ts",
+       8   "exports": {
+       9     ".": "./src/index.ts"
+      10   },
+
+● Write(packages\testing\tsconfig.json)
+  ⎿  Wrote 1 lines to packages\testing\tsconfig.json
+      1 {
+      2   "extends": "../../tsconfig.base.json",
+      3   "compilerOptions": {
+      4     "outDir": "./dist",
+      5     "rootDir": "./src",
+      6     "noEmit": true
+      7   },
+      8   "include": ["src"]
+      9 }
+
+● Write(packages\testing\vitest.config.ts)
+  ⎿  Wrote 1 lines to packages\testing\vitest.config.ts
+      1 import { defineConfig } from 'vitest/config';
+      2
+      3 export default defineConfig({
+      4   test: {
+      5     globals: true,
+      6   },
+      7 });
+
+● Write(packages\testing\src\factories\createTestUser.ts)
+  ⎿  Wrote 1 lines to packages\testing\src\factories\createTestUser.ts
+       1 /**
+       2  * Test factory for creating user objects.
+       3  * Returns a minimal user shape for testing purposes.
+       4  * Will be expanded as the User model evolves in Story 1.2+.
+       5  */
+       6 export interface TestUser {
+       7   id: string;
+       8   email: string;
+       9   name: string;
+      10   role: string;
+
+● Write(packages\testing\src\helpers\resetEnv.ts)
+  ⎿  Wrote 1 lines to packages\testing\src\helpers\resetEnv.ts
+      1 /**
+      2  * Shared test helper for environment reset between tests.
+      3  * Expanded as test infrastructure grows across stories.
+      4  */
+      5 export function resetTestEnvironment(): void {
+      6   // Placeholder — will reset database state, clear caches, etc.
+      7 }
+
+● Write(packages\testing\src\setup.ts)
+  ⎿  Wrote 1 lines to packages\testing\src\setup.ts
+      1 /**
+      2  * Shared test setup — imported by workspace vitest configs.
+      3  * Handles environment reset, global mocks, etc.
+      4  */
+      5 import { resetTestEnvironment } from './helpers/resetEnv';
+      6
+      7 export function setupTestSuite(): void {
+      8   resetTestEnvironment();
+      9 }
+
+● Write(packages\testing\src\index.ts)
+  ⎿  Wrote 1 lines to packages\testing\src\index.ts
+      1 export { createTestUser, type TestUser } from './factories/createTestUser';
+      2 export { resetTestEnvironment } from './helpers/resetEnv';
+      3 export { setupTestSuite } from './setup';
+
+● Now Task 5: Docker development environment — creating Docker files:
+
+● Write(compose.dev.yaml)
+  ⎿  Wrote 1 lines to compose.dev.yaml
+       1 services:
+       2   db:
+       3     image: postgres:17-alpine
+       4     environment:
+       5       POSTGRES_USER: vlprs
+       6       POSTGRES_PASSWORD: vlprs_dev
+       7       POSTGRES_DB: vlprs_dev
+       8     ports:
+       9       - "5432:5432"
+      10     volumes:
+
+● Write(Dockerfile.server)
+  ⎿  Wrote 1 lines to Dockerfile.server
+       1 # Stage 1: Base
+       2 FROM node:22-alpine AS base
+       3 RUN corepack enable && corepack prepare pnpm@latest --activate
+       4 WORKDIR /app
+       5
+       6 # Stage 2: Dependencies
+       7 FROM base AS deps
+       8 COPY pnpm-workspace.yaml pnpm-lock.yaml package.json ./
+       9 COPY apps/server/package.json ./apps/server/
+      10 COPY packages/shared/package.json ./packages/shared/
+
+● Write(Dockerfile.client)
+  ⎿  Wrote 1 lines to Dockerfile.client
+       1 # Stage 1: Base
+       2 FROM node:22-alpine AS base
+       3 RUN corepack enable && corepack prepare pnpm@latest --activate
+       4 WORKDIR /app
+       5
+       6 # Stage 2: Dependencies
+       7 FROM base AS deps
+       8 COPY pnpm-workspace.yaml pnpm-lock.yaml package.json ./
+       9 COPY apps/client/package.json ./apps/client/
+      10 COPY packages/shared/package.json ./packages/shared/
+
+● Write(.dockerignore)
+  ⎿  Wrote 1 lines to .dockerignore
+       1 node_modules
+       2 .git
+       3 .env
+       4 .env.local
+       5 dist
+       6 coverage
+       7 *.log
+       8 .DS_Store
+       9 Thumbs.db
+      10 _bmad
+
+● Now Task 6: Testing foundation — creating the trivial tests for all 4 workspaces, plus vitest config for the server:
+
+● Write(apps\server\vitest.config.ts)
+  ⎿  Wrote 1 lines to apps\server\vitest.config.ts
+      1 import { defineConfig } from 'vitest/config';
+      2
+      3 export default defineConfig({
+      4   test: {
+      5     globals: true,
+      6   },
+      7 });
+
+● Write(apps\client\src\App.test.tsx)
+  ⎿  Wrote 1 lines to apps\client\src\App.test.tsx
+       1 import { describe, it, expect } from 'vitest';
+       2 import { render, screen } from '@testing-library/react';
+       3 import App from './App';
+       4
+       5 describe('App', () => {
+       6   it('renders without crashing', () => {
+       7     render(<App />);
+       8     expect(screen.getByText('VLPRS')).toBeDefined();
+       9   });
+      10 });
+
+● Write(apps\server\src\index.test.ts)
+  ⎿  Wrote 1 lines to apps\server\src\index.test.ts
+       1 import { describe, it, expect } from 'vitest';
+       2 import request from 'supertest';
+       3 import app from './app';
+       4
+       5 describe('GET /api/health', () => {
+       6   it('returns status ok with 200', async () => {
+       7     const res = await request(app).get('/api/health');
+       8     expect(res.status).toBe(200);
+       9     expect(res.body.status).toBe('ok');
+      10     expect(res.body.timestamp).toBeDefined();
+
+● Write(packages\shared\src\index.test.ts)
+  ⎿  Wrote 1 lines to packages\shared\src\index.test.ts
+       1 import { describe, it, expect } from 'vitest';
+       2 import { emailSchema } from './index';
+       3
+       4 describe('emailSchema', () => {
+       5   it('validates a correct email', () => {
+       6     const result = emailSchema.safeParse('user@vlprs.gov.ng');
+       7     expect(result.success).toBe(true);
+       8   });
+       9
+      10   it('rejects an invalid email', () => {
+
+● Write(packages\testing\src\index.test.ts)
+  ⎿  Wrote 1 lines to packages\testing\src\index.test.ts
+       1 import { describe, it, expect } from 'vitest';
+       2 import { createTestUser } from './index';
+       3
+       4 describe('createTestUser', () => {
+       5   it('returns a user with expected shape', () => {
+       6     const user = createTestUser();
+       7     expect(user.id).toBeDefined();
+       8     expect(user.email).toContain('@test.vlprs.gov.ng');
+       9     expect(user.name).toBeDefined();
+      10     expect(user.role).toBe('viewer');
+
+● All source files created. Now I need to install dependencies. The server test uses supertest, so I need to add that as a dev dep.   
+  Let me install everything:
+
+● Bash(cd "C:/Users/DELL/Desktop/vlprs" && pnpm install 2>&1)
+  ⎿  Error: Exit code 1
+     Scope: all 5 workspace projects
+     Progress: resolved 1, reused 0, downloaded 0, added 0
+     Progress: resolved 5, reused 4, downloaded 0, added 0
+     Progress: resolved 6, reused 5, downloaded 0, added 0
+     Progress: resolved 8, reused 7, downloaded 0, added 0
+     C:\Users\DELL\Desktop\vlprs\apps\server:
+      ERR_PNPM_NO_MATCHING_VERSION  No matching version found for drizzle-kit@^0.45.0
+
+     This error happened while installing a direct dependency of C:\Users\DELL\Desktop\vlprs\apps\server
+     … +196 lines (ctrl+o to see all)
+
+● The story's Drizzle version info was inaccurate — Drizzle Kit latest is 0.31.9 (not 0.45.x). Let me check the actual Drizzle ORM    
+  version and fix:
+
+● Bash(cd "C:/Users/DELL/Desktop/vlprs" && pnpm view drizzle-orm version && pnpm view drizzle-kit version && pnpm view zod version && 
+      pnpm view express version)
+  ⎿  0.45.1
+     0.31.9
+     4.3.6
+     5.2.1
+
+● Drizzle ORM is indeed 0.45.1, but Drizzle Kit uses different versioning — latest is 0.31.9. Let me fix the server package.json and  
+  also add supertest for server tests:
+
+● Read 1 file (ctrl+o to expand)
+
+● Update(apps\server\package.json)
+  ⎿  Added 3 lines, removed 1 line
+      21      "dotenv": "^16.5.0"
+      22    },
+      23    "devDependencies": {
+      24 -    "drizzle-kit": "^0.45.0",                                                                                               
+      24 +    "drizzle-kit": "^0.31.9",                                                                                               
+      25      "@types/express": "^5.0.2",
+      26      "@types/cors": "^2.8.17",
+      27 +    "supertest": "^7.1.0",                                                                                                  
+      28 +    "@types/supertest": "^6.0.2",                                                                                           
+      29      "typescript": "^5.7.3",
+      30      "tsx": "^4.19.4",
+      31      "tsup": "^8.4.0",
+
+● Now I also need to add clsx and tailwind-merge to the client (required by the cn() utility). Let me also add the ESLint dev
+  dependencies to root:
+
+● Read 1 file (ctrl+o to expand)
+
+● Update(apps\client\package.json)
+  ⎿  Added 3 lines, removed 1 line
+      12    },
+      13    "dependencies": {
+      14      "react": "^18.3.1",
+      15 -    "react-dom": "^18.3.1"                                                                                                  
+      15 +    "react-dom": "^18.3.1",                                                                                                 
+      16 +    "clsx": "^2.1.1",                                                                                                       
+      17 +    "tailwind-merge": "^3.3.0"                                                                                              
+      18    },
+      19    "devDependencies": {
+      20      "@types/react": "^18.3.18",
+
+● Now add ESLint/Prettier dev deps to root and add the pg driver needed by drizzle-orm:
+
+● Read 1 file (ctrl+o to expand)
+
+● Update(package.json)
+  ⎿  Added 8 lines
+      11      "docker:dev": "docker compose -f compose.dev.yaml up --build",
+      12      "docker:dev:down": "docker compose -f compose.dev.yaml down"
+      13    },
+      14 +  "type": "module",                                                                                                         
+      15 +  "devDependencies": {                                                                                                      
+      16 +    "eslint": "^9.28.0",                                                                                                    
+      17 +    "@eslint/js": "^9.28.0",                                                                                                
+      18 +    "typescript-eslint": "^8.32.1",                                                                                         
+      19 +    "eslint-config-prettier": "^10.1.5",                                                                                    
+      20 +    "prettier": "^3.5.3"                                                                                                    
+      21 +  },                                                                                                                        
+      22    "pnpm": {
+      23      "onlyBuiltDependencies": ["bcrypt"]
+      24    }
+
+● Also need to add pg to server for the Drizzle PostgreSQL driver:
+
+● Read 1 file (ctrl+o to expand)
+
+● Update(apps\server\package.json)
+  ⎿  Added 2 lines, removed 1 line
+      18      "decimal.js": "^10.5.0",
+      19      "helmet": "^8.1.0",
+      20      "cors": "^2.8.5",
+      21 -    "dotenv": "^16.5.0"                                                                                                     
+      21 +    "dotenv": "^16.5.0",                                                                                                    
+      22 +    "pg": "^8.16.0"                                                                                                         
+      23    },
+      24    "devDependencies": {
+      25      "drizzle-kit": "^0.31.9",
+
+● Also need Zod in the server for env validation (it imports zod/v4):
+
+● Update(apps\server\package.json)
+  ⎿  Added 2 lines, removed 1 line
+      19      "helmet": "^8.1.0",
+      20      "cors": "^2.8.5",
+      21      "dotenv": "^16.5.0",
+      22 -    "pg": "^8.16.0"                                                                                                         
+      22 +    "pg": "^8.16.0",                                                                                                        
+      23 +    "zod": "^4.0.0"                                                                                                         
+      24    },
+      25    "devDependencies": {
+      26      "drizzle-kit": "^0.31.9",
+
+● Now let me install all dependencies:
+
+● Bash(cd "C:/Users/DELL/Desktop/vlprs" && pnpm install 2>&1)
+  ⎿  Scope: all 5 workspace projects
+     Progress: resolved 1, reused 0, downloaded 0, added 0
+     Progress: resolved 3, reused 2, downloaded 0, added 0
+     … +33 lines (ctrl+o to expand)
+  ⎿  (timeout 3m)
+
+● All dependencies installed successfully (459 packages). Now let me run the tests to see where we stand:
+
+● Bash(cd "C:/Users/DELL/Desktop/vlprs" && pnpm test 2>&1)
+  ⎿  > vlprs@0.1.0 test C:\Users\DELL\Desktop\vlprs
+     > pnpm -r run test
+     … +19 lines (ctrl+o to expand)
+  ⎿  (timeout 2m)
+
+● All 4 workspace tests pass:
+
+  - apps/client: 1 test passed (App renders)
+  - apps/server: 1 test passed (health endpoint returns 200 + status ok)
+  - packages/shared: 2 tests passed (email validation + rejection)
+  - packages/testing: 2 tests passed (factory shape + overrides)
+
+  6 tests total, all passing across 4 workspaces.
+
+  Now let me also run typecheck and lint to make sure those pass:
+
+● Bash(cd "C:/Users/DELL/Desktop/vlprs" && pnpm typecheck 2>&1)
+  ⎿  Error: Exit code 2
+
+     > vlprs@0.1.0 typecheck C:\Users\DELL\Desktop\vlprs
+     > pnpm -r run typecheck
+
+     Scope: 4 of 5 workspace projects
+     apps/client typecheck$ tsc --noEmit
+     apps/server typecheck$ tsc --noEmit
+     packages/shared typecheck$ tsc --noEmit
+     packages/testing typecheck$ tsc --noEmit
+     … +28 lines (ctrl+o to see all)
+
+● One type error — schema.ts has no exports so TypeScript doesn't consider it a module. Let me fix it:
+
+● Read 1 file (ctrl+o to expand)
+
+● Update(apps\server\src\db\schema.ts)
+  ⎿  Added 3 lines
+      11   * - Soft deletes: deleted_at timestamp
+      12   * - Booleans: is_ or has_ prefix
+      13   */
+      14 +                                                                                                                            
+      15 +export {};                                                                                                                  
+      16 +                                                                                                                            
+
+● Bash(cd "C:/Users/DELL/Desktop/vlprs" && pnpm typecheck 2>&1)
+  ⎿  Error: Exit code 2
+
+     > vlprs@0.1.0 typecheck C:\Users\DELL\Desktop\vlprs
+     > pnpm -r run typecheck
+
+     Scope: 4 of 5 workspace projects
+     apps/client typecheck$ tsc --noEmit
+     apps/server typecheck$ tsc --noEmit
+     packages/shared typecheck$ tsc --noEmit
+     packages/testing typecheck$ tsc --noEmit
+     … +30 lines (ctrl+o to see all)
+
+● Known Express 5 + pnpm strict resolution issue. The server is an app (not a library), so it doesn't need declaration output. Let me 
+  fix the server tsconfig:
+
+● Read 1 file (ctrl+o to expand)
+
+● Update(apps\server\tsconfig.json)
+  ⎿  Added 2 lines
+       5      "module": "ESNext",
+       6      "outDir": "./dist",
+       7      "rootDir": "./src",
+       8 +    "declaration": false,                                                                                                   
+       9 +    "declarationMap": false,                                                                                                
+      10      "noEmit": true
+      11    },
+      12    "include": ["src"]
+
+● Bash(cd "C:/Users/DELL/Desktop/vlprs" && pnpm typecheck 2>&1)
+  ⎿  > vlprs@0.1.0 typecheck C:\Users\DELL\Desktop\vlprs
+     > pnpm -r run typecheck
+     … +9 lines (ctrl+o to expand)
+  ⎿  (timeout 2m)
+
+● All 4 workspaces pass typecheck. Now let me run lint:
+
+● Bash(cd "C:/Users/DELL/Desktop/vlprs" && pnpm lint 2>&1)
+  ⎿  > vlprs@0.1.0 lint C:\Users\DELL\Desktop\vlprs
+     > eslint .
+  ⎿  (timeout 2m)
+
+● All quality gates passing:
+  - Tests: 6/6 passing across 4 workspaces
+  - Typecheck: Clean across all 4 workspaces
+  - Lint: Zero errors
+
+  Now Task 7: Git initialisation:
+
+● Bash(cd "C:/Users/DELL/Desktop/vlprs" && git init && git checkout -b main && git add -A && git commit -m "chore: scaffold VLPRS     
+      monorepo (Story 1.1)" 2>&1)
+  ⎿  Running in the background (↓ to manage)
+  ⎿  (timeout 30s)
+
+● Task Output bf3eeb9
+  ⎿  Initialized empty Git repository in C:/Users/DELL/Desktop/vlprs/.git/
+     Switched to a new branch 'main'
+     warning: in the working copy of '.claude/commands/bmad-agent-bmad-master.md', LF will be replaced by CRLF the next time Git      
+     … +1539 lines (ctrl+o to expand)
+
+● Git initialized with initial commit on main. Now create dev branch:
+
+● Bash(cd "C:/Users/DELL/Desktop/vlprs" && git checkout -b dev 2>&1)
+  ⎿  Interrupted · What should Claude do instead?
+
+● Background command "Initialize git repo and create initial commit on main" completed (exit code 0)
+
+● I see you rejected the git branch creation. What would you like me to do? Should I:
+
+  1. Skip the git branch creation for now and continue with other tasks?
+  2. Handle the git setup differently?
+  3. Something else?
+
+  Also, I noticed you opened apps/server/tsconfig.json — is there something you'd like me to adjust there?
+
+❯ please explain this git branch/ git checkout branch / create dev branch. Please explain indepth so that I can understand as I       
+  want to create a new repository on github and provide the link to push to the remote repository. What I know and have being         
+  doing was to just git init and ommit/add and push. How does this factor in? I have git credentials on my other projects on this        laptop I dont know if I set it as a global credential. How do I tie everything together.  Apologies for the rant/word vomit.       
+  Thoughts (make it better).                                                                                                          
+                                                                                                                                      
+● No need to apologize — these are great questions. Let me break it all down clearly.                                                                                                                                                                                       
+  ---                                                                                                                                 
+  Git Branches Explained
+                                                                                                                                        Think of branches as parallel copies of your code that can evolve independently.                                                    
+
+  main branch — the "production-ready" version. You never work directly on this. It only gets updated when code is reviewed and       
+  approved.
+
+  dev branch — your daily working branch. All development happens here. When a feature is complete and tested, it gets merged into    
+  main.
+
+  Why this matters for VLPRS: The story requires both branches because this is a professional workflow — dev protects main from       
+  half-finished work. The flow is:
+
+  dev (you work here) → PR/review → main (stable code)
+
+
+  ---
+  How It Connects To What You Already Know
+
+  What you've been doing:
+
+  git init → git add . → git commit → git push
+
+
+  That's the same thing — you were just always working on a single branch (probably main). The only new step is:
+
+  git init
+  git add . && git commit       ← commit on main (we just did this)
+  git checkout -b dev            ← create 'dev' branch from main, switch to it
+                                  (from now on, all work happens on dev)
+
+
+  ---
+  Setting Up GitHub Remote
+
+  Here's the full flow once you create the repo on GitHub:
+
+  Step 1: Go to https://github.com/new and create a new repository called vlprs. Do NOT initialize with README, .gitignore, or license
+   (we already have those locally).
+
+  Step 2: Once created, GitHub gives you a URL like:
+
+  https://github.com/YOUR_USERNAME/vlprs.git
+
+
+  Step 3: Come back here and give me that URL. I'll then run:
+
+  git remote add origin https://github.com/YOUR_USERNAME/vlprs.git
+  git push -u origin main        ← push the stable branch
+  git checkout -b dev             ← create dev branch
+  git push -u origin dev          ← push dev branch too
+
+
+  The -u flag means "remember this remote" — after that, plain git push works.
+
+  ---
+  Git Credentials
+
+  Since you said you have other projects working on this laptop, your credentials are likely already set globally. You can verify     
+  with:
+
+  git config --global user.name
+  git config --global user.email
+
+
+  If those show your GitHub name/email, you're good. The same credentials will work for this new repo automatically — no extra setup  
+  needed.
+
+  If you're using HTTPS (most common on Windows), Git Credential Manager stores your login. If you're using SSH, your key is in       
+  ~/.ssh/.
+
+  ---
+  What I Need From You
+
+  1. Create the empty repo on GitHub (no README, no .gitignore)
+  2. Give me the repo URL
+  3. I'll connect everything and push both branches
+
+  Want to go ahead and create the repo?
+
+❯ So how do we combine the dev and the main production the client sees                                                                                                                                        
+● Great question. Here's how it works in practice:                                                                                       
+  The Flow: Dev → Main → Production                                                                                                   
+  
+  You code on 'dev'                                                                                                                             ↓                                                                                                                           
+  Code reviewed & tested
+          ↓
+  Merge dev → main (via Pull Request on GitHub)
+          ↓
+  CI/CD pipeline detects main changed (Story 1.7 sets this up)
+          ↓
+  Automatically builds & deploys to your DigitalOcean droplet
+          ↓
+  Client sees the update at the live URL
+
+
+  In Real Terms
+
+  Day-to-day (on dev):
+  - You run stories (like we're doing now)
+  - Code gets committed to dev
+  - You run tests, review, iterate
+
+  When a feature is ready:
+  - You create a Pull Request on GitHub: dev → main
+  - The PR shows exactly what changed — you (or a reviewer) can inspect it
+  - If it looks good, you merge the PR
+  - main now has the new code
+
+  Deployment (Story 1.7 will automate this):
+  - GitHub Actions watches main
+  - When main changes → builds Docker images → pushes to your droplet
+  - Client sees the updated system
+
+  Why Not Just Push Straight to Main?
+
+  Because mistakes happen. The dev branch is your safety net:
+
+  ┌──────────────────────────────┬───────────────────────────┬─────────────────────────────────────────────┐
+  │           Scenario           │    Without dev branch     │               With dev branch               │
+  ├──────────────────────────────┼───────────────────────────┼─────────────────────────────────────────────┤
+  │ Broken code committed        │ Client sees broken site   │ Only dev is broken, main is fine            │
+  ├──────────────────────────────┼───────────────────────────┼─────────────────────────────────────────────┤
+  │ Bad feature                  │ Already in production     │ Stays on dev, never reaches client          │
+  ├──────────────────────────────┼───────────────────────────┼─────────────────────────────────────────────┤
+  │ Multiple stories in progress │ Everything mixed together │ Each story on dev, merge to main when ready │
+  └──────────────────────────────┴───────────────────────────┴─────────────────────────────────────────────┘
+
+  For VLPRS Specifically
+
+  Your client (Oyo State Government) will access the live system at your droplet URL. They will only ever see what's on main. The dev 
+  branch is your workspace — you can break things, experiment, and fix without affecting them.
+
+  ---
+  This all gets wired up properly in Story 1.7 (CI/CD Pipeline). For now, we just need the two branches to exist so the foundation is 
+  right.
+
+  Want to go create that GitHub repo so we can push and continue with the story?
+  
+❯ how do I initiate a pull request                                                                                                                                        
+● Pull Requests — Step by Step                                                                                                          
+  A Pull Request (PR) is just saying: "Hey, I want to merge this code from dev into main. Please review it."                          
+  
+  Option 1: On GitHub (Most Common)                                                                                                                                                                                                                                         
+  After you push dev to GitHub:
+
+  1. Go to your repo on GitHub
+  2. You'll often see a yellow banner: "dev had recent pushes — Compare & pull request" — click it
+  3. Or go to the Pull Requests tab → New pull request
+  4. Set: base: main ← compare: dev
+  5. Write a title (e.g. "Story 1.1: Monorepo Scaffold")
+  6. Click Create pull request
+  7. Review the changes shown
+  8. When satisfied → click Merge pull request
+  9. Done — main now has the code
+
+  Option 2: From the Terminal (Using GitHub CLI)
+
+  gh pr create --base main --head dev --title "Story 1.1: Monorepo Scaffold"
+
+
+  Then to merge it:
+
+  gh pr merge --merge
+
+
+  Option 3: I Can Do It For You
+
+  When a story is complete and reviewed, just tell me to create a PR and I'll handle it with the gh CLI.
+
+  ---
+  The Typical Rhythm for Each Story
+
+  1. Work on dev branch (we're doing this now)
+  2. Commit all changes
+  3. Push dev to GitHub
+  4. Create PR: dev → main
+  5. Review (code-review workflow or manual)
+  6. Merge PR
+  7. main is updated → deploys automatically (after Story 1.7)
+  8. Start next story on dev
+
+
+  ---
+  For Now
+
+  You don't need to worry about PRs yet — we're still building Story 1.1. When all tasks are done and tested, I'll help you:
+
+  1. Push dev to GitHub
+  2. Create the PR
+  3. Merge it
+
+  Ready to create that GitHub repo so we can keep going?
+  
+❯ git remote add origin https://github.com/awwallawal/vlprs.git                                                                       
+  git branch -M main
+  git push -u origin main                                                                                                                                       
+● Let me connect the remote and push.                                                                                                 
+  
+● Bash(cd "C:/Users/DELL/Desktop/vlprs" && git remote add origin https://github.com/awwallawal/vlprs.git && git branch -M main && git       push -u origin main 2>&1)
+  ⎿  branch 'main' set up to track 'origin/main'.                                                                                     
+     To https://github.com/awwallawal/vlprs.git
+      * [new branch]      main -> main                                                                                                
+ 
+● main is pushed. Now let me create the dev branch and push it too:                                                                                                                                                                                                    
+● Bash(cd "C:/Users/DELL/Desktop/vlprs" && git checkout -b dev && git push -u origin dev 2>&1)                                          ⎿  Switched to a new branch 'dev'                                                      
+     remote:                                                                                                                          
+     remote: Create a pull request for 'dev' on GitHub by visiting:                                                                        … +5 lines (ctrl+o to expand)                                                                                                    
+  ⎿  (timeout 1m)                                                                                                                                                                                                                                                           
+● Everything is connected:                                                                                                                                                                                                                                                    - main pushed to GitHub                                                                                                               - dev branch created and pushed                                                                                                       - dev is checked out as the working branch                                                                                            - Your credentials are working (pushed successfully)                                                                                                                                                                                                                        Your repo is live at: https://github.com/awwallawal/vlprs                                                                           
+
+  ---
+  Now let me get back to the story. Task 7 (Git initialisation) is complete. Let me also verify the shadcn/ui setup (Task 2.3) which  
+  we still need to do — the components.json and Button component. But first, let me check what's left incomplete and update the story 
+  file.
+
+  Let me take stock of where we are across all tasks:
+
+  - Task 1: All subtasks done (root config, pnpm-workspace, tsconfig, eslint, prettier, .env, .gitignore, scripts)
+  - Task 2: 2.1-2.2 done (Vite + React 18 scaffold, pinned versions). 2.3-2.5 still need shadcn/ui init + Button + path aliases       
+  - Task 3: All subtasks done (server scaffold, Express, Drizzle, health endpoint, tsx)
+  - Task 4: All subtasks done (shared package, Zod 4, emailSchema)
+  - Task 4b: All subtasks done (testing package, factories, helpers, setup)
+  - Task 5: Docker files created. 5.5-5.6 (verify Docker boots) not yet tested
+  - Task 6: All tests written and passing (4 workspaces, 6 tests)
+  - Task 7: Done (git init, main + dev branches, dev checked out)
+
+  The shadcn/ui init requires an interactive CLI which is tricky in this environment. Let me set it up manually instead — I know      
+  exactly what it needs to produce. Should I proceed with completing the remaining items (shadcn/ui setup + Docker verification)?     
+
+✻ Cogitated for 2m 9s
+
+❯ pnpm run dev is not starting the dev environmeent why?                                                                                                                                       
+● Because there's no dev script in the root package.json. Here's what exists:                                                            
+  "scripts": {                                                                                                                        
+      "lint": "eslint .",
+      "typecheck": "pnpm -r run typecheck",                                                                                                 "test": "pnpm -r run test",                                                                                                     
+      "build": "pnpm -r run build",
+      "docker:dev": "docker compose -f compose.dev.yaml up --build",
+      "docker:dev:down": "docker compose -f compose.dev.yaml down"
+  }
+
+  Per the story's architecture: everything runs through Docker Compose. So the command is:
+
+  pnpm docker:dev
+
+
+  This boots PostgreSQL + Express server + Vite client all together.
+
+  However — Docker builds take time and during active development you might want a faster local option too. Would you like me to add a
+   dev script to the root that runs the client and server directly on your machine (without Docker)?
+
+  It would look like:
+
+  "dev": "pnpm -r --parallel run dev"
+
+  This starts both apps/client (Vite on port 5173) and apps/server (tsx watch on port 3001) locally. You'd just need PostgreSQL       
+  running separately (via Docker or locally).
+
+  Which approach do you prefer?
+  1. Docker only (pnpm docker:dev) — as the story specifies
+  2. Add both — pnpm dev for quick local dev + pnpm docker:dev for full stack
+  3. Local only for now — Docker can wait until Story 1.7
+
+❯ 2                                                                                                                                   
+
+● Read 1 file (ctrl+o to expand)                                                                                                      
+  
+● Update(package.json)                                                                                                                  ⎿  Added 1 line                                                                                                                     
+       4    "private": true,
+       5    "description": "Vehicle Loan Processing & Receivables System — Oyo State Government",
+       6    "scripts": {
+       7 +    "dev": "pnpm -r --parallel run dev",                                                                                    
+       8      "lint": "eslint .",
+       9      "typecheck": "pnpm -r run typecheck",
+      10      "test": "pnpm -r run test",
+
+● Now you have both:
+
+  - pnpm dev — quick local dev (client + server in parallel, no Docker)
+  - pnpm docker:dev — full stack with PostgreSQL via Docker
+
+  Try pnpm dev now. Note that the server will fail to connect to PostgreSQL (no database running locally), but the client should start
+   fine on http://localhost:5173.
+
+  For the full stack with DB, run pnpm docker:dev when you need PostgreSQL.
+
+✻ Crunched for 59s
+  
+❯ We need the database because there would be no way to track progress loclly without the database hence the decision to use          
+  docker for that purpose and others. THought                                                                                        
+                                                                                                                                      ● Good thinking. The practical setup is a hybrid — PostgreSQL in Docker (lightweight), client + server running locally (fast          
+  hot-reload). Let me set that up:                                                                                                    
+                                                                                                                                      ● Read 1 file (ctrl+o to expand)    
+                                                                                                                                      
+● Update(package.json)
+  ⎿  Added 4 lines, removed 1 line                                                                                                           4    "private": true,                                                                                                          
+       5    "description": "Vehicle Loan Processing & Receivables System — Oyo State Government",                                            6    "scripts": {
+       7 -    "dev": "pnpm -r --parallel run dev",                                                                                    
+       7 +    "dev": "pnpm dev:db && pnpm -r --parallel run dev",
+       8 +    "dev:db": "docker compose -f compose.dev.yaml up -d db",
+       9 +    "dev:db:down": "docker compose -f compose.dev.yaml down",                                                               
+      10 +    "dev:local": "pnpm -r --parallel run dev",                                                                              
+      11      "lint": "eslint .",
+      12      "typecheck": "pnpm -r run typecheck",
+      13      "test": "pnpm -r run test",
+
+● Now you have three options:                                                                                                           
+  ┌──────────────────┬─────────────────────────────────────────────────────────────────────────────────────┐                          
+  │     Command      │                                    What it does                                     │
+  ├──────────────────┼─────────────────────────────────────────────────────────────────────────────────────┤                            │ pnpm dev         │ Starts PostgreSQL in Docker, then client + server locally (one command does it all) │                          
+  ├──────────────────┼─────────────────────────────────────────────────────────────────────────────────────┤
+  │ pnpm dev:db      │ Starts only PostgreSQL in Docker (if you want to start apps separately)             │
+  ├──────────────────┼─────────────────────────────────────────────────────────────────────────────────────┤
+  │ pnpm dev:local   │ Starts only client + server (if DB is already running)                              │
+  ├──────────────────┼─────────────────────────────────────────────────────────────────────────────────────┤
+  │ pnpm docker:dev  │ Full Docker stack — everything in containers                                        │
+  ├──────────────────┼─────────────────────────────────────────────────────────────────────────────────────┤
+  │ pnpm dev:db:down │ Stops the database container                                                        │
+  └──────────────────┴─────────────────────────────────────────────────────────────────────────────────────┘
+
+  The typical workflow:
+
+  pnpm dev          ← starts DB + apps, you're coding
+  pnpm dev:db:down  ← done for the day, stop DB
+
+
+  Want to try pnpm dev now to see if it boots?
+
+❯ yes try pnpm dev                                                                                                                                       
+● Bash(cd "C:/Users/DELL/Desktop/vlprs" && pnpm dev 2>&1)                                                                               ⎿  Running in the background (↓ to manage)
+  ⎿  (timeout 1m)                                                                                                                     
+                                                                                                                                      
+● Task Output b689940                                                                                                                 
+  ⎿                                                                                                                                   
+     > vlprs@0.1.0 dev C:\Users\DELL\Desktop\vlprs                                                                                         > pnpm dev:db && pnpm -r --parallel run dev                                                                                      
+     … +239 lines (ctrl+o to expand)                                                                                                                                                                                                                                        
+● It's pulling the PostgreSQL 17 Docker image (first time, ~106MB download). This will take a moment. Let me check if it's finished:  
+                                                                                                                                      
+● Task Output b689940                                                                                                                 
+  ⎿                                                                                                                                   
+     > vlprs@0.1.0 dev C:\Users\DELL\Desktop\vlprs                                                                                         > pnpm dev:db && pnpm -r --parallel run dev
+     … +800 lines (ctrl+o to expand)                                                                                                     
+● The PostgreSQL image downloaded successfully, but port 5432 is already in use — you have another PostgreSQL instance or Docker      
+  container running on that port. Let me check:
+                                                                                                                                      ● Bash(docker ps --format "table {{.Names}}\t{{.Ports}}\t{{.Status}}" 2>&1)                                                           
+  ⎿  NAMES            PORTS                                         STATUS                                                            
+     oslsr_redis      0.0.0.0:6379->6379/tcp, [::]:6379->6379/tcp   Up 23 hours (healthy)                                             
+     oslsr_postgres   0.0.0.0:5432->5432/tcp, [::]:5432->5432/tcp   Up 23 hours (healthy)                                             
+                                                                                                                                      
+● There it is — you have an OSLRS project running PostgreSQL on port 5432. Two options:                                                                                                                     
+  1. Change VLPRS DB port to 5433 (recommended — both projects can run simultaneously)                                                  2. Stop the OSLRS containers first (can't work on both projects at once)
+                                                                                                                                        Which do you prefer? Option 1 is better since you might want both projects accessible.                                                                                                                                                                                    ✻ Churned for 2m 33s                                                                                                                                                                                                                                                        ● Background command "Start dev environment (DB + client + server)" failed with exit code 1                                              
+● I already found the issue — your OSLRS project is using port 5432. Which option do you want?                                        
+  
+  1. Change VLPRS to port 5433 (both projects run side by side)                                                                         2. Stop OSLRS containers (only one project at a time)                                                                               
+                                                                                                                                      ❯ 1                                                                                                                                       
+● Read 1 file (ctrl+o to expand)                                                                                                      
+
+● Need to update the port in 4 places: compose file, .env, .env.example, and drizzle config.                                          
+                                                                                                                                      
+● Update(compose.dev.yaml)                                                                                                            
+  ⎿  Added 1 line, removed 1 line                                                                                                     
+       6        POSTGRES_PASSWORD: vlprs_dev                                                                                                 7        POSTGRES_DB: vlprs_dev                                                                                                
+       8      ports:                                                                                                                  
+       9 -      - "5432:5432"
+       9 +      - "5433:5432"
+      10      volumes:
+      11        - pgdata:/var/lib/postgresql/data
+      12      healthcheck:
+
+● Read 1 file (ctrl+o to expand)    
+
+● Update(.env)                                                                                                                        
+  ⎿  Added 1 line, removed 1 line
+      1  # Database                                                                                                                   
+      2 -DATABASE_URL=postgresql://vlprs:vlprs_dev@localhost:5432/vlprs_dev                                                                 2 +DATABASE_URL=postgresql://vlprs:vlprs_dev@localhost:5433/vlprs_dev                                                           
+      3                                                                                                                               
+      4  # JWT (Story 1.2 will use these)
+      5  JWT_SECRET=change-me-in-production
+
+● Update(.env.example)
+  ⎿  Added 1 line, removed 1 line
+      1  # Database                                                                                                                         2 -DATABASE_URL=postgresql://vlprs:vlprs_dev@localhost:5432/vlprs_dev
+      2 +DATABASE_URL=postgresql://vlprs:vlprs_dev@localhost:5433/vlprs_dev                                                           
+      3 
+      4  # JWT (Story 1.2 will use these)
+      5  JWT_SECRET=change-me-in-production
+
+● Read 1 file (ctrl+o to expand)    
+
+● Update(apps\server\drizzle.config.ts)                                                                                               
+  ⎿  Added 1 line, removed 1 line
+       5    out: './drizzle',                                                                                                         
+       6    dialect: 'postgresql',                                                                                                           7    dbCredentials: {                                                                                                          
+       8 -    url: process.env.DATABASE_URL || 'postgresql://vlprs:vlprs_dev@localhost:5432/vlprs_dev',                               
+       8 +    url: process.env.DATABASE_URL || 'postgresql://vlprs:vlprs_dev@localhost:5433/vlprs_dev',
+       9    },
+      10  });
+
+● Also update the db connection in the server:
+
+● Update(apps\server\src\db\index.ts)                                                                                                   ⎿  Added 1 line, removed 1 line
+      1  import { drizzle } from 'drizzle-orm/node-postgres';                                                                               2  import * as schema from './schema';
+      3                                                                                                                               
+      4 -const databaseUrl = process.env.DATABASE_URL || 'postgresql://vlprs:vlprs_dev@localhost:5432/vlprs_dev';
+      4 +const databaseUrl = process.env.DATABASE_URL || 'postgresql://vlprs:vlprs_dev@localhost:5433/vlprs_dev';
+      5
+      6  export const db = drizzle(databaseUrl, { schema });
+
+● All updated. Note: inside Docker, the server still connects to db:5432 (container-to-container networking) — that's correct. The
+  5433 is only for your host machine to reach the container. Now let's try again:
+                                                                                                                                      ● Bash(cd "C:/Users/DELL/Desktop/vlprs" && pnpm dev:db 2>&1)
+  ⎿  > vlprs@0.1.0 dev:db C:\Users\DELL\Desktop\vlprs                                                                                 
+     > docker compose -f compose.dev.yaml up -d db                                                                                    
+     … +4 lines (ctrl+o to expand)                                                                                                    
+  ⎿  (timeout 30s)                                                                                                                    
+                                                                                                                                      ● PostgreSQL is running on port 5433. Now let's start the client and server:                                                          
+                                                                                                                                      ● Bash(cd "C:/Users/DELL/Desktop/vlprs" && pnpm dev:local 2>&1)                                                                         ⎿  Running…                                                                                                                         
+                                                                                                                                      ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+ Bash command                                                                                                                         
+                                                                                                                                         cd "C:/Users/DELL/Desktop/vlprs" && pnpm dev:local 2>&1                                                                            
+   Start client and server locally                                                                                                    
+  
+ Do you want to proceed?
+ ❯ 1. Yes
+   2. Yes, and don't ask again for pnpm dev:local commands in C:\Users\DELL\Desktop\vlprs
+   3. No
+
+ Esc to cancel · Tab to amend · ctrl+e to explain
+
+
+
+● All green across the board.                                                                                                                                                                                                                                               
+  ---                                                                                                                                 
+  Story 1.1 Implementation Complete                                                                                                   
+                                                                                                                                        Here's the summary, Awwal:                                                                                                                                                                                                                                                  Story: 1.1 — Monorepo Scaffold & Development Environment                                                                              Status: review                                                                                                                      
+
+  What was built:
+
+  - 4 workspaces: apps/client, apps/server, packages/shared, packages/testing
+  - Client: React 18.3.1 + Vite 6 + Tailwind CSS v4 + shadcn/ui Button + Oyo State crimson theme
+  - Server: Express 5 + Drizzle ORM 0.45 + pino logging + health endpoint
+  - Shared: Zod v4 email schema + vocabulary constants
+  - Testing: Test factories (createTestUser) + helpers + shared setup
+  - Docker: PostgreSQL 17 on port 5433, multi-stage Dockerfiles
+  - Git: main + dev branches, pushed to github.com/awwallawal/vlprs
+
+  Quality gates:
+
+  ┌───────────────────────────────┬─────────────────┐
+  │             Check             │     Result      │
+  ├───────────────────────────────┼─────────────────┤
+  │ Tests (7 across 4 workspaces) │ All passing     │
+  ├───────────────────────────────┼─────────────────┤
+  │ TypeScript (strict mode)      │ Zero errors     │
+  ├───────────────────────────────┼─────────────────┤
+  │ ESLint                        │ Zero errors     │
+  ├───────────────────────────────┼─────────────────┤
+  │ drizzle-kit push              │ Verified        │
+  ├───────────────────────────────┼─────────────────┤
+  │ Health endpoint               │ {"status":"ok"} │
+  └───────────────────────────────┴─────────────────┘
+
+  Dev commands:
+
+  ┌────────────────┬────────────────────────────┐
+  │    Command     │        What it does        │
+  ├────────────────┼────────────────────────────┤
+  │ pnpm dev       │ Start DB + client + server │
+  ├────────────────┼────────────────────────────┤
+  │ pnpm test      │ Run all tests              │
+  ├────────────────┼────────────────────────────┤
+  │ pnpm typecheck │ Type check all workspaces  │
+  ├────────────────┼────────────────────────────┤
+  │ pnpm lint      │ Lint all code              │
+  └────────────────┴────────────────────────────┘
+
+  Next steps:
+
+  1. Run code-review workflow (ideally with a different LLM)
+  2. After review passes, create a PR: dev → main
+  3. Move on to Story 1.2: User Registration & Login
+
+  Would you like me to explain anything about the implementation, or shall we proceed with something else?
+
+✻ Cooked for 5m 31s
+
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+❯ lets commit and push to dev
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  ⏵⏵ accept edits on (shift+tab to cycle)                                                        Context left until auto-compact: 2%  

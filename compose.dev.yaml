@@ -6,9 +6,9 @@ services:
       POSTGRES_PASSWORD: vlprs_dev
       POSTGRES_DB: vlprs_dev
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
-      - pgdata:/var/lib/postgresql/data
+      - vlprs_pgdata:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U vlprs -d vlprs_dev"]
       interval: 5s
@@ -53,4 +53,4 @@ services:
     command: pnpm --filter client dev --host
 
 volumes:
-  pgdata:
+  vlprs_pgdata:
