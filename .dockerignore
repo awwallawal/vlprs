@@ -1,0 +1,12 @@
+node_modules
+.git
+.env
+.env.local
+dist
+coverage
+*.log
+.DS_Store
+Thumbs.db
+_bmad
+_bmad-output
+docs

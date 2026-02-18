@@ -1,0 +1,194 @@
+PS C:\Users\DELL\Desktop\vlprs> npx bmad-method install
+Need to install the following packages:
+bmad-method@6.0.0-Beta.8
+Ok to proceed? (y) y
+
+│ ╭─v6.0.0-Beta.8──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
+│ │                                                              ██████╗ ███╗   ███╗ █████╗ ██████╗ ™                                                          │
+│ │                                                              ██╔══██╗████╗ ████║██╔══██╗██╔══██╗                                                           │
+│ │                                                              ██████╔╝██╔████╔██║███████║██║  ██║                                                           │
+│ │                                                              ██╔══██╗██║╚██╔╝██║██╔══██║██║  ██║                                                           │
+│ │                                                              ██████╔╝██║ ╚═╝ ██║██║  ██║██████╔╝                                                           │
+│ │                                                               ╚═════╝ ╚═╝     ╚═╝╚═╝  ╚═╝╚═════╝                                                           │
+│ │                                                                  Build More, Architect Dreams                                                              │
+│ ╰────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+│
+●  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+│
+│  🎉 BETA IS HERE! Welcome to BMad Method V6 Beta!
+│
+│  We've officially graduated from Alpha! This milestone represents:
+│    - 50+ workflows covering the full development lifecycle
+│    - Stability - we will still be adding and evolving and optimizing,
+│      but anticipate no massive breaking changes
+│    - Groundwork in place for customization and community modules
+│
+│  📚 New Docs Site: http://docs.bmad-method.org/
+│    - High quality tutorials, guided walkthrough, and articles coming soon!
+│    - Everything is free. No paywalls. No gated content.
+│    - Knowledge should be shared, not sold.
+│
+│  💡 Love BMad? Please star us on GitHub & subscribe on YouTube!
+│    - GitHub: https://github.com/bmad-code-org/BMAD-METHOD/
+│    - YouTube: https://www.youtube.com/@BMadCode
+│
+│  Latest updates: https://github.com/bmad-code-org/BMAD-METHOD/CHANGELOG.md
+│
+│  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+│
+◇  Installation directory:
+│  C:\Users\DELL\Desktop\vlprs
+│
+●  Resolved installation path: C:\Users\DELL\Desktop\vlprs
+│
+│  Directory exists and is empty
+│
+◇  Install to this directory?
+│  Yes
+│
+◇  Select modules to install:
+│  6 items selected
+│
+│  Selected modules:
+│    • BMad Method Agile-AI Driven-Development
+│    • BMad Builder
+│    • BMad Creative Intelligence Suite
+│    • BMad Game Dev Studio
+│    • Test Architect
+│
+◇  Add custom modules, agents, or workflows from your computer?
+│  No
+│
+◇  Integrate with:
+│  3 items selected
+│
+│  Selected tools:
+│    • Claude Code ⭐
+│    • Codex ⭐
+│    • Gemini CLI
+│
+◇  BMad Core Configuration
+◇  What should agents call you? (Use your name or a team name)
+│  Awwal 
+◇  What language should agents use when chatting with you?
+│  English
+◇  Preferred document output language?
+│  English
+◇  Where should output files be saved?
+│  _bmad-output
+│
+◇  BMM Module
+│
+◇  Accept Defaults (no to customize)?
+│  Yes
+│
+◇  Fetched BMad Builder
+│
+◇  Installed dependencies for BMad Builder
+│
+◇  BMB Module
+│
+◇  Accept Defaults (no to customize)?
+│  Yes
+│
+◇  Fetched BMad Creative Intelligence Suite
+│
+◇  Installed dependencies for BMad Creative Intelligence Suite
+│
+◇  BMad Creative Innovation Suite (CIS) Module
+│
+◇  Accept Defaults (no to customize)?
+│  Yes
+│
+◇  Fetched BMad Game Dev Studio
+│
+◇  Installed dependencies for BMad Game Dev Studio
+│
+◇  BMad Game Development Studio Module
+│
+◇  Accept Defaults (no to customize)?
+│  Yes
+│
+◇  Fetched Test Architect
+│
+◇  Installed dependencies for Test Architect
+│
+◇  Test Architect: quality strategy, automation, and release gates
+│
+◇  Accept Defaults (no to customize)?
+│  Yes
+│
+◇  Pre-checks complete
+│
+●  Configuring codex...
+│
+◇  Where would you like to install Codex CLI prompts?
+│  Project-specific - Recommended for real work (requires CODEX_HOME=<project-dir>\.codex)
+│
+●  Prompts installed to: <project>/.codex/prompts (requires CODEX_HOME)
+│
+◇  Proceed with this installation option?
+│  Yes
+│
+◑  Configuring gemini..│
+│  Creating planning artifacts directory: _bmad-output/planning-artifacts
+│
+│  Creating implementation artifacts directory: _bmad-output/implementation-artifacts
+│
+│  Creating project knowledge directory: docs
+◒  Creating bmb module directories..│
+│  Creating bmb creations output folder directory: _bmad-output/bmb-creations
+◑  Creating tea module directories..│
+│  Creating test artifacts directory: _bmad-output/test-artifacts
+◇  Installation complete
+│
+◇  BMAD is ready to use! ──────────────────────────────────────╮
+│                                                              │
+│    ✓  Core (installed)                                       │
+│    ✓  Module: bmm (installed)                                │
+│    ✓  Module: bmb (installed)                                │
+│    ✓  Module: cis (installed)                                │
+│    ✓  Module: gds (installed)                                │
+│    ✓  Module: tea (installed)                                │
+│    ✓  Configurations (generated)                             │
+│    ✓  Manifests (82 workflows, 27 agents, 6 tasks, 0 tools)  │
+│    ✓  Help catalog                                           │
+│    ✓  claude-code (27 agents, 74 workflows, 6 tasks)         │
+│    ✓  codex (27 agents, 74 workflows, 6 tasks)               │
+│    ✓  gemini (27 agents, 74 workflows, 6 tasks)              │
+│    ✓  Module installers                                      │
+│                                                              │
+│    Installed to: C:\Users\DELL\Desktop\vlprs\_bmad           │
+│                                                              │
+├──────────────────────────────────────────────────────────────╯
+│
+●  ════════════════════════════════════════════════════════════════════════════════
+│
+│  ✨ BMAD V6 BETA IS INSTALLED! Thank you for being part of this journey!
+│
+│  🌟 BMad is 100% free and open source.
+│    - No gated Discord. No paywalls.
+│    - We believe in empowering everyone, not just those who can pay.
+│
+│  🙏 SUPPORT BMAD DEVELOPMENT:
+│    - During the Beta, please give us feedback and raise issues on GitHub!
+│    - Donate: https://buymeacoffee.com/bmad
+│    - Corporate Sponsorship available - DM on Discord
+│
+│  🎤 SPEAKING & MEDIA:
+│    - Available for conferences, podcasts, and media appearances
+│    - Topics: AI-Native Transformation, Spec and Context Engineering, BMad Method
+│    - For speaking inquiries or interviews, reach out to BMad on Discord!
+│
+│  📚 RESOURCES:
+│    - Docs: http://docs.bmad-method.org/ (bookmark it!)
+│    - Changelog: https://github.com/bmad-code-org/BMAD-METHOD/CHANGELOG.md
+│
+│  ⭐⭐⭐ HELP US GROW:
+│    - Star us on GitHub: https://github.com/bmad-code-org/BMAD-METHOD/
+│    - Subscribe on YouTube: https://www.youtube.com/@BMadCode
+│    - Every star & sub helps us reach more developers!
+│
+│  ════════════════════════════════════════════════════════════════════════════════
+│
+PS C:\Users\DELL\Desktop\vlprs> 

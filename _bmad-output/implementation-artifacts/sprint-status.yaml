@@ -1,0 +1,170 @@
+# generated: 2026-02-15
+# project: vlprs
+# project_key: NOKEY
+# tracking_system: file-system
+# story_location: _bmad-output/implementation-artifacts
+# sprint_sequence: 1→E1, 2→E2, 3→E10, 4→E3, 5→E4, 6→E6, 7→E5, 8→E11, 9→E7, 10→E8, 11→E12, 12→E9, 13→E13
+# total_epics: 13
+# total_stories: 58
+
+# STATUS DEFINITIONS:
+# ==================
+# Epic Status:
+#   - backlog: Epic not yet started
+#   - in-progress: Epic actively being worked on
+#   - done: All stories in epic completed
+#
+# Epic Status Transitions:
+#   - backlog -> in-progress: Automatically when first story is created (via create-story)
+#   - in-progress -> done: Manually when all stories reach 'done' status
+#
+# Story Status:
+#   - backlog: Story only exists in epic file
+#   - ready-for-dev: Story file created in stories folder
+#   - in-progress: Developer actively working on implementation
+#   - review: Ready for code review (via Dev's code-review workflow)
+#   - done: Story completed
+#
+# Retrospective Status:
+#   - optional: Can be completed but not required
+#   - done: Retrospective has been completed
+#
+# WORKFLOW NOTES:
+# ===============
+# - Epic transitions to 'in-progress' automatically when first story is created
+# - Stories can be worked in parallel if team capacity allows
+# - SM typically creates next story after previous one is 'done' to incorporate learnings
+# - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
+#
+# RETROSPECTIVE DISCIPLINE (from OSLRS playbook):
+# - Each retrospective MUST review action items from the PREVIOUS retro first
+# - Mark each prior action item as: done, irrelevant, or carried forward
+# - Carried items get assigned to specific upcoming stories
+# - Code review is adversarial: reviewer must find minimum 3 issues (High/Medium/Low)
+# - All High + Medium findings must be resolved before merge
+#
+# STORY SIZING GUARDRAIL:
+# - If a story exceeds 15 tasks during breakdown, split it before starting
+# - Signs: >3 new components, both API + frontend spanning multiple entities, "and also..." keeps appearing
+#
+# UAT CHECKPOINTS:
+# - Schedule structured UAT after every 2-3 stories (not just at epic completion)
+# - Client has live URL access — send "What to Test" checklist after each milestone
+# - Three-layer quality: Unit/Integration (Vitest) → E2E (Playwright) → Structured UAT (client)
+
+generated: 2026-02-15
+project: vlprs
+project_key: NOKEY
+tracking_system: file-system
+story_location: _bmad-output/implementation-artifacts
+
+development_status:
+  # Epic 1: Project Foundation & Secure Access
+  epic-1: in-progress
+  1-1-monorepo-scaffold-development-environment: in-progress
+  1-2-user-registration-login: backlog
+  1-3-session-security-token-refresh: backlog
+  1-4-role-based-access-control: backlog
+  1-5-audit-logging-action-tracking: backlog
+  1-6-frontend-authentication-shell: backlog
+  1-7-cicd-pipeline-production-infrastructure: backlog
+  1-8a-design-foundation-components-mock-data-layer: backlog
+  1-8b-role-specific-screens-demo-seed-wiring-map: backlog
+  epic-1-retrospective: optional
+
+  # Epic 2: Loan Data Management & Financial Computation
+  epic-2: backlog
+  2-1-mda-registry-loan-master-records: backlog
+  2-2-immutable-repayment-ledger: backlog
+  2-3-loan-repayment-schedule-computation: backlog
+  2-4-accelerated-repayment-last-payment-adjustment-auto-split: backlog
+  2-5-outstanding-balance-computation-historical-reconstruction: backlog
+  2-6-loan-search-record-retrieval: backlog
+  2-7-loan-lifecycle-states-transitions: backlog
+  epic-2-retrospective: optional
+
+  # Epic 3: Data Migration & Legacy Import
+  epic-3: backlog
+  3-1-legacy-spreadsheet-upload-column-mapping: backlog
+  3-2-migration-validation-variance-categorisation: backlog
+  3-3-side-by-side-comparison-with-mathematical-explanation: backlog
+  3-4-baseline-acknowledgment-ledger-entry-creation: backlog
+  3-5-migration-dashboard-mda-status-tracking: backlog
+  epic-3-retrospective: optional
+
+  # Epic 4: Executive Dashboard & Scheme Visibility
+  epic-4: backlog
+  4-1-dashboard-hero-metrics-api-display: backlog
+  4-2-attention-items-status-indicators: backlog
+  4-3-progressive-drill-down-dashboard-mda-loan: backlog
+  4-4-mda-compliance-status-view: backlog
+  epic-4-retrospective: optional
+
+  # Epic 5: MDA Monthly Submission
+  epic-5: backlog
+  5-1-csv-upload-atomic-validation: backlog
+  5-2-manual-entry-form: backlog
+  5-3-submission-confirmation-reference: backlog
+  5-4-comparison-summary-with-neutral-language: backlog
+  5-5-submission-frontend-template-download: backlog
+  epic-5-retrospective: optional
+
+  # Epic 6: Reporting & PDF Export
+  epic-6: backlog
+  6-1-executive-summary-mda-compliance-reports: backlog
+  6-2-variance-loan-snapshot-reports: backlog
+  6-3-weekly-ag-report: backlog
+  6-4-branded-pdf-export-one-tap-sharing: backlog
+  epic-6-retrospective: optional
+
+  # Epic 7: Exception Management & Record Annotations
+  epic-7: backlog
+  7-1-exception-flagging-queue: backlog
+  7-2-automatic-inactive-loan-detection: backlog
+  7-3-record-annotations-event-flag-corrections: backlog
+  epic-7-retrospective: optional
+
+  # Epic 8: Auto-Stop Certificate & Loan Completion
+  epic-8: backlog
+  8-1-zero-balance-detection-auto-stop-trigger: backlog
+  8-2-auto-stop-certificate-generation: backlog
+  8-3-auto-stop-dual-notification: backlog
+  epic-8-retrospective: optional
+
+  # Epic 9: Notifications & Automated Alerts
+  epic-9: backlog
+  9-1-submission-reminder-emails-t-3: backlog
+  9-2-overdue-alerts-non-compliance-list-t-1: backlog
+  9-3-loan-completion-auto-stop-notifications: backlog
+  epic-9-retrospective: optional
+
+  # Epic 10: Staff Temporal Profile & Retirement Validation
+  epic-10: backlog
+  10-1-retirement-date-computation-storage: backlog
+  10-2-service-extension-recording: backlog
+  10-3-tenure-vs-remaining-service-gratuity-receivable: backlog
+  10-4-service-status-verification-report: backlog
+  epic-10-retrospective: optional
+
+  # Epic 11: Pre-Submission Checkpoint & Mid-Cycle Events
+  epic-11: backlog
+  11-1-pre-submission-checkpoint-screen: backlog
+  11-2-mid-cycle-employment-event-filing: backlog
+  11-3-event-reconciliation-engine: backlog
+  11-4-mda-historical-data-upload: backlog
+  epic-11-retrospective: optional
+
+  # Epic 12: Early Exit Processing
+  epic-12: backlog
+  12-1-early-exit-computation: backlog
+  12-2-early-exit-commitment-payment: backlog
+  12-3-early-exit-dashboard-history: backlog
+  epic-12-retrospective: optional
+
+  # Epic 13: User Administration & Staff ID Governance
+  epic-13: backlog
+  13-1-user-account-management: backlog
+  13-2-password-reset: backlog
+  13-3-staff-id-management: backlog
+  13-4-duplicate-staff-id-detection: backlog
+  epic-13-retrospective: optional

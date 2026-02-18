@@ -1,0 +1,62 @@
+This will be a word vomit. I have a brief from my Client a department of a government agency of the Oyo State Government to develop a software (web app not a native andriod app but the design so be mobile first, mobile friendly and mobile optimized) dedicated to track their process of the car loan issued by the department of the agency of the Oyo State Government. The department is under the Accountant General's Office who gives direct supervision to the car loan issuance. The Head of the department is my client in this case and the HOD wants the web app as an internal tool to track this car loan issuance as it is done via paper form submission and the department want to digitize the process so that they can easily call up various types of reports, track complaints of overdeduction as the once the loan is advanced, the loan is recovered via the salaries of the government workers. Many a times due to mix-up in the getting up to date information about the loan status, many worker's salaries are over deducted beyond the period the loan is supposed to end leading to alot of headaches, accusations and counter accusations and in fact in extreme cases physical fistcuffs. The car loan issuance is a mess. Files upon files in the department office, tracking files is an headache and as a matter of fact, it is daunting for officers looking at a long room of file cabinets to track files and this has opened up an avenue for corruption/bribery as workers who have complaints and need their files to be tracked need to bribe the frontdesk officers to find the files who themselves are not to be fully blamed because of the enourmous rows of files to be sorted. I also proposed that the apart from making it an internal tool we can open it up to the public of the government workers who want to access th loan by creating a public interface of a static website to explain the car loan process and the benefits derivable from quick payment of the loan as the interest is reduced once the pay off quickly and also intimate the public government workers about the activities of the department from which they could register their intention via a form form for the car loan and once approved they have a username/password to track the status of their application whether approved or not. If approved they can print/download a pdf of the approval and from their dashboard track their monthly deductions till completion and in case of grievances and discrepancies they have a way to channel their feedback via their dashboard and once the loan is fully paid, they can download the signed pdf letter that their loan obligation is fully repaid. The staff in the department and their superiors have their own route to the app where we can create different roles with differing level of access. The Super Admins (the Commissioner for Finance, Accountant General, Chairman Vehicle Loan Committee, Director of Finance Accountant General Office and Department Head) should have a 360 degree view of the app. The front desk officers of the department would have varying level of access and can generate different level of reports based on their role. 
+
+Here is the additional context: Loans are approved based on level within the government salary cadre. Levels 1 to 6 (250,000), levels 7 -8(450,000), Levels 9 -10(600,000), there is no level 11 the next is Levels 12 and above (750,000). The tenure for the loan is 60 months (5 years). Deduction is monthly with a quirk in the calculation. Here is the quirk: We will be using Level 12 and above who can access 750,000 as the target. The Principal is 750,000, the Interest rate is 13.33% and the repayment time is 60 months. Thus, the monthly principal repayment is (750,000/60) = 12,500; the total interest to be repaid is ((750,000*13.33)/100) = 99,975 and monthly interest (((750,000*13.33)/100)/60) = 1666.25. Thus, for a level 12 and above officer, a total of (12,500 + 1666.25) =14,166.25. So the total Obligation is 750,000 (the loan amount approved) and 99,975 (the total loan obligation  gotten by ((750,000*13.33)/100)). The quirk is that if a level 12 and above staff wants to quickly pay off the loan in a shorter timeframe (let's say 50 months), the calculation then becomes Monthly Principal Repayment is (750,000/50) = 15,000 and ; the total interest to be repaid is (((750,000*13.33)/100)/60)*50 = 83,312.50 but monthly interest to be paid will remain the standard (((750,000*13.33)/100)/60) = 1666.25 which is done to encourage and incentivize staffs to quickly pay their loans and the money in the pool is a revolving loan and the more staff quickly pay the more other staffs in the government workforce who have earlier been rejected due to lack of funds can be approved to benefit from the scheme. Is this explanation understandable?  
+
+
+Before we move to the next logical steps and others, the last quirk is if a staff wishes to exit today (at the end of the month in question) and has paid for 12 months out of 60 months, meaning the level twelve and above staff has paid 12,500 for 12 months (150,000) out of the principal with a balance of (750,000 -150,000) = 600,000 and a loan interest of 1666.25 for 12 months (1666.25*12 = 19,995.00) with a loan interest balance of (99,975 - 19,995 = 79,980) and the staff had a windfall/extra money outside the salary and wishes to pay of the loan obligation, the staff can pay 600,000 at that point (which is the balance of the principal to be repaid) and the interest balance is forfeited by the government all to incentivize the government staff workforce. Do you understand this context. 
+
+
+Another quirk this is a bit difficult. Normally the loan should be a standard 60 months (5 years tenure) which means any staff with less than 5 years of service to retirement should not be able to access the loan. However, the government made it so that the cut off point is 24 months (2 years) before retirement, staffs can access the loan. For those class of people they would retire from the government service and once this happens they do not draw salary and there is no where to deduct payments from. So what the government did was to say at retirement, the outstanding principal and interest would be deducted from the gratuity to be paid to the worker at their retirement from the government service. In those cases, when the officer is doing clearance to collect their gratuity from the government after their years of service (the minimum amount of years that entitles a staff to collect gratuity from the government is 10 years (this information may not be neccessary to the project at hand)) the remaining loan obligation is calculated and sent to the Ministries processing the gratuity for onward deduction from the gratuity. Thus, every month when staffs of the government retiree and they have collected the car loan we must be able to generate the report and status of staff and total amount receivable from the Ministry processing gratuity. We should be able to pull out staff retiring amount payable both individually and aggregate monthly and track this. We can proactively through this push monthly update to the Ministry processing gratuity of what is coming in the future, current obligations due in the month of people that will retire and the past obligations of people that have retired that have not been settled. Apologies for this word vomit 
+
+
+How do we input the current paper work into the app after building it because we have move these paperwork online and start the process. What, Which and How do we approach this? 
+
+
+Further context, we have 62 MDAs reporting the status of their car loan to the Car Loan department, we a printout of each MDA with 17 column headings viz: 
+1. Serial Number (just counting numbers on the rows)
+2. Name of MDA 
+3. Name of Staff
+4. Principal (original amount loaned based on the 4 level classification)
+5. Interest According to Installment (Total Interest to be paid on Principal)
+6. Total Loan (Principal plus Interest According to Installment)
+7. No of Installments (Number of Months the loan will run for maximum is 60)
+8. Principal Monthly Deduction (Principal divided by the No of Installments) 
+9.  Interest Monthly Deduction (Interest According to Installment divided by No of Installments)
+10. Total Monthly Payment (Principal Monthly Deduction plus Interest Monthly Deduction)
+11. Total Interest Paid (A total of Interest Monthly Deduction to date) 
+12. Total Outstanding Interest (Interest According to Installment minus Total Interest Paid)
+13. Number of Installment Paid (No of monthly installment payments made)
+14. No of Installment Outstanding (No of Installments minus Number of Installment Paid)
+15. Total Loan Paid (Total of the Monthly Principal and Interest repayment to date)
+16. Outstanding balance (Total Loan minus Total Loan Paid)
+17. Remarks. 
+
+Example
+1. 4
+2. BIR
+3. Tunji Adewale
+4. 250,000
+5. 27,771.00
+6. 277,771.00
+7. 60
+8. 4,722.08
+9. 462.85
+10. 4,166.67
+11. 22,679.65
+12. 5,091.35
+13. 49
+14. 11
+15. 231,381.92
+16. 51,942.88
+17. Nil
+
+Verify this if I tallies and make sense based on the context of our discussion so far. How do we replicate this into the process we have built. 
+
+Critique this 
+Criticise this 
+Clarify this 
+Don't validate assumptions 
+Make it better 
+
+
+ I think I made the mistake please using the 17 (16 without the remark you can put it if you like) can you provide the calculation for a 250,000 loan for 60 months at month 49.

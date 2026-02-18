@@ -1,0 +1,42 @@
+@import "tailwindcss";
+
+@theme {
+  /* Brand — Oyo State Heritage */
+  --color-crimson: #9C1E23;
+  --color-crimson-dark: #7A181D;
+  --color-crimson-medium: #B83338;
+  --color-crimson-50: #FCECED;
+
+  /* Secondary — Complementary Teal */
+  --color-teal: #0D7377;
+  --color-teal-hover: #10969B;
+  --color-teal-50: #E0F5F5;
+
+  /* Tertiary — Heritage Gold */
+  --color-gold: #D4A017;
+  --color-gold-dark: #B8860B;
+  --color-gold-50: #FDF8E8;
+
+  /* Semantic */
+  --color-success: #16A34A;
+  --color-danger: #DC2626;
+
+  /* Surfaces */
+  --color-background: #FFFFFF;
+  --color-surface: #F8FAFC;
+  --color-border: #E2E8F0;
+  --color-text-primary: #1E293B;
+  --color-text-secondary: #64748B;
+  --color-text-muted: #94A3B8;
+
+  /* Focus */
+  --color-focus-ring: #0D7377;
+
+  /* Typography */
+  --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+
+  /* Spacing */
+  --radius-card: 8px;
+  --radius-button: 6px;
+}

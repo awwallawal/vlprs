@@ -1,0 +1,858 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VLPRS — Design Direction Showcase</title>
+<style>
+  :root {
+    --crimson: #9C1E23;
+    --crimson-dark: #7A181D;
+    --crimson-medium: #B83338;
+    --crimson-50: #FCECED;
+    --teal: #0D7377;
+    --teal-light: #10969B;
+    --teal-50: #E0F5F5;
+    --gold: #D4A017;
+    --gold-dark: #B8860B;
+    --gold-50: #FDF8E8;
+    --success: #16A34A;
+    --success-50: #F0FDF4;
+    --danger: #DC2626;
+    --info: #0D7377;
+    --variance: #6B7280;
+    --bg: #FFFFFF;
+    --surface: #F8FAFC;
+    --border: #E2E8F0;
+    --text: #1E293B;
+    --text-secondary: #64748B;
+    --text-muted: #94A3B8;
+    --radius: 8px;
+    --radius-sm: 6px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: #F1F5F9;
+    color: var(--text);
+    line-height: 1.5;
+  }
+
+  /* ── Direction Selector ── */
+  .direction-nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
+    background: var(--crimson-dark);
+    padding: 12px 24px;
+    display: flex; gap: 8px; align-items: center;
+    overflow-x: auto;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  }
+  .direction-nav h1 {
+    color: white; font-size: 14px; font-weight: 600;
+    margin-right: 16px; white-space: nowrap;
+    padding-right: 16px; border-right: 1px solid rgba(255,255,255,0.3);
+  }
+  .dir-btn {
+    padding: 6px 16px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.3);
+    background: transparent; color: white; font-size: 13px; cursor: pointer;
+    white-space: nowrap; transition: all 0.2s;
+  }
+  .dir-btn:hover { background: rgba(255,255,255,0.1); }
+  .dir-btn.active { background: white; color: var(--crimson); font-weight: 600; border-color: white; }
+
+  .showcase { padding-top: 60px; }
+  .direction { display: none; }
+  .direction.active { display: block; }
+
+  .direction-header {
+    background: white; padding: 32px; margin: 24px;
+    border-radius: var(--radius); border-left: 4px solid var(--crimson);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+  }
+  .direction-header h2 { font-size: 24px; margin-bottom: 8px; color: var(--crimson); }
+  .direction-header p { color: var(--text-secondary); font-size: 15px; line-height: 1.6; }
+  .direction-header .tags { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+  .direction-header .tag {
+    padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 500;
+    background: var(--crimson-50); color: var(--crimson);
+  }
+
+  /* ── Direction 1: Classic Dashboard ── */
+  .mockup-frame {
+    margin: 24px; border-radius: var(--radius);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    overflow: hidden; background: white;
+  }
+  .mockup-label {
+    background: var(--surface); padding: 8px 16px;
+    font-size: 12px; color: var(--text-secondary); font-weight: 500;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 8px;
+  }
+  .mockup-label .dot { width: 8px; height: 8px; border-radius: 50%; }
+  .mockup-label .dot.red { background: #FF5F56; }
+  .mockup-label .dot.yellow { background: #FFBD2E; }
+  .mockup-label .dot.green { background: #27C93F; }
+
+  /* Classic Layout */
+  .classic-layout { display: flex; min-height: 600px; }
+  .classic-sidebar {
+    width: 256px; background: var(--crimson); padding: 0;
+    display: flex; flex-direction: column; flex-shrink: 0;
+  }
+  .sidebar-brand {
+    padding: 20px; display: flex; align-items: center; gap: 12px;
+    border-bottom: 1px solid rgba(255,255,255,0.15);
+  }
+  .sidebar-brand .logo {
+    width: 36px; height: 36px; border-radius: 8px;
+    background: rgba(255,255,255,0.2); display: flex;
+    align-items: center; justify-content: center;
+    font-size: 16px; font-weight: 700; color: white;
+  }
+  .sidebar-brand span { color: white; font-weight: 600; font-size: 15px; }
+  .sidebar-brand small { color: rgba(255,255,255,0.6); font-size: 11px; display: block; }
+  .sidebar-nav { padding: 12px; flex: 1; }
+  .sidebar-item {
+    padding: 10px 12px; border-radius: var(--radius-sm);
+    color: rgba(255,255,255,0.7); font-size: 14px;
+    display: flex; align-items: center; gap: 10px;
+    cursor: pointer; transition: all 0.15s; margin-bottom: 2px;
+  }
+  .sidebar-item:hover { background: rgba(255,255,255,0.1); color: white; }
+  .sidebar-item.active { background: rgba(255,255,255,0.15); color: white; font-weight: 500; }
+  .sidebar-item .icon { width: 18px; text-align: center; font-size: 14px; }
+  .sidebar-section { padding: 8px 12px 4px; font-size: 11px; color: rgba(255,255,255,0.4); text-transform: uppercase; letter-spacing: 0.5px; margin-top: 8px; }
+  .sidebar-user {
+    padding: 16px; border-top: 1px solid rgba(255,255,255,0.15);
+    display: flex; align-items: center; gap: 10px;
+  }
+  .sidebar-user .avatar {
+    width: 32px; height: 32px; border-radius: 50%;
+    background: rgba(255,255,255,0.2); display: flex;
+    align-items: center; justify-content: center;
+    font-size: 13px; color: white; font-weight: 600;
+  }
+  .sidebar-user .name { color: white; font-size: 13px; font-weight: 500; }
+  .sidebar-user .role { color: rgba(255,255,255,0.5); font-size: 11px; }
+
+  .classic-content { flex: 1; padding: 24px; background: var(--surface); overflow: auto; }
+  .content-header {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 24px;
+  }
+  .content-header h2 { font-size: 22px; font-weight: 600; }
+  .content-header .actions { display: flex; gap: 8px; }
+
+  .btn {
+    padding: 8px 16px; border-radius: var(--radius-sm);
+    font-size: 13px; font-weight: 500; cursor: pointer;
+    border: none; transition: all 0.15s; display: inline-flex;
+    align-items: center; gap: 6px;
+  }
+  .btn-primary { background: var(--crimson); color: white; }
+  .btn-primary:hover { background: var(--crimson-dark); }
+  .btn-secondary { background: white; color: var(--text); border: 1px solid var(--border); }
+  .btn-teal { background: var(--teal); color: white; }
+
+  /* Hero Metrics */
+  .hero-metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
+  .metric-card {
+    background: white; border-radius: var(--radius); padding: 20px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06); border: 1px solid var(--border);
+    transition: box-shadow 0.15s;
+  }
+  .metric-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+  .metric-card .label { font-size: 13px; color: var(--text-secondary); margin-bottom: 8px; font-weight: 500; }
+  .metric-card .value { font-size: 28px; font-weight: 700; color: var(--text); font-variant-numeric: tabular-nums; }
+  .metric-card .sub { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+  .metric-card .trend { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 500; }
+  .metric-card .trend.up { color: var(--success); }
+  .metric-card .trend.neutral { color: var(--text-muted); }
+
+  /* Attention Items */
+  .attention-section { background: white; border-radius: var(--radius); padding: 20px; margin-bottom: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); border: 1px solid var(--border); }
+  .attention-section h3 { font-size: 15px; font-weight: 600; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+  .attention-item {
+    display: flex; align-items: center; gap: 12px; padding: 12px;
+    border-radius: var(--radius-sm); margin-bottom: 8px;
+    transition: background 0.15s; cursor: pointer;
+  }
+  .attention-item:hover { background: var(--surface); }
+  .attention-badge {
+    padding: 3px 10px; border-radius: 12px; font-size: 11px;
+    font-weight: 600; white-space: nowrap;
+  }
+  .badge-attention { background: var(--gold-50); color: var(--gold-dark); }
+  .badge-success { background: var(--success-50); color: var(--success); }
+  .badge-info { background: var(--teal-50); color: var(--teal); }
+  .attention-item .desc { flex: 1; font-size: 14px; }
+  .attention-item .meta { font-size: 12px; color: var(--text-muted); }
+
+  /* Table */
+  .data-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  .data-table th {
+    text-align: left; padding: 12px; font-size: 12px; font-weight: 600;
+    color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.3px;
+    border-bottom: 2px solid var(--border); background: var(--surface);
+  }
+  .data-table td {
+    padding: 12px; border-bottom: 1px solid var(--border);
+    font-variant-numeric: tabular-nums;
+  }
+  .data-table tr:hover td { background: var(--surface); }
+  .status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 6px; }
+  .status-dot.green { background: var(--success); }
+  .status-dot.gold { background: var(--gold); }
+  .status-dot.grey { background: var(--variance); }
+  .status-text { font-size: 13px; display: inline-flex; align-items: center; gap: 4px; }
+
+  /* Submission Mockup */
+  .submission-card {
+    max-width: 640px; margin: 0 auto; background: white;
+    border-radius: var(--radius); padding: 32px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06); border: 1px solid var(--border);
+  }
+  .submission-card h3 { font-size: 18px; margin-bottom: 4px; }
+  .submission-card .subtitle { color: var(--text-secondary); font-size: 14px; margin-bottom: 24px; }
+  .upload-zone {
+    border: 2px dashed var(--border); border-radius: var(--radius);
+    padding: 48px 24px; text-align: center; cursor: pointer;
+    transition: all 0.2s; margin-bottom: 24px;
+  }
+  .upload-zone:hover { border-color: var(--teal); background: var(--teal-50); }
+  .upload-zone .icon { font-size: 36px; margin-bottom: 12px; color: var(--teal); }
+  .upload-zone .label { font-size: 15px; font-weight: 500; margin-bottom: 4px; }
+  .upload-zone .hint { font-size: 13px; color: var(--text-muted); }
+
+  .confirmation-box {
+    background: var(--success-50); border: 1px solid #BBF7D0;
+    border-radius: var(--radius); padding: 20px; margin-bottom: 24px;
+  }
+  .confirmation-box h4 { color: var(--success); font-size: 15px; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
+  .confirmation-box .details { font-size: 13px; color: var(--text-secondary); }
+  .confirmation-box .ref { font-family: 'JetBrains Mono', monospace; font-weight: 600; color: var(--text); }
+
+  .comparison-box {
+    background: white; border: 1px solid var(--border);
+    border-radius: var(--radius); overflow: hidden;
+  }
+  .comparison-header { padding: 16px; background: var(--surface); border-bottom: 1px solid var(--border); font-weight: 600; font-size: 15px; display: flex; align-items: center; gap: 8px; }
+  .comparison-row { display: flex; padding: 12px 16px; border-bottom: 1px solid var(--border); align-items: center; font-size: 14px; }
+  .comparison-row:last-child { border-bottom: none; }
+  .comparison-row .count { font-weight: 600; min-width: 32px; }
+  .comparison-row .label { flex: 1; }
+  .comparison-row .icon { width: 24px; text-align: center; }
+  .aligned-icon { color: var(--success); }
+  .variance-icon { color: var(--info); }
+
+  /* Variance Detail */
+  .variance-detail {
+    background: var(--surface); border-radius: var(--radius-sm);
+    padding: 16px; margin: 8px 16px 16px; font-size: 13px;
+  }
+  .variance-detail .row { display: flex; justify-content: space-between; padding: 4px 0; }
+  .variance-detail .label { color: var(--text-secondary); }
+  .variance-detail .value { font-weight: 500; font-variant-numeric: tabular-nums; }
+  .variance-detail .diff { color: var(--info); font-weight: 600; }
+
+  /* Mobile Dashboard */
+  .mobile-frame {
+    width: 375px; margin: 24px auto;
+    border-radius: 24px; border: 8px solid #1E293B;
+    overflow: hidden; box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+    background: white;
+  }
+  .mobile-status { background: var(--crimson); padding: 8px 20px; display: flex; justify-content: space-between; font-size: 12px; color: white; font-weight: 500; }
+  .mobile-header {
+    background: var(--crimson); padding: 16px 20px 20px;
+    color: white;
+  }
+  .mobile-header h2 { font-size: 18px; font-weight: 600; }
+  .mobile-header .subtitle { font-size: 12px; opacity: 0.7; margin-top: 2px; }
+  .mobile-content { padding: 16px; background: var(--surface); }
+  .mobile-metric {
+    background: white; border-radius: var(--radius); padding: 16px;
+    margin-bottom: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    border: 1px solid var(--border);
+  }
+  .mobile-metric .label { font-size: 12px; color: var(--text-secondary); font-weight: 500; }
+  .mobile-metric .value { font-size: 24px; font-weight: 700; margin-top: 4px; font-variant-numeric: tabular-nums; }
+  .mobile-metric .sub { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+  .mobile-attention {
+    background: white; border-radius: var(--radius); padding: 16px;
+    margin-bottom: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    border: 1px solid var(--border);
+  }
+  .mobile-attention h4 { font-size: 13px; font-weight: 600; margin-bottom: 12px; }
+  .mobile-att-item { display: flex; align-items: center; gap: 8px; padding: 8px 0; border-top: 1px solid var(--border); font-size: 13px; }
+  .mobile-att-item:first-of-type { border-top: none; }
+
+  /* Certificate Mockup */
+  .certificate-frame {
+    max-width: 540px; margin: 24px auto; background: white;
+    border: 3px solid var(--gold); border-radius: 12px;
+    padding: 40px; text-align: center;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.1);
+  }
+  .certificate-crest {
+    width: 72px; height: 72px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--crimson), var(--crimson-dark));
+    margin: 0 auto 16px; display: flex; align-items: center;
+    justify-content: center; color: white; font-weight: 700; font-size: 24px;
+    box-shadow: 0 2px 8px rgba(156,30,35,0.3);
+  }
+  .certificate-title { font-size: 11px; text-transform: uppercase; letter-spacing: 2px; color: var(--text-muted); margin-bottom: 4px; }
+  .certificate-heading { font-size: 22px; font-weight: 700; color: var(--crimson); margin-bottom: 4px; }
+  .certificate-subheading { font-size: 14px; color: var(--text-secondary); margin-bottom: 24px; }
+  .certificate-success {
+    background: var(--success-50); border-radius: var(--radius);
+    padding: 20px; margin-bottom: 24px;
+  }
+  .certificate-success .check { font-size: 32px; color: var(--success); margin-bottom: 8px; }
+  .certificate-success h3 { font-size: 16px; color: var(--success); margin-bottom: 4px; }
+  .certificate-success p { font-size: 13px; color: var(--text-secondary); }
+  .certificate-details { text-align: left; font-size: 14px; margin-bottom: 24px; }
+  .certificate-details .row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border); }
+  .certificate-details .label { color: var(--text-secondary); }
+  .certificate-details .value { font-weight: 600; }
+  .certificate-qr { width: 80px; height: 80px; background: var(--surface); border-radius: 8px; margin: 0 auto; display: flex; align-items: center; justify-content: center; font-size: 10px; color: var(--text-muted); border: 1px solid var(--border); }
+  .certificate-footer { font-size: 11px; color: var(--text-muted); margin-top: 16px; }
+
+  /* Direction 3: Comparison View */
+  .comparison-panel {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 0;
+    border: 1px solid var(--border); border-radius: var(--radius);
+    overflow: hidden; margin-bottom: 24px;
+  }
+  .comp-side { padding: 20px; }
+  .comp-side.declared { background: white; }
+  .comp-side.computed { background: var(--teal-50); }
+  .comp-side h4 { font-size: 13px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 16px; display: flex; align-items: center; gap: 6px; }
+  .comp-side .comp-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 14px; }
+  .comp-side .comp-row:last-child { border-bottom: none; }
+  .comp-side .comp-label { color: var(--text-secondary); }
+  .comp-side .comp-value { font-weight: 600; font-variant-numeric: tabular-nums; }
+  .comp-diff {
+    grid-column: 1 / -1; background: var(--surface);
+    padding: 16px 20px; border-top: 1px solid var(--border);
+    display: flex; align-items: center; gap: 12px; font-size: 14px;
+  }
+  .comp-diff .info-icon {
+    width: 28px; height: 28px; border-radius: 50%;
+    background: var(--teal-50); color: var(--teal);
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 14px; flex-shrink: 0;
+  }
+
+  /* Two Column Grid */
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+
+  @media (max-width: 900px) {
+    .hero-metrics { grid-template-columns: repeat(2, 1fr); }
+    .two-col { grid-template-columns: 1fr; }
+    .classic-sidebar { display: none; }
+    .comparison-panel { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<nav class="direction-nav">
+  <h1>VLPRS Design Directions</h1>
+  <button class="dir-btn active" onclick="showDirection(1)">1. AG Dashboard</button>
+  <button class="dir-btn" onclick="showDirection(2)">2. Mobile View</button>
+  <button class="dir-btn" onclick="showDirection(3)">3. MDA Submission</button>
+  <button class="dir-btn" onclick="showDirection(4)">4. Comparison View</button>
+  <button class="dir-btn" onclick="showDirection(5)">5. Auto-Stop Certificate</button>
+  <button class="dir-btn" onclick="showDirection(6)">6. Migration Dashboard</button>
+</nav>
+
+<div class="showcase">
+
+<!-- Direction 1: AG Executive Dashboard -->
+<div class="direction active" id="dir-1">
+  <div class="direction-header">
+    <h2>Direction 1 — AG Executive Dashboard (Desktop)</h2>
+    <p>The flagship experience: Crimson sidebar establishes Oyo State authority. Content area stays neutral for data presentation. Four hero metrics answer any executive question without interaction. Attention items use gold (heritage) not red (danger).</p>
+    <div class="tags">
+      <span class="tag">Zero-Click Truth</span>
+      <span class="tag">Progressive Disclosure</span>
+      <span class="tag">Mobile-First Scales Up</span>
+    </div>
+  </div>
+
+  <div class="mockup-frame">
+    <div class="mockup-label">
+      <span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span>
+      VLPRS — Executive Dashboard — Super Admin View
+    </div>
+    <div class="classic-layout">
+      <div class="classic-sidebar">
+        <div class="sidebar-brand">
+          <div class="logo">OY</div>
+          <div><span>VLPRS</span><small>Oyo State Government</small></div>
+        </div>
+        <div class="sidebar-nav">
+          <div class="sidebar-item active"><span class="icon">◉</span> Dashboard</div>
+          <div class="sidebar-item"><span class="icon">📋</span> Loan Records</div>
+          <div class="sidebar-item"><span class="icon">📊</span> Reports</div>
+          <div class="sidebar-section">Operations</div>
+          <div class="sidebar-item"><span class="icon">📤</span> Submissions</div>
+          <div class="sidebar-item"><span class="icon">⚡</span> Exceptions</div>
+          <div class="sidebar-item"><span class="icon">📁</span> Migration</div>
+          <div class="sidebar-section">System</div>
+          <div class="sidebar-item"><span class="icon">👥</span> Users</div>
+          <div class="sidebar-item"><span class="icon">⚙</span> Settings</div>
+        </div>
+        <div class="sidebar-user">
+          <div class="avatar">AG</div>
+          <div><div class="name">Madam AG</div><div class="role">Super Admin</div></div>
+        </div>
+      </div>
+      <div class="classic-content">
+        <div class="content-header">
+          <h2>Executive Dashboard</h2>
+          <div class="actions">
+            <button class="btn btn-secondary">↓ Export</button>
+            <button class="btn btn-primary">📄 Share as PDF</button>
+          </div>
+        </div>
+
+        <div class="hero-metrics">
+          <div class="metric-card">
+            <div class="label">Active Loans</div>
+            <div class="value">3,147</div>
+            <div class="sub"><span class="trend neutral">across 63 MDAs</span></div>
+          </div>
+          <div class="metric-card">
+            <div class="label">Total Exposure</div>
+            <div class="value">₦1.84B</div>
+            <div class="sub"><span class="trend up">↑ 2.1% from last month</span></div>
+          </div>
+          <div class="metric-card">
+            <div class="label">Fund Available</div>
+            <div class="value">₦126M</div>
+            <div class="sub"><span class="trend neutral">for new approvals</span></div>
+          </div>
+          <div class="metric-card">
+            <div class="label">Monthly Recovery</div>
+            <div class="value">₦47.2M</div>
+            <div class="sub"><span class="trend up">↑ ₦1.8M vs last month</span></div>
+          </div>
+        </div>
+
+        <div class="two-col">
+          <div class="attention-section">
+            <h3>⚡ Attention Items</h3>
+            <div class="attention-item">
+              <span class="attention-badge badge-attention">Review</span>
+              <span class="desc">Ministry of Works — variance growing for 3rd consecutive month</span>
+              <span class="meta">₦1.7M</span>
+            </div>
+            <div class="attention-item">
+              <span class="attention-badge badge-attention">Review</span>
+              <span class="desc">5 MDAs have not submitted for February 2026</span>
+              <span class="meta">Due 28th</span>
+            </div>
+            <div class="attention-item">
+              <span class="attention-badge badge-info">Info</span>
+              <span class="desc">3 loans completing this quarter — Auto-Stop pending</span>
+              <span class="meta">Mar-Apr</span>
+            </div>
+            <div class="attention-item">
+              <span class="attention-badge badge-success">Complete</span>
+              <span class="desc">Auto-Stop Certificate issued: Staff ID 7823 (MOE)</span>
+              <span class="meta">Today</span>
+            </div>
+          </div>
+
+          <div class="attention-section">
+            <h3>📊 Scheme Health</h3>
+            <div class="attention-item">
+              <span class="attention-badge badge-success">92%</span>
+              <span class="desc">MDA Submission Rate (58/63)</span>
+              <span class="meta">February</span>
+            </div>
+            <div class="attention-item">
+              <span class="attention-badge badge-success">97.3%</span>
+              <span class="desc">Deduction Accuracy</span>
+              <span class="meta">This period</span>
+            </div>
+            <div class="attention-item">
+              <span class="attention-badge badge-info">12</span>
+              <span class="desc">Open Exceptions</span>
+              <span class="meta">3 High, 5 Med, 4 Low</span>
+            </div>
+            <div class="attention-item">
+              <span class="attention-badge badge-attention">7</span>
+              <span class="desc">Inactive Loans (60+ days no deduction)</span>
+              <span class="meta">Auto-flagged</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Direction 2: Mobile Dashboard -->
+<div class="direction" id="dir-2">
+  <div class="direction-header">
+    <h2>Direction 2 — AG Mobile Dashboard (Phone, 4G)</h2>
+    <p>The 30-second scenario on the AG's phone. Crimson header establishes brand. Hero metrics stack vertically, full-width. Attention items below. Everything visible without scrolling on first render. This is the view when the Commissioner calls.</p>
+    <div class="tags">
+      <span class="tag">&lt;3s Load</span>
+      <span class="tag">Zero Interaction</span>
+      <span class="tag">4G Optimised</span>
+    </div>
+  </div>
+
+  <div class="mobile-frame">
+    <div class="mobile-status">
+      <span>9:14 AM</span>
+      <span>4G ●●●</span>
+    </div>
+    <div class="mobile-header">
+      <h2>VLPRS Dashboard</h2>
+      <div class="subtitle">February 2026 — Last updated 2 hours ago</div>
+    </div>
+    <div class="mobile-content">
+      <div class="mobile-metric">
+        <div class="label">Active Loans</div>
+        <div class="value">3,147</div>
+        <div class="sub">across 63 MDAs</div>
+      </div>
+      <div class="mobile-metric">
+        <div class="label">Total Exposure</div>
+        <div class="value" style="color: var(--crimson);">₦1.84B</div>
+        <div class="sub">↑ 2.1% from January</div>
+      </div>
+      <div class="mobile-metric">
+        <div class="label">Fund Available</div>
+        <div class="value" style="color: var(--teal);">₦126M</div>
+        <div class="sub">for new approvals</div>
+      </div>
+      <div class="mobile-metric">
+        <div class="label">Monthly Recovery</div>
+        <div class="value">₦47.2M</div>
+        <div class="sub">↑ ₦1.8M vs last month</div>
+      </div>
+      <div class="mobile-attention">
+        <h4>Attention Items</h4>
+        <div class="mobile-att-item">
+          <span class="attention-badge badge-attention" style="font-size:10px;">Review</span>
+          <span style="font-size:13px; flex:1;">Works — growing variance (3 months)</span>
+        </div>
+        <div class="mobile-att-item">
+          <span class="attention-badge badge-attention" style="font-size:10px;">Review</span>
+          <span style="font-size:13px; flex:1;">5 MDAs pending submission</span>
+        </div>
+        <div class="mobile-att-item">
+          <span class="attention-badge badge-success" style="font-size:10px;">Done</span>
+          <span style="font-size:13px; flex:1;">Auto-Stop: Staff 7823 (MOE)</span>
+        </div>
+      </div>
+      <button class="btn btn-primary" style="width:100%; justify-content:center; padding: 14px;">📄 Share as PDF</button>
+    </div>
+  </div>
+</div>
+
+<!-- Direction 3: MDA Submission -->
+<div class="direction" id="dir-3">
+  <div class="direction-header">
+    <h2>Direction 3 — MDA Monthly Submission Flow</h2>
+    <p>The workhorse experience: upload CSV, get confirmation, see neutral comparison. Positive confirmation FIRST (green success), then comparison (neutral grey/teal info). Mrs. Adebayo's 15-minute monthly task.</p>
+    <div class="tags">
+      <span class="tag">Confirm Then Compare</span>
+      <span class="tag">Neutral by Default</span>
+      <span class="tag">One File, Done</span>
+    </div>
+  </div>
+
+  <div class="mockup-frame">
+    <div class="mockup-label">
+      <span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span>
+      VLPRS — Monthly Submission — MDA: Board of Internal Revenue
+    </div>
+    <div style="padding: 32px; background: var(--surface); min-height: 600px;">
+      <div class="submission-card">
+        <h3>Monthly Submission</h3>
+        <div class="subtitle">February 2026 — Board of Internal Revenue (BIR)</div>
+
+        <div class="confirmation-box">
+          <h4>✓ Upload Complete</h4>
+          <div class="details">
+            Reference: <span class="ref">BIR-2026-02-0001</span><br>
+            Timestamp: 14-Feb-2026 10:23 WAT<br>
+            Records received: <strong>47</strong>
+          </div>
+        </div>
+
+        <div class="comparison-box">
+          <div class="comparison-header">
+            ℹ️ Comparison Summary
+          </div>
+          <div class="comparison-row">
+            <span class="icon aligned-icon">✓</span>
+            <span class="count">43</span>
+            <span class="label">records aligned</span>
+          </div>
+          <div class="comparison-row">
+            <span class="icon variance-icon">ℹ</span>
+            <span class="count">3</span>
+            <span class="label">minor variance (&lt;₦500)</span>
+          </div>
+          <div class="comparison-row" style="background: var(--surface);">
+            <span class="icon variance-icon">ℹ</span>
+            <span class="count">1</span>
+            <span class="label">variance: ₦4,166.25</span>
+          </div>
+          <div class="variance-detail">
+            <div class="row"><span class="label">Staff ID</span><span class="value">2847</span></div>
+            <div class="row"><span class="label">Expected deduction</span><span class="value">₦14,166.25</span></div>
+            <div class="row"><span class="label">Amount submitted</span><span class="value">₦10,000.00</span></div>
+            <div class="row"><span class="label">Difference</span><span class="diff">₦4,166.25</span></div>
+            <div style="margin-top: 8px; font-size: 12px; color: var(--text-muted);">
+              This variance has been logged for reconciliation. No action required from you.
+            </div>
+          </div>
+        </div>
+        <div style="margin-top: 20px; text-align: center;">
+          <button class="btn btn-primary" style="padding: 12px 32px;">Done — Return to Dashboard</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Direction 4: Comparison View -->
+<div class="direction" id="dir-4">
+  <div class="direction-header">
+    <h2>Direction 4 — Comparison View (Declared vs Computed)</h2>
+    <p>The novel non-punitive pattern. Side-by-side with mathematical explanation. White for declared (MDA's numbers), teal tint for computed (system truth). Information icon, not warning. Expandable calculation detail builds trust.</p>
+    <div class="tags">
+      <span class="tag">Novel Pattern</span>
+      <span class="tag">Explain Don't Assert</span>
+      <span class="tag">Trust Through Math</span>
+    </div>
+  </div>
+
+  <div class="mockup-frame">
+    <div class="mockup-label">
+      <span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span>
+      VLPRS — Loan Detail — Staff ID: 2847 (Board of Internal Revenue)
+    </div>
+    <div style="padding: 32px; background: var(--surface);">
+      <div style="max-width: 800px; margin: 0 auto;">
+        <div style="margin-bottom: 24px;">
+          <h3 style="font-size: 18px;">Loan Comparison — Akinwale T.O.</h3>
+          <div style="color: var(--text-secondary); font-size: 14px;">Staff ID: 2847 | Grade Level 9 | BIR | Loan ref: VLC-2023-0412</div>
+        </div>
+
+        <div class="comparison-panel">
+          <div class="comp-side declared">
+            <h4>📋 MDA Declared</h4>
+            <div class="comp-row"><span class="comp-label">Principal</span><span class="comp-value">₦600,000.00</span></div>
+            <div class="comp-row"><span class="comp-label">Total Interest</span><span class="comp-value">₦79,980.00</span></div>
+            <div class="comp-row"><span class="comp-label">Monthly Deduction</span><span class="comp-value">₦10,000.00</span></div>
+            <div class="comp-row"><span class="comp-label">Installments Paid</span><span class="comp-value">34</span></div>
+            <div class="comp-row"><span class="comp-label">Outstanding Balance</span><span class="comp-value" style="font-size: 16px;">₦339,980.00</span></div>
+          </div>
+          <div class="comp-side computed">
+            <h4 style="color: var(--teal);">🔢 System Computed</h4>
+            <div class="comp-row"><span class="comp-label">Principal</span><span class="comp-value">₦600,000.00</span></div>
+            <div class="comp-row"><span class="comp-label">Total Interest</span><span class="comp-value">₦79,980.00</span></div>
+            <div class="comp-row"><span class="comp-label">Expected Deduction</span><span class="comp-value">₦14,166.25</span></div>
+            <div class="comp-row"><span class="comp-label">Installments Received</span><span class="comp-value">34</span></div>
+            <div class="comp-row"><span class="comp-label">Outstanding Balance</span><span class="comp-value" style="font-size: 16px; color: var(--teal);">₦305,822.50</span></div>
+          </div>
+          <div class="comp-diff">
+            <div class="info-icon">ℹ</div>
+            <div>
+              <strong>Balance difference: ₦34,157.50</strong><br>
+              <span style="font-size: 13px; color: var(--text-secondary);">
+                The MDA deduction of ₦10,000/month is ₦4,166.25 less than the expected ₦14,166.25. Over 34 months, this accumulates to ₦141,652.50 in lower payments, partially offset by correct principal allocation.
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div style="background: white; border-radius: var(--radius); padding: 20px; border: 1px solid var(--border);">
+          <h4 style="font-size: 14px; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; cursor: pointer; color: var(--teal);">
+            ▶ How was the system balance calculated?
+          </h4>
+          <div style="font-size: 13px; color: var(--text-secondary); padding: 12px; background: var(--surface); border-radius: var(--radius-sm);">
+            Principal: ₦600,000.00 | Interest (13.33%): ₦79,980.00 | Total obligation: ₦679,980.00<br>
+            Standard tenure: 60 months | Monthly installment: ₦11,333.00 (principal) + ₦2,833.25 (interest) = ₦14,166.25<br>
+            34 installments received at actual amounts from ledger → Balance: ₦305,822.50<br>
+            <span style="color: var(--text-muted); font-style: italic;">Each figure derived from immutable repayment ledger entries. No manual adjustments.</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Direction 5: Auto-Stop Certificate -->
+<div class="direction" id="dir-5">
+  <div class="direction-header">
+    <h2>Direction 5 — Auto-Stop Certificate (Celebration Moment)</h2>
+    <p>The emotional climax. Premium visual treatment — gold border, Oyo State crest, green celebration, QR verification. This is the "never over-deducted again" guarantee made tangible. Every certificate is proof the system works.</p>
+    <div class="tags">
+      <span class="tag">Celebrate Protection</span>
+      <span class="tag">Premium UX</span>
+      <span class="tag">Official Document</span>
+    </div>
+  </div>
+
+  <div class="certificate-frame">
+    <div class="certificate-crest">OY</div>
+    <div class="certificate-title">Oyo State Government</div>
+    <div class="certificate-heading">Auto-Stop Certificate</div>
+    <div class="certificate-subheading">Vehicle Loan Processing & Receivables System</div>
+
+    <div class="certificate-success">
+      <div class="check">✓</div>
+      <h3>Loan Fully Repaid</h3>
+      <p>All salary deductions related to this loan should cease immediately.</p>
+    </div>
+
+    <div class="certificate-details">
+      <div class="row"><span class="label">Beneficiary</span><span class="value">Alhaji Mustapha K.</span></div>
+      <div class="row"><span class="label">Staff ID</span><span class="value">7823</span></div>
+      <div class="row"><span class="label">MDA</span><span class="value">Ministry of Education</span></div>
+      <div class="row"><span class="label">Loan Reference</span><span class="value">VLC-2021-0847</span></div>
+      <div class="row"><span class="label">Original Principal</span><span class="value">₦600,000.00</span></div>
+      <div class="row"><span class="label">Total Repaid</span><span class="value">₦679,980.00</span></div>
+      <div class="row"><span class="label">Completion Date</span><span class="value">April 2026</span></div>
+      <div class="row" style="border-bottom: none;"><span class="label">Certificate ID</span><span class="value" style="color: var(--crimson);">ASC-2026-04-0023</span></div>
+    </div>
+
+    <div class="certificate-qr">QR Code<br>Verification</div>
+    <div class="certificate-footer">
+      Generated by VLPRS on 01-Apr-2026 08:00 WAT<br>
+      Verify at: vlprs.oyostate.gov.ng/verify/ASC-2026-04-0023
+    </div>
+  </div>
+</div>
+
+<!-- Direction 6: Migration Dashboard -->
+<div class="direction" id="dir-6">
+  <div class="direction-header">
+    <h2>Direction 6 — Migration Dashboard (Dept Admin View)</h2>
+    <p>Mr. Okonkwo's view during the migration marathon. Status tracking for all 63 MDAs using GOV.UK-inspired status tags. Non-punitive categorisation: Clean, Minor, Significant, Structural. Progress is visible, blame is absent.</p>
+    <div class="tags">
+      <span class="tag">Status Tracking</span>
+      <span class="tag">Batch Progress</span>
+      <span class="tag">Non-Punitive Categories</span>
+    </div>
+  </div>
+
+  <div class="mockup-frame">
+    <div class="mockup-label">
+      <span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span>
+      VLPRS — Migration Dashboard — Department Admin View
+    </div>
+    <div style="padding: 24px; background: var(--surface);">
+      <div class="content-header">
+        <h2>Migration Progress</h2>
+        <div class="actions">
+          <button class="btn btn-teal">+ Import MDA Data</button>
+        </div>
+      </div>
+
+      <div class="hero-metrics" style="grid-template-columns: repeat(5, 1fr);">
+        <div class="metric-card"><div class="label">Total MDAs</div><div class="value" style="font-size:24px;">63</div></div>
+        <div class="metric-card"><div class="label">Certified</div><div class="value" style="font-size:24px; color: var(--success);">12</div></div>
+        <div class="metric-card"><div class="label">Reconciled</div><div class="value" style="font-size:24px; color: var(--teal);">8</div></div>
+        <div class="metric-card"><div class="label">Imported</div><div class="value" style="font-size:24px; color: var(--gold);">15</div></div>
+        <div class="metric-card"><div class="label">Pending</div><div class="value" style="font-size:24px; color: var(--text-muted);">28</div></div>
+      </div>
+
+      <div class="attention-section">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>MDA</th>
+              <th>Records</th>
+              <th>Status</th>
+              <th>Clean</th>
+              <th>Minor</th>
+              <th>Significant</th>
+              <th>Structural</th>
+              <th>Last Updated</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td style="font-weight:500;">Sports Council</td>
+              <td>23</td>
+              <td><span class="status-text"><span class="status-dot green"></span>Certified</span></td>
+              <td>14 (61%)</td>
+              <td>5 (22%)</td>
+              <td>3 (13%)</td>
+              <td>1 (4%)</td>
+              <td style="color:var(--text-muted)">12 Feb</td>
+            </tr>
+            <tr>
+              <td style="font-weight:500;">Board of Internal Revenue</td>
+              <td>47</td>
+              <td><span class="status-text"><span class="status-dot" style="background:var(--teal)"></span>Reconciled</span></td>
+              <td>38 (81%)</td>
+              <td>6 (13%)</td>
+              <td>2 (4%)</td>
+              <td>1 (2%)</td>
+              <td style="color:var(--text-muted)">11 Feb</td>
+            </tr>
+            <tr>
+              <td style="font-weight:500;">Ministry of Works</td>
+              <td>62</td>
+              <td><span class="status-text"><span class="status-dot gold"></span>Imported</span></td>
+              <td>31 (50%)</td>
+              <td>12 (19%)</td>
+              <td>14 (23%)</td>
+              <td>5 (8%)</td>
+              <td style="color:var(--text-muted)">10 Feb</td>
+            </tr>
+            <tr>
+              <td style="font-weight:500;">Ministry of Health</td>
+              <td>55</td>
+              <td><span class="status-text"><span class="status-dot gold"></span>Validated</span></td>
+              <td>42 (76%)</td>
+              <td>8 (15%)</td>
+              <td>3 (5%)</td>
+              <td>2 (4%)</td>
+              <td style="color:var(--text-muted)">10 Feb</td>
+            </tr>
+            <tr>
+              <td style="font-weight:500;">Ministry of Education</td>
+              <td>—</td>
+              <td><span class="status-text"><span class="status-dot grey"></span>Pending</span></td>
+              <td>—</td>
+              <td>—</td>
+              <td>—</td>
+              <td>—</td>
+              <td style="color:var(--text-muted)">—</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<script>
+function showDirection(n) {
+  document.querySelectorAll('.direction').forEach(d => d.classList.remove('active'));
+  document.querySelectorAll('.dir-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('dir-' + n).classList.add('active');
+  document.querySelectorAll('.dir-btn')[n-1].classList.add('active');
+}
+</script>
+</body>
+</html>

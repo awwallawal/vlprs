@@ -1,0 +1,1847 @@
+
+           Claude Code v2.1.42
+ ▐▛███▜▌   Opus 4.6 · Claude Max
+▝▜█████▛▘  ~\Desktop\vlprs
+  ▘▘ ▝▝    Opus 4.6 is here · $50 free extra usage · /extra-usage to enable
+
+❯ /bmad-agent-bmad-master 
+
+● Searched for 1 pattern, read 1 file (ctrl+o to expand)
+
+● Now let me load the config file.
+
+● Read 1 file (ctrl+o to expand)
+
+● Welcome, Awwal! The BMad Master is at your service.                                                                                               
+  Before we dive in, know that you can type /bmad-help at any time to get advice on what to do next. You can also combine it with a question, for 
+  example:       
+  /bmad-help where should I start with an idea I have that does XYZ
+
+  Here is what the BMad Master can do for you:
+
+  1. [MH] Redisplay Menu Help — Show this menu again
+  2. [CH] Chat with the Agent — Chat about anything
+  3. [LT] List Available Tasks — Browse all available tasks
+  4. [LW] List Workflows — Browse all available workflows
+  5. [PM] Start Party Mode — Launch Party Mode workflow
+  6. [DA] Dismiss Agent — Exit and dismiss the BMad Master
+
+  What would you like to do, Awwal? Enter a number or command.
+
+❯ I noticed we missed something in the PRD which will have a cascading effect. Who is the best agent to help in this regards?                                                                                                                                                     
+● Great question, Awwal. The BMad Master recommends checking what agents are available in your setup to give you the most accurate guidance. Let    me take a quick look at what's configured.                                                                                                      
+                                                                                                                                                  
+● Searched for 5 patterns, read 2 files (ctrl+o to expand)     
+                                                                                                                                                  ● Excellent question, Awwal. The BMad Master knows exactly who you need.                                                                                                                                                                                                                            
+  John, the Product Manager (PM) is your go-to agent for this. His role is specifically:                                                          
+  
+  "Product Manager specializing in collaborative PRD creation through user interviews, requirement discovery, and stakeholder alignment."                                                                                                                                                           
+  John will help you identify what's missing, update the PRD properly, and think through the implications.
+
+  Now, regarding the cascading effect — the BMad Master wants to flag something important. Depending on what was missed, updating the PRD may     
+  require downstream updates to:
+
+  1. Architecture docs — Winston (Architect) may need to revisit technical designs
+  2. UX/wireframes — Sally (UX Designer) if it affects user flows
+  3. Stories/backlog — Bob (Scrum Master) to update or create new stories
+  4. Tech specs — If already created, they may need revision
+
+  The BMad Master recommends this approach:
+
+  1. Start with John (PM) to update the PRD and scope the impact of the missed item
+  2. Then assess which downstream artifacts need updating based on the change
+
+  Would you like the BMad Master to activate John (PM) for you via Party Mode, or would you prefer to work with him directly? Just say the word,  
+  Awwal.
+
+✻ Worked for 38s
+
+❯ proceed                                                                                                                                         
+           
+● Read 2 files (ctrl+o to expand)                                                                                                                                                                                                                                                                   
+● The BMad Master is stepping aside. John, the Product Manager, is taking over now.                                                                  
+  ---                                                                                                                                               📋 Hey Awwal! John here — your Product Manager.                                                                                                 
+                                                                                                                                                    So you've spotted something missing in the PRD that's going to ripple downstream. Good catch — WHY did it take until now to surface? That's not 
+  a blame question, that's a process question John files away for later. What matters now is getting it fixed right.
+
+  You can type /bmad-help at any time if you need advice on what to do next. Combine it with your question like: /bmad-help where should I start  
+  with an idea I have that does XYZ
+
+  Here's what John can do for you:
+
+  1. [MH] Redisplay Menu Help
+  2. [CH] Chat with the Agent — about anything
+  3. [CP] Create PRD — Expert-led facilitation to produce your Product Requirements Document
+  4. [VP] Validate PRD — Validate a PRD is comprehensive, lean, well organized and cohesive
+  5. [EP] Edit PRD — Update an existing Product Requirements Document
+  6. [CE] Create Epics and Stories — Create the Epics and Stories Listing that will drive development
+  7. [IR] Implementation Readiness — Ensure PRD, UX, Architecture, and Epics/Stories are all aligned
+  8. [CC] Course Correction — Determine how to proceed if major changes are discovered mid-implementation
+  9. [PM] Start Party Mode
+  10. [DA] Dismiss Agent
+
+  Given you need to update an existing PRD, John recommends [EP] Edit PRD — that's exactly what it's built for. But if you think the gap is so    
+  significant it warrants a full course correction, [CC] might be the play.
+
+  What'll it be, Awwal?
+
+✻ Cogitated for 35s
+
+❯ Can you read the PRD first so that when I make raise the issue you will have a clear grasp of the issue                                                                                                                                                    
+● Smart move, Awwal. John always says — understand the terrain before you start digging. Let me find and read the PRD.                                                                                                                                                                              
+● Searched for 2 patterns, read 1 file (ctrl+o to expand)                                                                                            
+● John has read the entire PRD thoroughly, Awwal. All 866 lines — from the Executive Summary through every user journey, domain requirement,        functional requirement, and non-functional requirement.                                                                                         
+                                                                                                                                                    Here's what John now has loaded in his head:
+                                                                                                                                                  
+  - 10 user journeys (AG, Deputy AG, Mr. Okonkwo x2, Mrs. Adebayo x2, Beneficiary, Committee, Front Desk, Auditor)
+  - 59 Functional Requirements (FR1-FR59)
+  - Full NFR coverage (Performance, Security, Scalability, Accessibility, Reliability)
+  - 3-phase roadmap (MVP → Growth → Vision)
+  - 4-tier computation engine, immutable ledger, 63 MDAs, 3,100+ loans
+  - The post-validation edit history from Feb 14
+
+  John is ready. What did you catch that was missed? Lay it on me — WHY does it matter, and which part of the system does it touch?
+
+❯ We only looked at the 60 month full loan tenure with the assumption that staffs have more than sixty months to use within the service. Even     
+   at that I believe we need to have a way (column) dedicated to knowing the retirement date of all staff(s) entering the loan pool. we know     
+  they have a 17 column spreadsheet currently in use that explicitly believe staff(s) have more months to use in the service than the loan          tenure. How do we track this because if we don't track it how can we interface with the Pensions/Gratuity Committee on the future              
+  obligations that would arise from the car loan to be deducted from the enititlements. Also, for the other cases of                                Deceased/Suspended/Absconded/Early Exit and others we need a way to track the dates so that we can forecast/analyse/group/filter and do all    
+   manipulations on theses and other information as it relates to the staff record. Finally this cascades to the dashboard as the AG cannot       
+  have a true position if the dates for actions such as the retirement date in the future and other dates that affect data manipulation are       
+  not recorded somehow. So how do we bring this in considering this has not been tracked in the PRD to be built into the system or is it          
+  tracked somehow and I don't know. I hope my word vomit/rant can make sense to you. Thoughts (make it better).                                                                                                                                                                                     ● Awwal, your "word vomit" makes perfect sense. John loves this kind of rant because it reveals a foundational data gap that would have haunted us   in production. Let me break down what you've actually uncovered.                                                                               
+                                                                                                                                                  
+  What You Found — It's Bigger Than You Think                                                                                                     
+                                                                                                                                                    You've identified not one issue but three interconnected gaps:                                                                                  
+
+  Gap 1: Staff Temporal Data is Missing from the Data Model
+
+  The PRD tracks loan lifecycle states (FR14) and event flags in submissions, but flags are binary — "RETIRED: yes/no." What's missing is WHEN:   
+
+  - Retirement date — knowable at loan origination (date of birth + 60, or date of first appointment + 35 years)
+  - Date of event for Deceased, Suspended, Absconded, Transfer, Dismissal, etc.
+  - Date of birth and date of first appointment — the source data needed to compute retirement date
+
+  Without dates, you have facts without a timeline. And a financial system without a timeline is blind.
+
+  Gap 2: The Computation Engine Can't Handle Tenure > Remaining Service
+
+  Right now FR1-FR6 assume a clean 60-month runway. But what happens when:
+
+  - A staff member has 36 months to retirement and gets a 60-month loan?
+  - The remaining 24 months become a receivable against gratuity
+  - The system needs to know this AT APPROVAL TIME, not when it happens
+
+  The 17-column spreadsheet assumes everyone has enough service time. VLPRS should be smarter than the spreadsheet, not replicate its blind spot. 
+
+  Gap 3: The AG Dashboard Shows Incomplete Exposure
+
+  If the AG sees "Total Exposure: ₦1.84B" but doesn't know that ₦340M of that will shift from payroll deduction to gratuity recovery in the next  
+  12 months — she's making decisions on incomplete data. The "30-Second Truth" becomes a "30-Second Partial Truth."
+
+  ---
+  Where It Cascades
+
+  ┌────────────────────┬─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐    
+  │        Area        │                                                       Impact                                                        │    
+  ├────────────────────┼─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤    
+  │ Loan Master Record │ Needs: date of birth, date of first appointment, computed retirement date, expected end-of-service date             │    
+  ├────────────────────┼─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤    
+  │ Computation Engine │ Must handle split-tenure: payroll portion vs gratuity receivable portion                                            │    
+  ├────────────────────┼─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤    
+  │ Event Tracking     │ Every employment event needs a DATE, not just a flag — this creates a staff employment event log                    │    
+  ├────────────────────┼─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤    
+  │ Migration Tool     │ Must capture or derive retirement dates from legacy data (DOB should be in personnel records)                       │    
+  ├────────────────────┼─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤    
+  │ Dashboard          │ AG needs a "Retirement Pipeline" view — loans transitioning from payroll to gratuity in 3/6/12 months               │    
+  ├────────────────────┼─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤    
+  │ Committee Approval │ Eligibility check must compare loan tenure against remaining service — and flag or adjust if tenure exceeds service │    
+  ├────────────────────┼─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤    
+  │ Gratuity Interface │ Can't forecast obligations to Pensions/Gratuity Committee without retirement dates                                  │    
+  ├────────────────────┼─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤    
+  │ Reports            │ Need filtering/grouping by: retiring within X months, event type, event date ranges                                 │    
+  └────────────────────┴─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘    
+
+  ---
+  John's Recommendation
+
+  Here's what John thinks we need to add to the PRD:
+
+  1. Staff Temporal Profile (New Data Requirement — MVP)
+  - Date of birth, date of first appointment, computed retirement date
+  - These are captured at loan origination and stored in the Loan Master
+  - Retirement date is derived but can be overridden (early retirement, extension)
+
+  2. Employment Event Log (Elevate from Phase 2 to MVP)
+  - The "13-status Employment Status Taxonomy" is currently Phase 2 — but the DATE-BEARING version of key statuses (Retired, Deceased, Suspended, 
+  Absconded, Transferred, Dismissed, LWOP) needs to be MVP
+  - Each event: type, effective date, reporting date, reported by, supporting reference
+
+  3. Tenure Validation at Approval (New FR — MVP)
+  - System computes remaining service months from retirement date
+  - If loan tenure > remaining service: flag it, compute the split (payroll months vs gratuity receivable months)
+  - Committee sees this clearly before approving
+
+  4. Dashboard Enhancement (MVP)
+  - "Retirement Pipeline" as a headline or attention item — loans where payroll deductions will end due to retirement within 3/6/12 months        
+  - Gratuity receivable exposure amount
+
+  5. Gratuity Receivable Tracking (MVP — Basic)
+  - For loans where tenure exceeds remaining service: track the projected gratuity receivable amount
+  - This doesn't require the full "Retirement-Gratuity Handshake Protocol" (that stays Phase 2) — just the TRACKING of the obligation
+
+  ---
+  This is a significant PRD update, Awwal. John doesn't want to just patch it — he wants to do it right through the Edit PRD workflow so every FR,
+   NFR, and journey that's affected gets updated systematically.
+
+  Want John to fire up [EP] Edit PRD and work through these changes with you? Or do you want to refine the scope of what should be MVP vs Phase 2 
+  first?
+
+✻ Crunched for 55s
+
+❯ Before firing the EP up we need to know how the MDA Accounting Officers report this. What is the best way to collect this information and       
+  how do we validate it?                                                                                                                         
+                                                                                                                                                  ● NOW you're thinking like a product manager, Awwal. John is grinning. Because the hardest part of any data requirement isn't what to collect —     it's how it actually enters the system from the people on the ground. Let's break this apart.                                                   
+                                                                                                                                                  
+  Two Different Data Types, Two Different Collection Patterns                                                                                     
+                                                                                                                                                    What you're really asking about is two fundamentally different kinds of data:                                                                   
+
+  Type 1: Staff Profile Data (Known at Loan Entry, Collected Once)
+
+  ┌───────────────────────────┬───────────────────────────────────────────────────────────────────────┬───────────────────────┐
+  │           Field           │                                Source                                 │      When Known       │
+  ├───────────────────────────┼───────────────────────────────────────────────────────────────────────┼───────────────────────┤
+  │ Date of Birth             │ Personnel records                                                     │ Before loan approval  │
+  ├───────────────────────────┼───────────────────────────────────────────────────────────────────────┼───────────────────────┤
+  │ Date of First Appointment │ Personnel records                                                     │ Before loan approval  │
+  ├───────────────────────────┼───────────────────────────────────────────────────────────────────────┼───────────────────────┤
+  │ Computed Retirement Date  │ Derived (earlier of: DOB + 60 years, or first appointment + 35 years) │ Calculable from above │
+  ├───────────────────────────┼───────────────────────────────────────────────────────────────────────┼───────────────────────┤
+  │ Grade Level at Approval   │ Loan application                                                      │ At approval           │
+  └───────────────────────────┴───────────────────────────────────────────────────────────────────────┴───────────────────────┘
+
+  This data doesn't change monthly. It's captured ONCE per staff member and lives on the loan record permanently. The question is: who provides it
+   and when?
+
+  Type 2: Employment Event Data (Unknown Until It Happens)
+
+  ┌──────────────┬─────────────────┬──────────────────────────────────────────┐
+  │    Event     │ Who Knows First │              How They Know               │
+  ├──────────────┼─────────────────┼──────────────────────────────────────────┤
+  │ Retirement   │ MDA + Staff     │ Planned — known months in advance        │
+  ├──────────────┼─────────────────┼──────────────────────────────────────────┤
+  │ Death        │ MDA             │ Reported to MDA by family/colleagues     │
+  ├──────────────┼─────────────────┼──────────────────────────────────────────┤
+  │ Suspension   │ MDA             │ Formal HR action with paperwork          │
+  ├──────────────┼─────────────────┼──────────────────────────────────────────┤
+  │ Absconding   │ MDA             │ Discovered over time — "hasn't shown up" │
+  ├──────────────┼─────────────────┼──────────────────────────────────────────┤
+  │ Transfer Out │ Sending MDA     │ Transfer letter with effective date      │
+  ├──────────────┼─────────────────┼──────────────────────────────────────────┤
+  │ Dismissal    │ MDA             │ Formal HR action with effective date     │
+  ├──────────────┼─────────────────┼──────────────────────────────────────────┤
+  │ LWOP         │ MDA             │ Approved leave with start/end dates      │
+  └──────────────┴─────────────────┴──────────────────────────────────────────┘
+
+  This data arrives when the event happens — not on a monthly schedule. The question is: do we bolt it onto the monthly submission or create a    
+  separate channel?
+
+  ---
+  The Collection Design Decision
+
+  John sees three realistic approaches. Let's think through each:
+
+  Approach A: Expand the Monthly CSV (7 or 8 Fields)
+
+  Add Event Date as a 7th field. When Event Flag = NONE, Event Date is blank. When Event Flag = RETIRED, Event Date = the effective retirement    
+  date.
+
+  Pros:
+  - Minimal training change — MDA officers already know the CSV flow
+  - Single submission channel — no new interface to learn
+  - Event date rides alongside the event flag naturally
+
+  Cons:
+  - Event reporting is now tied to the monthly submission cycle. If someone dies on the 2nd and the submission isn't due until the 28th, the event
+   waits 26 days
+  - Doesn't solve the static profile data (DOB, appointment date) — that's not a monthly field
+
+  Approach B: Two-Track Collection
+
+  Track 1 — Staff Profile (once, at migration or loan onboarding):
+  - Department Admin (Mr. Okonkwo) enters DOB and first appointment date for each staff member
+  - During migration: added to the migration spreadsheet as required columns
+  - For new loans post-MVP: captured during loan setup
+  - Retirement date computed automatically by the system
+
+  Track 2 — Employment Event Report (separate from monthly submission):
+  - A simple form: Staff ID, Event Type, Effective Date, Supporting Reference (letter number, etc.), Notes
+  - Available to MDA Reporting Officers anytime — not tied to the monthly cycle
+  - Department Admin can also file events (since they're the ones who often get the call)
+
+  Monthly CSV stays at 6 fields. Clean, simple, unchanged.
+
+  Pros:
+  - MDA officers' monthly workflow stays simple — the 6-field win is preserved
+  - Events can be reported AS THEY HAPPEN, not on a monthly cycle
+  - Profile data is collected once properly, not repeated monthly
+  - Separation of concerns — facts vs events
+
+  Cons:
+  - Two interfaces for MDA officers to learn (monthly submission + event reporting)
+  - Risk that MDA officers forget to report events separately
+
+  Approach C: Hybrid — Expand CSV + Separate Event Form
+
+  CSV becomes 7 fields (add Event Date). BUT also provide a standalone event reporting form for mid-cycle events. The monthly submission catches  
+  anything the standalone form missed.
+
+  Pros:
+  - Belt and suspenders — events can be reported immediately OR caught in the monthly cycle
+  - If the standalone form is skipped, the CSV is the safety net
+
+  Cons:
+  - Potential duplicate reporting (event filed via form AND via CSV)
+  - More complexity
+
+  ---
+  John's Recommendation: Approach B (Two-Track) — Here's WHY
+
+  The 6-field monthly CSV is one of VLPRS's greatest design wins. It's what takes Mrs. Adebayo from 3 hours to 12 minutes. John does NOT want to  
+  compromise that simplicity. Every field you add to the monthly submission increases friction for 63 officers, 12 months a year.
+
+  Employment events are episodic, not periodic. A retirement happens once. A death happens once. These are not monthly rhythms — they're
+  interruptions. They deserve their own simple, purpose-built channel.
+
+  Here's what John proposes:
+
+  Staff Profile Data (Track 1):
+  - During migration: Mr. Okonkwo adds DOB and date of first appointment to the migration spreadsheet (he has access to personnel files)
+  - For new loans: Committee approval workflow requires DOB and appointment date before loan can be created
+  - System computes retirement date automatically
+  - Department Admin can correct if needed (e.g., approved service extension)
+
+  Employment Event Reporting (Track 2):
+  - Simple form available to MDA Reporting Officers and Department Admin
+  - 5 fields: Staff ID, Event Type (dropdown), Effective Date, Reference Number (optional), Notes (optional)
+  - Available anytime — not tied to submission cycle
+  - System sends confirmation: "Event recorded for Staff ID XXXX. Loan status updated."
+
+  Monthly CSV stays at 6 fields. But the system cross-checks: if the monthly submission shows zero deduction for a staff member AND no employment 
+  event has been filed, the system flags it as "Missing Event — possible unreported status change." This is your safety net.
+
+  ---
+  Validation — How Do We Trust the Data?
+
+  Data Point: Date of Birth
+  Validation Method: Format validation + reasonableness check (age 18-65 at loan approval). Cross-reference: does retirement date fall BEFORE loan
+
+    end date? If yes, flag for committee.
+  ────────────────────────────────────────
+  Data Point: Date of First Appointment
+  Validation Method: Format validation + reasonableness (not before age 18, not in the future). Cross-check: appointment date + 35 years should   
+    roughly align with DOB + 60 years for consistency.
+  ────────────────────────────────────────
+  Data Point: Computed Retirement Date
+  Validation Method: System-derived — no manual input. Recomputed if DOB or appointment date is corrected. Rule: earlier of (DOB + 60 years) or   
+    (first appointment + 35 years).
+  ────────────────────────────────────────
+  Data Point: Employment Event Date
+  Validation Method: Cannot be in the future (except scheduled retirement). Cannot be before the last recorded deduction (you can't retire before 
+    your last pay day). If event date > 90 days in the past, flag as "Late Report" for Department Admin review.
+  ────────────────────────────────────────
+  Data Point: Event + Deduction Cross-check
+  Validation Method: If event filed but deductions still arriving — flag ("Deductions continuing after reported retirement"). If no event filed   
+  but
+    deductions stopped — flag ("Unreported status change").
+  ────────────────────────────────────────
+  Data Point: Retirement vs Tenure
+  Validation Method: At loan approval: if retirement date < loan end date, system computes and displays the split (payroll months vs gratuity     
+    receivable months). Committee sees this BEFORE approving.
+
+  The key insight: the system validates by cross-referencing data streams against each other. The MDA says one thing in the monthly submission,   
+  another thing in the event report, and the math says a third thing. When these don't align, the system surfaces it. Trust then verify — the same
+   philosophy already in the PRD.
+
+  ---
+  What do you think, Awwal? Does the Two-Track approach feel right for how MDAs actually work? Or does John need to rethink this? Once we align on
+   the collection model, THEN we fire up the Edit PRD workflow and bake it in properly.
+
+✻ Baked for 1m 14s
+
+❯ I would prefer C, let the field be increased to capture the date issue (Government Staff can be funny and we should not give an excuse for      
+  under-reporting where they would say they forgot. Let it be right in their face) and also if any issue happens before the reporting date it    
+   can be reported in the separate flow and if they don't report it there, the monthly submission flow would remind them to fill all                important dates information. Thoughts (make it better)                                                                                         
+                                                                                                                                                  ● Awwal, John LOVES this call. You know your users better than any persona doc ever could. "Don't give them an excuse" — that's not just UX,        that's governance design. Let me refine Approach C into something bulletproof.                                                                  
+                                                                                                                                                  
+  Refined Approach C: The Monthly Checkpoint + Mid-Cycle Event Channel                                                                            
+                                                                                                                                                    The Core Principle                                                                                                                              
+
+  The monthly submission isn't just a data dump — it becomes a monthly accountability checkpoint. Every month, 63 MDA officers are FORCED to look 
+  at their staff records and confirm status. The separate event form handles urgency. The monthly CSV handles compliance. Belt AND suspenders.    
+
+  ---
+  Monthly CSV: 6 Fields → 8 Fields
+
+  ┌─────┬────────────────────────────┬─────────────┬───────────────────────────────────────────────────────────────────────────────────┐
+  │  #  │           Field            │  Required   │                                       Notes                                       │
+  ├─────┼────────────────────────────┼─────────────┼───────────────────────────────────────────────────────────────────────────────────┤
+  │ 1   │ Staff ID                   │ Always      │ Unchanged                                                                         │
+  ├─────┼────────────────────────────┼─────────────┼───────────────────────────────────────────────────────────────────────────────────┤
+  │ 2   │ Month                      │ Always      │ Unchanged                                                                         │
+  ├─────┼────────────────────────────┼─────────────┼───────────────────────────────────────────────────────────────────────────────────┤
+  │ 3   │ Amount Deducted            │ Always      │ Unchanged (₦0 is valid — but triggers event requirement)                          │
+  ├─────┼────────────────────────────┼─────────────┼───────────────────────────────────────────────────────────────────────────────────┤
+  │ 4   │ Payroll Batch Reference    │ Always      │ Unchanged                                                                         │
+  ├─────┼────────────────────────────┼─────────────┼───────────────────────────────────────────────────────────────────────────────────┤
+  │ 5   │ MDA Code                   │ Always      │ Pre-filled, unchanged                                                             │
+  ├─────┼────────────────────────────┼─────────────┼───────────────────────────────────────────────────────────────────────────────────┤
+  │ 6   │ Event Flag                 │ Always      │ Unchanged (NONE, RETIRED, DECEASED, etc.)                                         │
+  ├─────┼────────────────────────────┼─────────────┼───────────────────────────────────────────────────────────────────────────────────┤
+  │ 7   │ Event Effective Date       │ Conditional │ Required when Event Flag ≠ NONE. Blank when NONE.                                 │
+  ├─────┼────────────────────────────┼─────────────┼───────────────────────────────────────────────────────────────────────────────────┤
+  │ 8   │ Deduction Cessation Reason │ Conditional │ Required when Amount = ₦0 AND Event Flag = NONE. Why is this person showing zero? │
+  └─────┴────────────────────────────┴─────────────┴───────────────────────────────────────────────────────────────────────────────────┘
+
+  WHY field 8? Because this closes the loophole. Right now, an MDA officer can submit ₦0 with Event Flag = NONE and nobody asks questions. Field 8
+   forces them to explain: "Leave Without Pay," "Payroll Error," "Awaiting Salary Reinstatement," etc. No more silent zeros.
+
+  The Mrs. Adebayo impact: She goes from 6 fields to... still mostly 6. For her 47 staff where everyone is paying normally, fields 7 and 8 are    
+  blank. She only fills them when something happened. The cognitive load increase is near zero for the happy path, but it's right in their face   
+  when something requires attention.
+
+  ---
+  The Monthly Submission Checkpoint Screen
+
+  Here's where it gets powerful. Before the MDA officer uploads their CSV or submits manually, the system shows a pre-submission checkpoint:      
+
+  Pre-Submission Review — February 2026
+
+  Before submitting, please review the following staff requiring attention:
+
+  Approaching Retirement (next 12 months):
+  - Staff 4412 — Adamu B.K. — Retirement: August 2026 (6 months)
+  - Staff 7201 — Bello H.M. — Retirement: November 2026 (9 months)
+
+  Previously Flagged — No Deduction Last Month:
+  - Staff 3301 — Ogunyemi F.A. — Zero deduction in January. No event filed. Please update.
+
+  Mid-Cycle Events Already Reported:
+  - Staff 2847 — Musa K.R. — TRANSFERRED reported on Feb 3. Please confirm in this submission.
+
+  ☐ I confirm I have reviewed the above and my submission reflects the current status of all staff.
+
+  They CANNOT submit until they tick that confirmation. Every unreported issue is staring them in the face. No excuses.
+
+  ---
+  Mid-Cycle Event Report Form (Separate Channel)
+
+  Available anytime, not tied to monthly cycle. For when events can't wait:
+
+  Field: Staff ID
+  Required: Yes
+  Notes: Lookup shows staff name + MDA for confirmation
+  ────────────────────────────────────────
+  Field: Event Type
+  Required: Yes
+  Notes: Dropdown: Retired, Deceased, Suspended, Absconded, Transferred Out, Dismissed, LWOP Start, LWOP End, Service Extension
+  ────────────────────────────────────────
+  Field: Effective Date
+  Required: Yes
+  Notes: The date the event actually took/takes effect
+  ────────────────────────────────────────
+  Field: Reference Number
+  Required: Conditional
+  Notes: Required for: Retirement (retirement letter ref), Transfer (transfer letter ref), Dismissal (dismissal letter ref). Optional for others. 
+  ────────────────────────────────────────
+  Field: Notes
+  Required: Optional
+  Notes: Free text for context
+
+  After submission: System immediately updates the staff's status. The NEXT monthly submission checkpoint will show this event and ask the MDA    
+  officer to confirm it in their CSV. If they don't — flag it.
+
+  ---
+  Cross-Validation Engine (The Safety Net)
+
+  This is where the two tracks reinforce each other:
+
+  Scenario: Event filed mid-cycle, CSV confirms same event + date
+  System Response: Matched. No action needed.
+  ────────────────────────────────────────
+  Scenario: Event filed mid-cycle, CSV shows different date
+  System Response: Flag: "Date discrepancy — mid-cycle report says Jan 15, monthly submission says Jan 22. Department Admin to reconcile."        
+  ────────────────────────────────────────
+  Scenario: Event filed mid-cycle, CSV shows no event for that staff
+  System Response: Flag: "Unreported event — mid-cycle event filed but monthly submission does not reflect it."
+  ────────────────────────────────────────
+  Scenario: CSV shows event, no mid-cycle report was filed
+  System Response: Accepted — the monthly CSV caught it. System records event.
+  ────────────────────────────────────────
+  Scenario: CSV shows ₦0 + Event Flag NONE + no Cessation Reason
+  System Response: Rejected — "Row 12: Amount is ₦0 with no Event Flag or Cessation Reason. Please explain why no deduction was made."
+  ────────────────────────────────────────
+  Scenario: No deduction for 2+ months, no event filed anywhere
+  System Response: Attention item → Deputy AG's dashboard. Auto-flag as "Inactive — Unreported."
+  ────────────────────────────────────────
+  Scenario: Staff approaching retirement (< 6 months), no event filed
+  System Response: Monthly checkpoint shows it. If no event filed by T-3 months before computed retirement date, escalate to Department Admin.    
+
+  ---
+  Staff Profile Data — The One-Time Collection
+
+  The monthly CSV handles ongoing events. But the STATIC profile data (DOB, appointment date) still needs to be collected once. John proposes:    
+
+  During Migration (Existing 3,100+ Staff):
+  - Migration spreadsheet adds two required columns: Date of Birth, Date of First Appointment
+  - Mr. Okonkwo sources from personnel files (he has access)
+  - System computes retirement date from these
+  - If DOB or appointment date is missing: record is flagged as "Profile Incomplete" — migration proceeds but loan shows an amber indicator until 
+  resolved
+
+  For New Loans (Post-MVP):
+  - Loan setup requires DOB and appointment date before the loan record can be created
+  - Committee approval screen shows: "Remaining service: 48 months. Loan tenure: 60 months. 12 months gratuity receivable."
+  - Non-negotiable — no profile data, no loan record
+
+  For Profile Corrections:
+  - Department Admin can update DOB or appointment date with a correction workflow (old value, new value, reason, supporting reference)
+  - Retirement date automatically recomputes
+  - Any affected loan tenure calculations update accordingly
+
+  ---
+  Impact on Existing PRD Sections
+
+  ┌──────────────────────────┬──────────────────────────────────────────────────────────────────────────────────────────────┐
+  │       PRD Section        │                                         What Changes                                         │
+  ├──────────────────────────┼──────────────────────────────────────────────────────────────────────────────────────────────┤
+  │ FR16 (CSV upload)        │ 6 fields → 8 fields, conditional validation rules                                            │
+  ├──────────────────────────┼──────────────────────────────────────────────────────────────────────────────────────────────┤
+  │ FR17 (manual entry)      │ Same 8-field expansion                                                                       │
+  ├──────────────────────────┼──────────────────────────────────────────────────────────────────────────────────────────────┤
+  │ FR20 (validation)        │ New rules for conditional required fields                                                    │
+  ├──────────────────────────┼──────────────────────────────────────────────────────────────────────────────────────────────┤
+  │ FR10 (loan master)       │ Add DOB, first appointment date, computed retirement date                                    │
+  ├──────────────────────────┼──────────────────────────────────────────────────────────────────────────────────────────────┤
+  │ FR25 (migration)         │ Migration spreadsheet requires DOB + appointment date                                        │
+  ├──────────────────────────┼──────────────────────────────────────────────────────────────────────────────────────────────┤
+  │ New FRs needed           │ Mid-cycle event form, pre-submission checkpoint, cross-validation engine, profile enrichment │
+  ├──────────────────────────┼──────────────────────────────────────────────────────────────────────────────────────────────┤
+  │ FR32-33 (dashboard)      │ Retirement pipeline view, gratuity receivable exposure                                       │
+  ├──────────────────────────┼──────────────────────────────────────────────────────────────────────────────────────────────┤
+  │ Journey 5 (Mrs. Adebayo) │ Updated to reflect 8 fields + checkpoint screen                                              │
+  ├──────────────────────────┼──────────────────────────────────────────────────────────────────────────────────────────────┤
+  │ NFRs                     │ Validation rules for date fields, cross-validation performance                               │
+  └──────────────────────────┴──────────────────────────────────────────────────────────────────────────────────────────────┘
+
+  ---
+  This is the complete collection and validation model, Awwal. The monthly CSV is the forcing function. The mid-cycle form is the urgency channel.
+   The cross-validation engine catches everything that falls through. And the pre-submission checkpoint puts it RIGHT IN THEIR FACE.
+
+  Ready to fire up [EP] Edit PRD and bake all of this in? Or do you want to refine anything else before we commit?
+
+That file is just our conversation transcript — no new clues there for the tugging thought. But your MDA historical upload idea? That's         
+  significant. Let John unpack it before we dive in.
+                                                                                                                                                    MDA Historical Upload — WHY This Matters
+                                                                                                                                                  
+  You're saying: don't make Mr. Okonkwo the sole bottleneck for getting data into the system. Let the 63 MDA officers ALSO upload their historical
+   monthly records.
+
+  This is powerful because:
+
+  - Mr. Okonkwo has the central view — but each MDA officer has THEIR version of the truth in their 17-column spreadsheets
+  - If both upload independently, the system can cross-validate — where do central records and MDA records agree? Where do they diverge?
+  - Historical monthly records reveal actual deduction timelines — when did deductions start, stop, change? This reconstructs event histories that
+   were never formally reported
+  - It distributes the migration workload — 63 officers uploading their own data vs one man doing everything
+
+  John thinks this should be a parallel migration track: Mr. Okonkwo uploads centrally, MDA officers upload their historical records, and the     
+  system reconciles the two. Variances become the investigation list.
+
+  The Thing Tugging at You
+
+  John has a hunch. Could it be this: staff who are ALREADY past their computed retirement date but still showing active deductions? If we bring  
+  in DOB and appointment dates during migration, the system might immediately discover that 50-100 staff should have stopped being deducted months
+   or years ago. That's not a future problem — that's a DAY ONE discovery. That's the kind of thing that makes an AG's phone ring.
+
+  If that's not it, park it. It'll surface. These things always do once the edit is underway.
+
+  ---
+  Now — firing up [EP] Edit PRD.
+
+  Edit Mode: Improving an existing PRD.
+
+  John already knows the PRD path: _bmad-output/planning-artifacts/prd.md
+
+  Loading the discovery step now.
+
+● Read 2 files (ctrl+o to expand)    
+
+● Good — PRD purpose standards internalized. Now, John already has the PRD loaded and knows the path. Let me check for a validation report, then    we proceed.
+                                                                                                                                                  ● Searched for 1 pattern, read 1 file (ctrl+o to expand)     
+                                                                                                                                                  ● Found Validation Report from 2026-02-14.                                                                                                           
+  And Awwal — John just found something that'll make you feel vindicated. The validation report ALREADY flagged this:                             
+  
+  Moderate Gap #3: "Financial Integrity Metrics incomplete — Retirement receivables tracking, write-off quantification, fund rotation rate          missing"                                                                                                                                        
+
+  Moderate Gap #5: "Discovery Engine partially covered — Retirement pipeline forecasting deferred to Phase 2; Product Brief presents it as core   
+  differentiator"
+
+  The validation caught it. The first edit pass didn't fully address it. Now we're here to finish the job.
+
+  ---
+  Edit Requirements Understood
+
+  PRD Format: BMAD Standard (6/6 core sections)
+  Validation Guide: Yes — loaded, will use findings to cross-reference
+  Edit Goals: Based on our full discussion, here's the consolidated scope:
+
+  #: 1
+  Edit: Staff Temporal Profile — Add DOB, date of first appointment, computed retirement date to Loan Master (FR10)
+  Category: New data requirement
+  ────────────────────────────────────────
+  #: 2
+  Edit: Monthly CSV 6→8 fields — Add Event Effective Date (conditional) + Deduction Cessation Reason (conditional) to FR16, FR17
+  Category: FR modification
+  ────────────────────────────────────────
+  #: 3
+  Edit: Pre-Submission Checkpoint — New FR: system displays staff requiring attention before upload, requires confirmation
+  Category: New FR
+  ────────────────────────────────────────
+  #: 4
+  Edit: Mid-Cycle Event Report Form — New FR: standalone event reporting with 5 fields, available anytime
+  Category: New FR
+  ────────────────────────────────────────
+  #: 5
+  Edit: Cross-Validation Engine — New FR: system reconciles monthly CSV against mid-cycle events, flags discrepancies
+  Category: New FR
+  ────────────────────────────────────────
+  #: 6
+  Edit: Tenure vs Service Validation — New FR: at loan approval, flag when tenure exceeds remaining service, compute payroll/gratuity split       
+  Category: New FR
+  ────────────────────────────────────────
+  #: 7
+  Edit: Dashboard: Retirement Pipeline — Enhance FR32-33 with retirement pipeline view + gratuity receivable exposure
+  Category: FR modification
+  ────────────────────────────────────────
+  #: 8
+  Edit: Gratuity Receivable Tracking — New FR: track projected gratuity receivable for split-tenure loans
+  Category: New FR
+  ────────────────────────────────────────
+  #: 9
+  Edit: MDA Historical Upload — New FR: MDA officers can upload historical monthly records, system cross-validates against migration data
+  Category: New FR
+  ────────────────────────────────────────
+  #: 10
+  Edit: Migration: DOB + Appointment Date — Expand FR25 to require DOB and appointment date, flag incomplete profiles
+  Category: FR modification
+  ────────────────────────────────────────
+  #: 11
+  Edit: Journey 5 update — Mrs. Adebayo's journey updated to reflect 8 fields + checkpoint
+  Category: Journey update
+  ────────────────────────────────────────
+  #: 12
+  Edit: Phase 2 reclassification — Elevate key elements of Employment Status Taxonomy from Phase 2 to MVP
+  Category: Scope change
+  ────────────────────────────────────────
+  #: 13
+  Edit: Validation report moderate gaps #3 and #5 — Retirement receivables tracking and pipeline forecasting now addressed by above
+  Category: Gap closure
+
+  Does this capture everything, Awwal? Anything to add or adjust before John dives into the deep review and starts writing? And has that tugging  
+  thought surfaced yet?
+
+✻ Churned for 1m 57s
+
+❯ You raised something else with your hunch which is "ghost workers" how can someone be supposedly retired/past retirement date and still be      
+  drawing salary                                                                                                                                
+                                                                                                                                                  ● NOW we're getting somewhere, Awwal. John thinks THIS might be what was tugging at you.
+                                                                                                                                                    The Ghost Worker Detection — An Emergent Capability                                                                                                                                                                                                                                               
+  Here's what's powerful: VLPRS wasn't designed as a ghost worker detection system. But the MOMENT you put DOB and appointment dates into the Loan   Master, it BECOMES one — at least within the car loan pool.                                                                                    
+
+  Think about what happens on Day One of migration:
+
+  1. Mr. Okonkwo uploads 3,100+ records with DOB and appointment dates
+  2. System computes retirement date for every single staff member
+  3. System instantly flags: "47 staff members have computed retirement dates BEFORE today's date but are showing active loan deductions"
+
+  Each one of those 47 is one of three things:
+
+  Scenario: Legitimate extension
+  Explanation: Staff got approved service extension beyond 60/35 years
+  System Response: MDA should provide extension reference number. System records override with documentation.
+  ────────────────────────────────────────
+  Scenario: Administrative oversight
+  Explanation: Staff retired but MDA never reported it. Deductions still being posted from payroll inertia.
+  System Response: MDA needs to file retirement event. System flags for immediate resolution. Potential over-deduction recovery.
+  ────────────────────────────────────────
+  Scenario: Ghost worker
+  Explanation: Staff left service. Someone is still drawing salary and "deductions" are being reported for a person who doesn't exist on the      
+    payroll anymore.
+  System Response: Escalation to AG. This isn't a loan issue — it's a payroll integrity issue VLPRS has surfaced.
+
+  The AG doesn't just get loan visibility. She gets a canary in the coal mine for payroll integrity across 63 MDAs.
+
+  WHY This Is Politically Sensitive — And Why Design Matters
+
+  John needs to flag something: in Nigerian government context, "ghost worker" is a loaded term. Accusations fly, people get defensive,
+  investigations get political. VLPRS must surface this data WITHOUT becoming a witch-hunting tool.
+
+  The same non-punitive design philosophy already in the PRD applies here:
+
+  - Never call it "ghost worker detection" — call it "Post-Retirement Activity Alert" or "Service Status Verification"
+  - The language: "Staff ID 4412 — computed retirement date: March 2025. Active deductions recorded through February 2026. Verification required: 
+  service extension or status update needed."
+  - No accusation. No blame. Just: "the math says this person should have retired. Please explain why deductions continue."
+  - The MDA can respond with a service extension reference, a retirement event filing, or an investigation request
+
+  What This Adds to the PRD
+
+  #: 14
+  New Requirement: Post-Retirement Activity Detection — During migration AND ongoing monthly processing, system flags any staff with active       
+    deductions whose computed retirement date is in the past
+  Type: New FR
+  ────────────────────────────────────────
+  #: 15
+  New Requirement: Service Extension Override — Department Admin can record a service extension with reference number, new expected retirement    
+    date, and approving authority, overriding the computed date
+  Type: New FR
+  ────────────────────────────────────────
+  #: 16
+  New Requirement: Dashboard: Service Status Verification Queue — New attention item category: staff with past-retirement deductions requiring MDA
+
+    verification (separate from normal exceptions)
+  Type: FR33 enhancement
+  ────────────────────────────────────────
+  #: 17
+  New Requirement: Migration: Immediate Retirement Scan — As part of migration processing, system generates a "Service Status Verification Report"
+
+    listing all staff past computed retirement date
+  Type: FR25-31 enhancement
+
+  This brings our total edit scope to 17 items.
+
+  Awwal — is THIS the thing that was tugging? The ghost worker angle? And here's John's real question: how sensitive is this politically? Because 
+  the way we frame it in the PRD determines how the AG positions it. Does she WANT this capability surfaced prominently, or does she want it as a 
+  quiet back-channel report only visible to Super Admin?
+
+✻ Worked for 48s                                                                                                                                     
+❯ It is not the thing tugging but your perspective opened up another thing. She doesnot want this capability but we must surface it both for      
+  her and her deputy. If is there we surface it and if it is not there it is all well and good but the ability must be there I believe.          
+  Thoughts (make it better)                                                                                                                                                                                                                                                                         
+● John agrees completely. Here's the right design principle:                                                                                        
+  Passive Truth Surfacing — Not Active Hunting                                                                                                    
+                                                                                                                                                  
+  The system doesn't "detect ghost workers." The system computes retirement dates and displays attention items when the math doesn't add up.        That's it. It's the same philosophy as every other variance in VLPRS.                                                                           
+
+  The framing in the PRD should be:
+
+  - It's NOT a named feature. There's no "Ghost Worker Detection" in the feature list.
+  - It's a natural consequence of having temporal data + the computation engine + the attention items system that already exists
+  - Post-retirement activity is just another attention item type alongside "growing variance," "missed submission," "inactive loan"
+  - If zero staff are past retirement with active deductions — the item simply never appears on the dashboard. Quiet. Clean.
+  - If 47 staff are flagged — it shows up like any other amber/red item. The AG sees it. The Deputy investigates it. Standard workflow.
+
+  The system doesn't look for problems. It computes truth. If truth reveals a problem, it doesn't look away either.
+
+  That's already the DNA of VLPRS. We're just extending it to temporal data.
+
+  So let me revise item 14 in our edit scope:
+
+  ~~Post-Retirement Activity Detection (new feature)~~
+  → Enhance existing Attention Items (FR33) to include: "Active deductions recorded for staff past computed retirement date — service status      
+  verification required." Visible to Super Admin and Department Admin. Appears only when applicable.
+
+  One line in the attention items definition. Not a feature. A consequence of truth.
+
+  ---
+  Now Awwal — that thing is STILL tugging. Let me throw a few possibilities at you. Sometimes hearing the wrong answer shakes the right one loose:
+
+  - What happens financially when someone dies/absconds mid-loan? The outstanding balance becomes a receivable against... who? Estate? Guarantor? 
+  Written off? Each event type has a different financial consequence the system needs to compute.
+  - Pro-rated deductions? If someone retires on the 15th of the month, is the last deduction full or partial?
+  - Who takes over when an MDA Reporting Officer themselves leaves? Succession/handover for the submission role itself.
+  - Can a staff member have more than one loan in the legacy data? The policy says no, but legacy data might say otherwise.
+
+  Any of those ring a bell? Or is it something else entirely? Don't force it — it'll come. Let's keep moving and it'll surface. Should John       
+  proceed to the deep review step and start drafting the edits?
+
+✻ Sautéed for 46s
+
+❯ I think it is the date for those who want an early exit from the loan. Remember we said at early exit the remaining principal is computed       
+  and paid including the month interest. If there staff(s) opting for the early loan exit we must also be able to track this. For the            
+  Deceased and Abscond i think we have made provision for that with the deduction from the death entitlements and gaurantor repayment. There        is no pro-rated deduction as it is based on month. Yes the succession plan we must give the "Mr Okonkwo" a user management ability same as     
+  the Ag/Deputy but they would most likely not be direct operators of the feature. Let's see what the legacy data surfaces with respect to          multiple loan as currently not all staff submit their staff id, we must allow the MDA Accounting Officers/Mr Okonkwo to post/update the        
+  Staff ID for staff(s) that haven't submitted it before so Mr Okonkwo can search system wide and update and each MDA Accounting Officer can      
+  post/update for their staff the AG/Deputy can also search system wide. Thoughts (make it better)                                                                                                                                                                                                  ● THERE it is, Awwal. The tugging thought was early exit date tracking. And you've just surfaced TWO more gaps (user management + Staff ID          management) in the same breath. Let me unpack all three.                                                                                        
+                                                                                                                                                  
+  1. Early Exit Date Tracking — The Missing Workflow                                                                                              
+                                                                                                                                                    The PRD mentions early exit simulation (Journey 4 — Mr. Okonkwo shows Alhaja Musa her payoff amount). But it's a SIMULATION only. There's no    
+  tracked workflow for when someone actually COMMITS to early exit.
+
+  What's missing is the lifecycle:
+
+  ┌─────────────┬────────────────────────────────────────────────────────────────────────────────────────┬─────────────────────────────────────┐  
+  │    Stage    │                                      What Happens                                      │            Date Tracked             │  
+  ├─────────────┼────────────────────────────────────────────────────────────────────────────────────────┼─────────────────────────────────────┤  
+  │ Request     │ Staff expresses intent to exit early (walk-in or MDA reports it)                       │ Request date                        │  
+  ├─────────────┼────────────────────────────────────────────────────────────────────────────────────────┼─────────────────────────────────────┤  
+  │ Computation │ System computes: remaining principal + current month interest = lump sum payoff amount │ Computation date + valid-until date │  
+  ├─────────────┼────────────────────────────────────────────────────────────────────────────────────────┼─────────────────────────────────────┤  
+  │ Commitment  │ Staff confirms they will pay. Amount is locked for a defined period.                   │ Commitment date + payment deadline  │  
+  ├─────────────┼────────────────────────────────────────────────────────────────────────────────────────┼─────────────────────────────────────┤  
+  │ Payment     │ Lump sum received and recorded in the ledger                                           │ Payment date                        │  
+  ├─────────────┼────────────────────────────────────────────────────────────────────────────────────────┼─────────────────────────────────────┤  
+  │ Closure     │ Loan marked as Completed — Early Exit. Auto-Stop Certificate generated.                │ Closure date                        │  
+  └─────────────┴────────────────────────────────────────────────────────────────────────────────────────┴─────────────────────────────────────┘  
+
+  WHY dates matter here:
+  - The payoff amount changes every month as interest accrues — so a computation done in February is invalid in March
+  - If 12 staff have pending early exit commitments totaling ₦4.8M, the AG needs to see that as incoming fund recovery on her dashboard
+  - Mr. Okonkwo needs to chase staff who committed but haven't paid by the deadline
+  - The computation must have an expiry — "This payoff amount is valid until March 28, 2026. After this date, a new computation is required."     
+
+  This feeds the dashboard: "Pending Early Exits: 12 staff, ₦4.8M expected recovery" — that's real money the AG can plan around.
+
+  2. User Management — The Succession Gap
+
+  The PRD has RBAC (who can do what) but NOT user lifecycle management (who creates/disables/reassigns accounts). If an MDA Reporting Officer     
+  retires or transfers, someone needs to:
+
+  - Deactivate the old officer's account
+  - Create a new officer's account
+  - Assign the new officer to the correct MDA
+  - Ensure no submission gap during transition
+
+  Here's the access model:
+
+  ┌──────────────────────────────────────┬────────────────────────────────┬────────────────────────────────────────────────────────┐
+  │              Capability              │ Department Admin (Mr. Okonkwo) │                Super Admin (AG/Deputy)                 │
+  ├──────────────────────────────────────┼────────────────────────────────┼────────────────────────────────────────────────────────┤
+  │ Create MDA Reporting Officer account │ Yes — primary operator         │ Yes — has capability, rarely uses directly             │
+  ├──────────────────────────────────────┼────────────────────────────────┼────────────────────────────────────────────────────────┤
+  │ Deactivate account                   │ Yes                            │ Yes                                                    │
+  ├──────────────────────────────────────┼────────────────────────────────┼────────────────────────────────────────────────────────┤
+  │ Reassign MDA assignment              │ Yes                            │ Yes                                                    │
+  ├──────────────────────────────────────┼────────────────────────────────┼────────────────────────────────────────────────────────┤
+  │ Reset officer password               │ Yes                            │ Yes                                                    │
+  ├──────────────────────────────────────┼────────────────────────────────┼────────────────────────────────────────────────────────┤
+  │ View all user accounts               │ Yes                            │ Yes                                                    │
+  ├──────────────────────────────────────┼────────────────────────────────┼────────────────────────────────────────────────────────┤
+  │ Create Department Admin account      │ No                             │ Yes — only Super Admin can create admin-level accounts │
+  └──────────────────────────────────────┴────────────────────────────────┴────────────────────────────────────────────────────────┘
+
+  Mr. Okonkwo is the day-to-day operator of user management. The AG/Deputy have the keys but don't turn them unless they need to. This is
+  consistent with the existing "system informs, humans decide" philosophy — and with how government admin actually works.
+
+  3. Staff ID Management — The Data Quality Foundation
+
+  This is critical, Awwal. If not all staff have Staff IDs in the legacy data, then Staff ID cannot be the sole identifier at migration time. The 
+  system needs to handle this gracefully:
+
+  The problem: Legacy spreadsheets may have staff names but missing Staff IDs. You can't reject these records — that's real loan data. But you    
+  can't search or deduplicate without a unique identifier.
+
+  The solution:
+
+  Aspect: Internal ID
+  Design: System generates a unique VLPRS Loan Reference (e.g., VLC-2024-0847) for every record — this is the TRUE unique key, always present     
+  ────────────────────────────────────────
+  Aspect: Staff ID
+  Design: Optional at migration, but flagged as "Profile Incomplete" until provided
+  ────────────────────────────────────────
+  Aspect: Search
+  Design: Search works on: VLPRS Reference, Staff ID, Staff Name, MDA — so records without Staff ID are still findable
+  ────────────────────────────────────────
+  Aspect: Staff ID Update
+  Design: Can be added/updated after migration as records are enriched
+
+  Who can update Staff IDs:
+
+  ┌────────────────────────────────┬────────────────────────┬────────────────────────────────────────────────────────────────────────────────────┐
+  │              Role              │         Scope          │                                     Rationale                                      │
+  ├────────────────────────────────┼────────────────────────┼────────────────────────────────────────────────────────────────────────────────────┤
+  │ MDA Reporting Officer          │ Their MDA's staff only │ They know their people — they can provide the Staff ID from HR records             │
+  ├────────────────────────────────┼────────────────────────┼────────────────────────────────────────────────────────────────────────────────────┤
+  │ Department Admin (Mr. Okonkwo) │ System-wide            │ He's the cross-MDA authority — can search, find duplicates, and reconcile          │
+  ├────────────────────────────────┼────────────────────────┼────────────────────────────────────────────────────────────────────────────────────┤
+  │ Super Admin (AG/Deputy)        │ System-wide            │ Supervisory capability — same as Mr. Okonkwo's scope but rarely exercised directly │
+  └────────────────────────────────┴────────────────────────┴────────────────────────────────────────────────────────────────────────────────────┘
+
+  Validation on Staff ID updates:
+  - Duplicate check: "This Staff ID is already assigned to another loan record. Please verify." — prevents two loans mapping to one person (or    
+  catches genuine duplicates in legacy data)
+  - Format validation: whatever the Oyo State staff ID format is
+  - Audit trail: old value, new value, who changed it, when, why
+
+  Dashboard impact: "Records Missing Staff ID: 284 of 3,147 (9%)" — tracked as a data quality metric that should trend toward zero over the first 
+  few months.
+
+  ---
+  Updated Edit Scope — Now 21 Items
+
+  #: 1-13
+  Edit: (previous items unchanged)
+  Category:
+  ────────────────────────────────────────
+  #: 14
+  Edit: Enhance FR33 attention items to include post-retirement active deductions (passive truth surfacing)
+  Category: FR modification
+  ────────────────────────────────────────
+  #: 15
+  Edit: Service extension override with reference number and new retirement date
+  Category: New FR
+  ────────────────────────────────────────
+  #: 16
+  Edit: Early Exit Workflow — request, computation with expiry, commitment, payment, closure with date tracking at each stage
+  Category: New FR(s)
+  ────────────────────────────────────────
+  #: 17
+  Edit: Early Exit Dashboard Item — pending early exits with expected recovery amount
+  Category: FR32-33 enhancement
+  ────────────────────────────────────────
+  #: 18
+  Edit: User Lifecycle Management — Department Admin can create/deactivate/reassign MDA officer accounts; Super Admin can manage all account      
+  levels
+  Category: New FR
+  ────────────────────────────────────────
+  #: 19
+  Edit: Staff ID Management — MDA officers can add/update Staff ID for their staff; Department Admin and Super Admin can search and update        
+    system-wide
+  Category: New FR
+  ────────────────────────────────────────
+  #: 20
+  Edit: Staff ID Duplicate Detection — system flags when a Staff ID is already assigned to another record
+  Category: New FR
+  ────────────────────────────────────────
+  #: 21
+  Edit: Data Quality Dashboard Metric — records missing Staff ID as tracked metric trending toward zero
+  Category: FR32-33 enhancement
+
+  That's a substantial but coherent set of edits, Awwal. Every item traces back to a real operational need you've identified. Shall John proceed  
+  to the deep review step and start writing these into the PRD? Or is there anything else surfacing?
+
+✻ Worked for 1m 19s
+
+❯ proceed because adding more at this point may mean we have to start writing the PRD again laughing out loudly!                                  
+                                                                                                                 
+● Ha! John hears you, Awwal. 21 edits is already a significant surgery — let's stitch before we add more incisions!                                                                                                                                                                                 
+  Proceeding to deep review and analysis...                                                                                                          
+● Read 1 file (ctrl+o to expand)                                                                                                                                                                                                                                                                    
+● Now let me perform the deep review and build a detailed change plan. John has the full PRD, the validation report, and all 21 edit items from     our discussion. Let me map everything to specific sections.
+                                                                                                                                                  
+  ---
+  Deep Review Complete — Change Plan                                                                                                                                                                                                                                                                
+  PRD Current State: BMAD Standard format, 866 lines, rated 4/5 in validation. Already edited once (Feb 14) adding FR53-FR59. Well-structured,
+  information-dense, zero anti-patterns. The edits we're proposing address foundational data model gaps that ripple across multiple sections.     
+
+  Validation Report Findings Being Addressed:
+  - Moderate Gap #3: Financial integrity metrics — retirement receivables tracking ✓
+  - Moderate Gap #5: Retirement pipeline forecasting elevated from Phase 2 ✓
+
+  Edit Requirements: 21 items from our discussion, mapped below.
+
+  ---
+  Proposed Change Plan — By Section
+
+  Section 1: Executive Summary (lines 36-75)
+
+  - Current State: Solid. Vision, core problem, differentiator, target users.
+  - Changes Needed:
+    - Update Target Users table — add note that Department Admin has user management authority
+    - Minor: note that MDA officers submit 8 fields (not 6) — this number appears in the Executive Summary's product differentiator description   
+  - Priority: Medium
+  - Edit Items: #18 (user management)
+
+  Section 2: Success Criteria (lines 77-156)
+
+  - Current State: Strong success criteria but missing temporal/retirement metrics
+  - Changes Needed:
+    - Add to Measurable Outcomes: Staff ID completion rate (trending toward 100%)
+    - Add to Measurable Outcomes: Early exit processing time (request to closure)
+    - Add to Measurable Outcomes: Service status verification resolution rate
+    - Add to Business Success: Retirement pipeline visibility milestone
+    - Validation gap closure: retirement receivables tracking metric, fund rotation rate
+  - Priority: High
+  - Edit Items: #7, #8, #13, #16, #17, #21
+
+  Section 3: Product Scope & Phased Development (lines 159-271)
+
+  - Current State: 10 MVP features, clean build sequence. Employment Status Taxonomy is Phase 2.
+  - Changes Needed:
+    - MVP Feature Set: Add feature 11: "Staff Temporal Profile & Employment Event Tracking" — DOB, appointment date, computed retirement date,    
+  event lifecycle with dates, mid-cycle event reporting
+    - MVP Feature Set: Add feature 12: "User & Staff Record Management" — user lifecycle management, Staff ID management, MDA historical upload   
+    - Build Sequence: Insert Staff Temporal Profile after RBAC (step 3) and before Migration (step 4) — migration depends on having the temporal  
+  data model
+    - Phase 2 reclassification: Move date-bearing employment events (Retired, Deceased, Suspended, Absconded, Transferred, Dismissed, LWOP) from  
+  the 13-status taxonomy to MVP. Leave the FULL taxonomy (all 13 statuses with detailed workflow rules) in Phase 2.
+    - MVP User Journey Coverage: Update table for new coverage
+    - Risk Mitigation: Add data quality risk (incomplete Staff IDs, missing DOB data in legacy records)
+  - Priority: Critical
+  - Edit Items: #1, #9, #10, #12, #16, #18, #19
+
+  Section 4: User Journeys (lines 273-568)
+
+  - Current State: 10 rich journeys. Key journeys affected: 3 (Migration), 4 (Daily Ops), 5 (Happy Path)
+  - Changes Needed:
+
+  - Journey 3 — Mr. Okonkwo Migration (lines 328-361):
+    - Add: migration spreadsheet now requires DOB and date of first appointment columns
+    - Add: system computes retirement date and flags staff already past retirement ("Service Status Verification" items)
+    - Add: MDA officers can upload their own historical monthly records for cross-validation
+    - Add to Requirements Revealed: temporal profile fields, historical upload capability, post-retirement activity flagging
+
+  Journey 4 — Mr. Okonkwo Daily Ops (lines 364-388):
+    - Expand the early exit scene: Alhaja Musa doesn't just simulate — she COMMITS. Show the full early exit workflow: computation → expiry date →
+   commitment → payment → closure
+    - Add: Mr. Okonkwo creates a new MDA officer account when the old officer at Ministry of Works retires (user management scene)
+    - Add: Mr. Okonkwo updates Staff IDs for records flagged as incomplete
+    - Add to Requirements Revealed: early exit workflow with date tracking, user lifecycle management, Staff ID update capability
+
+  Journey 5 — Mrs. Adebayo Happy Path (lines 392-419):
+    - Update: CSV is now 8 fields (add Event Effective Date, Deduction Cessation Reason)
+    - Add: pre-submission checkpoint screen showing staff approaching retirement, previously flagged items, mid-cycle events to confirm
+    - Add: confirmation checkbox before upload
+    - Note: for the happy path, fields 7 and 8 are blank — cognitive load stays near zero
+    - Update: "6 fields of fact" becomes "8 fields" throughout the journey
+    - Add to Requirements Revealed: 8-field CSV, pre-submission checkpoint, confirmation requirement
+
+  Journey 6 — Mrs. Adebayo Error Recovery (lines 422-447):
+    - Add: new error case — "Row 29: Amount is ₦0 with no Event Flag or Cessation Reason. Please explain why no deduction was made."
+    - Add to Requirements Revealed: conditional field validation, zero-amount explanation requirement
+  - Priority: Critical
+  - Edit Items: #1, #3, #9, #10, #11, #16, #18, #19
+
+  Section 5: Domain-Specific Requirements (lines 571-640)
+
+  - Current State: Comprehensive. NDPR, financial administration, audit, technical constraints, integration.
+  - Changes Needed:
+    - Financial Data Integrity: add temporal data integrity requirement — retirement date computation must be deterministic and auditable
+    - Integration Requirements: note that MDA historical data upload creates a reconciliation pathway (not external integration, but internal     
+  cross-validation)
+  - Priority: Low
+  - Edit Items: #1, #9
+
+  Section 6: Web Application Specific Requirements (lines 643-705)
+
+  - Current State: Complete. No changes needed.
+  - Priority: None
+
+  Section 7: Functional Requirements (lines 708-797)
+
+  - Current State: FR1-FR59. This section takes the heaviest edit load.
+  - Changes Needed:
+
+  - Modifications to Existing FRs:
+
+  | FR   | Change    
+    
+     | Edit Item         |
+  |------|----------------------------------------------------------------------------------------------------------------------------------------
+  ------------------------------------------------------------------------------------------------------------------------------------------------
+  ---|-------------------|
+  | FR10 | Add to loan master: date of birth, date of first appointment, computed retirement date, Staff ID (optional at migration, required for  
+  new loans)
+      | #1, #19           |
+  | FR16 | CSV upload: 6→8 fields. Add Event Effective Date (required when Event Flag ≠ NONE) and Deduction Cessation Reason (required when Amount
+   = ₦0 AND Event Flag = NONE)
+     | #2                |
+  | FR17 | Manual entry: same 8-field expansion with same conditional rules
+
+     | #2                |
+  | FR20 | Add conditional validation rules: Event Date required when Event Flag ≠ NONE; Cessation Reason required when Amount = ₦0 + Flag = NONE;
+   zero-amount rejection when neither provided
+     | #2                |
+  | FR25 | Migration requires DOB + appointment date columns. Records with missing temporal data flagged as "Profile Incomplete" — migration      
+  proceeds with amber indicator
+          | #10               |
+  | FR32 | Dashboard: add Pending Early Exits count + expected recovery amount to headline area or secondary metrics
+
+     | #17               |
+  | FR33 | Attention items: add (e) staff with active deductions past computed retirement date — service status verification required; (f) pending
+   early exits approaching payment deadline; (g) records missing Staff ID (data quality). Add: Staff ID completion percentage as data quality     
+  metric | #7, #14, #17, #21 |
+
+  - New FRs to Add (FR60-FR75 approximately):
+
+  | New FR | Description
+                                      
+                                                  | Edit Item |
+  |--------|--------------------------------------------------------------------------------------------------------------------------------------
+  ------------------------------------------------------------------------------------------------------------------------------------------------
+  ------------------------------------------------|-----------|
+  | FR60   | Pre-Submission Checkpoint: Before CSV upload or manual submission, system displays staff requiring attention (approaching retirement 
+  within 12 months, zero deduction last month with no event, mid-cycle events awaiting confirmation) and requires MDA officer to confirm review   
+  before proceeding                                 | #3        |
+  | FR61   | Mid-Cycle Event Report: MDA Reporting Officers and Department Admin can file employment events (Retired, Deceased, Suspended,        
+  Absconded, Transferred Out, Dismissed, LWOP Start, LWOP End, Service Extension) at any time via a 5-field form: Staff ID, Event Type, Effective 
+  Date, Reference Number (conditional), Notes (optional) | #4        |
+  | FR62   | Event Cross-Validation: System reconciles mid-cycle events against monthly CSV submissions — matched events confirmed, date
+  discrepancies flagged for Department Admin, mid-cycle events not reflected in CSV flagged as "Unconfirmed Event"
+                                                           | #5        |
+  | FR63   | Tenure vs Service Validation: At loan approval, system computes remaining service months from retirement date and compares against   
+  loan tenure. If tenure exceeds remaining service, system displays: payroll deduction months, gratuity receivable months, and projected gratuity 
+  receivable amount                                 | #6        |
+  | FR64   | Gratuity Receivable Tracking: For loans where tenure exceeds remaining service, system tracks projected gratuity receivable amount,  
+  updated monthly as deductions are posted, and surfaces total gratuity receivable exposure on the executive dashboard
+                                                   | #8        |
+  | FR65   | Retirement Date Computation: System computes retirement date as the earlier of (date of birth + 60 years) or (date of first
+  appointment + 35 years). Recomputed automatically if DOB or appointment date is corrected                          
+                                                           | #1        |
+  | FR66   | Service Extension Override: Department Admin can record a service extension with: new expected retirement date, approving authority  
+  reference, and notes. Overrides computed retirement date. Audit-logged with old value, new value, and reason 
+                                                   | #15       |
+  | FR67   | Early Exit Request: Department Admin can initiate an early exit computation for a staff member, generating: remaining principal,     
+  current month interest, total lump sum payoff, and a validity expiry date (end of current month). Computation locked and referenced by unique ID
+                                                      | #16       |
+  | FR68   | Early Exit Commitment & Payment: Department Admin can record: staff commitment to pay (with payment deadline), lump sum payment      
+  received (with payment date and reference), triggering loan closure and Auto-Stop Certificate generation             
+                                                       | #16       |
+  | FR69   | Early Exit Expiry: If early exit computation expires without payment, system marks computation as expired. New computation required  
+  for updated amount. Expired computations retained in audit trail                                                   
+                                                   | #16       |
+  | FR70   | MDA Historical Data Upload: MDA Reporting Officers can upload historical monthly deduction records (prior months/years) via CSV.     
+  System processes, validates, and cross-references against migration baseline. Variances between MDA historical records and central migration    
+  data surfaced for Department Admin reconciliation      | #9        |
+  | FR71   | User Account Management: Department Admin can create, deactivate, and reassign MDA Reporting Officer accounts including MDA
+  assignment. Super Admin can manage all account levels including Department Admin accounts. All account changes audit-logged    
+                                                           | #18       |
+  | FR72   | Password Reset: Department Admin can reset passwords for MDA Reporting Officer accounts. Super Admin can reset passwords for all     
+  account levels                                                                                                              
+                                                      | #18       |
+  | FR73   | Staff ID Management: MDA Reporting Officers can add or update Staff ID for loan records within their assigned MDA. Department Admin  
+  and Super Admin can search and update Staff IDs system-wide                                                                
+                                                   | #19       |
+  | FR74   | Staff ID Duplicate Detection: When a Staff ID is added or updated, system checks for existing records with the same Staff ID and     
+  alerts the user: "This Staff ID is already assigned to loan record [reference]. Please verify."                                 
+                                                      | #20       |
+  | FR75   | Migration: Post-Retirement Activity Scan: During migration processing, system generates a Service Status Verification Report listing 
+  all staff whose computed retirement date is before the migration date, with active loan status. Report provided to Department Admin for
+  investigation                                           | #14       |
+
+  - Priority: Critical
+  - Edit Items: All 21
+
+  Section 8: Non-Functional Requirements (lines 800-866)
+
+  - Current State: 39 NFRs across 5 categories. Security section previously hardened in first edit.
+  - Changes Needed:
+    - Performance: add cross-validation engine processing target (reconciliation of mid-cycle events against monthly CSV < 5 seconds per
+  submission)
+    - Performance: add historical data upload processing target (matching specs of migration tool)
+    - Scalability: note historical data upload may temporarily increase ledger size significantly — system must handle bulk historical imports    
+  within performance targets
+  - Priority: Medium
+  - Edit Items: #5, #9
+
+  ---
+  Change Plan Summary
+
+  Changes by Type:
+  - Additions: ~16 new FRs (FR60-FR75), new success metrics, new risk items
+  - Updates: 7 existing FRs modified (FR10, FR16, FR17, FR20, FR25, FR32, FR33), 4 journeys updated, scope section revised
+  - Removals: 0 (no content removed)
+  - Restructuring: Phase 2 → MVP reclassification for employment event tracking
+
+  Priority Distribution:
+  - Critical: 9 changes (FR modifications, new FRs, scope, journeys)
+  - High: 6 changes (success criteria, dashboard, early exit)
+  - Medium: 5 changes (executive summary, domain reqs, NFRs)
+  - Low: 1 change (domain-specific integration note)
+
+  Estimated Effort: Substantial — but systematic. The changes are coherent and non-contradictory. Each section edit flows logically.
+
+  Recommended Edit Order:
+  1. Functional Requirements (new FRs + modifications) — foundation
+  2. Product Scope (MVP features, build sequence, phase reclassification)
+  3. User Journeys (4 journey updates)
+  4. Success Criteria (new metrics)
+  5. Executive Summary (minor updates)
+  6. Non-Functional Requirements (performance targets)
+  7. Domain-Specific Requirements (minor updates)
+  8. Frontmatter (update edit history)
+
+  ---
+  Questions for you, Awwal:
+  1. Does this change plan align with what you had in mind?
+  2. Any items to add, remove, or reprioritize?
+  3. Ready to proceed to the edit step?
+
+✻ Churned for 1m 57s
+
+❯ nothing to add. plan aligns. proceed                                                                                                            
+                                       
+✻ Beboppin'… (1m 39s · ↑ 0 tokens)                                                                                                                                                                                                                                                                  
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+❯  
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────  esc to interrupt                                                                                                                                
+
+
+
+● All housekeeping fixes are now complete. Let me verify the edits look correct.
+
+● Read 1 file (ctrl+o to expand)                                                                                                                     
+● All edits verified. Here's the complete housekeeping summary:                                                                                                                                                                                                                                     
+  ---                                                                                                                                               All validation housekeeping fixes applied. Here's what was done across 6 batches:                                                               
+                                                                                                                                                  
+  Batch 1 — FR Measurability (6 FRs)                                                                                                              
+  - FR20: "human-readable" → specific error message criteria testable with usability testing
+  - FR34/FR35: Added enumerated drill-down fields for portfolio and loan-level reports
+  - FR38/FR39: Expanded from one-liners to full report specifications with fields, filters, sort options, and variance thresholds
+  - FR54: Clarified email sharing mechanism (download + email with attachment and cover message)
+
+  Batch 2 — Implementation Leakage & NFR Fixes
+  - Removed 2 tool-specific references (Lighthouse → "industry-standard web performance measurement tooling"; OWASP ZAP → "automated security     
+  scanning tool")
+  - Replaced vague scalability NFR with testable API consumer requirement
+  - Removed motivational prose from design quality standard; replaced aspirational quality bar with measurable statement
+
+  Batch 3 — FR Renumbering
+  - FR75 (Service Status Verification Report) → FR71, shifting FR71-74 to FR72-75 for sequential grouping
+
+  Batch 4 — Journey Requirements Summary Table
+  - Updated Journeys 3-6 to reflect temporal profile, early exit, user management, Staff ID governance, pre-submission checkpoint, 8-field CSV,   
+  and conditional field validation
+
+  Batch 5 — Phase 2/3 Traceability
+  - Added parenthetical references to all 14 Phase 2 and 8 Phase 3 features, linking each to stakeholder needs, user journeys, discovery
+  artifacts, or MVP foundations
+
+  Batch 6 — Frontmatter
+  - Logged complete housekeeping changelog in editHistory
+
+  ---
+  What would you like to do next?
+
+  ┌─────┬────────────────────────────────────────┐
+  │ Key │                 Action                 │
+  ├─────┼────────────────────────────────────────┤
+  │ [R] │ Re-run validation to confirm all fixes │
+  ├─────┼────────────────────────────────────────┤
+  │ [E] │ Continue editing the PRD               │
+  ├─────┼────────────────────────────────────────┤
+  │ [M] │ Return to main PM menu                 │
+  ├─────┼────────────────────────────────────────┤
+  │ [X] │ Exit to BMAD Master                    │
+  └─────┴────────────────────────────────────────┘
+
+✻ Churned for 4m 28s                                                                                                                                 
+❯ m                                                                                                                                                   
+● Welcome back to the main menu, Awwal.                                                                                                                                                                                                                                                             
+  ---                                                                                                                                               John — Product Manager
+                                                                                                                                                    The VLPRS PRD is in strong shape — validated at 5/5 Excellent with all housekeeping fixes applied. Here's what we can do:                       
+
+  ┌─────┬─────────────────────────────┐
+  │ Key │           Action            │
+  ├─────┼─────────────────────────────┤
+  │ [1] │ Create / Edit Product Brief │
+  ├─────┼─────────────────────────────┤
+  │ [2] │ Create PRD (full workflow)  │
+  ├─────┼─────────────────────────────┤
+  │ [3] │ Edit PRD (targeted changes) │
+  ├─────┼─────────────────────────────┤
+  │ [V] │ Validate PRD                │
+  ├─────┼─────────────────────────────┤
+  │ [S] │ Generate Story Set from PRD │
+  ├─────┼─────────────────────────────┤
+  │ [X] │ Exit to BMAD Master         │
+  └─────┴─────────────────────────────┘
+
+  What would you like to do?
+
+❯ we have infused the PRD with our changes so we need to infuse this changes in the Architecture, UX, and Epics and Stories, Sprint Planning.     
+   Thoughts (make it better)                                                                                                                     
+                                                                                                                                                  ● Good thinking — the PRD delta is substantial and needs to cascade cleanly. Before I recommend a strategy, let me see what downstream artifacts
+  already exist.                                                                                                                                  
+                                                                                                                                                  
+● Searched for 1 pattern (ctrl+o to expand)                                                                                                       
+                                                                                                                                                  ● All four downstream artifacts exist. Let me quickly assess their current state against the PRD delta.                                           
+                                                                                                                                                  ● Read 4 files (ctrl+o to expand)                                                                                                                   
+● Good — now I have the full picture. Here's my strategic assessment:                                                                             
+  
+  ---                                                                                                                                               Current State of Downstream Artifacts
+                                                                                                                                                  
+  Artifact: Architecture
+  Dated: 2026-02-14
+  State vs PRD: References "59 FRs across 9 categories" — now 75 FRs. Missing: temporal profile data model, 8-field conditional CSV pipeline,     
+  early
+    exit state machine, user management subsystem, Staff ID governance, pre-submission checkpoint, cross-validation engine, data quality dashboard
+  ────────────────────────────────────────
+  Artifact: UX Spec
+  Dated: 2026-02-14
+  State vs PRD: Still says "6 fields" for MDA submission. Missing: pre-submission checkpoint screen, early exit workflow screens, user management 
+    screens, Staff ID management screens, temporal profile display, MDA historical data upload, data quality dashboard
+  ────────────────────────────────────────
+  Artifact: Epics
+  Dated: 2026-02-14
+  State vs PRD: Only covers FR1-FR59 (9 epics). FR60-FR75 have zero coverage — no epics, no stories. Existing FR descriptions use stale wording   
+  ────────────────────────────────────────
+  Artifact: Sprint Status
+  Dated: 2026-02-14
+  State vs PRD: 9 epics tracked. Missing epics for all new capability areas. Sprint sequencing doesn't account for expanded scope
+
+  The gap is structural, not cosmetic. 16 new FRs introduce 3 new subsystems (temporal profiles, user management, Staff ID governance), 2 new     
+  workflows (early exit, pre-submission checkpoint), and a fundamentally changed CSV pipeline (6→8 conditional fields). This isn't a
+  find-and-replace — it's a controlled cascade.
+
+  ---
+  Recommended Strategy: Dependency-Ordered Cascade
+
+  The naive approach — update all four in parallel — breaks because architecture constrains UX (data models dictate what screens can show), and   
+  both constrain stories (you can't decompose what isn't designed). Sprint planning is meaningless until epics exist.
+
+  The better approach:
+
+  Phase A:  Architecture  ──────────────────────►  (foundation)
+  Phase B:  UX Spec  ───────────────────────────►  (depends on A for data models + APIs)
+  Phase C:  Epics & Stories  ───────────────────►  (depends on A + B for decomposition)
+  Phase D:  Sprint Re-Planning  ────────────────►  (depends on C for scope)
+  Phase E:  Implementation Readiness Report  ───►  (depends on all above)
+
+  Why this order:
+
+  1. Architecture first — The new FRs introduce data model changes (temporal fields on loan master, employment event type enum, Staff ID
+  uniqueness constraints), new state machine transitions (early exit: Active → Early Exit Requested → Early Exit Approved → Settlement Computed → 
+  Completed), new API surfaces (user CRUD, Staff ID search/merge/governance), and a restructured CSV validation pipeline (conditional field       
+  logic). Every downstream artifact needs these decisions locked.
+  2. UX second — Needs architecture's data model to know what fields to display, what state transitions to visualise, what API responses to design
+   screens around. But UX also feeds back into stories — screen complexity drives frontend story granularity.
+  3. Epics third — Needs both architecture (backend decomposition) and UX (frontend decomposition) to produce implementable stories. We'll add new
+   epics for the new subsystems and update existing story descriptions where FRs were hardened.
+  4. Sprint re-planning fourth — Can't sequence what doesn't exist yet.
+  5. Implementation readiness report last — The existing one (2026-02-14) becomes the baseline for a delta assessment.
+
+  ---
+  The "Make It Better" Additions
+
+  Three things that turn a mechanical cascade into a high-quality one:
+
+  1. Delta merge, not regeneration. Each artifact has solid existing coverage for FR1-FR59. We surgically add the new material and update stale   
+  references rather than regenerating from scratch. This preserves the design decisions already made and avoids introducing regressions.
+
+  2. Traceability thread at each phase. As we update each artifact, we maintain the chain: FR → Architecture component → UX screen → Epic/Story.  
+  When we finish Phase C, every FR60-FR75 should be traceable from PRD through to a story.
+
+  3. Validation checkpoint after Architecture + UX. Before decomposing into stories, we do a quick consistency check — does every new FR have an  
+  architecture home and a UX surface? This catches gaps early rather than discovering them during sprint execution.
+
+  ---
+  Execution Plan
+
+  ┌───────┬───────────────┬─────────────────────────────────────────────────────────────────────────────────────┬────────────────────────────────┐
+  │ Phase │     Agent     │                                      Approach                                       │             Output             │
+  ├───────┼───────────────┼─────────────────────────────────────────────────────────────────────────────────────┼────────────────────────────────┤
+  │       │ Sarah         │ Surgical update: add temporal data model, 8-field CSV pipeline, early exit state    │                                │
+  │ A     │ (Architect)   │ machine, user management + Staff ID governance subsystems, pre-submission           │ Updated architecture.md        │
+  │       │               │ checkpoint flow. Update FR inventory from 59→75.                                    │                                │
+  ├───────┼───────────────┼─────────────────────────────────────────────────────────────────────────────────────┼────────────────────────────────┤
+  │       │ Jess (UX      │ Surgical update: new screens for checkpoint, early exit, user mgmt, Staff ID,       │ Updated                        │
+  │ B     │ Designer)     │ temporal profile, data quality dashboard. Update 6→8 field references. Add          │ ux-design-specification.md     │
+  │       │               │ conditional field interaction patterns.                                             │                                │
+  ├───────┼───────────────┼─────────────────────────────────────────────────────────────────────────────────────┼────────────────────────────────┤
+  │ C     │ Sean (Scrum   │ Add 3-4 new epics covering FR60-FR75. Update existing story descriptions for        │ Updated epics.md +             │
+  │       │ Master)       │ hardened FRs. Refresh FR inventory.                                                 │ sprint-status.yaml             │
+  ├───────┼───────────────┼─────────────────────────────────────────────────────────────────────────────────────┼────────────────────────────────┤
+  │ D     │ John (PM)     │ Re-validate implementation readiness against updated artifacts                      │ Updated readiness report       │
+  └───────┴───────────────┴─────────────────────────────────────────────────────────────────────────────────────┴────────────────────────────────┘
+
+  ---
+  My recommendation: Start with Phase A (Architecture) now. It's the critical path and everything else blocks on it. Shall I switch you to Sarah, 
+  or would you like to adjust the strategy first?
+
+  ┌─────┬─────────────────────────────────────────────┐
+  │ Key │                   Action                    │
+  ├─────┼─────────────────────────────────────────────┤
+  │ [A] │ Start Phase A — switch to Sarah (Architect) │
+  ├─────┼─────────────────────────────────────────────┤
+  │ [E] │ Adjust the strategy                         │
+  ├─────┼─────────────────────────────────────────────┤
+  │ [M] │ Return to main menu                         │
+  └─────┴─────────────────────────────────────────────┘
+
+✻ Worked for 1m 40s                                                                                                                                 
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+❯  
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────  ? for shortcuts                                                                                                                                 
+
+
+
+
+
+
+✻ Conversation compacted (ctrl+o for history)
+
+  ⎿  Referenced file _bmad-output\planning-artifacts\prd.md
+  ⎿  Referenced file _bmad-output\planning-artifacts\prd-validation-report.md
+  ⎿  Read ..\..\AppData\Local\Temp\claude\C--Users-DELL-Desktop-vlprs\tasks\a18e8f4.output (1 lines)
+  ⎿  Read ..\..\AppData\Local\Temp\claude\C--Users-DELL-Desktop-vlprs\tasks\a1c08f1.output (1 lines)
+  ⎿  Read ..\..\AppData\Local\Temp\claude\C--Users-DELL-Desktop-vlprs\tasks\a8ff173.output (1 lines)
+
+● Task "Edit PRD functional requirements" completed in background
+
+● Task "Edit PRD user journeys" completed in background
+
+● Task "Edit PRD product scope section" completed in background
+  ⎿  Skills restored (bmad-agent-bmad-master)
+
+● Continuing with the remaining housekeeping fixes. Let me read the current state of the relevant sections.
+
+● Read 1 file (ctrl+o to expand)                                                                                                                    
+● Let me read the rest of the frontmatter to find the editHistory section.                                                                                                                                                                                                                          
+● Read 1 file (ctrl+o to expand)                                                                                                                                                                                                                                                                    
+● Now I have the full picture. Let me apply the three remaining fixes in parallel.                                                                                                                                                                                                                  ● Update(_bmad-output\planning-artifacts\prd.md)                                                                                                  
+  ⎿  Added 4 lines, removed 4 lines                                                                                                               
+      633  |---------|--------------------------|                                                                                                       634  | **AG — 30-Second Truth** | Executive dashboard, PDF sharing, mobile performance, headline numbers |                                  
+      635  | **Deputy AG — Pattern Hunter** | Drill-down, variance trends, exception flagging, MDA detail view, comparison views |                      636 -| **Dept Admin — Migration** | Migration tool, column trust, variance categorisation, baseline acknowledgment, migration dashboa
+          -rd |                                                                                                                                   
+      637 -| **Dept Admin — Daily Ops** | Loan lookup, early exit simulation, exception resolution, event flag correction, report generatio     
+          -n |                                                                                                                                          638 -| **MDA Officer — Happy Path** | Submission wizard, CSV upload, automatic comparison, neutral variance language |                            639 -| **MDA Officer — Error Recovery** | Atomic upload, clear error messages, duplicate detection, clean re-upload |                             636 +| **Dept Admin — Migration** | Migration tool, column trust, variance categorisation, baseline acknowledgment, migration dashboa                 +rd, temporal profile management, post-retirement detection, MDA historical data upload |                                               
+      637 +| **Dept Admin — Daily Ops** | Loan lookup, early exit full workflow, exception resolution, event flag correction, report genera
+          +tion, user account management, Staff ID governance, data quality dashboard |                                                           
+      638 +| **MDA Officer — Happy Path** | Pre-submission checkpoint, 8-field CSV with conditional fields (event date, cessation reason),        
+          +submission wizard, automatic comparison, neutral variance language |                                                                   
+      639 +| **MDA Officer — Error Recovery** | Atomic upload, clear error messages, duplicate detection, clean re-upload, conditional fiel       
+          +d validation (zero amount + NONE event flag) |                                                                                         
+      640  | **Beneficiary — Completion** | Auto-Stop Certificate, clearance letter, dual notification, digital verification |
+      641  | **Committee — Approval** | Pre-built reports, eligibility validation, bulk approval, fund calculation, moratorium scheduling |       
+      642  | **Front Desk — Walk-In** | Instant lookup, application status, certificate visibility, discrepancy ticket creation |
+                                                                                                                                                  ● Update(_bmad-output\planning-artifacts\prd.md)
+  ⎿  Added 22 lines, removed 22 lines                                                                                                             
+      240                                                                                                                                         
+      241  ### Phase 2 — Growth (Continuous Deployment After MVP)                                                                                       242                                                                                                                                         
+      243 -- Beneficiary Dashboard (login, status, history, statements, grievance submission)                                                     
+      244 -- Public Education Portal (expanding Public Zone — EOI form, approved lists, calculator)                                                     245 -- Guarantor Tracking (entity model, relationships, circular detection)
+      246 -- Full Staff Employment Status Taxonomy (expand from 7 MVP event types to 13 statuses with detailed workflow rules and automated       
+          - status transitions)
+      247 -- Transfer Handshake Protocol (paired Transfer Out/In between MDAs)                                                                          248 -- Discrepancy Ticket System (formal correction workflow)                                                                                     249 -- Annotation System (institutional memory capture)                                                                                           250 -- Historical Data Archaeology Tool                                                                                                           251 -- Retirement-Gratuity Handshake Protocol (12-month pipeline, automated reports)                                                        
+      252 -- Fund Pool Forecasting (3/6/12-month projections)
+      253 -- Full Executive Report Suite (Retirement Pipeline, Fund Pool, Committee Action Items, Trends, Rankings)                               
+      254 -- Share as PDF (branded output with Oyo State crest)                                                                                   
+      255 -- Committee Admin, Front Desk Officer, Auditor/Oversight roles                                                                         
+      256 -- Variance Trend Tracking (month-over-month patterns)                                                                                  
+      243 +- Beneficiary Dashboard — login, status, history, statements, grievance submission (extends Journey 7: Beneficiary — Completion;       
+          + stakeholder: Beneficiaries)                                                                                                           
+      244 +- Public Education Portal — expanding Public Zone: EOI form, approved lists, calculator (stakeholder: general public; discovery:       
+          + Cabinet Presentation)                                                                                                                 
+      245 +- Guarantor Tracking — entity model, relationships, circular detection (discovery: Governance Pack guarantor requirements)             
+      246 +- Full Staff Employment Status Taxonomy — expand from 7 MVP event types to 13 statuses with detailed workflow rules and automate       
+          +d status transitions (extends MVP FR60-FR67 temporal profile foundation)                                                               
+      247 +- Transfer Handshake Protocol — paired Transfer Out/In between MDAs (extends Journey 4: Dept Admin — Daily Ops event handling)         
+      248 +- Discrepancy Ticket System — formal correction workflow (extends Journey 4 exception resolution; stakeholder: Dept Admin)             
+      249 +- Annotation System — institutional memory capture (discovery: Concept Note knowledge preservation requirement)                        
+      250 +- Historical Data Archaeology Tool (extends Journey 3: Dept Admin — Migration)                                                         
+      251 +- Retirement-Gratuity Handshake Protocol — 12-month pipeline, automated reports (extends MVP FR67 gratuity receivable tracking)        
+      252 +- Fund Pool Forecasting — 3/6/12-month projections (stakeholder: AG; extends Journey 1 executive oversight)                            
+      253 +- Full Executive Report Suite — Retirement Pipeline, Fund Pool, Committee Action Items, Trends, Rankings (extends Journeys 1-2:        
+          +AG and Deputy AG)                                                                                                                      
+      254 +- Share as PDF — branded output with Oyo State crest (extends MVP FR54 PDF generation)                                                 
+      255 +- Committee Admin, Front Desk Officer, Auditor/Oversight roles (enables Journeys 8-10)                                                 
+      256 +- Variance Trend Tracking — month-over-month patterns (extends Journey 2: Deputy AG — Pattern Hunter)                                  
+      257
+      258  ### Phase 3 — Vision
+      259
+      260 -- Policy Versioning Engine (interest rates, tiers, moratorium as versioned data)                                                       
+      261 -- MDA Lifecycle Management (rename, merge, split, dissolve)                                                                            
+      262 -- Concurrent Loan Policy configuration                                                                                                 
+      263 -- Computation Integrity Monitor (nightly 5-check self-audit)                                                                           
+      264 -- Full Notification Escalation Engine (T-3 to T+7 ladder)                                                                              
+      265 -- Upload Resilience Protocol (offline email fallback, status page)                                                                     
+      266 -- System Self-Correction Protocol (append-only corrections, transparency playbook)                                                     
+      267 -- Payroll Cross-Verification (future payroll data feed integration)                                                                    
+      260 +- Policy Versioning Engine — interest rates, tiers, moratorium as versioned data (discovery: 4-tier interest rate structure; ena       
+          +bles dynamic policy changes without code deployment)                                                                                   
+      261 +- MDA Lifecycle Management — rename, merge, split, dissolve (discovery: MDA organisational restructuring events)                       
+      262 +- Concurrent Loan Policy configuration (discovery: future policy evolution beyond single active loan)                                  
+      263 +- Computation Integrity Monitor — nightly 5-check self-audit (extends NFR data integrity requirements; immutable ledger verifica       
+          +tion)                                                                                                                                  
+      264 +- Full Notification Escalation Engine — T-3 to T+7 ladder (extends MVP notification foundation; stakeholder: all roles)                
+      265 +- Upload Resilience Protocol — offline email fallback, status page (discovery: MDA connectivity challenges noted in rollout plan       
+          +ning)                                                                                                                                  
+      266 +- System Self-Correction Protocol — append-only corrections, transparency playbook (extends immutable ledger architecture)             
+      267 +- Payroll Cross-Verification — future payroll data feed integration (discovery: payroll-deduction reconciliation concept from br       
+          +ainstorming)                                                                                                                           
+      268
+      269  ### Risk Mitigation Strategy
+      270
+
+● Update(_bmad-output\planning-artifacts\prd.md)
+  ⎿  Added 2 lines                                                                                                                                
+      30  lastEdited: '2026-02-15'     
+      31  editHistory:
+      32    - date: '2026-02-15'                                                                                                                        33 +    changes: 'Post-validation housekeeping: hardened 6 FRs for measurability (FR20, FR34, FR35, FR38, FR39, FR54 — replaced vague
+         + terms with enumerated fields and testable criteria). Removed 2 implementation leakage references (Lighthouse, OWASP ZAP → tool-a       
+         +gnostic language). Fixed 3 NFRs (scalability future-growth → testable API consumer requirement; removed motivational prose from d     
+         +esign quality standard; replaced aspirational quality bar with measurable statement). Renumbered FR71-FR75 for sequential groupin                +g (Service Status Verification Report moved from after FR70 to FR71, shifted User Account Management to FR72, Password Reset to F                +R73, Staff ID Management to FR74, Duplicate Staff ID Detection to FR75). Updated Journey Requirements Summary table to reflect ex                +panded Journeys 3-6. Added Phase 2/3 traceability references linking each feature to stakeholder needs, journeys, or discovery ar                +tifacts.'                                                                                                                               
+      34 +  - date: '2026-02-15'
+      35      changes: 'Staff temporal profile & date tracking: added DOB, appointment date, computed retirement date to loan master (FR10)       
+          . Expanded CSV from 6 to 8 fields with conditional Event Date and Cessation Reason (FR16-17, FR20). Added 16 new FRs (FR60-FR75):       
+           pre-submission checkpoint, mid-cycle event reporting, cross-validation engine, retirement/tenure validation, gratuity receivable       
+           tracking, early exit workflow, MDA historical data upload, user account management, Staff ID governance. Updated 4 user journeys       
+           (3-6) with temporal data, early exit, user management, and checkpoint flows. Expanded MVP from 10 to 12 features, build sequence       
+           from 10 to 14 steps. Elevated date-bearing employment events from Phase 2 to MVP. Added 7 measurable outcomes, 4 business succes       
+          s milestones, new performance NFR targets. Added data quality risk to adoption risks.'
+      36    - date: '2026-02-14'
+      37      changes: 'Post-validation fixes: added FR53-FR59, hardened 12 Security NFRs, refined 10 SMART FRs, reconciled MDA count, adde       
+          d success metrics'
+
+● All housekeeping fixes are now complete. Let me verify the edits look correct.
+
+● Read 1 file (ctrl+o to expand)                                                                                                                     
+● All edits verified. Here's the complete housekeeping summary:                                                                                                                                                                                                                                     
+  ---                                                                                                                                               All validation housekeeping fixes applied. Here's what was done across 6 batches:                                                               
+                                                                                                                                                  
+  Batch 1 — FR Measurability (6 FRs)                                                                                                              
+  - FR20: "human-readable" → specific error message criteria testable with usability testing
+  - FR34/FR35: Added enumerated drill-down fields for portfolio and loan-level reports
+  - FR38/FR39: Expanded from one-liners to full report specifications with fields, filters, sort options, and variance thresholds
+  - FR54: Clarified email sharing mechanism (download + email with attachment and cover message)
+
+  Batch 2 — Implementation Leakage & NFR Fixes
+  - Removed 2 tool-specific references (Lighthouse → "industry-standard web performance measurement tooling"; OWASP ZAP → "automated security     
+  scanning tool")
+  - Replaced vague scalability NFR with testable API consumer requirement
+  - Removed motivational prose from design quality standard; replaced aspirational quality bar with measurable statement
+
+  Batch 3 — FR Renumbering
+  - FR75 (Service Status Verification Report) → FR71, shifting FR71-74 to FR72-75 for sequential grouping
+
+  Batch 4 — Journey Requirements Summary Table
+  - Updated Journeys 3-6 to reflect temporal profile, early exit, user management, Staff ID governance, pre-submission checkpoint, 8-field CSV,   
+  and conditional field validation
+
+  Batch 5 — Phase 2/3 Traceability
+  - Added parenthetical references to all 14 Phase 2 and 8 Phase 3 features, linking each to stakeholder needs, user journeys, discovery
+  artifacts, or MVP foundations
+
+  Batch 6 — Frontmatter
+  - Logged complete housekeeping changelog in editHistory
+
+  ---
+  What would you like to do next?
+
+  ┌─────┬────────────────────────────────────────┐
+  │ Key │                 Action                 │
+  ├─────┼────────────────────────────────────────┤
+  │ [R] │ Re-run validation to confirm all fixes │
+  ├─────┼────────────────────────────────────────┤
+  │ [E] │ Continue editing the PRD               │
+  ├─────┼────────────────────────────────────────┤
+  │ [M] │ Return to main PM menu                 │
+  ├─────┼────────────────────────────────────────┤
+  │ [X] │ Exit to BMAD Master                    │
+  └─────┴────────────────────────────────────────┘
+
+✻ Churned for 4m 28s                                                                                                                                 
+❯ m                                                                                                                                                   
+● Welcome back to the main menu, Awwal.                                                                                                                                                                                                                                                             
+  ---                                                                                                                                               John — Product Manager
+                                                                                                                                                    The VLPRS PRD is in strong shape — validated at 5/5 Excellent with all housekeeping fixes applied. Here's what we can do:                       
+
+  ┌─────┬─────────────────────────────┐
+  │ Key │           Action            │
+  ├─────┼─────────────────────────────┤
+  │ [1] │ Create / Edit Product Brief │
+  ├─────┼─────────────────────────────┤
+  │ [2] │ Create PRD (full workflow)  │
+  ├─────┼─────────────────────────────┤
+  │ [3] │ Edit PRD (targeted changes) │
+  ├─────┼─────────────────────────────┤
+  │ [V] │ Validate PRD                │
+  ├─────┼─────────────────────────────┤
+  │ [S] │ Generate Story Set from PRD │
+  ├─────┼─────────────────────────────┤
+  │ [X] │ Exit to BMAD Master         │
+  └─────┴─────────────────────────────┘
+
+  What would you like to do?
+
+❯ we have infused the PRD with our changes so we need to infuse this changes in the Architecture, UX, and Epics and Stories, Sprint Planning.     
+   Thoughts (make it better)                                                                                                                     
+                                                                                                                                                  ● Good thinking — the PRD delta is substantial and needs to cascade cleanly. Before I recommend a strategy, let me see what downstream artifacts
+  already exist.                                                                                                                                  
+                                                                                                                                                  
+● Searched for 1 pattern (ctrl+o to expand)                                                                                                       
+                                                                                                                                                  ● All four downstream artifacts exist. Let me quickly assess their current state against the PRD delta.                                           
+                                                                                                                                                  ● Read 4 files (ctrl+o to expand)                                                                                                                   
+● Good — now I have the full picture. Here's my strategic assessment:                                                                             
+  
+  ---                                                                                                                                               Current State of Downstream Artifacts
+                                                                                                                                                  
+  Artifact: Architecture
+  Dated: 2026-02-14
+  State vs PRD: References "59 FRs across 9 categories" — now 75 FRs. Missing: temporal profile data model, 8-field conditional CSV pipeline,     
+  early
+    exit state machine, user management subsystem, Staff ID governance, pre-submission checkpoint, cross-validation engine, data quality dashboard
+  ────────────────────────────────────────
+  Artifact: UX Spec
+  Dated: 2026-02-14
+  State vs PRD: Still says "6 fields" for MDA submission. Missing: pre-submission checkpoint screen, early exit workflow screens, user management 
+    screens, Staff ID management screens, temporal profile display, MDA historical data upload, data quality dashboard
+  ────────────────────────────────────────
+  Artifact: Epics
+  Dated: 2026-02-14
+  State vs PRD: Only covers FR1-FR59 (9 epics). FR60-FR75 have zero coverage — no epics, no stories. Existing FR descriptions use stale wording   
+  ────────────────────────────────────────
+  Artifact: Sprint Status
+  Dated: 2026-02-14
+  State vs PRD: 9 epics tracked. Missing epics for all new capability areas. Sprint sequencing doesn't account for expanded scope
+
+  The gap is structural, not cosmetic. 16 new FRs introduce 3 new subsystems (temporal profiles, user management, Staff ID governance), 2 new     
+  workflows (early exit, pre-submission checkpoint), and a fundamentally changed CSV pipeline (6→8 conditional fields). This isn't a
+  find-and-replace — it's a controlled cascade.
+
+  ---
+  Recommended Strategy: Dependency-Ordered Cascade
+
+  The naive approach — update all four in parallel — breaks because architecture constrains UX (data models dictate what screens can show), and   
+  both constrain stories (you can't decompose what isn't designed). Sprint planning is meaningless until epics exist.
+
+  The better approach:
+
+  Phase A:  Architecture  ──────────────────────►  (foundation)
+  Phase B:  UX Spec  ───────────────────────────►  (depends on A for data models + APIs)
+  Phase C:  Epics & Stories  ───────────────────►  (depends on A + B for decomposition)
+  Phase D:  Sprint Re-Planning  ────────────────►  (depends on C for scope)
+  Phase E:  Implementation Readiness Report  ───►  (depends on all above)
+
+  Why this order:
+
+  1. Architecture first — The new FRs introduce data model changes (temporal fields on loan master, employment event type enum, Staff ID
+  uniqueness constraints), new state machine transitions (early exit: Active → Early Exit Requested → Early Exit Approved → Settlement Computed → 
+  Completed), new API surfaces (user CRUD, Staff ID search/merge/governance), and a restructured CSV validation pipeline (conditional field       
+  logic). Every downstream artifact needs these decisions locked.
+  2. UX second — Needs architecture's data model to know what fields to display, what state transitions to visualise, what API responses to design
+   screens around. But UX also feeds back into stories — screen complexity drives frontend story granularity.
+  3. Epics third — Needs both architecture (backend decomposition) and UX (frontend decomposition) to produce implementable stories. We'll add new
+   epics for the new subsystems and update existing story descriptions where FRs were hardened.
+  4. Sprint re-planning fourth — Can't sequence what doesn't exist yet.
+  5. Implementation readiness report last — The existing one (2026-02-14) becomes the baseline for a delta assessment.
+
+  ---
+  The "Make It Better" Additions
+
+  Three things that turn a mechanical cascade into a high-quality one:
+
+  1. Delta merge, not regeneration. Each artifact has solid existing coverage for FR1-FR59. We surgically add the new material and update stale   
+  references rather than regenerating from scratch. This preserves the design decisions already made and avoids introducing regressions.
+
+  2. Traceability thread at each phase. As we update each artifact, we maintain the chain: FR → Architecture component → UX screen → Epic/Story.  
+  When we finish Phase C, every FR60-FR75 should be traceable from PRD through to a story.
+
+  3. Validation checkpoint after Architecture + UX. Before decomposing into stories, we do a quick consistency check — does every new FR have an  
+  architecture home and a UX surface? This catches gaps early rather than discovering them during sprint execution.
+
+  ---
+  Execution Plan
+
+  ┌───────┬───────────────┬─────────────────────────────────────────────────────────────────────────────────────┬────────────────────────────────┐
+  │ Phase │     Agent     │                                      Approach                                       │             Output             │
+  ├───────┼───────────────┼─────────────────────────────────────────────────────────────────────────────────────┼────────────────────────────────┤
+  │       │ Sarah         │ Surgical update: add temporal data model, 8-field CSV pipeline, early exit state    │                                │
+  │ A     │ (Architect)   │ machine, user management + Staff ID governance subsystems, pre-submission           │ Updated architecture.md        │
+  │       │               │ checkpoint flow. Update FR inventory from 59→75.                                    │                                │
+  ├───────┼───────────────┼─────────────────────────────────────────────────────────────────────────────────────┼────────────────────────────────┤
+  │       │ Jess (UX      │ Surgical update: new screens for checkpoint, early exit, user mgmt, Staff ID,       │ Updated                        │
+  │ B     │ Designer)     │ temporal profile, data quality dashboard. Update 6→8 field references. Add          │ ux-design-specification.md     │
+  │       │               │ conditional field interaction patterns.                                             │                                │
+  ├───────┼───────────────┼─────────────────────────────────────────────────────────────────────────────────────┼────────────────────────────────┤
+  │ C     │ Sean (Scrum   │ Add 3-4 new epics covering FR60-FR75. Update existing story descriptions for        │ Updated epics.md +             │
+  │       │ Master)       │ hardened FRs. Refresh FR inventory.                                                 │ sprint-status.yaml             │
+  ├───────┼───────────────┼─────────────────────────────────────────────────────────────────────────────────────┼────────────────────────────────┤
+  │ D     │ John (PM)     │ Re-validate implementation readiness against updated artifacts                      │ Updated readiness report       │
+  └───────┴───────────────┴─────────────────────────────────────────────────────────────────────────────────────┴────────────────────────────────┘
+
+  ---
+  My recommendation: Start with Phase A (Architecture) now. It's the critical path and everything else blocks on it. Shall I switch you to Sarah, 
+  or would you like to adjust the strategy first?
+
+  ┌─────┬─────────────────────────────────────────────┐
+  │ Key │                   Action                    │
+  ├─────┼─────────────────────────────────────────────┤
+  │ [A] │ Start Phase A — switch to Sarah (Architect) │
+  ├─────┼─────────────────────────────────────────────┤
+  │ [E] │ Adjust the strategy                         │
+  ├─────┼─────────────────────────────────────────────┤
+  │ [M] │ Return to main menu                         │
+  └─────┴─────────────────────────────────────────────┘
+
+✻ Worked for 1m 40s                                                                                                                                 
+❯ A                                                                                                                                                   
+● Let me load Sarah's agent definition and the architecture workflow to do this properly.                                                                                                                                                                                                           
+● Searched for 3 patterns, read 4 files (ctrl+o to expand)                                                                                           
+● Now let me read the full architecture document to understand the complete scope of updates needed.                                                                                                                                                                                                
+● Read 1 file (ctrl+o to expand)                                                                                                                    
+● Good — I've read the full architecture document. It's comprehensive and well-structured. Now let me read the new FRs from the PRD so I have the   exact specifications.                                                                                                                           
+                                                                                                                                                  ● Read 1 file (ctrl+o to expand)    
+                                                                                                                                                  ● Good. I now have the full picture of both the architecture and the PRD delta. Let me activate Sarah and get to work.                              
+  ---                                                                                                                                               Sarah (Winston) — Architect
+                                                                                                                                                    Awwal, I've reviewed the architecture document and the updated PRD. The delta is significant but well-scoped. Let me work through the surgical  
+  updates systematically.
+
+  Gap Analysis — Architecture vs Current PRD:
+
+  ┌────────────────┬─────────────────────────────────────────────────────────────────────────────────────────────────┐
+  │      Area      │                                               Gap                                               │
+  ├────────────────┼─────────────────────────────────────────────────────────────────────────────────────────────────┤
+  │ FR inventory   │ 59 FRs documented → 75 FRs exist. 16 FRs missing entirely                                       │
+  ├────────────────┼─────────────────────────────────────────────────────────────────────────────────────────────────┤
+  │ FR categories  │ 9 categories → needs 15 (6 new capability areas)                                                │
+  ├────────────────┼─────────────────────────────────────────────────────────────────────────────────────────────────┤
+  │ CSV pipeline   │ References "6 fields" → now 8 fields with conditional logic                                     │
+  ├────────────────┼─────────────────────────────────────────────────────────────────────────────────────────────────┤
+  │ Data model     │ Missing temporal profile fields (DOB, appointment date, retirement date)                        │
+  ├────────────────┼─────────────────────────────────────────────────────────────────────────────────────────────────┤
+  │ State machines │ Missing early exit workflow, employment event lifecycle                                         │
+  ├────────────────┼─────────────────────────────────────────────────────────────────────────────────────────────────┤
+  │ Services       │ Missing ~6 new services (temporal, early exit, event, preSubmission, staffId, cross-validation) │
+  ├────────────────┼─────────────────────────────────────────────────────────────────────────────────────────────────┤
+  │ Pages/Routes   │ Missing ~4 new frontend pages and API route groups                                              │
+  ├────────────────┼─────────────────────────────────────────────────────────────────────────────────────────────────┤
+  │ Shared types   │ Missing ~5 new type/validator modules                                                           │
+  └────────────────┴─────────────────────────────────────────────────────────────────────────────────────────────────┘
+
+  Let me apply the edits now.
+
+  Batch 1 — Requirements Overview section:
+                                                                                                                                                  ● Update(_bmad-output\planning-artifacts\architecture.md)
+  ⎿  Added 12 lines, removed 6 lines                                                                                                              
+      31                                                                                                                                                32  ### Requirements Overview
+      33                                                                                                                                                34 -**Functional Requirements (59 FRs across 9 categories):**
+      34 +**Functional Requirements (75 FRs across 15 categories):**                                                                              
+      35 
+      36  | Category | FRs | Architectural Weight |                                                                                                     37  |----------|-----|---------------------|                                                                                                      38  | Loan Computation & Financial Engine | FR1-FR9 | **Critical** — deterministic, 100% accuracy, banking-grade, 4 tiers parameteris                 ed |                                                                                                                                          39 -| Data Management & Immutable Ledger | FR10-FR15 | **Critical** — append-only ledger, computed views, no UPDATE/DELETE |                
+      40 -| MDA Monthly Submission | FR16-FR24 | High — atomic upload, validation, comparison engine, neutral language |
+      41 -| Data Migration | FR25-FR31 | High — column mapping, variance categorisation, baseline creation |                                      
+      42 -| Executive Dashboard & Reporting | FR32-FR41 | High — real-time aggregation, PDF generation, drill-down |                              
+      39 +| Data Management & Immutable Ledger | FR10-FR15 | **Critical** — append-only ledger, computed views, no UPDATE/DELETE, temporal        
+         +profile (DOB, appointment date, computed retirement date) |                                                                             
+      40 +| MDA Monthly Submission | FR16-FR24 | High — 8-field CSV with conditional fields (event date, cessation reason), atomic upload,        
+         +validation, comparison engine, neutral language |                                                                                       
+      41 +| Data Migration | FR25-FR31 | High — column mapping, variance categorisation, baseline creation, temporal data required |              
+      42 +| Executive Dashboard & Reporting | FR32-FR41 | High — real-time aggregation, PDF generation, drill-down, early exit and gratuity       
+         + receivable metrics |                                                                                                                   
+      43  | Access Control & Authentication | FR42-FR48 | High — 3 MVP roles, API-level RBAC, audit logging |
+      44  | Notifications & Alerts | FR49-FR52 | Medium — email (MVP), SMS (fast-follow), scheduled reminders |
+      45 -| Report Output & Sharing | FR53-FR54 | Medium — branded PDF with Oyo State crest, one-tap share |                                      
+      45 +| Report Output & Sharing | FR53-FR54 | Medium — branded PDF with Oyo State crest, one-tap share + email attachment |                   
+      46  | Exception Management + Annotations | FR55-FR59 | Medium — priority queue, auto-flagging, correction workflow |
+      47 +| Pre-Submission & Mid-Cycle Events | FR60-FR62 | High — pre-submission checkpoint, mid-cycle event filing, cross-validation engi       
+         +ne reconciling events against CSV |                                                                                                     
+      48 +| Retirement & Tenure Validation | FR63-FR66 | High — retirement date computation (min of DOB+60y, appointment+35y), tenure vs se       
+         +rvice comparison, gratuity receivable tracking, service extension overrides |                                                           
+      49 +| Early Exit Processing | FR67-FR69 | High — early exit computation workflow with state machine (Computed → Committed → Paid → Cl       
+         +osed / Expired), lump sum payoff, Auto-Stop trigger |                                                                                   
+      50 +| Historical Data & Migration Reconciliation | FR70-FR71 | Medium — historical CSV upload, cross-reference against migration base       
+         +line, service status verification report |                                                                                              
+      51 +| User & Account Administration | FR72-FR73 | Medium — user CRUD by Dept Admin/Super Admin, password reset, account lifecycle aud       
+         +it logging |                                                                                                                            
+      52 +| Staff ID Governance | FR74-FR75 | Medium — Staff ID add/update with system-wide duplicate detection, justification logging |          
+      53
+      54  **Non-Functional Requirements Driving Architecture:**
+      55
+                                                                                                                                                  ● Update(_bmad-output\planning-artifacts\architecture.md)
+  ⎿  Added 2 lines, removed 2 lines                                                                                                               
+      81  - **Primary domain:** Full-stack web (govtech-fintech)                                                                                        82  - **Complexity level:** High
+      83  - **Data complexity:** Medium-high — relational with immutable append-only financial records, computed views, multi-tenant-like M                 DA isolation                                                                                                                            
+      84 -- **User interaction complexity:** Medium — dashboard drill-down, CSV upload, comparison views, exception queues                        
+      84 +- **User interaction complexity:** Medium-high — dashboard drill-down, CSV upload (8-field conditional), comparison views, except     
+         +ion queues, early exit workflow, mid-cycle event filing, pre-submission checkpoint, user account management, Staff ID governance              85  - **Integration complexity:** Low (MVP standalone) → Medium (Phase 2 external integrations)                                                   86  - **Regulatory compliance:** High — NDPR, government financial audit requirements, segregation of duties                                      87 -- **Estimated architectural components:** ~15 (auth, computation engine, ledger, submission, migration, dashboard, reports, notif                -ications, exception management, PDF generation, file upload, search, RBAC, audit logging, public zone)                                  
+      87 +- **Estimated architectural components:** ~21 (auth, computation engine, ledger, submission, migration, dashboard, reports, notif
+         +ications, exception management, PDF generation, file upload, search, RBAC, audit logging, public zone, temporal validation, early       
+         + exit processing, mid-cycle events, pre-submission checkpoint, Staff ID governance, user account admin)                                 
+      88
+      89  ### Technical Constraints & Dependencies
+      90
+
+● Now update the cross-cutting concerns and technical constraints:
+                                                                                                                                                  ● Update(_bmad-output\planning-artifacts\architecture.md)                                                                                         
+  ⎿  Added 7 lines, removed 5 lines                                                                                                               
+      100                                                                                                                                               101  ### Cross-Cutting Concerns Identified                                                                                                  
+      102                                                                                                                                               103 -1. **Audit logging** — every action, every module, append-only, tamper-resistant                                                       
+      104 -2. **RBAC enforcement** — API-level checks on every endpoint, MDA-scoped data isolation                                                
+      105 -3. **Financial computation accuracy** — 100% deterministic, kobo-precise, verifiable by auditors                                     
+      103 +1. **Audit logging** — every action, every module, append-only, tamper-resistant. Account lifecycle, Staff ID changes, early exi                 +t computations, service extensions all audit-logged                                                                                          104 +2. **RBAC enforcement** — API-level checks on every endpoint, MDA-scoped data isolation. User account admin scoped: Dept Admin m                 +anages MDA Officers, Super Admin manages all levels                                                                                          105 +3. **Financial computation accuracy** — 100% deterministic, kobo-precise, verifiable by auditors. Extends to early exit payoff c       
+          +omputations and gratuity receivable projections
+      106  4. **Immutability guarantees** — database constraints + API middleware + no direct DB access
+      107  5. **Non-punitive vocabulary** — consistent across API responses, UI, error messages, database enums
+      108 -6. **Input validation** — server-side at all system boundaries (CSV, forms, API calls)                                                 
+      109 -7. **Transaction atomicity** — all-or-nothing for submissions, migrations, state transitions                                           
+      108 +6. **Input validation** — server-side at all system boundaries (CSV 8-field conditional logic, forms, API calls, mid-cycle event       
+          +s)                                                                                                                                     
+      109 +7. **Transaction atomicity** — all-or-nothing for submissions, migrations, state transitions, early exit payment recording             
+      110 +8. **Temporal validation** — retirement date computation (min of DOB+60y, appointment+35y), tenure vs remaining service checks,        
+          +post-retirement deduction detection. Recomputed on date corrections                                                                    
+      111 +9. **Staff ID uniqueness** — system-wide duplicate detection on every Staff ID add/update, with justification logging for intent       
+          +ional overrides                                                                                                                        
+      112
+      113  ## Starter Template Evaluation
+      114
+                                                                                                                                                  ● Update(_bmad-output\planning-artifacts\architecture.md)
+  ⎿  Added 2 lines, removed 1 line                                                                                                                
+       95  5. **Immutable ledger** — INSERT only, no UPDATE/DELETE on financial records (database + API enforced)                                        96  6. **Computed views** — balances derived from ledger entries, never stored as mutable state
+       97  7. **API-first** — all data access through structured endpoints for future integration readiness                                              98 -8. **MVP standalone** — no external system integrations; CSV upload and manual entry only                                              
+       98 +8. **MVP standalone** — no external system integrations; 8-field CSV upload (with conditional event date and cessation reason fi       
+          +elds) and manual entry only                                                                                                          
+       99  9. **Non-punitive vocabulary** — API responses, error messages, and database enums must use approved terminology                             100 +10. **Temporal data required** — DOB and date of first appointment required for new loans, required in migration (flagged "Profi                 +le Incomplete" if missing). Retirement date computed, never manually set (except service extension override)                                 101                                                                                                                                               102  ### Cross-Cutting Concerns Identified                                                                                                  
+      103  
+
+● Batch 2 — Update CSV/file upload references and data architecture:
+                                                                                                                                                  ● Update(_bmad-output\planning-artifacts\architecture.md)                                                                                         
+  ⎿  Added 1 line, removed 1 line                                                                                                                 
+      295  | **API documentation** | Swagger/OpenAPI via `swagger-jsdoc` + `swagger-ui-express` | Auto-generated from JSDoc annotations on                   route handlers. Available at `/api/docs` in development. Useful for auditors and future integrators |                                  
+      296  | **HTTP client (frontend)** | Native `fetch` with typed wrapper in `apps/client/src/lib/api-client.ts` | Zero-dependency. Wrapp                  er handles: JWT attachment from memory, 401 → silent refresh → retry, response typing from `packages/shared`, error normalisatio       
+           n |                                                                                                                                    
+      297  | **Rate limiting tiers** | Strict (auth) → Moderate (mutations) → Relaxed (reads) | Auth endpoints: 5 req/15min per IP. Submiss     
+           ion/write endpoints: 30 req/min per user. Dashboard/read endpoints: 120 req/min per user |                                                   298 -| **File upload** | `multer` middleware, max 5MB per CSV, server-side parsing with `papaparse` | CSV validated row-by-row agains                 -t Zod schema. Atomic: entire file succeeds or entire file rejected with per-row error report |                                               298 +| **File upload** | `multer` middleware, max 5MB per CSV, server-side parsing with `papaparse` | 8-field CSV validated row-by-ro                 +w against Zod schema with conditional logic (fields 7-8 required/blank based on Event Flag and Amount). Atomic: entire file succ       
+          +eeds or entire file rejected with per-row error report referencing field names and row numbers |
+      299
+      300  ### Frontend Architecture
+      301
+
+● Batch 3 — Add new services, routes, pages, types to the project structure. Let me update the Requirements to Structure Mapping first, then the
+  detailed project structure.
+                                                                                                                                                  ● Update(_bmad-output\planning-artifacts\architecture.md)
+  ⎿  Added 6 lines                                                                                                                                
+      720  | Notifications & Alerts | FR49-FR52 | `services/emailService.ts`, `services/notificationService.ts` | — (server-driven) |                   721  | Report Output & Sharing | FR53-FR54 | `services/reportService.ts` | `pages/dashboard/ReportsPage.tsx` |
+      722  | Exception Management + Annotations | FR55-FR59 | `services/exceptionService.ts` | `pages/dashboard/ExceptionsPage.tsx` |                   723 +| Pre-Submission & Mid-Cycle Events | FR60-FR62 | `services/preSubmissionService.ts`, `services/employmentEventService.ts` | `pa       
+          +ges/dashboard/PreSubmissionPage.tsx`, `pages/dashboard/EmploymentEventsPage.tsx` |                                                     
+      724 +| Retirement & Tenure Validation | FR63-FR66 | `services/temporalValidationService.ts` | `pages/dashboard/components/RetirementP     
+          +rofileCard.tsx` |                                                                                                                            725 +| Early Exit Processing | FR67-FR69 | `services/earlyExitService.ts` | `pages/dashboard/EarlyExitPage.tsx` |                                 726 +| Historical Data & Migration | FR70-FR71 | `services/migrationService.ts` (extended) | `pages/dashboard/MigrationPage.tsx` (ext                 +ended) |                                                                                                                                     727 +| User & Account Administration | FR72-FR73 | `services/userAdminService.ts`, `routes/userRoutes.ts` (extended) | `pages/dashboa       
+          +rd/AdminPage.tsx` (extended) |
+      728 +| Staff ID Governance | FR74-FR75 | `services/staffIdService.ts` | `pages/dashboard/components/StaffIdManager.tsx` |                   
+      729
+      730  ### Complete Project Directory Structure
+      731
+
+● Now update the detailed project structure with the new files. Let me add the new server services, routes, client pages, hooks, and shared types.
+                                                                                                                                                  ● Update(_bmad-output\planning-artifacts\architecture.md)                                                                                         
+  ⎿  Added 7 lines, removed 3 lines                                                                                                               
+      844  │           │   ├── index.ts              # Route aggregator: mounts all route groups on /api                                                845  │           │   ├── authRoutes.ts         # POST /login, /logout, /refresh, /password-reset                                            
+      846  │           │   ├── loanRoutes.ts         # GET/POST /loans, GET /loans/:id, computation views                                               847 -│           │   ├── submissionRoutes.ts   # POST /submissions (CSV upload), GET /submissions                                           
+      847 +│           │   ├── submissionRoutes.ts   # POST /submissions (8-field CSV upload), GET /submissions                                   
+      848  │           │   ├── ledgerRoutes.ts       # GET /ledger (read-only, no PUT/PATCH/DELETE)
+      849  │           │   ├── dashboardRoutes.ts    # GET /dashboard/hero-metrics, /attention-items, /charts                                           850  │           │   ├── exceptionRoutes.ts    # GET/POST /exceptions, PATCH /exceptions/:id/resolve                                              851  │           │   ├── reportRoutes.ts       # GET /reports/:id/pdf (generates branded PDF)                                                     852 -│           │   ├── migrationRoutes.ts    # POST /migrations (legacy data intake, Super Admin)                                               852 +│           │   ├── migrationRoutes.ts    # POST /migrations (legacy data intake + historical upload)                                  
+      853  │           │   ├── mdaRoutes.ts          # GET /mdas, GET /mdas/:id/submissions
+      854 -│           │   ├── userRoutes.ts         # GET/POST /users (admin), PATCH /users/:id                                                  
+      854 +│           │   ├── userRoutes.ts         # GET/POST /users (admin CRUD), PATCH /users/:id, POST /users/:id/reset-password             
+      855 +│           │   ├── employmentEventRoutes.ts # POST /employment-events (mid-cycle filing), GET by staff/MDA                            
+      856 +│           │   ├── earlyExitRoutes.ts    # POST /early-exits/compute, POST /early-exits/:id/commit, POST /early-exits/:id/pay         
+      857 +│           │   ├── preSubmissionRoutes.ts # GET /pre-submission/checkpoint (retirement approaching, zero deductions, pending ev       
+          +ents)                                                                                                                                  
+      858 +│           │   ├── staffIdRoutes.ts      # PATCH /staff-id/:loanId, GET /staff-id/search, POST /staff-id/check-duplicate              
+      859  │           │   └── healthRoutes.ts       # GET /health (Docker health check, uptime monitoring)
+      860  │           │
+      861  │           ├── middleware/
+                                                                                                                                                  ● Update(_bmad-output\planning-artifacts\architecture.md)
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+ Opened changes in Visual Studio Code ⧉                                                                                                              
+ Save file to continue…                                                                                                                           
+                                                                                                                                                  
+ Do you want to make this edit to architecture.md?        
+ ❯ 1. Yes
+   2. Yes, allow all edits during this session (shift+tab)
+   3. No
+ 
+
+ Esc to cancel · Tab to amend

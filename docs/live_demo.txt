@@ -1,0 +1,1452 @@
+
+ ▐▛███▜▌   Claude Code v2.1.45
+▝▜█████▛▘  Opus 4.6 · Claude Max
+  ▘▘ ▝▝    ~\Desktop\vlprs
+
+❯ /bmad-agent-bmm-pm 
+
+● Read 2 files (ctrl+o to expand)
+
+● Hey Awwal! I'm John, your Product Manager.
+
+  I'm here to help you shape ideas into solid product requirements, discover what your users actually need, and make sure we're building the right thing before   
+  writing a single line of code. I ask a lot of "why" questions — that's how we get to the good stuff.
+
+  Here's what I can help you with:
+
+  1. [MH] Menu Help — Redisplay this menu
+  2. [CH] Chat — Chat with me about anything product-related
+  3. [CP] Create PRD — Expert-led facilitation to produce your Product Requirements Document
+  4. [VP] Validate PRD — Validate a PRD is comprehensive, lean, well-organized and cohesive
+  5. [EP] Edit PRD — Update an existing Product Requirements Document
+  6. [CE] Create Epics & Stories — Create the Epics and Stories listing that will drive development
+  7. [IR] Implementation Readiness — Ensure PRD, UX, Architecture, and Epics/Stories are all aligned
+  8. [CC] Course Correction — Determine how to proceed if a major change is needed mid-implementation
+  9. [PM] Party Mode — Start Party Mode
+  10. [DA] Dismiss Agent — Exit and dismiss me
+
+  You can type /bmad-help at any time to get advice on what to do next. You can combine it with context too, for example:
+  /bmad-help where should I start with an idea I have that does XYZ
+
+  What would you like to do?
+
+❯ 2 
+
+● Sure thing, Awwal! I'm all ears.
+
+  What's on your mind? Whether it's a product idea, a question about strategy, user research, prioritization, or anything else — fire away and let's dig into it. 
+
+❯ it is about this project that i am starting out. It is a greenfield project an we have done the PRD, Architecture files, UX Specs, EPics & Stories and the      
+  Sprint File, as a matter of fact we have develop the story 1.1 and validated it. However I have an issue with the something tugging my mind with respect to     
+   the UI. Yes I have read the sprint files and i like it but please read the sprint files and point out the place that deal with the UI creation as my           
+  client want to be able to see progress immediately and if I dont have a UI to show the Client of my progress it may be somehow. We have designed the UX         
+  Specifications and infact have a demo for the UI Screens. I just want to be able to know if we have adequately translate the UX Specifications into the         
+  Sprint so that we can get to be able to show the Client the progress as we move ahead. Apologies for the word vomit. Thoughts (make it better)                  
+
+● No need to apologize, Awwal — that's actually a very sharp concern. Client visibility into progress is a real product management issue, not just a "nice to     
+  have." Let me dig into the sprint files and UX specs so I can give you a grounded answer.
+
+● Explore(Find sprint and UX files)
+  ⎿  Done (24 tool uses · 20.0k tokens · 56s)
+  (ctrl+o to expand)
+
+● Good, let me now read the key files — the sprint status, epics, and UX spec.
+
+● Searched for 1 pattern, read 3 files (ctrl+o to expand)
+
+● Let me read deeper into the epics to see how UI work is distributed across the stories.
+
+● Searched for 1 pattern, read 1 file (ctrl+o to expand)
+
+● Now let me see the specific stories within the key epics — particularly Epic 1 (where you are now) and Epic 4 (the dashboard).
+
+● Read 1 file (ctrl+o to expand)
+
+● Alright Awwal, I've read through everything — the sprint status, the full epics breakdown, and the UX spec. And honestly? Your instinct is dead right. Let me   
+  break down exactly what I see.
+
+  ---
+  The Problem: A "UI Dark Zone" in Your Sprint Plan
+
+  Here's where UI-visible work actually lands:
+
+  ┌────────┬─────────────────────────┬────────────────┬──────────────────────────────────────────────────────────────────────────┐
+  │ Sprint │          Epic           │    UI Work?    │                             What Client Sees                             │
+  ├────────┼─────────────────────────┼────────────────┼──────────────────────────────────────────────────────────────────────────┤
+  │ 1      │ Foundation & Auth       │ Story 1.6 only │ Login page, landing page, app shell with crimson sidebar, role-based nav │
+  ├────────┼─────────────────────────┼────────────────┼──────────────────────────────────────────────────────────────────────────┤
+  │ 2      │ Loan Data & Computation │ None           │ Pure backend — computation engine, ledger, decimal.js math               │
+  ├────────┼─────────────────────────┼────────────────┼──────────────────────────────────────────────────────────────────────────┤
+  │ 3      │ Staff Temporal Profile  │ None           │ Pure backend — retirement date computation, gratuity tracking            │
+  ├────────┼─────────────────────────┼────────────────┼──────────────────────────────────────────────────────────────────────────┤
+  │ 4      │ Data Migration          │ Some           │ Column mapping UI, migration dashboard for 63 MDAs                       │
+  ├────────┼─────────────────────────┼────────────────┼──────────────────────────────────────────────────────────────────────────┤
+  │ 5      │ Executive Dashboard     │ The big one    │ AG's 4 hero metrics, drill-down, attention items — the flagship screen   │
+  └────────┴─────────────────────────┴────────────────┴──────────────────────────────────────────────────────────────────────────┘
+
+  Your gap: After Story 1.6 (the login shell), you have approximately 4-6 weeks (Sprints 2 and 3) of pure backend work with ZERO new visible UI to show the       
+  client.
+
+  The sprint plan is technically correct — you need the computation engine and data before the dashboard can show anything real. But from a client confidence     
+  perspective, this is a risk. The AG wants to see her 30-second dashboard, and she won't see it until Sprint 5.
+
+  ---
+  The Good News
+
+  Story 1.6 is actually well-designed for a first client demo — you get:
+  - Branded landing page (Oyo State crest, scheme info)
+  - Login flow with the crimson palette
+  - Role-based app shell (sidebar, navigation, role badge)
+  - Responsive layout (mobile + desktop)
+
+  That's not nothing. It's a real product feel.
+
+  ---
+  The WHY Question (This Is What's Really Tugging at You)
+
+  Your UX spec has 17 custom components designed. Your demo screens exist. But the sprint plan doesn't have a dedicated "build the UI component library" or "build
+   screen shells" story. The UI work is scattered across epics — each epic builds its own screens when it gets there.
+
+  That means there's no early story that says "build the skeleton screens so we can show navigation flow and layout to the client."
+
+  ---
+  My Recommendation — What Do You Want to Do?
+
+  This is a real PM decision point. You have a few options:
+
+  1. Add a UI Shell story (maybe as 1.8 or move 1.6 to encompass more) — build skeleton/placeholder screens for the major views (dashboard with mock data,        
+  submission page layout, migration page layout) so the client sees the navigation flow and visual design even before the backends are ready
+  2. Stay the course — demo Story 1.6 (login + shell) after Sprint 1, then accept the backend-dark period and wow them at Sprint 5 with real data in the dashboard
+  3. Reorder smartly — pull a lightweight "dashboard with mock data" story into Sprint 2 alongside the computation engine, so the client sees visual progress     
+  while the backend catches up
+
+  What resonates with you? Which direction do you want to explore?
+
+✻ Cogitated for 2m 9s
+
+❯ Can we merge your recommendation 1 and 3 together and expand story 1.6. Then add notification into the story to start wiring up the static pages to API as      
+  we move ahead after the expanded Story 1.6. I hope you undrstand what I am proposing, Thoughts (make it better)                                                 
+
+● I absolutely understand what you're proposing, Awwal. And the core instinct is sharp — build the visual product early, then progressively wire it to real APIs  
+  as the backend catches up. That's a proven pattern.
+
+  But let me push back on one thing and then make it better.
+
+  ---
+  The Risk: Story 1.6 Becomes a Monster
+
+  Story 1.6 already carries real weight:
+  - Login page with reCAPTCHA
+  - Token refresh logic (silent retry on 401)
+  - Role-based routing & redirect
+  - App shell (crimson sidebar, mobile header, role badge, logout)
+  - Landing page with Oyo State branding
+
+  If you bolt on all the skeleton screens, mock data, 17 custom components, and a wiring notification pattern — you're turning one story into a 3-week epic inside
+   a 2-week sprint. It'll slip, and you'll be in the exact position you're trying to avoid.
+
+  ---
+  What I'd Recommend Instead
+
+  Keep 1.6 as-is. It does its job well — it gives you the auth shell and the branded app skeleton.
+
+  Add a new Story 1.8: "Frontend Screen Scaffolding & Mock Data Layer" — this is your client demo story. Here's what it does:
+
+  Story 1.8 Scope:
+
+  A) Design Foundation
+  - Wire up design tokens: Oyo Crimson palette, Inter + JetBrains Mono typography, non-punitive colour tokens (--variance-bg, --attention-bg), extended shadcn/ui 
+  Badge variants
+  - Build a small set of priority reusable components: HeroMetricCard, NairaDisplay, AttentionItemCard, FileUploadZone — enough to make screens feel real
+
+  B) Skeleton Screens with Mock Data (the demo reel)
+  - Executive Dashboard — 4 hero metric cards with mock numbers, attention items section, compliance status grid (this is the AG's 30-second screen)
+  - MDA Submission — upload zone, confirmation placeholder, comparison summary placeholder
+  - Migration Dashboard — 63 MDA progress cards with mock statuses
+  - Loan Detail — basic layout with placeholder data
+
+  All powered by a mock data service layer — a clean interface (e.g., useDashboardData(), useSubmissionData()) that returns hardcoded mock data today but can be  
+  pointed at real APIs later with a one-line change.
+
+  C) The "Wiring Ready" Pattern (your notification idea, refined)
+
+  Instead of a loose "notification," you formalize it. Each screen component calls data through a hook abstraction:
+
+  // Sprint 1: returns mock data
+  const { data } = useDashboardMetrics();
+
+  // Sprint 5: same hook, now hits real API — zero UI changes
+  const { data } = useDashboardMetrics();
+
+
+  Then in the sprint status file, each subsequent epic gets a lightweight tag:
+
+  wire: dashboard-metrics → /api/dashboard/metrics
+  wire: migration-status → /api/migration/status
+
+  This way, when you finish a backend story, you immediately know which screen to connect — and it's a 30-minute task, not a full story. Progressive wiring       
+  becomes a checklist, not a project.
+
+  ---
+  What This Gets You
+
+  ┌────────────────┬───────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+  │ After Sprint 1 │                                                  Client Sees                                                  │
+  ├────────────────┼───────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+  │ Story 1.6      │ Real login, branded landing, role-based app shell                                                             │
+  ├────────────────┼───────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+  │ Story 1.8      │ Full visual product with mock data — dashboard, submission, migration, loan detail. Looks like a working app. │
+  └────────────────┴───────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+
+  Then every subsequent sprint lights up screens with real data — the client sees the same UI getting smarter, not a blank screen getting built. That's a much    
+  better story to tell.
+
+  ---
+  The Trade-off
+
+  Adding 1.8 to Sprint 1 means 8 stories in one sprint. That's tight for a solo developer. Two options:
+
+  1. Accept the stretch — Sprint 1 goes to 2.5 weeks instead of 2, but you come out with a demo-ready product shell
+  2. Split Sprint 1 — Stories 1.1-1.5 (backend foundation) in Sprint 1a, Stories 1.6-1.8 (frontend shell + scaffolding) in Sprint 1b. Two weeks each. Client demo 
+  after 1b.
+
+  ---
+  What's your call, Awwal? Does this structure feel right, or do you want to adjust the scope of 1.8?
+
+✻ Cogitated for 1m 9s
+
+❯ Accept the stretch. Would the 8 user roles have their screens up and running and I can use seeded credentials to demo this at the end of sprint 1? Thoughts     
+   (make it better)                                                                                                                                               
+
+● Quick correction first, Awwal — you have 3 MVP roles, not 8. But those 3 roles serve 5 distinct user profiles with different experiences. Let me show you       
+  exactly what the demo looks like.
+
+  ---
+  The Sprint 1 Demo: Seeded Credentials, Role-Specific Screens
+
+  Yes, this is absolutely achievable. Here's what each login gets:
+
+  Seeded Demo Accounts
+
+  ┌────────────────────────────────┬─────────────┬───────────────────────────────────────────────────┐
+  │           Credential           │    Role     │                     Lands On                      │
+  ├────────────────────────────────┼─────────────┼───────────────────────────────────────────────────┤
+  │ ag@vlprs.oyo.gov.ng            │ super_admin │ Executive Dashboard                               │
+  ├────────────────────────────────┼─────────────┼───────────────────────────────────────────────────┤
+  │ deputy.ag@vlprs.oyo.gov.ng     │ super_admin │ Executive Dashboard                               │
+  ├────────────────────────────────┼─────────────┼───────────────────────────────────────────────────┤
+  │ admin@vlprs.oyo.gov.ng         │ dept_admin  │ Operations Hub                                    │
+  ├────────────────────────────────┼─────────────┼───────────────────────────────────────────────────┤
+  │ mda.health@vlprs.oyo.gov.ng    │ mda_officer │ Submission View (scoped to Ministry of Health)    │
+  ├────────────────────────────────┼─────────────┼───────────────────────────────────────────────────┤
+  │ mda.education@vlprs.oyo.gov.ng │ mda_officer │ Submission View (scoped to Ministry of Education) │
+  └────────────────────────────────┴─────────────┴───────────────────────────────────────────────────┘
+
+  Two MDA officers with different MDA scopes — so the client sees that scoping actually works.
+
+  What Each Role Sees (Mock Data, Full Visual Treatment)
+
+  Super Admin (AG / Deputy AG):
+  - 4 hero metric cards with mock Naira figures (₦2.4B Total Exposure, 2,847 Active Loans, etc.) with count-up animation
+  - Attention items section (amber indicators, non-punitive language)
+  - MDA compliance grid (63 MDAs, colour-coded submission status)
+  - Drill-down: tap an MDA → MDA detail view → tap a loan → Loan detail view
+  - One-tap PDF placeholder ("Report generated" toast)
+
+  Department Admin:
+  - Migration Dashboard — 63 MDA cards with mock statuses (Pending, Imported, Validated, Certified)
+  - Loan search bar (mock results)
+  - Exception queue placeholder (priority-sorted list with mock flags)
+  - Report generation section
+
+  MDA Reporting Officer:
+  - Pre-submission checkpoint placeholder (retirement warnings, zero-deduction alerts)
+  - File upload zone (the FileUploadZone component, fully styled, accepts CSV but processes nothing yet)
+  - Submission history with mock confirmation references
+  - Comparison summary with non-punitive language ("Comparison Complete", info icons, teal/amber tokens — never red, never "error")
+
+  All Roles:
+  - Oyo Crimson sidebar with role-appropriate nav items
+  - Role badge in sidebar header
+  - Global search bar (Ctrl+K, non-functional but present)
+  - Responsive — works on phone and desktop
+  - Logout → back to branded landing page
+
+  ---
+  Making It Better: The Seed Script as a First-Class Concern
+
+  Don't treat seeding as an afterthought. Add it as an explicit acceptance criterion in Story 1.8:
+
+  Given the development environment is running
+  When I run pnpm seed:demo
+  Then 5 demo accounts are created with known credentials, 3 mock MDAs exist with sample data, and the dashboard displays realistic Naira figures, MDA names, and 
+  status indicators
+
+  The mock data should tell a story, not show placeholders:
+  - Use real Oyo State MDA names (Ministry of Health, Ministry of Education, Ministry of Works)
+  - Use realistic Naira amounts in the right order of magnitude
+  - Show 2-3 attention items that feel real ("Ministry of Works — submission overdue by 3 days")
+  - Show a mix of compliance statuses across the 63 MDAs
+
+  This is what separates a demo from a prototype. The client sees their world reflected back at them — not "Lorem ipsum" and "$1,234."
+
+  ---
+  The Demo Script (Write This Down)
+
+  When you present to the client, walk them through in this order:
+
+  1. Landing page — "This is what anyone sees. Oyo State branded. Staff Login button."
+  2. Login as AG — "This is the AG's 30-second view." Show 4 hero numbers. Don't click anything. Pause. Let it sink in.
+  3. Drill down — Tap one metric → MDA list → one loan. "Three taps to any record in the system."
+  4. Login as MDA Officer — "This is what your 63 MDA officers see. Notice they can ONLY see their MDA." Show the upload zone. "Upload a CSV, get a confirmation. 
+  15 minutes instead of half a day."
+  5. Login as Department Admin — "This is the operations view. Migration status for all 63 MDAs. Exception queue. Reports."
+  6. Phone demo — Pull up the AG dashboard on a phone. "This works on 4G."
+
+  That's a 10-minute demo that sells the product. Everything after Sprint 1 just makes the mock numbers real.
+
+  ---
+  One Concern to Flag
+
+  8 stories in Sprint 1 with the stretch is tight for a solo developer. I'd estimate 2.5 to 3 weeks realistically. The risk is Story 1.7 (CI/CD pipeline with     
+  GitHub Actions, Docker production setup, DigitalOcean deployment) — that's infrastructure work that can eat time unexpectedly.
+
+  My suggestion: Deprioritize 1.7 within Sprint 1. You don't need production deployment for the client demo — Docker dev environment is enough. Push 1.7 to the   
+  start of Sprint 2 if Sprint 1 is running tight. The demo runs on localhost or your dev machine — the client won't care.
+
+  ---
+  So to summarize: Story 1.8 gives you a demo-ready product with seeded credentials, role-specific screens, realistic mock data, and a clear wiring pattern for   
+  every subsequent sprint. Shall I draft the full Story 1.8 with acceptance criteria so it's ready to add to your epics file?
+
+✻ Baked for 1m 4s
+
+❯ Leave Story 1.7 as it is. If we don't do the hard work of the Infrastructure up front and push it we will still meet it whenever we are ready and it would      
+  still be a painful process with the added burden of having a tech debt to resolve at that point. So I beleive we wireup infrastructure early and provide        
+  the Client with the hosted solution through their domain that the could be checking remotely and view things as it progress unlike going for a physical         
+  demo presentation with a laptop local dev environment. Thoughts (make it better)                                                                                
+
+● You're right, Awwal. I was wrong to suggest pushing 1.7.
+
+  And not just for the tech debt reason — your real insight is much sharper than that. Let me play it back to you because I don't think you realize how strong    
+  this move actually is.
+
+  ---
+  What You're Actually Proposing
+
+  You're not just "keeping 1.7." You're fundamentally changing the client relationship model:
+
+  ┌──────────────────────────────────────────┬────────────────────────────────────────────┐
+  │              My suggestion               │               Your approach                │
+  ├──────────────────────────────────────────┼────────────────────────────────────────────┤
+  │ Scheduled laptop demos                   │ Client has a live URL on their domain      │
+  ├──────────────────────────────────────────┼────────────────────────────────────────────┤
+  │ You control when they see progress       │ They see progress whenever they want       │
+  ├──────────────────────────────────────────┼────────────────────────────────────────────┤
+  │ "Let me show you what we built"          │ "Go check — it's live"                     │
+  ├──────────────────────────────────────────┼────────────────────────────────────────────┤
+  │ Demo creates a single moment of judgment │ Continuous access builds compounding trust │
+  └──────────────────────────────────────────┴────────────────────────────────────────────┘
+
+  This is the difference between a vendor relationship and a partnership. The AG opens vlprs.oyo.gov.ng on her phone at 7am, sees her dashboard with mock data,   
+  and she's already mentally living in the product. By Sprint 5 when the numbers become real, she's been checking it for weeks. That's adoption before launch.    
+
+  ---
+  Why This Makes Story 1.8 Dramatically More Powerful
+
+  With 1.7 (CI/CD) deployed before 1.8, every merge to main automatically pushes to production. That means:
+
+  Sprint 1 delivery:
+  - vlprs.oyo.gov.ng is live
+  - Client receives 5 demo credentials via secure channel
+  - AG opens her phone → branded login → 4 hero metrics on her actual phone, on actual 4G
+  - That's not a demo. That's the product.
+
+  Every sprint after that:
+  - You finish a backend story, merge to main, CI/CD deploys
+  - You send a WhatsApp: "The dashboard numbers are now real. Log in and check."
+  - No scheduling meetings. No setting up projectors. No laptop demos.
+  - The client watches mock data become real data, screen by screen, sprint by sprint
+
+  The client becomes your continuous tester. They'll find UX issues you'd never catch. They'll give you feedback between sprints, not after. They'll feel
+  ownership because they've been watching it grow.
+
+  ---
+  Making It Better: The Sprint 1 Delivery Sequence
+
+  Order matters. Here's how I'd sequence the 8 stories within Sprint 1 for maximum impact:
+
+  Phase: Week 1
+  Stories: 1.1 (Scaffold) → 1.2 (Auth) → 1.3 (Session) → 1.4 (RBAC) → 1.5 (Audit)
+  What It Achieves: Backend foundation complete. All APIs working locally.
+  ────────────────────────────────────────
+  Phase: Week 2
+  Stories: 1.7 (CI/CD) → 1.6 (Auth Shell) → 1.8 (Screen Scaffolding + Seed)
+  What It Achieves: Infrastructure deployed first, then frontend pushed through the pipeline.
+
+  Why 1.7 before 1.6 in Week 2: Once CI/CD is live, every frontend commit you make for 1.6 and 1.8 automatically deploys. The client could literally be watching  
+  screens appear in real-time if they're checking the URL. You're building in public — to an audience of one very important stakeholder.
+
+  ---
+  One Thing to Add: A "What's Live" Status Page
+
+  Since the client will be checking the URL between sprints, add a lightweight status indicator somewhere in the app — maybe a small badge in the sidebar footer  
+  or a /status page:
+
+  VLPRS Build Status
+  Sprint 1 — Foundation & UI Shell
+  Last deployed: 15 Feb 2026, 3:42pm
+  Next milestone: Sprint 2 — Loan Computation Engine (real numbers)
+
+  This sets expectations. The client knows what's mock and what's real. They know what's coming next. No confusion, no misplaced criticism of placeholder data.   
+
+  ---
+  The Revised Sprint 1 Summary
+
+  Story: 1.1
+  Scope: Monorepo scaffold
+  Client Impact: —
+  ────────────────────────────────────────
+  Story: 1.2
+  Scope: User auth API
+  Client Impact: —
+  ────────────────────────────────────────
+  Story: 1.3
+  Scope: Session security
+  Client Impact: —
+  ────────────────────────────────────────
+  Story: 1.4
+  Scope: RBAC
+  Client Impact: —
+  ────────────────────────────────────────
+  Story: 1.5
+  Scope: Audit logging
+  Client Impact: —
+  ────────────────────────────────────────
+  Story: 1.7
+  Scope: CI/CD + production deploy
+  Client Impact: vlprs.oyo.gov.ng goes live
+  ────────────────────────────────────────
+  Story: 1.6
+  Scope: Auth shell + landing page
+  Client Impact: Client sees branded login, app shell, role-based nav
+  ────────────────────────────────────────
+  Story: 1.8
+  Scope: Screen scaffolding + mock data + seed
+  Client Impact: Client sees full product — dashboard, submission, migration — with realistic mock data. 5 demo credentials. Works on phone.
+
+  End of Sprint 1 delivery: One message to the client — "Here are your login credentials. The URL is live. Check it on your phone."
+
+  ---
+  Shall I draft the full Story 1.8 with acceptance criteria now? I'll write it in the same format as your existing stories so it drops straight into the epics    
+  file.
+
+✻ Crunched for 49s
+
+
+
++**And** the build status is configured via environment variables so it updates with each deployment without code changes:            
+      730 +```                                                                                                                                  
+      731 +VITE_SPRINT_LABEL="Sprint 1 — Foundation & UI Shell"                                                                                 
+      732 +VITE_NEXT_MILESTONE="Sprint 2 — Loan Computation Engine (real numbers)"                                                              
+      733 +```                                                                                                                                  
+      734 +                                                                                                                                     
+      735 +**Demo Seed Script**                                                                                                                 
+      736 +                                                                                                                                     
+      737 +**Given** the development or production environment with the database running                                                        
+      738 +**When** I run `pnpm seed:demo`                                                                                                      
+      739 +**Then** the following accounts are created:                                                                                         
+      740 +                                                                                                                                     
+      741 +| Email | Role | MDA Scope |                                                                                                         
+      742 +|-------|------|-----------|                                                                                                         
+      743 +| ag@vlprs.oyo.gov.ng | super_admin | All MDAs |                                                                                     
+      744 +| deputy.ag@vlprs.oyo.gov.ng | super_admin | All MDAs |                                                                              
+      745 +| admin@vlprs.oyo.gov.ng | dept_admin | All MDAs |                                                                                   
+      746 +| health.officer@vlprs.oyo.gov.ng | mda_officer | Ministry of Health |                                                               
+      747 +| education.officer@vlprs.oyo.gov.ng | mda_officer | Ministry of Education |                                                         
+      748 +                                                                                                                                     
+      749 +**And** all accounts use a shared demo password that meets the password policy (min 8 chars, 1 uppercase, 1 lowercase, 1 digit       
+          +), documented in `.env.example` as `DEMO_SEED_PASSWORD`                                                                              
+      750 +**And** 3 MDAs are seeded with full metadata: Ministry of Health, Ministry of Education, Ministry of Works and Transport             
+      751 +**And** mock loan records (10-15 per seeded MDA) are created with realistic Naira amounts at the correct order of magnitude fo       
+          +r Oyo State vehicle loans, staff names, grade level tiers, and a distribution of loan statuses (Active, Completed, Applied)          
+      752 +**And** the remaining 60 MDAs are seeded as name-only entries (for the compliance grid and migration dashboard to display all        
+          +63)                                                                                                                                  
+      753 +**And** the seed script is idempotent — safe to run multiple times without duplicating data                                          
+      754 +**And** the seed script logs what it created: "Seeded 5 users, 63 MDAs, 38 loan records"                                             
+      755 +                                                                                                                                     
+      756 +**Wiring Map**                                                                                                                       
+      757 +                                                                                                                                     
+      758 +**Given** Story 1.8 is complete                                                                                                      
+      759 +**When** I inspect `WIRING-MAP.md` in the project root                                                                               
+      760 +**Then** a documented mapping exists for every mock hook to its target API endpoint and delivery sprint:                             
+      761 +                                                                                                                                     
+      762 +| Hook | Target Endpoint | Wire Sprint |                                                                                             
+      763 +|------|----------------|-------------|                                                                                              
+      764 +| `useDashboardMetrics()` | `GET /api/dashboard/metrics` | Sprint 5 (Epic 4) |                                                       
+      765 +| `useMdaComplianceGrid()` | `GET /api/dashboard/compliance` | Sprint 5 (Epic 4) |                                                   
+      766 +| `useAttentionItems()` | `GET /api/dashboard/attention` | Sprint 5 (Epic 4) |                                                       
+      767 +| `useMdaDetail(mdaId)` | `GET /api/mdas/:id/summary` | Sprint 5 (Epic 4) |                                                          
+      768 +| `useLoanDetail(loanId)` | `GET /api/loans/:id` | Sprint 2 (Epic 2) |                                                               
+      769 +| `useLoanSearch(query)` | `GET /api/loans/search` | Sprint 2 (Epic 2) |                                                             
+      770 +| `useSubmissionHistory(mdaId)` | `GET /api/submissions?mdaId=` | Sprint 7 (Epic 5) |                                                
+      771 +| `useMigrationStatus()` | `GET /api/migration/status` | Sprint 4 (Epic 3) |                                                         
+      772 +| `useExceptionQueue()` | `GET /api/exceptions` | Sprint 9 (Epic 7) |                                                                
+      773 +                                                                                                                                     
+      774 +**And** each wiring event is a hook-level change only (swap mock source for API call) — zero UI component modifications requir       
+          +ed                                                                                                                                   
+      775 +                                                                                                                                     
+      776  ---
+      777
+      778  ## Epic 2: Loan Data Management & Financial Computation
+
+● Now update the sprint status file to add Story 1.8.
+
+● Update(_bmad-output\implementation-artifacts\sprint-status.yaml)
+  ⎿  Added 1 line, removed 1 line
+       5  # story_location: _bmad-output/implementation-artifacts
+       6  # sprint_sequence: 1→E1, 2→E2, 3→E10, 4→E3, 5→E4, 6→E6, 7→E5, 8→E11, 9→E7, 10→E8, 11→E12, 12→E9, 13→E13
+       7  # total_epics: 13
+       8 -# total_stories: 56                                                                                                                   
+       8 +# total_stories: 57                                                                                                                   
+       9
+      10  # STATUS DEFINITIONS:
+      11  # ==================
+
+● Update(_bmad-output\implementation-artifacts\sprint-status.yaml)
+  ⎿  Added 1 line
+      52    1-5-audit-logging-action-tracking: backlog
+      53    1-6-frontend-authentication-shell: backlog
+      54    1-7-cicd-pipeline-production-infrastructure: backlog
+      55 +  1-8-frontend-screen-scaffolding-mock-data-layer-demo-seed: backlog                                                                  
+      56    epic-1-retrospective: optional
+      57
+      58    # Epic 2: Loan Data Management & Financial Computation
+
+● Now let me also update the metadata header in the epics file to reflect the edit.
+
+● Read 1 file (ctrl+o to expand)
+
+● Update(_bmad-output\planning-artifacts\epics.md)
+  ⎿  Added 3 lines, removed 1 line
+       3  lastStep: 4
+       4  status: 'complete'
+       5  completedAt: '2026-02-14'
+       6 -lastEdited: '2026-02-15'                                                                                                              
+       6 +lastEdited: '2026-02-17'                                                                                                              
+       7  editHistory:
+       8 +  - date: '2026-02-17'                                                                                                                
+       9 +    changes: 'Added Story 1.8 (Frontend Screen Scaffolding, Mock Data Layer & Demo Seed) to Epic 1. Story adds design foundatio       
+         +n (Oyo Crimson tokens, typography, extended Badge variants), 6 priority reusable components (HeroMetricCard, NairaDisplay, Atte       
+         +ntionItemCard, FileUploadZone, MigrationProgressCard, ExceptionQueueRow), role-specific skeleton screens with mock data (Execut       
+         +ive Dashboard, MDA Detail, Loan Detail, MDA Submission, Operations Hub), mock data service layer with hook abstractions for pro       
+         +gressive API wiring, demo seed script (5 accounts, 63 MDAs, mock loans), build status indicator, and wiring map documentation.        
+         +Updated Epic 1 description, sprint sequence (7→8 stories), total stories (56→57), and added Sprint 1 demonstrability milestone.       
+         + Rationale: eliminate UI dark zone in Sprints 2-3, enable continuous client visibility via hosted domain from Sprint 1.'              
+      10    - date: '2026-02-15'
+      11      changes: 'PRD delta cascade (FR60-FR75): Updated FR inventory (FR16/17/20 hardened for 8-field CSV, added FR60-FR75). Updat       
+          ed Additional Requirements (17 custom components, 16 services, new API routes). Updated FR Coverage Map (FR60-FR75 mapped to Ep       
+          ics 10-13). Updated Epic 5 for 8-field CSV. Added 4 new epics: Epic 10 (Staff Temporal Profile & Retirement Validation — 4 stor       
+          ies), Epic 11 (Pre-Submission Checkpoint & Mid-Cycle Events — 4 stories), Epic 12 (Early Exit Processing — 3 stories), Epic 13        
+          (User Administration & Staff ID Governance — 4 stories). Added Sprint Sequence section with 13-sprint implementation order, cri       
+          tical path, and demonstrability milestones. Total: 13 epics, 56 stories covering 75 FRs.'
+      12  inputDocuments:
+
+● Let me verify everything looks correct by reading the key sections.
+
+● Searched for 1 pattern, read 1 file (ctrl+o to expand)
+
+● Everything is in place. Here's a summary of what was updated:
+
+  ---
+  Files modified:
+
+  1. _bmad-output/planning-artifacts/epics.md
+    - Added Story 1.8 with full acceptance criteria (inserted at line 620, after Story 1.7)
+    - Updated Epic 1 description to reflect the demo-ready frontend scope
+    - Updated sprint sequence table: 7 → 8 stories for Epic 1
+    - Updated total count: 56 → 57 stories
+    - Added Sprint 1 demonstrability milestone: "Live product shell — branded login, role-specific screens with mock data, 5 seeded demo        
+  accounts, hosted on client domain"
+    - Added edit history entry documenting the change and rationale
+  2. _bmad-output/implementation-artifacts/sprint-status.yaml
+    - Added 1-8-frontend-screen-scaffolding-mock-data-layer-demo-seed: backlog to Epic 1
+    - Updated total_stories comment: 56 → 57
+
+  ---
+  The story is live in your planning artifacts, Awwal. When the Scrum Master creates the story file for development, all the acceptance criteria
+   are ready to go — design tokens, 6 components, 5 screens, seed script, wiring map, the whole thing.
+
+  Anything else you want to adjust, or are we good on this?
+
+✻ Cogitated for 3m 38s
+
+❯ what the prd  
+
+● Are you asking whether the PRD needs to be updated to reflect the Story 1.8 addition? Or did you want me to read through the PRD for something
+   else?
+
+  The short answer on PRD impact: Story 1.8 doesn't change any functional requirements. It's a delivery strategy change, not a feature change.  
+  The FRs stay at 75. The UX spec already defines the screens and components — 1.8 just builds them earlier with mock data.
+
+  That said, there are two things in the PRD that could be worth updating:
+
+  1. Build Sequence / Implementation Strategy — if the PRD has a section describing how the product rolls out, it should mention that Sprint 1  
+  now delivers a demo-ready visual shell, not just backend infrastructure
+  2. Demonstrability / Client Visibility — if there's any section on stakeholder communication or demo cadence, the "live hosted URL from Sprint
+   1" strategy is worth capturing
+
+  Want me to check the PRD and flag what (if anything) needs a touch?
+
+❯ yes check the PRD and flag what needs updating including the architecture file  
+
+● 2 Explore agents finished (ctrl+o to expand)
+   ├─ Read PRD file fully · 4 tool uses · 35.3k tokens
+   │  ⎿  Done
+   └─ Read architecture file fully · 1 tool use · 10.8k tokens
+      ⎿  Done
+
+● Good. I've reviewed both files thoroughly. Here's my assessment.
+
+  ---
+  PRD — What Needs Updating
+
+  The PRD has 3 sections that need a touch. The functional requirements (75 FRs) and success criteria are unaffected — Story 1.8 doesn't change 
+  WHAT the product does, it changes WHEN the client sees it.
+
+  1. Solo Developer Build Sequence (around line 190)
+
+  Current state: Step 6 ("AG Executive Dashboard") is the first time the client sees anything visual. Steps 1-5 are all backend/data.
+
+  Problem: This doesn't reflect that Sprint 1 now delivers a visual product shell with mock data. The build sequence implies the dashboard isn't
+   demonstrable until step 6.
+
+  Recommended update: Add a note to step 3 (RBAC + Authentication) that the frontend foundation includes screen scaffolding with mock data for  
+  client visibility. Or add a step 3.5 noting the UI shell with mock data layer.
+
+  2. Demonstrability Milestone (around line 207)
+
+  Current state:
+  "Features 1-7 produce a system with real temporal data — that the AG can see and interact with."
+
+  Problem: This skips Sprint 1 entirely. With Story 1.8, the AG can see and interact with the dashboard (mock data) from Sprint 1, on her phone,
+   on her domain.
+
+  Recommended update: Add a sentence noting that the frontend shell with mock data is delivered at step 3, giving stakeholders continuous       
+  visibility from the first sprint. Features 1-7 then replace mock data with real data.
+
+  3. Implementation Considerations (around line 778)
+
+  Current state:
+  "Design system should be established early — colours, typography, spacing, component library — before building screens"
+
+  Problem: This is vague guidance. It's now a concrete commitment — design system is established in Sprint 1 with Story 1.8.
+
+  Recommended update: Strengthen to: "Design system established in Sprint 1 — tokens, typography, component library, and skeleton screens with  
+  mock data for continuous stakeholder visibility."
+
+  ---
+  Architecture — What Needs Updating
+
+  The architecture has 5 sections that should reflect the mock data layer pattern.
+
+  1. Implementation Sequence (around line 337)
+
+  Current state: 10-step build order. Step 5 is "Frontend shell — auth flow" and step 8 is "Dashboard — TanStack Query + hero metrics."
+
+  Problem: With Story 1.8, the frontend shell (step 5) now includes ALL screen scaffolding with mock data — not just auth. The dashboard visual 
+  shell comes at step 5, not step 8. Step 8 becomes "wire dashboard to real APIs."
+
+  Recommended update: Expand step 5 to include screen scaffolding with mock data layer. Clarify step 8 as "Dashboard wiring — replace mock data 
+  with real API endpoints."
+
+  2. Custom Hooks Section (around line 831)
+
+  Current state: Lists hooks like useDashboard.ts, useSubmissions.ts, etc. — implying they hit real APIs.
+
+  Problem: With Story 1.8, these hooks exist from Sprint 1 but return mock data initially. The architecture should document this progressive    
+  pattern.
+
+  Recommended update: Add a note that hooks implement a mock-first pattern — returning data from src/mocks/ in Sprint 1, switchable to real API 
+  calls when backend endpoints are delivered. Zero component changes required on wiring.
+
+  3. Component Organization (around line 423)
+
+  Current state: Shows components/shared/ with NairaDisplay, NonPunitiveVarianceDisplay.
+
+  Problem: Story 1.8 adds 6 priority components (HeroMetricCard, NairaDisplay, AttentionItemCard, FileUploadZone, MigrationProgressCard,        
+  ExceptionQueueRow). The architecture's component list should reflect these as Sprint 1 deliverables.
+
+  Recommended update: Note which components are delivered in Sprint 1 (with mock data) vs built later with their respective epics.
+
+  4. Seed Data (around line 944)
+
+  Current state: Shows seed.ts for development seed data. No mention of demo-specific seeding.
+
+  Problem: Story 1.8 adds a pnpm seed:demo script with 5 named accounts, 63 MDAs, and mock loan records — distinct from generic dev seeding.    
+
+  Recommended update: Add seed-demo.ts to the file structure and document the demo seed script as a separate concern from development seeding.  
+
+  5. Environment Configuration
+
+  Current state: Lists env vars for DB, JWT, Resend, reCAPTCHA, etc.
+
+  Problem: Story 1.8 introduces new env vars: VITE_SPRINT_LABEL, VITE_NEXT_MILESTONE, and DEMO_SEED_PASSWORD. These should be documented.       
+
+  Recommended update: Add these to the environment variables table and .env.example specification.
+
+  ---
+  Summary
+
+  File: PRD
+  Sections to Update: Build Sequence, Demonstrability Milestone, Implementation Considerations
+  Severity: Low — wording adjustments, no FR changes
+  ────────────────────────────────────────
+  File: Architecture
+  Sections to Update: Implementation Sequence, Custom Hooks, Component Organization, Seed Data, Environment Config
+  Severity: Medium — structural pattern (mock-first hooks) should be documented for developer clarity
+
+  None of these are blocking — the epics file and sprint status already have the full Story 1.8 spec. But updating these documents keeps all    
+  three artifacts aligned, which matters when a developer picks up the story and references the architecture.
+
+  Want me to go ahead and make these updates, Awwal?
+
+✻ Cooked for 2m 34s
+
+❯ yes proceed 
+
+● Let me read the exact sections I need to edit in both files.
+
+● Read 2 files (ctrl+o to expand)
+
+● Now let me read the architecture sections for hooks, components, seed data, and environment config.
+
+● Read 1 file (ctrl+o to expand)
+
+● Now let me also check the PRD's edit history/frontmatter so I can update it.
+
+● Read 2 files (ctrl+o to expand)
+
+● Good. Now I have all the context I need. Let me make all the edits in parallel where possible.
+
+● Update(_bmad-output\planning-artifacts\prd.md)
+  ⎿  Added 3 lines, removed 1 line
+      27    brainstorming: 1
+      28    projectDocs: 11
+      29  workflowType: 'prd'
+      30 -lastEdited: '2026-02-15'                                                                                                              
+      30 +lastEdited: '2026-02-17'                                                                                                              
+      31  editHistory:
+      32 +  - date: '2026-02-17'                                                                                                                
+      33 +    changes: 'Story 1.8 alignment: Updated Solo Developer Build Sequence to reflect frontend screen scaffolding with mock data        
+         +at step 3 (Foundation), enabling continuous client visibility from Sprint 1 via hosted domain. Updated demonstrability mileston       
+         +e to include Sprint 1 demo-ready UI shell. Updated Implementation Considerations to specify design system and mock data layer e       
+         +stablished in Sprint 1. Updated Solo Developer Risks to include continuous client access via hosted URL. No FR changes.'              
+      34    - date: '2026-02-15'
+      35      changes: 'Post-validation housekeeping: hardened 6 FRs for measurability (FR20, FR34, FR35, FR38, FR39, FR54 — replaced vag       
+          ue terms with enumerated fields and testable criteria). Removed 2 implementation leakage references (Lighthouse, OWASP ZAP → to       
+          ol-agnostic language). Fixed 3 NFRs (scalability future-growth → testable API consumer requirement; removed motivational prose        
+          from design quality standard; replaced aspirational quality bar with measurable statement). Renumbered FR71-FR75 for sequential       
+           grouping (Service Status Verification Report moved from after FR70 to FR71, shifted User Account Management to FR72, Password        
+          Reset to FR73, Staff ID Management to FR74, Duplicate Staff ID Detection to FR75). Updated Journey Requirements Summary table t       
+          o reflect expanded Journeys 3-6. Added Phase 2/3 traceability references linking each feature to stakeholder needs, journeys, o       
+          r discovery artifacts.'
+      36    - date: '2026-02-15'
+
+● Update(_bmad-output\planning-artifacts\prd.md)
+  ⎿  Added 5 lines, removed 3 lines
+      187
+      188  **Resource Model:** Solo developer. Build sequence optimised for dependency order and demonstrable progress at each stage.
+      189
+      190 +**Client Visibility Strategy:** System is deployed to the client's domain from Sprint 1 with CI/CD auto-deploying on every mer       
+          +ge to `main`. The client receives demo credentials and can access the live hosted system at any time — watching mock data beco       
+          +me real data sprint by sprint. No scheduled laptop demos; continuous access builds compounding trust.                                
+      191 +                                                                                                                                     
+      192  ### Solo Developer Build Sequence
+      193
+      194  | Order | Feature | Milestone |
+      195  |-------|---------|-----------|
+      196  | 1 | Database Schema (Loan Master + Repayment Ledger) | Data foundation established |
+      197  | 2 | Computation Engine (all 4 tiers, all settlement paths) | Mathematical core verified |
+      196 -| 3 | RBAC + Authentication (3 MVP roles) | Access control operational |                                                             
+      198 +| 3 | RBAC + Authentication + CI/CD + Frontend Screen Scaffolding | Access control operational, CI/CD deploying to client doma       
+          +in, all role-specific screens live with mock data — dashboard, submission, migration, loan detail. Design system established.        
+          +Demo seed credentials active. |                                                                                                      
+      199  | 4 | Staff Temporal Profile & Event Model | Temporal data foundation for migration |
+      200  | 5 | Snapshot-Forward Migration Tool | Real data in system — all 63 MDAs |
+      199 -| 6 | AG Executive Dashboard | Flagship experience demonstrable |                                                                    
+      201 +| 6 | AG Executive Dashboard (wired to real data) | Mock dashboard numbers replaced with live data — flagship experience with        
+          +real numbers |                                                                                                                       
+      202  | 7 | Core Reports | System provably correct |
+      203  | 8 | MDA Submission Interface (8-field CSV + manual) | Ongoing operations enabled |
+      204  | 9 | Pre-Submission Checkpoint & Mid-Cycle Events | Accountability and event tracking operational |
+     ...
+      208  | 13 | Basic Notifications (email first, SMS fast-follow) | Operational loop complete |
+      209  | 14 | User & Staff Record Management | Administrative self-sufficiency achieved |
+      210
+      209 -**Demonstrability milestone:** Features 1-7 produce a system with real temporal data — DOB, appointment dates, computed retire       
+          -ment dates — that the AG can see and interact with. Features 8-14 complete operational loops: submission, event tracking, vali       
+          -dation, auto-stop, early exit, notifications, and administrative self-service.                                                       
+      211 +**Demonstrability milestone:** Feature 3 delivers a demo-ready product shell hosted on the client's domain — role-specific scr       
+          +eens with mock data, seeded demo credentials, responsive on mobile. The AG can open the dashboard on her phone from Sprint 1.        
+          +Features 4-7 progressively replace mock data with real data — DOB, appointment dates, computed retirement dates, real MDA figu       
+          +res. Features 8-14 complete operational loops: submission, event tracking, validation, auto-stop, early exit, notifications, a       
+          +nd administrative self-service. Each sprint's merge to `main` auto-deploys, so the client watches the product evolve in real t       
+          +ime.                                                                                                                                 
+      212
+      213  ### MVP Feature Set (Phase 1)
+      214
+
+● Now update the PRD's Solo Developer Risks and Implementation Considerations sections.
+
+● Update(_bmad-output\planning-artifacts\prd.md)
+  ⎿  Added 2 lines, removed 1 line
+      294
+      295  **Solo Developer Risks:**
+      296  - Build sequence creates demonstrable progress at each stage — visible wins maintain momentum
+      297 -- Design system established once and reused across all screens — no per-screen redesign                                              
+      297 +- Design system and screen scaffolding established in Sprint 1 with mock data — all subsequent screens reuse the same tokens,        
+          +components, and patterns. No per-screen redesign                                                                                     
+      298 +- Client has continuous access to the live hosted system from Sprint 1 — no dependency on scheduled demos or physical presenta       
+          +tions. Progress is visible on the client's domain at all times                                                                       
+      299  - Migration conversations with Mr. Okonkwo should start early — get MDA spreadsheets flowing in parallel with build
+      300  - This PRD is the scope contract — if it's not in MVP, it waits for Phase 2
+      301  - Staff temporal profile established before migration ensures retirement date computation is available from day one — avoids c       
+           ostly retrofit
+
+● Update(_bmad-output\planning-artifacts\prd.md)
+  ⎿  Added 3 lines, removed 1 line
+      780  ### Implementation Considerations
+      781
+      782  - **Framework choice** should support SPA architecture, component-based design, and modern CSS (to be decided in technical arc       
+           hitecture)
+      783 -- **Design system** should be established early — colours, typography, spacing, component library — before building screens          
+      783 +- **Design system** established in Sprint 1 — Oyo Crimson palette, Inter/JetBrains Mono typography, non-punitive colour tokens       
+          +, extended Badge variants, and priority reusable components (HeroMetricCard, NairaDisplay, AttentionItemCard, FileUploadZone,        
+          +MigrationProgressCard, ExceptionQueueRow). All subsequent screens built from this foundation                                         
+      784 +- **Mock data layer** established in Sprint 1 — all screens fetch data through hook abstractions returning mock data initially       
+          +. When backend APIs are delivered in subsequent sprints, hooks are updated to call real endpoints with zero UI component chang       
+          +es. Progressive wiring, not big-bang integration                                                                                     
+      785  - **Asset optimisation** for 4G mobile performance — lazy loading, code splitting, compressed images
+      786  - **State management** appropriate for role-based views with shared data (loan records, dashboard aggregates)
+      787  - **API-first backend** — all data access through structured API endpoints, enabling future integrations without backend chang       
+           es
+      788 +- **Demo seed script** (`pnpm seed:demo`) delivers 5 named accounts with role-specific credentials, 63 MDAs, and realistic moc       
+          +k loan data — enabling client access to the hosted system from Sprint 1                                                              
+      789
+      790  ---
+      791
+
+● PRD is done. Now the architecture file — 5 edits.
+
+● Update(_bmad-output\planning-artifacts\architecture.md)
+  ⎿  Added 2 lines
+      22  user_name: 'Awwal'
+      23  date: '2026-02-15'
+      24  editHistory:
+      25 +  - date: '2026-02-17'                                                                                                                
+      26 +    changes: 'Story 1.8 alignment: Updated implementation sequence step 5 to include screen scaffolding with mock data layer an       
+         +d CI/CD deployment. Added mock data directory (src/mocks/) to frontend source structure. Added seed-demo.ts to database directo       
+         +ry. Added mock-first hook pattern note to hooks section. Added VITE_SPRINT_LABEL, VITE_NEXT_MILESTONE, and DEMO_SEED_PASSWORD t       
+         +o environment variables. Added pnpm seed:demo to development workflow commands. Updated cross-component dependencies with mock        
+         +data wiring pattern. No architectural decisions changed.'                                                                             
+      27    - date: '2026-02-15'
+      28      changes: 'PRD cascade (FR60-FR75): updated FR inventory from 59→75 across 15 categories. Added 6 new services (preSubmissio       
+          n, employmentEvent, temporalValidation, earlyExit, userAdmin, staffId), 4 new route groups, 5 new client pages, 5 new hooks, 3        
+          new shared type modules, 4 new validator schemas. Added 3 data flow diagrams (submission with pre-submission checkpoint, early        
+          exit lifecycle, mid-cycle event). Updated cross-cutting concerns (temporal validation, Staff ID uniqueness), technical constrai       
+          nts (8-field CSV, temporal data required), service boundaries (16 services), and requirements coverage validation. Updated comp       
+          leteness checklist and readiness assessment.'
+      29  ---
+
+● Update(_bmad-output\planning-artifacts\architecture.md)
+  ⎿  Added 7 lines, removed 6 lines
+      342  2. **Database schema** — Drizzle schema with immutability triggers, UUIDv7 PKs
+      343  3. **Auth system** — JWT sign/verify, bcrypt, refresh token table, RBAC middleware
+      344  4. **API skeleton** — Express 5 with middleware chain (helmet → cors → rate-limit → auth → audit)
+      345 -5. **Frontend shell** — Vite + React 18 + shadcn/ui + React Router, auth flow (login → store access token → refresh cycle)           
+      346 -6. **Computation engine** — `decimal.js` financial calculations, ledger INSERT logic                                                 
+      347 -7. **Submission workflow** — CSV upload → validate → atomic ledger insert → comparison engine                                        
+      348 -8. **Dashboard** — TanStack Query + hero metrics API + recharts visualisations                                                       
+      349 -9. **CI/CD pipeline** — GitHub Actions auto-deploy on merge to `main`                                                                
+      350 -10. **Remaining features** — exceptions, reports, PDF, notifications, migration tool                                                 
+      345 +5. **CI/CD pipeline** — GitHub Actions auto-deploy on merge to `main`. Deployed before frontend so every subsequent commit aut       
+          +o-deploys to client domain                                                                                                           
+      346 +6. **Frontend shell + screen scaffolding** — Vite + React 18 + shadcn/ui + React Router, auth flow, design system (Oyo Crimson       
+          + tokens, Inter/JetBrains Mono typography, extended Badge variants), role-specific skeleton screens (Executive Dashboard, MDA S       
+          +ubmission, Operations Hub, MDA Detail, Loan Detail) with mock data layer, demo seed script (5 accounts, 63 MDAs, mock loans).        
+          +All data access through hook abstractions returning mock data from `src/mocks/` — each hook switchable to real API with zero U       
+          +I component changes                                                                                                                  
+      347 +7. **Computation engine** — `decimal.js` financial calculations, ledger INSERT logic. Wire `useLoanDetail` and `useLoanSearch`       
+          + hooks to real endpoints                                                                                                             
+      348 +8. **Dashboard wiring** — Replace mock data in `useDashboardMetrics`, `useMdaComplianceGrid`, `useAttentionItems` hooks with T       
+          +anStack Query calls to real dashboard API endpoints                                                                                  
+      349 +9. **Submission workflow** — CSV upload → validate → atomic ledger insert → comparison engine. Wire `useSubmissionHistory` hoo       
+          +k to real endpoints                                                                                                                  
+      350 +10. **Remaining features** — exceptions, reports, PDF, notifications, migration tool. Each feature wires its corresponding moc       
+          +k hooks to real APIs                                                                                                                 
+      351
+      352  **Cross-Component Dependencies:**
+      353
+      354  - **Auth ↔ Every route** — All protected endpoints depend on JWT middleware + RBAC
+      355  - **Shared types ↔ Client + Server** — API contracts, Zod schemas, enums consumed by both workspaces
+      356 +- **Mock data layer ↔ Real APIs** — All frontend screens use hook abstractions (e.g., `useDashboardMetrics()`) that return moc       
+          +k data from Sprint 1. As backend endpoints are delivered, hooks are updated to call real APIs — zero UI component changes requ       
+          +ired. Wiring map documents each hook→endpoint→sprint mapping                                                                         
+      357  - **Computation engine ↔ Ledger** — Financial calculations write to immutable ledger; dashboard reads computed views from ledg       
+           er
+      358  - **Audit log ↔ Every mutation** — Middleware captures authenticated user + action for every write operation
+      359  - **Non-punitive vocabulary ↔ Every response** — Shared constants enforce approved terminology across error messages, API resp       
+           onses, and UI copy
+
+● Now update the component organization, hooks, seed data, and environment sections.
+
+● Update(_bmad-output\planning-artifacts\architecture.md)
+  ⎿  Added 19 lines, removed 3 lines
+      429  apps/client/src/
+      430  ├── components/
+      431  │   ├── ui/                    ← shadcn/ui components (auto-generated)
+      432 -│   ├── shared/                ← custom shared (NairaDisplay, NonPunitiveVarianceDisplay)                                            
+      432 +│   ├── shared/                ← custom shared components                                                                            
+      433 +│   │   ├── HeroMetricCard.tsx           ← Sprint 1 (mock data)                                                                      
+      434 +│   │   ├── NairaDisplay.tsx             ← Sprint 1 (mock data)                                                                      
+      435 +│   │   ├── AttentionItemCard.tsx        ← Sprint 1 (mock data)                                                                      
+      436 +│   │   ├── FileUploadZone.tsx           ← Sprint 1 (mock data)                                                                      
+      437 +│   │   ├── MigrationProgressCard.tsx    ← Sprint 1 (mock data)                                                                      
+      438 +│   │   ├── ExceptionQueueRow.tsx        ← Sprint 1 (mock data)                                                                      
+      439 +│   │   └── NonPunitiveVarianceDisplay.tsx ← built with Epic 5                                                                       
+      440  │   └── layout/                ← layout components (Sidebar, Header, AuthGuard)
+      441 +├── mocks/                     ← mock data for Sprint 1 screen scaffolding                                                           
+      442 +│   ├── dashboardMetrics.ts    ← Target: GET /api/dashboard/metrics (Sprint 5)                                                       
+      443 +│   ├── mdaComplianceGrid.ts   ← Target: GET /api/dashboard/compliance (Sprint 5)                                                    
+      444 +│   ├── attentionItems.ts      ← Target: GET /api/dashboard/attention (Sprint 5)                                                     
+      445 +│   ├── migrationStatus.ts     ← Target: GET /api/migration/status (Sprint 4)                                                        
+      446 +│   ├── loanSearch.ts          ← Target: GET /api/loans/search (Sprint 2)                                                            
+      447 +│   ├── submissionHistory.ts   ← Target: GET /api/submissions (Sprint 7)                                                             
+      448 +│   └── exceptionQueue.ts      ← Target: GET /api/exceptions (Sprint 9)                                                              
+      449  ├── pages/
+      450  │   ├── public/                ← public zone routes
+      451  │   │   ├── HomePage.tsx
+      452  │   │   └── EoiPage.tsx
+      453  │   └── dashboard/             ← protected zone routes
+      454  │       ├── DashboardPage.tsx
+      455 +│       ├── MdaDetailPage.tsx                                                                                                        
+      456 +│       ├── LoanDetailPage.tsx                                                                                                       
+      457  │       ├── SubmissionsPage.tsx
+      458 +│       ├── OperationsHubPage.tsx                                                                                                    
+      459  │       ├── ExceptionsPage.tsx
+      460  │       └── components/        ← page-specific (used only by this page)
+      443 -│           ├── HeroMetricCard.tsx                                                                                                   
+      444 -│           └── AttentionItemCard.tsx                                                                                                
+      461  ```
+      462
+      463  **Service Organization: By domain**
+
+● Update(_bmad-output\planning-artifacts\architecture.md)
+  ⎿  Added 14 lines, removed 9 lines
+      849  │   │       │
+      850  │   │       ├── hooks/
+      851  │   │       │   ├── useAuth.ts            # Access token state, login/logout/refresh
+      852 -│   │       │   ├── useDashboard.ts       # TanStack Query hooks for dashboard endpoints                                             
+      853 -│   │       │   ├── useSubmissions.ts     # TanStack Query hooks for submission endpoints                                            
+      854 -│   │       │   ├── useLoans.ts           # TanStack Query hooks for loan endpoints                                                  
+      855 -│   │       │   ├── useExceptions.ts      # TanStack Query hooks for exception endpoints                                             
+      856 -│   │       │   ├── useEmploymentEvents.ts # TanStack Query hooks for mid-cycle events                                               
+      857 -│   │       │   ├── useEarlyExit.ts       # TanStack Query hooks for early exit workflow                                             
+      858 -│   │       │   ├── usePreSubmission.ts   # TanStack Query hooks for pre-submission checkpoint                                       
+      859 -│   │       │   ├── useStaffId.ts         # TanStack Query hooks for Staff ID operations                                             
+      860 -│   │       │   ├── useUserAdmin.ts       # TanStack Query hooks for user account management                                         
+      852 +│   │       │   ├── useDashboard.ts       # Sprint 1: returns mock data; Sprint 5: TanStack Query → real API                         
+      853 +│   │       │   ├── useSubmissions.ts     # Sprint 1: returns mock data; Sprint 7: TanStack Query → real API                         
+      854 +│   │       │   ├── useLoans.ts           # Sprint 1: returns mock data; Sprint 2: TanStack Query → real API                         
+      855 +│   │       │   ├── useExceptions.ts      # Sprint 1: returns mock data; Sprint 9: TanStack Query → real API                         
+      856 +│   │       │   ├── useMigration.ts       # Sprint 1: returns mock data; Sprint 4: TanStack Query → real API                         
+      857 +│   │       │   ├── useEmploymentEvents.ts # TanStack Query hooks for mid-cycle events (Sprint 8)                                    
+      858 +│   │       │   ├── useEarlyExit.ts       # TanStack Query hooks for early exit workflow (Sprint 11)                                 
+      859 +│   │       │   ├── usePreSubmission.ts   # TanStack Query hooks for pre-submission checkpoint (Sprint 8)                            
+      860 +│   │       │   ├── useStaffId.ts         # TanStack Query hooks for Staff ID operations (Sprint 13)                                 
+      861 +│   │       │   ├── useUserAdmin.ts       # TanStack Query hooks for user account management (Sprint 13)                             
+      862  │   │       │   └── useDebounce.ts        # Debounced search input
+      863 +│   │       │   # NOTE: Hooks marked "Sprint 1: returns mock data" implement a mock-first pattern.                                   
+      864 +│   │       │   # They import from src/mocks/ initially. When the target API is delivered,                                           
+      865 +│   │       │   # the hook is updated to use TanStack Query with the real endpoint.                                                  
+      866 +│   │       │   # Zero UI component changes required — only the hook internals change.                                               
+      867  │   │       │
+      868  │   │       ├── lib/
+      869  │   │       │   ├── apiClient.ts          # Typed fetch wrapper: JWT attach, refresh, retry
+
+● Update(_bmad-output\planning-artifacts\architecture.md)
+  ⎿  Added 2 lines, removed 1 line
+      965  │           │   │   ├── earlyExitQueries.ts
+      966  │           │   │   ├── temporalQueries.ts
+      967  │           │   │   └── staffIdQueries.ts
+      968 -│           │   └── seed.ts               # Development seed data                                                                    
+      968 +│           │   ├── seed.ts               # Development seed data                                                                    
+      969 +│           │   └── seed-demo.ts          # Demo seed: 5 named accounts, 63 MDAs, mock loans (pnpm seed:demo)                        
+      970  │           │
+      971  │           └── lib/
+      972  │               ├── jwt.ts                # sign, verify, decode (jsonwebtoken)
+
+● Now update the environment variables table and development workflow.
+
+● Update(_bmad-output\planning-artifacts\architecture.md)
+  ⎿  Added 2 lines
+      1212  | Container Registry | GitHub (ghcr.io) | Docker push/pull | `GHCR_TOKEN` |
+      1213  | Hosting | DO Droplet | SSH via GitHub Actions | `DROPLET_SSH_KEY`, `DROPLET_IP` |
+      1214  | Object Storage | DO Spaces | Backup uploads | `DO_SPACES_KEY`, `DO_SPACES_SECRET` |
+      1215 +| Build Status | Client-side env vars | Vite env injection | `VITE_SPRINT_LABEL`, `VITE_NEXT_MILESTONE` |                           
+      1216 +| Demo Seed | Shared demo password | Seed script config | `DEMO_SEED_PASSWORD` |                                                    
+      1217
+      1218  ### Deferred Infrastructure (Post-MVP)
+      1219
+
+● Update(_bmad-output\planning-artifacts\architecture.md)
+  ⎿  Added 2 lines, removed 1 line
+      1230  # Local development (Docker)
+      1231  docker compose -f docker-compose.dev.yml up          # Start PG + server + client
+      1232  docker compose -f docker-compose.dev.yml exec server pnpm db:push      # Push schema
+      1233 -docker compose -f docker-compose.dev.yml exec server pnpm db:seed      # Seed data                                                  
+      1233 +docker compose -f docker-compose.dev.yml exec server pnpm db:seed      # Seed dev data                                              
+      1234 +docker compose -f docker-compose.dev.yml exec server pnpm seed:demo    # Seed demo accounts (5 users, 63 MDAs, mock loans)          
+      1235  docker compose -f docker-compose.dev.yml exec server pnpm test         # Server tests
+      1236  docker compose -f docker-compose.dev.yml exec client pnpm test         # Client tests
+      1237
+
+● Let me verify the architecture edits are clean by checking the key sections.
+
+● Searched for 2 patterns (ctrl+o to expand)
+
+● All edits are verified. Here's the summary of everything that was updated:
+
+  ---
+  PRD Updates (4 sections)
+
+  Section: Edit history
+  What Changed: Added 2026-02-17 entry documenting Story 1.8 alignment changes
+  ────────────────────────────────────────
+  Section: Client Visibility Strategy
+  What Changed: New paragraph added under Resource Model — documents the "deployed to client domain from Sprint 1, continuous access" approach  
+  ────────────────────────────────────────
+  Section: Solo Developer Build Sequence
+  What Changed: Step 3 expanded to include CI/CD + frontend scaffolding + mock data + demo seed. Step 6 clarified as "wired to real data" (not  
+    first-time dashboard). Demonstrability milestone rewritten to start at Sprint 1
+  ────────────────────────────────────────
+  Section: Solo Developer Risks
+  What Changed: Added two bullets: design system established in Sprint 1, client has continuous hosted access
+  ────────────────────────────────────────
+  Section: Implementation Considerations
+  What Changed: Design system bullet made specific (Sprint 1, named components). Added mock data layer bullet. Added demo seed script bullet    
+
+  Architecture Updates (6 sections)
+
+  Section: Edit history
+  What Changed: Added 2026-02-17 entry documenting changes
+  ────────────────────────────────────────
+  Section: Implementation Sequence
+  What Changed: Reordered: CI/CD moved to step 5 (before frontend), frontend shell expanded to step 6 with screen scaffolding + mock data. Steps
+
+    7-10 updated to reference hook wiring
+  ────────────────────────────────────────
+  Section: Cross-Component Dependencies
+  What Changed: Added "Mock data layer ↔ Real APIs" dependency documenting the progressive wiring pattern
+  ────────────────────────────────────────
+  Section: Component Organization
+  What Changed: Added 6 Sprint 1 shared components with labels. Added mocks/ directory with target endpoint comments. Added MdaDetailPage,      
+    LoanDetailPage, OperationsHubPage
+  ────────────────────────────────────────
+  Section: Hooks section
+  What Changed: Each hook annotated with "Sprint 1: mock data → Sprint N: real API" pattern. Added explanatory NOTE comment about mock-first    
+    pattern. Added useMigration.ts
+  ────────────────────────────────────────
+  Section: Seed data
+  What Changed: Added seed-demo.ts alongside seed.ts
+  ────────────────────────────────────────
+  Section: Environment variables
+  What Changed: Added VITE_SPRINT_LABEL, VITE_NEXT_MILESTONE, DEMO_SEED_PASSWORD to external integration table
+  ────────────────────────────────────────
+  Section: Development workflow
+  What Changed: Added pnpm seed:demo command
+
+  ---
+  All three planning artifacts — PRD, Architecture, and Epics — are now aligned on the Story 1.8 strategy. A developer picking up any of these  
+  documents will see the same picture: mock-first frontend in Sprint 1, progressive API wiring, continuous client visibility via hosted domain. 
+
+  Anything else, Awwal?
+
+✻ Brewed for 4m 3s
+
+❯ Quick one PM, I want you to read this C:\Users\DELL\Desktop\vlprs\docs\portable-playbook.md, it is a playbook from a project I developed,     
+   is there any thing that can be gleaned from this and implemented here to make this project better. Thought (make it better)                  
+
+● Read 1 file (ctrl+o to expand)
+
+● Good read, Awwal. This is a battle-tested playbook — 37 stories, 5 epics, 1,200+ tests, and an expensive course correction. There's real scar 
+  tissue in here. Let me separate what's already covered in VLPRS from what would genuinely make the project better.
+
+  ---
+  Already Covered (No Action Needed)
+
+  These patterns from OSLRS are already in your VLPRS architecture:
+
+  - UUIDv7 for primary keys
+  - Pino structured logging
+  - AppError class pattern (appError.ts in architecture)
+  - Shared types/validators in packages/shared
+  - JWT + refresh token auth (VLPRS uses rotation instead of Redis — different, both valid)
+  - Monorepo with pnpm workspaces
+  - BMAD workflow process
+  - ESM modules throughout
+
+  ---
+  High Value — Should Implement
+
+  1. Story 1.8 Needs a Size Check
+
+  The playbook's hardest-won lesson (Section 1.2):
+
+  "If a story exceeds 15 tasks during breakdown, split it before starting. The split cost is always less than the scope explosion cost."        
+
+  Awwal, Story 1.8 is big. Count the deliverables: design tokens, 6 components, 5 screens, mock data layer with 9 hooks, seed script, build     
+  status indicator, wiring map document. That's likely 18-22 tasks during breakdown.
+
+  My recommendation: When the Scrum Master breaks Story 1.8 into tasks, if it exceeds 15, split it into:
+  - 1.8a: Design foundation + priority components + mock data layer
+  - 1.8b: Screen scaffolding (all 5 screens using the components from 1.8a) + seed script + wiring map
+
+  1.8a is the foundational story (Section 1.3 pattern — "deliberately sequence one foundational story"). 1.8b is derivative — it's faster       
+  because the components and patterns already exist.
+
+  2. Spike-First for CI/CD Chain (Story 1.7)
+
+  The playbook's #1 lesson:
+
+  "For ANY external integration or unfamiliar technology: build a vertical spike first — connect the full path end-to-end with throwaway code." 
+
+  Story 1.7 chains together: GitHub Actions → Docker build → ghcr.io push → SSH to Droplet → docker compose pull → Nginx SSL → live site. That's
+   6 external services in one pipeline. If any link breaks, you're debugging blind.
+
+  My recommendation: Before production-quality Dockerfiles, spike the full deploy path with a "Hello World" Express app. Get
+  https://vlprs.oyo.gov.ng showing "VLPRS — Coming Soon" through the full pipeline first. Then build the real Dockerfiles on a proven path. This
+   could be the first task within Story 1.7.
+
+  3. Three-Layer Testing Strategy
+
+  The playbook's most painful lesson (Section 1.4):
+
+  "53 RBAC unit tests passed. 3 roles couldn't access their dashboards."
+
+  VLPRS has 3 roles with role-specific home screens — exactly the scenario where this bug manifests. Your architecture specifies Vitest, but    
+  doesn't mention E2E testing (Playwright) or structured UAT.
+
+  My recommendation: Add to the testing approach:
+
+  ┌──────────────────┬─────────────────────┬───────────────────┬────────────────────────────────────────────────────────────────────┐
+  │      Layer       │        Tool         │       When        │                          What It Catches                           │
+  ├──────────────────┼─────────────────────┼───────────────────┼────────────────────────────────────────────────────────────────────┤
+  │ Unit/Integration │ Vitest              │ Every story       │ Logic correctness, service behaviour                               │
+  ├──────────────────┼─────────────────────┼───────────────────┼────────────────────────────────────────────────────────────────────┤
+  │ E2E              │ Playwright          │ Every 2-3 stories │ Wiring bugs — "login as MDA officer, verify submission page loads" │
+  ├──────────────────┼─────────────────────┼───────────────────┼────────────────────────────────────────────────────────────────────┤
+  │ Structured UAT   │ Client via live URL │ After each epic   │ UX gaps, flow problems, real-world feedback                        │
+  └──────────────────┴─────────────────────┴───────────────────┴────────────────────────────────────────────────────────────────────┘
+
+  The E2E layer is especially critical for VLPRS because the mock-first pattern means every wiring event (mock → real API) is a potential       
+  breakpoint. A Playwright test that logs in as each role and verifies their home screen is a 30-minute investment that catches the exact class 
+  of bugs OSLRS hit.
+
+  4. Formalize Client UAT via the Live URL
+
+  The playbook says (Section 1.4):
+
+  "Schedule UAT after every 2-3 stories, not just at epic completion."
+
+  You already have something better than OSLRS had — the client has a live hosted URL from Sprint 1. But passive access isn't the same as       
+  structured feedback.
+
+  My recommendation: After every epic completion (or every 3-4 stories within an epic), send the client a "What to Test" checklist — specific   
+  flows to walk through with their demo credentials. Something like:
+
+  "Sprint 2 is deployed. Please log in as AG and check: (1) Do the dashboard numbers look realistic? (2) Tap Active Loans — does the MDA list   
+  load? (3) Try it on your phone."
+
+  This turns the client from a passive observer into an active UAT participant — and catches issues before they compound.
+
+  5. packages/testing/ Shared Test Package
+
+  OSLRS created a shared testing package with factories, helpers, and setup utilities. VLPRS doesn't have this.
+
+  My recommendation: Add packages/testing/ to the monorepo with:
+  - Test factories — createMockLoan(), createMockMda(), createMockUser() — shared across server and client tests
+  - Test helpers — authenticated request helpers, database cleanup, mock data generators
+  - Global setup — consistent test configuration across all workspaces
+
+  This pays off fast when you have 56+ stories and need consistent test data everywhere.
+
+  6. Production Seed from Environment Variables
+
+  OSLRS learned (Section 2.4):
+
+  "Production mode: reads SUPER_ADMIN_EMAIL and SUPER_ADMIN_PASSWORD from env vars. Creates only the initial super admin account."
+
+  VLPRS has seed.ts (dev) and seed-demo.ts (demo), but doesn't plan for production initialization. When you first deploy to the client's domain,
+   you need to create the initial super admin account — and that password can't be hardcoded.
+
+  My recommendation: Add a pnpm seed:production command that reads SUPER_ADMIN_EMAIL and SUPER_ADMIN_PASSWORD from env vars. This is a small    
+  addition to Story 1.7 or 1.8's acceptance criteria.
+
+  ---
+  Medium Value — Good Practices to Adopt
+
+  7. Role Constants as Single Source of Truth
+
+  OSLRS's bug: frontend used admin, database used super_admin. Three roles failed at runtime despite passing 53 tests.
+
+  VLPRS architecture already puts shared types in packages/shared, but the playbook lesson is specific — role string constants must be imported,
+   never hardcoded anywhere. Worth adding as an explicit convention in the architecture:
+
+  // packages/shared/src/constants/roles.ts — SINGLE SOURCE OF TRUTH
+  export const ROLES = {
+    SUPER_ADMIN: 'super_admin',
+    DEPT_ADMIN: 'dept_admin',
+    MDA_OFFICER: 'mda_officer',
+  } as const;
+  // Both apps/server and apps/client import from here — never hardcode
+
+  8. Retro Follow-Through Discipline
+
+  OSLRS found that 40% of retro action items were never addressed. The fix:
+
+  "Each retrospective must review action items from the PREVIOUS retro first."
+
+  Simple process discipline. Worth adopting from Epic 1 retrospective onward.
+
+  9. TanStack Query Hook Naming Convention
+
+  use<Action><Entity> — e.g., useCreateLoan, useDeactivateUser, useSearchLoans. Consistent across the codebase. VLPRS hooks are named broadly   
+  (useDashboard.ts, useLoans.ts) — but within those files, the individual hooks should follow this convention.
+
+  ---
+  Summary: What to Act On
+
+  ┌─────┬────────────────────────────────────────────────────────────┬────────────────────────────────────┬────────┐
+  │  #  │                           Action                           │           Where to Apply           │ Effort │
+  ├─────┼────────────────────────────────────────────────────────────┼────────────────────────────────────┼────────┤
+  │ 1   │ Size-check Story 1.8 — split if >15 tasks                  │ Epics file / sprint planning       │ Low    │
+  ├─────┼────────────────────────────────────────────────────────────┼────────────────────────────────────┼────────┤
+  │ 2   │ Spike CI/CD with Hello World before production Dockerfiles │ Story 1.7 first task               │ Low    │
+  ├─────┼────────────────────────────────────────────────────────────┼────────────────────────────────────┼────────┤
+  │ 3   │ Add Playwright E2E testing to test strategy                │ Architecture doc, Story 1.6 or 1.8 │ Medium │
+  ├─────┼────────────────────────────────────────────────────────────┼────────────────────────────────────┼────────┤
+  │ 4   │ Formalize client UAT checklists via live URL               │ Process — after each epic          │ Low    │
+  ├─────┼────────────────────────────────────────────────────────────┼────────────────────────────────────┼────────┤
+  │ 5   │ Add packages/testing/ shared test package                  │ Architecture doc, Story 1.1 or 1.2 │ Medium │
+  ├─────┼────────────────────────────────────────────────────────────┼────────────────────────────────────┼────────┤
+  │ 6   │ Production seed from env vars                              │ Story 1.7 acceptance criteria      │ Low    │
+  ├─────┼────────────────────────────────────────────────────────────┼────────────────────────────────────┼────────┤
+  │ 7   │ Role constants single source of truth                      │ packages/shared convention         │ Low    │
+  ├─────┼────────────────────────────────────────────────────────────┼────────────────────────────────────┼────────┤
+  │ 8   │ Retro follow-through discipline                            │ Process — every retro              │ Low    │
+  ├─────┼────────────────────────────────────────────────────────────┼────────────────────────────────────┼────────┤
+  │ 9   │ TanStack hook naming convention                            │ Architecture doc convention        │ Low    │
+  └─────┴────────────────────────────────────────────────────────────┴────────────────────────────────────┴────────┘
+
+  Items 1-4 are the high-value wins — they directly prevent the classes of bugs and delays that cost OSLRS weeks. Items 5-9 are good hygiene    
+  that pays dividends over 13 sprints.
+
+  What do you want to do with these, Awwal? Apply them all to the planning artifacts, or pick the ones you want?
+
+✻ Sautéed for 1m 45s
+
+❯ apply them all, how do/will you apply them?                                                                                                       
+● Here's exactly how each item lands — which file, which section, what changes:                                                                 
+                                                                                                                                                
+  #: 1                                                                                                                                          
+  Action: Split Story 1.8 → 1.8a + 1.8b                                                                                                           File(s): epics.md + sprint-status.yaml
+  How: Split the story in two: 1.8a (design foundation + components + mock data layer), 1.8b (5 screens + seed script + wiring map). Update     
+    sprint status to track both.
+  ────────────────────────────────────────                                                                                                        #: 2                                                                                                                                          
+  Action: Spike CI/CD first
+  File(s): epics.md (Story 1.7)
+  How: Add a new acceptance criterion at the top of 1.7: deploy a "Hello World" Express app through the full pipeline to vlprs.oyo.gov.ng before
+
+    building production Dockerfiles.
+  ────────────────────────────────────────
+  #: 3
+  Action: Playwright E2E testing
+  File(s): architecture.md + epics.md (Story 1.6)
+  How: Add Playwright to architecture's testing section. Add E2E smoke test to Story 1.6: "login as each role, verify correct home screen       
+  loads."
+  ────────────────────────────────────────
+  #: 4
+  Action: Client UAT checklists
+  File(s): prd.md
+  How: Add under Solo Developer Risks / Client Visibility Strategy: after each epic, send structured "What to Test" checklist to client via     
+  their
+    live URL.
+  ────────────────────────────────────────
+  #: 5
+  Action: packages/testing/
+  File(s): architecture.md + epics.md (Story 1.1)
+  How: Add the package to architecture directory structure. Add acceptance criterion to Story 1.1: shared test factories and helpers in
+    packages/testing/.
+  ────────────────────────────────────────
+  #: 6
+  Action: Production seed from env
+  File(s): architecture.md + epics.md (Story 1.7)
+  How: Add seed-production.ts to architecture's DB directory. Add acceptance criterion to 1.7: initial super admin created from env vars on     
+  first
+    production deploy.
+  ────────────────────────────────────────
+  #: 7
+  Action: Role constants SSoT
+  File(s): architecture.md
+  How: Add explicit convention in patterns section: ROLES constant in packages/shared, never hardcode role strings.
+  ────────────────────────────────────────
+  #: 8
+  Action: Retro follow-through
+  File(s): sprint-status.yaml
+  How: Add to workflow notes: "Each retrospective must review previous retro action items first."
+  ────────────────────────────────────────
+  #: 9
+  Action: Hook naming convention
+  File(s): architecture.md
+  How: Add convention to TanStack Query section: individual hooks named use<Action><Entity>.
+
+  That's 4 files touched: epics.md, architecture.md, prd.md, sprint-status.yaml. Let me go.
+
+● First, let me read the sections I need to edit — Story 1.7, Story 1.1, and the architecture testing and patterns sections.
+
+● Searched for 1 pattern, read 2 files (ctrl+o to expand)     
+
+● Now let me read the TanStack Query convention section and the packages directory structure.
+                                                            
+● Read 1 file (ctrl+o to expand)    
+
+● Now let me read the Story 1.6 section where I need to add E2E, and also read the full Story 1.8 to find where to split it.                    
+                                                              
+● Read 1 file (ctrl+o to expand)                                                                                                                
+
+● Good, I have everything I need. Let me make all the edits now. Starting with the biggest change — splitting Story 1.8 and updating Story 1.1, 
+  1.6, and 1.7 in the epics file.                              
+                                                                                                                                                
+● Update(_bmad-output\planning-artifacts\epics.md)
+  ⎿  Added 1 line, removed 1 line                                                                                                                     302  
+      303  | Sprint | Epic | Stories | PRD Build Step | Key Dependency | Milestone |                                                            
+      304  |--------|------|---------|----------------|----------------|-----------|
+      305 -| 1 | Epic 1: Foundation & Secure Access | 8 | Step 3 | None — first sprint | Dev environment, auth, RBAC, CI/CD, demo-ready U
+          -I shell operational |                                                                                                                
+      305 +| 1 | Epic 1: Foundation & Secure Access | 9 | Step 3 | None — first sprint | Dev environment, auth, RBAC, CI/CD, demo-ready U       
+          +I shell operational |                                                                                                                
+      306  | 2 | Epic 2: Loan Data & Financial Computation | 7 | Steps 1-2 | Epic 1 (auth + audit) | Immutable ledger, computation engine       
+            verified |
+      307  | 3 | Epic 10: Staff Temporal Profile & Retirement | 4 | Step 4 | Epic 2 (loan master records) | Retirement dates computed, gr       
+           atuity receivable tracked |
+      308  | 4 | Epic 3: Data Migration & Legacy Import | 5 | Step 5 | Epic 10 (temporal validation for post-retirement scan) | All 63 MD       
+           As imported with temporal profiles |
+
+● Update(_bmad-output\planning-artifacts\epics.md)
+  ⎿  Added 1 line, removed 1 line
+      316  | 12 | Epic 9: Notifications & Alerts | 3 | Step 13 | Epic 8 (completion notifications) | Operational loop complete |
+      317  | 13 | Epic 13: User Admin & Staff ID Governance | 4 | Step 14 | Epic 1 (user management foundation) | Administrative self-suf       
+           ficiency achieved |
+      318
+      319 -**Total:** 13 sprints, 57 stories, ~26 weeks (6.5 months)                                                                            
+      319 +**Total:** 13 sprints, 58 stories, ~26 weeks (6.5 months)                                                                            
+      320
+      321  ### Critical Path
+      322
+
+● Now add packages/testing/ to Story 1.1.                      
+    
+● Update(_bmad-output\planning-artifacts\epics.md)
+  ⎿  Added 7 lines, removed 2 lines                                                                                                                   441  **When** I inspect its dependencies
+      442  **Then** Drizzle ORM and Drizzle Kit are installed, `drizzle.config.ts` exists pointing to the Docker PostgreSQL instance, and       
+            `pnpm drizzle-kit push` executes without error against the running database                                                         
+      443  
+      444 -**Given** Vitest is configured in all three workspaces                                                                               
+      444 +**Given** a `packages/testing` workspace exists                                                                                      
+      445 +**When** I inspect its contents                                                                                                      
+      446 +**Then** it contains shared test utilities: test data factories (`createMockUser()`, `createMockLoan()`, `createMockMda()`), c       
+          +ommon test helpers (authenticated request helper, database cleanup), and global test setup                                           
+      447 +**And** both `apps/client` and `apps/server` can import from `@vlprs/testing`                                                        
+      448 +                                                                                                                                     
+      449 +**Given** Vitest is configured in all four workspaces                                                                                
+      450  **When** I run `pnpm test` from the monorepo root
+      446 -**Then** Vitest discovers and passes at least one trivial test in each workspace (`apps/client`, `apps/server`, `packages/shar       
+          -ed`)                                                                                                                                 
+      451 +**Then** Vitest discovers and passes at least one trivial test in each workspace (`apps/client`, `apps/server`, `packages/shar       
+          +ed`, `packages/testing`)                                                                                                             
+      452
+      453  **Given** the repository is initialised with Git
+      454  **When** I inspect the branches
+
+● Now add Playwright E2E to Story 1.6.                         
+    
+● Update(_bmad-output\planning-artifacts\epics.md)
+  ⎿  Added 13 lines                                                                                                                                   593  **Then** they see a landing page with Oyo State branding, scheme information, and a "Staff Login" button
+      594  **And** a "Beneficiary Portal — Coming Soon (Phase 2)" placeholder is visible                                                              595                                                                                                                                       
+      596 +**E2E Smoke Tests (Playwright)**                                                                                                     
+      597 +                                                                                                                                     
+      598 +**Given** Playwright is installed and configured
+      599 +**When** E2E smoke tests run against the dev environment with seeded demo accounts                                                   
+      600 +**Then** the following flows pass:                                                                                                   
+      601 +- Unauthenticated user → redirected to login page                                                                                    
+      602 +- Login as `super_admin` → lands on Executive Dashboard                                                                              
+      603 +- Login as `dept_admin` → lands on Operations Hub                                                                                    
+      604 +- Login as `mda_officer` → lands on Submission View scoped to assigned MDA                                                           
+      605 +- Logout → returns to landing page                                                                                                   
+      606 +**And** each test validates the correct home screen heading and role badge are visible                                               
+      607 +**And** Playwright config is committed to the repo with CI-compatible settings                                                       
+      608 +                                                                                                                                     
+      609  ### Story 1.7: CI/CD Pipeline & Production Infrastructure
+      610
+      611  As the **development team**,
+
+● Now add the spike criterion and production seed to Story 1.7.
+    
+● Update(_bmad-output\planning-artifacts\epics.md)                         
+  ⎿  Added 8 lines                                                                                                                                    614  
+      615  **Acceptance Criteria:**                                                                                                                   616                                                                                                                                       
+      617 +**Spike-First Validation (do this BEFORE production Dockerfiles)**                                                                   
+      618 +                                                                                                                                     
+      619 +**Given** a fresh DigitalOcean Droplet with Docker installed
+      620 +**When** I deploy a minimal "Hello World" Express app through the full pipeline: GitHub Actions → Docker build → push to ghcr.       
+          +io → SSH to Droplet → docker compose up → Nginx → SSL                                                                                
+      621 +**Then** `https://vlprs.oyo.gov.ng` (or the target domain) responds with a placeholder page ("VLPRS — Coming Soon")                  
+      622 +**And** the full pipeline path is validated end-to-end before investing in production-quality Dockerfiles                            
+      623 +**And** SSL termination via Let's Encrypt + Certbot is confirmed working                                                             
+      624 +                                                                                                                                     
+      625  **Given** a GitHub Actions workflow file
+      626  **When** a PR is merged to `main`
+      627  **Then** the pipeline runs: lint → typecheck → test → build Docker images → push to ghcr.io → SSH to DigitalOcean Droplet → `d       
+           ocker compose pull && docker compose up -d`
+
+● Update(_bmad-output\planning-artifacts\epics.md)            
+  ⎿  Added 9 lines, removed 1 line
+      643  **When** a developer attempts to push directly to `main`
+      644  **Then** the push is rejected — changes must go through a PR with CI passing                                                               645  
+      646 -### Story 1.8: Frontend Screen Scaffolding, Mock Data Layer & Demo Seed                                                              
+      646 +**Production Initial Seed**                                                                                                          
+      647  
+      648 +**Given** the production environment is deployed for the first time                                                                  
+      649 +**When** I run `pnpm seed:production`                                                                                                
+      650 +**Then** an initial super admin account is created using `SUPER_ADMIN_EMAIL` and `SUPER_ADMIN_PASSWORD` from environment varia       
+          +bles — never hardcoded                                                                                                               
+      651 +**And** the script is idempotent — running it again does not create duplicates                                                       
+      652 +**And** the initial admin creation is audit-logged                                                                                   
+      653 +                                                                                                                                     
+      654 +### Story 1.8a: Frontend Screen Scaffolding, Mock Data Layer & Demo Seed                                                             
+      655 +                                                                                                                                     
+      656  As a **product stakeholder**,
+      657  I want to log into the live hosted VLPRS at the client's domain with role-specific credentials and see a fully-designed, navig       
+           able product experience with realistic mock data across all major screens,
+      658  So that I can visualize the complete product on any device, provide early feedback, and track visible progress as screens are        
+           wired to real APIs sprint by sprint.
+
+● Now the big one — split Story 1.8 into 1.8a and 1.8b.        
+    
+✶ Applying playbook lessons to planning artifacts… (3m 19s · ↓ 5.4k tokens)
+  ⎿  ◼ Apply playbook lessons to VLPRS planning artifacts                                                                                         
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+❯                                                                                                                                               
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  ⏵⏵ accept edits on (shift+tab to cycle) · esc to interrupt · ctrl+t to hide tasks                       Context left until auto-compact: 11%  

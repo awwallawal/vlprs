@@ -1,0 +1,15 @@
+function App() {
+  return (
+    <div className="min-h-screen bg-background text-text-primary font-sans">
+      <header className="bg-crimson text-white p-4">
+        <h1 className="text-xl font-bold">VLPRS</h1>
+        <p className="text-sm opacity-80">Vehicle Loan Processing & Receivables System</p>
+      </header>
+      <main className="p-6">
+        <p className="text-text-secondary">System initialising…</p>
+      </main>
+    </div>
+  );
+}
+
+export default App;
