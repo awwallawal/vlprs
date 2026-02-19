@@ -14,6 +14,12 @@ const envSchema = z.object({
   JWT_SECRET: z.string().default('change-me-in-production'),
   JWT_EXPIRY: z.string().default('15m'),
   REFRESH_TOKEN_EXPIRY: z.string().default('7d'),
+  SUPER_ADMIN_EMAIL: z.string().optional(),
+  SUPER_ADMIN_PASSWORD: z.string().optional(),
+  SUPER_ADMIN_FIRST_NAME: z.string().default('Super'),
+  SUPER_ADMIN_LAST_NAME: z.string().default('Admin'),
+  MAX_LOGIN_ATTEMPTS: z.coerce.number().default(5),
+  LOCKOUT_DURATION_MINUTES: z.coerce.number().default(15),
 });
 
 export const env = envSchema.parse(process.env);

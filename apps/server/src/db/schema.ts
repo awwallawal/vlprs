@@ -1,6 +1,5 @@
 /**
  * Drizzle ORM schema — single file for all table definitions.
- * Tables will be added incrementally starting from Story 1.2.
  *
  * Conventions:
  * - Tables: snake_case, plural (e.g., users, ledger_entries)
@@ -12,5 +11,66 @@
  * - Booleans: is_ or has_ prefix
  */
 
-export {};
+import {
+  pgTable,
+  pgEnum,
+  uuid,
+  varchar,
+  text,
+  boolean,
+  integer,
+  timestamp,
+  index,
+} from 'drizzle-orm/pg-core';
+import { generateUuidv7 } from '../lib/uuidv7';
 
+// ─── Enums ──────────────────────────────────────────────────────────
+export const roleEnum = pgEnum('role', ['super_admin', 'dept_admin', 'mda_officer']);
+
+// ─── MDAs (stub — expanded in Epic 2) ──────────────────────────────
+export const mdas = pgTable('mdas', {
+  id: uuid('id').primaryKey().$defaultFn(generateUuidv7),
+  name: varchar('name', { length: 255 }).notNull(),
+  code: varchar('code', { length: 50 }).notNull().unique(),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+});
+
+// ─── Users ──────────────────────────────────────────────────────────
+export const users = pgTable(
+  'users',
+  {
+    id: uuid('id').primaryKey().$defaultFn(generateUuidv7),
+    email: varchar('email', { length: 255 }).notNull().unique(),
+    hashedPassword: text('hashed_password').notNull(),
+    firstName: varchar('first_name', { length: 100 }).notNull(),
+    lastName: varchar('last_name', { length: 100 }).notNull(),
+    role: roleEnum('role').notNull(),
+    mdaId: uuid('mda_id').references(() => mdas.id),
+    isActive: boolean('is_active').notNull().default(true),
+    failedLoginAttempts: integer('failed_login_attempts').notNull().default(0),
+    lockedUntil: timestamp('locked_until', { withTimezone: true }),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+    deletedAt: timestamp('deleted_at', { withTimezone: true }),
+  },
+  (table) => [
+    index('idx_users_email').on(table.email),
+  ],
+);
+
+// ─── Refresh Tokens ─────────────────────────────────────────────────
+export const refreshTokens = pgTable(
+  'refresh_tokens',
+  {
+    id: uuid('id').primaryKey().$defaultFn(generateUuidv7),
+    userId: uuid('user_id').notNull().references(() => users.id),
+    tokenHash: text('token_hash').notNull(),
+    expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    revokedAt: timestamp('revoked_at', { withTimezone: true }),
+  },
+  (table) => [
+    index('idx_refresh_tokens_user_revoked').on(table.userId, table.revokedAt),
+  ],
+);

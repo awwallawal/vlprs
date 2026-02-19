@@ -464,12 +464,21 @@ So that only authorised personnel can access the system.
 
 **Acceptance Criteria:**
 
-**Given** the system has a `users` table with UUIDv7 primary keys, `email`, `password_hash`, `role`, `mda_id`, `is_active`, `created_at`, `updated_at`, `deleted_at`
+**Given** the system has a `users` table with UUIDv7 primary keys, `email` (unique constraint), `password_hash`, `role`, `mda_id`, `is_active`, `created_at`, `updated_at`, `deleted_at`
 **When** a Super Admin calls `POST /api/auth/register` with valid user data
 **Then** a new user is created with bcrypt-hashed password (12 rounds) and the response returns user details (without password)
 **And** password validation enforces: minimum 8 characters, at least 1 uppercase, 1 lowercase, 1 digit (FR42)
 
-**Given** a registered user
+**Given** the `POST /api/auth/register` endpoint exists
+**When** RBAC middleware is not yet implemented (Story 1.4)
+**Then** the endpoint is temporarily unprotected — Story 1.4 will restrict it to `super_admin` role only
+**And** the production seed script (Story 1.7) creates the initial super admin from environment variables, so no public registration is ever needed
+
+**Given** a caller attempts to register with an email that already exists
+**When** they call `POST /api/auth/register`
+**Then** the response returns 409 Conflict with message "Email already registered"
+
+**Given** a registered, active user
 **When** they call `POST /api/auth/login` with correct email and password
 **Then** the response returns a JWT access token (15-minute expiry) in the JSON body and sets a refresh token (7-day expiry) in an `httpOnly`, `secure`, `sameSite: strict` cookie
 **And** the access token contains claims: `userId`, `role`, `mdaId`
@@ -477,6 +486,20 @@ So that only authorised personnel can access the system.
 **Given** a registered user
 **When** they call `POST /api/auth/login` with incorrect credentials
 **Then** the response returns 401 with message "Invalid email or password" (no credential enumeration)
+
+**Given** a user whose account is deactivated (`is_active = false`) or soft-deleted (`deleted_at IS NOT NULL`)
+**When** they call `POST /api/auth/login` with correct credentials
+**Then** the response returns 401 with the same message "Invalid email or password" (no account status enumeration)
+
+**Given** `packages/shared` contains Zod validation schemas
+**When** I inspect `packages/shared/src/schemas/authSchemas.ts`
+**Then** it exports `loginSchema` (email + password) and `registerSchema` (email, password, role, mdaId) with the FR42 password rules
+**And** both `apps/server` (request validation) and `apps/client` (form validation in Story 1.6) can import them
+
+**Given** Story 1.2 is implemented
+**When** I run `pnpm test` from the monorepo root
+**Then** unit tests pass for: password hashing (bcrypt 12 rounds), password policy validation (all FR42 rules), JWT token generation (correct claims and expiry), and Zod schema validation (valid/invalid inputs)
+**And** integration tests pass for: successful registration, duplicate email rejection (409), successful login (token in body + cookie set), failed login (401), and deactivated user login (401)
 
 ### Story 1.3: Session Security & Token Refresh
 
@@ -486,7 +509,7 @@ So that my account is protected while maintaining a smooth, uninterrupted experi
 
 **Acceptance Criteria:**
 
-**Given** a `refresh_tokens` table storing `token_hash` (SHA-256), `user_id`, `expires_at`, `created_at`, `revoked_at`
+**Given** a `refresh_tokens` table storing `token_hash` (SHA-256), `user_id`, `expires_at`, `created_at`, `revoked_at`, `last_activity_at`
 **When** the client calls `POST /api/auth/refresh` with a valid refresh token cookie
 **Then** the old refresh token is revoked, a new refresh token is issued (rotation), and a new access token is returned
 **And** the new refresh token replaces the old one in the httpOnly cookie
@@ -496,22 +519,42 @@ So that my account is protected while maintaining a smooth, uninterrupted experi
 **Then** ALL refresh tokens for that user are revoked (reuse detection) and the response returns 401
 **And** the user must re-login
 
-**Given** an authenticated session
-**When** no API request is made for 30 minutes (inactivity timeout)
-**Then** the session is effectively expired — the next access token refresh fails and the user must re-login (NFR-SEC-10)
+**Given** the `refresh_tokens` table tracks `last_activity_at`, updated on every authenticated API request via the `authenticate` middleware
+**When** a client calls `POST /api/auth/refresh` and the associated refresh token's `last_activity_at` is older than 30 minutes
+**Then** the refresh token is revoked and the response returns 401 — the user must re-login (NFR-SEC-10)
+
+**Given** a user logs in successfully on a new device or browser
+**When** the system issues a new refresh token
+**Then** all other active (non-revoked, non-expired) refresh tokens for that user are revoked — enforcing max 1 concurrent session (NFR-SEC-10)
+
+**Given** an authenticated user
+**When** they call `POST /api/auth/logout`
+**Then** the current refresh token is revoked in the database, the httpOnly cookie is cleared, and the response returns 200
+**And** the logout event is recorded for audit logging (FR47)
 
 **Given** a user has 5 consecutive failed login attempts within 10 minutes
 **When** they attempt a 6th login
 **Then** the account is locked for 15 minutes and a 429 response is returned (NFR-SEC-11)
 **And** failed attempts are logged with IP address
 
+**Given** `express-rate-limit` is configured with tiered rate limits
+**When** any client exceeds 5 requests per 15 minutes on auth endpoints (`/api/auth/login`, `/api/auth/refresh`, `/api/auth/register`)
+**Then** the response returns 429 Too Many Requests — applied per-IP before authentication in the middleware stack (helmet → cors → rate-limit → authenticate)
+
 **Given** CSRF protection is active
 **When** any state-changing request is made
 **Then** the request must include a valid CSRF token in the `X-CSRF-Token` header, or it is rejected with 403
 
-**Given** a user changes their password
-**When** the password is updated
-**Then** all existing refresh tokens for that user are invalidated and they must re-login on all devices (FR42)
+**Given** an authenticated user
+**When** they call `POST /api/auth/change-password` with their current password and a valid new password (FR42 password rules)
+**Then** the password is updated (bcrypt 12 rounds), all existing refresh tokens for that user are invalidated, and they must re-login on all devices (FR42)
+**And** the response returns 200 with a confirmation message
+**And** submitting an incorrect current password returns 401
+
+**Given** Story 1.3 is implemented
+**When** I run `pnpm test` from the monorepo root
+**Then** unit tests pass for: token rotation (old revoked, new issued), reuse detection (all tokens revoked), inactivity timeout (30-min `last_activity_at` check), and CSRF token validation
+**And** integration tests pass for: successful token refresh (new access + refresh tokens), reused token rejection (401 + all revoked), logout (cookie cleared + token revoked), account lockout after 5 failures (429), lockout expiry after 15 minutes, rate limiting on auth endpoints (429), concurrent session enforcement (old session revoked on new login), password change (tokens invalidated + re-login required), and password change with wrong current password (401)
 
 ### Story 1.4: Role-Based Access Control
 
@@ -521,26 +564,45 @@ So that Super Admin, Department Admin, and MDA Officers each access only what th
 
 **Acceptance Criteria:**
 
+**Given** `packages/shared/src/constants/roles.ts` exists
+**When** I inspect its exports
+**Then** it exports a `ROLES` constant object (`SUPER_ADMIN`, `DEPT_ADMIN`, `MDA_OFFICER`) and a permission matrix mapping roles to allowed actions
+**And** both `apps/server` and `apps/client` import role strings exclusively from `@vlprs/shared` — no hardcoded role strings anywhere in the codebase (OSLRS lesson: frontend/backend role string mismatch caused 3 roles to fail at runtime despite 53 passing tests)
+
 **Given** 3 MVP roles exist: `super_admin`, `dept_admin`, `mda_officer`
 **When** the middleware chain processes a request: `authenticate` → `authorise(requiredRoles)` → `scopeToMda` → route handler
 **Then** each middleware executes in order: JWT verified → role checked → MDA scope applied
 
+**Given** the `POST /api/auth/register` endpoint was temporarily unprotected in Story 1.2
+**When** Story 1.4 RBAC middleware is applied
+**Then** `POST /api/auth/register` is restricted to `authorise('super_admin')` — only authenticated super admins can create user accounts
+
 **Given** a user with role `super_admin`
 **When** they access any API endpoint
-**Then** they can view all data across all MDAs (FR44)
+**Then** they can view all data across all MDAs — `scopeToMda` middleware is bypassed (FR44)
 
 **Given** a user with role `dept_admin`
 **When** they access API endpoints for loans, migrations, exceptions, and reports
-**Then** they can view all data, manage loans, process migrations, and resolve exceptions (FR45)
+**Then** they can view all data across all MDAs — `scopeToMda` middleware is bypassed (same visibility as `super_admin`, different permitted actions) — and they can manage loans, process migrations, and resolve exceptions (FR45)
 
 **Given** a user with role `mda_officer`
 **When** they access any API endpoint
-**Then** all queries are automatically scoped by their `mda_id` from the JWT — they can only view and submit data for their assigned MDA (FR46)
+**Then** the `scopeToMda` middleware injects `mda_id` from the JWT into the request context (e.g., `req.mdaScope`), and all downstream queries are filtered by this value — enforced at query level, not just route level, so no route handler can accidentally bypass isolation (FR46)
 **And** attempting to access another MDA's data returns 403
 
 **Given** any API endpoint
-**When** a request arrives without a valid JWT or with insufficient role
-**Then** the request is rejected with 401 (no token) or 403 (wrong role) before reaching the route handler (NFR-SEC-2)
+**When** a request arrives without a JWT, or with an expired or malformed JWT
+**Then** the request is rejected with 401 before reaching `authorise` or the route handler
+**And** an expired JWT returns 401 with an indication the client should attempt a token refresh (via `POST /api/auth/refresh` from Story 1.3)
+
+**Given** any API endpoint
+**When** a request arrives with a valid JWT but with insufficient role for that endpoint
+**Then** the request is rejected with 403 before reaching the route handler (NFR-SEC-2)
+
+**Given** Story 1.4 is implemented
+**When** I run `pnpm test` from the monorepo root
+**Then** unit tests pass for: `authorise` middleware (each role allowed/denied per endpoint), `scopeToMda` middleware (injects `mda_id` for `mda_officer`, bypasses for `super_admin` and `dept_admin`), and role constants imported from `@vlprs/shared` (no hardcoded strings in server or client)
+**And** integration tests pass for: `super_admin` accessing cross-MDA data (200), `dept_admin` accessing cross-MDA data (200), `mda_officer` accessing own MDA (200), `mda_officer` accessing another MDA (403), unauthenticated request (401), expired JWT (401), wrong role for endpoint (403), and `POST /api/auth/register` blocked for non-super-admin roles (403)
 
 ### Story 1.5: Audit Logging & Action Tracking
 
@@ -550,18 +612,33 @@ So that all system activity is fully traceable for governance and audit complian
 
 **Acceptance Criteria:**
 
-**Given** a dedicated `audit_log` table with UUIDv7 PK, columns: `user_id`, `role`, `mda_id`, `action`, `resource`, `request_body_hash`, `response_status`, `ip_address`, `timestamp`
-**When** any authenticated API call is made
-**Then** an audit log entry is created automatically via Express middleware (FR48)
-**And** the audit_log table is append-only — no UPDATE or DELETE operations permitted (NFR-SEC-7)
+**Given** a dedicated `audit_log` table with UUIDv7 PK, columns: `user_id`, `role`, `mda_id`, `action` (HTTP method + route), `resource` (target entity/ID), `request_body_hash` (SHA-256 of request body, or `null` for GET requests), `response_status` (HTTP status code), `ip_address`, `timestamp`
+**When** any authenticated API call is made — including GET (read), POST (create), PUT/PATCH (update), and DELETE (all HTTP verbs, not just mutations)
+**Then** an audit log entry is created automatically via the `auditLog` Express middleware (FR48, NFR-SEC-6)
+**And** the `request_body_hash` stores a SHA-256 hash of the request body, never the raw body — NDPR data minimisation prevents storing PII or financial data in audit logs
+**And** the `audit_log` table is append-only — no UPDATE or DELETE operations permitted (NFR-SEC-7)
 
-**Given** a user logs in, logs out, or fails a login attempt
+**Given** the `auditLog` middleware sits last in the chain (`...validate → auditLog → route handler`) per the architecture middleware stack
+**When** a route handler completes and the response is sent
+**Then** the middleware captures `response_status` by hooking into `res.on('finish')` — the audit entry is written after the response, ensuring the actual HTTP status code is recorded (not a pre-handler guess)
+
+**Given** a user logs in, logs out, fails a login attempt, or triggers account lockout
 **When** the authentication event occurs
 **Then** it is logged with: event type, email, IP address, timestamp, and success/failure status (FR47)
+**And** this logging is added retroactively to the auth endpoints built in Stories 1.2 and 1.3 — `POST /api/auth/login` (success + failure), `POST /api/auth/logout`, `POST /api/auth/refresh`, `POST /api/auth/register`, and `POST /api/auth/change-password` each emit an auth event log entry inline (in addition to the general `auditLog` middleware entry)
 
 **Given** the audit log
-**When** any attempt is made to modify or delete an existing entry
-**Then** the operation is rejected at the database level (trigger or constraint)
+**When** any attempt is made to modify or delete an existing entry via SQL UPDATE or DELETE
+**Then** the operation is rejected at the database level via a PostgreSQL trigger that raises an exception (NFR-SEC-7)
+
+**Given** the audit log in the MVP
+**When** an authorised auditor needs to review system activity
+**Then** audit logs are accessed directly via database queries — there is no API endpoint exposing audit logs in the MVP (audit logs are used by auditors, not displayed in the application UI)
+
+**Given** Story 1.5 is implemented
+**When** I run `pnpm test` from the monorepo root
+**Then** unit tests pass for: `auditLog` middleware (captures `user_id`, `role`, `mda_id`, `action`, `resource`, `response_status`, `ip_address`, `timestamp` for all HTTP verbs), `request_body_hash` computation (SHA-256 for POST/PUT/PATCH, `null` for GET), and `res.on('finish')` hook (correct status code captured after handler completes)
+**And** integration tests pass for: audit entry created on authenticated GET request, audit entry created on authenticated POST request, `response_status` matches actual handler response (e.g., 200, 400, 404), auth event logging for login success, login failure, logout, and registration, and PostgreSQL trigger rejects UPDATE and DELETE on `audit_log` table
 
 ### Story 1.6: Frontend Authentication Shell
 
