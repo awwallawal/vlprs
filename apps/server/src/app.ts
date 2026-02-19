@@ -5,6 +5,7 @@ import cookieParser from 'cookie-parser';
 import healthRoutes from './routes/healthRoutes';
 import authRoutes from './routes/authRoutes';
 import { AppError } from './lib/appError';
+import { VOCABULARY } from '@vlprs/shared';
 
 const app = express();
 
@@ -38,6 +39,18 @@ app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
         code: err.code,
         message: err.message,
         ...(err.details ? { details: err.details } : {}),
+      },
+    });
+    return;
+  }
+
+  // Map csrf-csrf errors to the AC-specified response format
+  if ('code' in err && (err as Error & { code: string }).code === 'EBADCSRFTOKEN') {
+    res.status(403).json({
+      success: false,
+      error: {
+        code: 'CSRF_VALIDATION_FAILED',
+        message: VOCABULARY.CSRF_VALIDATION_FAILED,
       },
     });
     return;

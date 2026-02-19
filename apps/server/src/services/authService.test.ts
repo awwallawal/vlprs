@@ -223,4 +223,19 @@ describe('authService.login', () => {
     const [user] = await db.select().from(users).where(sql`LOWER(${users.email}) = LOWER(${testEmail})`);
     expect(user.failedLoginAttempts).toBe(0);
   });
+
+  it('revokes existing tokens on login (single concurrent session)', async () => {
+    // First login
+    const result1 = await authService.login({ email: testEmail, password: testPassword });
+    expect(result1.refreshToken.raw).toBeTruthy();
+
+    // Second login
+    const result2 = await authService.login({ email: testEmail, password: testPassword });
+    expect(result2.refreshToken.raw).toBeTruthy();
+
+    // Only 1 active token should remain
+    const allTokens = await db.select().from(refreshTokens);
+    const active = allTokens.filter((t) => t.revokedAt === null);
+    expect(active).toHaveLength(1);
+  });
 });

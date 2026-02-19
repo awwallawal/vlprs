@@ -34,3 +34,7 @@ export interface RegisterRequest {
   role: 'super_admin' | 'dept_admin' | 'mda_officer';
   mdaId?: string | null;
 }
+
+export interface RefreshResponse {
+  accessToken: string;
+}

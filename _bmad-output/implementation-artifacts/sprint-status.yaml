@@ -5,7 +5,7 @@
 # story_location: _bmad-output/implementation-artifacts
 # sprint_sequence: 1→E1, 2→E2, 3→E10, 4→E3, 5→E4, 6→E6, 7→E5, 8→E11, 9→E7, 10→E8, 11→E12, 12→E9, 13→E13
 # total_epics: 13
-# total_stories: 58
+# total_stories: 58 (Epic 1: 11, Epic 13: 2 — FR72/FR73 moved from Epic 13 to Epic 1)
 
 # STATUS DEFINITIONS:
 # ==================
@@ -63,13 +63,15 @@ development_status:
   epic-1: in-progress
   1-1-monorepo-scaffold-development-environment: done
   1-2-user-registration-login: done
-  1-3-session-security-token-refresh: ready-for-dev
+  1-3-session-security-token-refresh: review
   1-4-role-based-access-control: ready-for-dev
   1-5-audit-logging-action-tracking: ready-for-dev
-  1-6-frontend-authentication-shell: backlog
-  1-7-cicd-pipeline-production-infrastructure: backlog
-  1-8a-design-foundation-components-mock-data-layer: backlog
+  1-6-frontend-authentication-shell: ready-for-dev
+  1-7-cicd-pipeline-production-infrastructure: ready-for-dev
+  1-8a-design-foundation-components-mock-data-layer: ready-for-dev
   1-8b-role-specific-screens-demo-seed-wiring-map: backlog
+  1-9a-user-account-lifecycle-api-email-invitation: backlog
+  1-9b-user-administration-interface-profile-first-login: backlog
   epic-1-retrospective: optional
 
   # Epic 2: Loan Data Management & Financial Computation
@@ -161,10 +163,8 @@ development_status:
   12-3-early-exit-dashboard-history: backlog
   epic-12-retrospective: optional
 
-  # Epic 13: User Administration & Staff ID Governance
+  # Epic 13: Staff ID Governance (Stories 13.1/13.2 moved to Epic 1 as 1.9a/1.9b)
   epic-13: backlog
-  13-1-user-account-management: backlog
-  13-2-password-reset: backlog
   13-3-staff-id-management: backlog
   13-4-duplicate-staff-id-detection: backlog
   epic-13-retrospective: optional

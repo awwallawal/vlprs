@@ -16,6 +16,12 @@ export const VOCABULARY = {
   EMAIL_ALREADY_EXISTS: 'An account with this email address already exists.',
   // Validation
   VALIDATION_FAILED: 'Please check your input and try again.',
+  // Session Security (Story 1.3)
+  TOKEN_REUSE_DETECTED: 'A security concern was detected with your session. Please log in again.',
+  SESSION_INACTIVE: 'Your session has expired due to inactivity. Please log in again.',
+  REFRESH_TOKEN_EXPIRED: 'Your session has expired. Please log in again.',
+  REFRESH_TOKEN_INVALID: 'Your session could not be verified. Please log in again.',
+  CSRF_VALIDATION_FAILED: 'Your request could not be verified. Please refresh the page and try again.',
   // Rate Limiting
   RATE_LIMIT_EXCEEDED: 'Too many requests. Please wait before trying again.',
 } as const;

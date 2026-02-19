@@ -2,6 +2,7 @@ import { Router, type Request, type Response } from 'express';
 import { authenticate } from '../middleware/authenticate';
 import { validate } from '../middleware/validate';
 import { authLimiter } from '../middleware/rateLimiter';
+import { doubleCsrfProtection, generateCsrfToken, CSRF_COOKIE_NAME } from '../middleware/csrf';
 import { loginSchema, registerSchema, ROLES, VOCABULARY } from '@vlprs/shared';
 import { AppError } from '../lib/appError';
 import { env } from '../config/env';
@@ -34,7 +35,7 @@ router.post(
   async (req: Request, res: Response) => {
     const result = await authService.login(req.body);
 
-    // Set refresh token in httpOnly cookie (HTTP concern stays in route handler)
+    // Set refresh token in httpOnly cookie
     res.cookie('refreshToken', result.refreshToken.raw, {
       httpOnly: true,
       secure: env.NODE_ENV === 'production',
@@ -43,6 +44,11 @@ router.post(
       maxAge: result.refreshToken.expiresMs,
     });
 
+    // Bind CSRF token to the new refresh token (req.cookies won't have it yet)
+    req.cookies = req.cookies ?? {};
+    req.cookies.refreshToken = result.refreshToken.raw;
+    generateCsrfToken(req, res, { overwrite: true });
+
     res.status(200).json({
       success: true,
       data: {
@@ -50,6 +56,63 @@ router.post(
         user: result.user,
       },
     });
+  },
+);
+
+// POST /auth/refresh — cookie-authenticated, CSRF-protected, rate-limited
+router.post(
+  '/auth/refresh',
+  authLimiter,
+  doubleCsrfProtection,
+  async (req: Request, res: Response) => {
+    const tokenFromCookie = req.cookies?.refreshToken;
+    const result = await authService.refreshToken(tokenFromCookie);
+
+    // Set new refresh token in httpOnly cookie
+    res.cookie('refreshToken', result.refreshToken.raw, {
+      httpOnly: true,
+      secure: env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      path: '/api/auth',
+      maxAge: result.refreshToken.expiresMs,
+    });
+
+    // Bind CSRF token to the new refresh token
+    req.cookies.refreshToken = result.refreshToken.raw;
+    generateCsrfToken(req, res, { overwrite: true });
+
+    res.status(200).json({
+      success: true,
+      data: { accessToken: result.accessToken },
+    });
+  },
+);
+
+// POST /auth/logout — JWT-authenticated, CSRF-protected
+router.post(
+  '/auth/logout',
+  authenticate,
+  doubleCsrfProtection,
+  async (req: Request, res: Response) => {
+    await authService.logout(req.user!.userId);
+
+    // Clear refresh token cookie
+    res.clearCookie('refreshToken', {
+      httpOnly: true,
+      secure: env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      path: '/api/auth',
+    });
+
+    // Clear CSRF cookie
+    res.clearCookie(CSRF_COOKIE_NAME, {
+      httpOnly: false,
+      secure: env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      path: '/',
+    });
+
+    res.status(200).json({ success: true, data: null });
   },
 );
 

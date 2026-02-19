@@ -20,6 +20,8 @@ const envSchema = z.object({
   SUPER_ADMIN_LAST_NAME: z.string().default('Admin'),
   MAX_LOGIN_ATTEMPTS: z.coerce.number().default(5),
   LOCKOUT_DURATION_MINUTES: z.coerce.number().default(15),
+  CSRF_SECRET: z.string().min(32).default('change-csrf-secret-in-production'),
+  INACTIVITY_TIMEOUT_MINUTES: z.coerce.number().default(30),
 });
 
 export const env = envSchema.parse(process.env);
