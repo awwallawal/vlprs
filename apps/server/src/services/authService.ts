@@ -1,5 +1,5 @@
 import { randomBytes } from 'node:crypto';
-import { eq, sql } from 'drizzle-orm';
+import { eq, and, isNull, sql } from 'drizzle-orm';
 import { db } from '../db/index';
 import { users, refreshTokens, mdas } from '../db/schema';
 import { hashPassword, comparePassword } from '../lib/password';
@@ -159,6 +159,9 @@ export async function login(data: LoginRequest): Promise<LoginResult> {
     .set({ failedLoginAttempts: 0, lockedUntil: null })
     .where(eq(users.id, user.id));
 
+  // Single concurrent session — revoke all existing tokens before issuing new
+  await revokeAllUserTokens(user.id);
+
   // Generate access token
   const accessToken = signAccessToken({
     userId: user.id,
@@ -188,4 +191,158 @@ export async function login(data: LoginRequest): Promise<LoginResult> {
       expiresMs,
     },
   };
+}
+
+export interface RefreshResult {
+  accessToken: string;
+  refreshToken: {
+    raw: string;
+    expiresMs: number;
+  };
+}
+
+export async function revokeAllUserTokens(userId: string): Promise<number> {
+  const result = await db.update(refreshTokens)
+    .set({ revokedAt: new Date() })
+    .where(
+      and(
+        eq(refreshTokens.userId, userId),
+        isNull(refreshTokens.revokedAt),
+      ),
+    );
+  return result.rowCount ?? 0;
+}
+
+export async function refreshToken(tokenFromCookie: string): Promise<RefreshResult> {
+  if (!tokenFromCookie) {
+    throw new AppError(401, 'REFRESH_TOKEN_INVALID', VOCABULARY.REFRESH_TOKEN_INVALID);
+  }
+
+  const tokenHashValue = hashToken(tokenFromCookie);
+
+  // Use error indicators instead of throwing inside the transaction,
+  // because Drizzle rolls back on throw — which would undo revocations.
+  const txResult = await db.transaction(async (tx) => {
+    const [storedToken] = await tx
+      .select()
+      .from(refreshTokens)
+      .where(eq(refreshTokens.tokenHash, tokenHashValue));
+
+    if (!storedToken) {
+      return { error: new AppError(401, 'REFRESH_TOKEN_INVALID', VOCABULARY.REFRESH_TOKEN_INVALID) };
+    }
+
+    // Reuse detection — token already revoked means theft
+    if (storedToken.revokedAt !== null) {
+      await tx.update(refreshTokens)
+        .set({ revokedAt: new Date() })
+        .where(
+          and(
+            eq(refreshTokens.userId, storedToken.userId),
+            isNull(refreshTokens.revokedAt),
+          ),
+        );
+      return { error: new AppError(401, 'TOKEN_REUSE_DETECTED', VOCABULARY.TOKEN_REUSE_DETECTED) };
+    }
+
+    // Check absolute expiry (7 days)
+    if (storedToken.expiresAt < new Date()) {
+      await tx.update(refreshTokens)
+        .set({ revokedAt: new Date() })
+        .where(eq(refreshTokens.id, storedToken.id));
+      return { error: new AppError(401, 'REFRESH_TOKEN_EXPIRED', VOCABULARY.REFRESH_TOKEN_EXPIRED) };
+    }
+
+    // Inactivity timeout check
+    const inactivityMs = env.INACTIVITY_TIMEOUT_MINUTES * 60 * 1000;
+    if (Date.now() - storedToken.lastUsedAt.getTime() > inactivityMs) {
+      await tx.update(refreshTokens)
+        .set({ revokedAt: new Date() })
+        .where(eq(refreshTokens.id, storedToken.id));
+      return { error: new AppError(401, 'SESSION_INACTIVE', VOCABULARY.SESSION_INACTIVE) };
+    }
+
+    // Atomically revoke old token — AND revoked_at IS NULL prevents race condition
+    const revokeResult = await tx.update(refreshTokens)
+      .set({ revokedAt: new Date() })
+      .where(
+        and(
+          eq(refreshTokens.id, storedToken.id),
+          isNull(refreshTokens.revokedAt),
+        ),
+      );
+
+    // If no rows affected, another concurrent request already revoked this token
+    if ((revokeResult.rowCount ?? 0) === 0) {
+      await tx.update(refreshTokens)
+        .set({ revokedAt: new Date() })
+        .where(
+          and(
+            eq(refreshTokens.userId, storedToken.userId),
+            isNull(refreshTokens.revokedAt),
+          ),
+        );
+      return { error: new AppError(401, 'TOKEN_REUSE_DETECTED', VOCABULARY.TOKEN_REUSE_DETECTED) };
+    }
+
+    // Re-check user is still active
+    const [user] = await tx.select().from(users).where(eq(users.id, storedToken.userId));
+    if (!user || !user.isActive) {
+      await tx.update(refreshTokens)
+        .set({ revokedAt: new Date() })
+        .where(
+          and(
+            eq(refreshTokens.userId, storedToken.userId),
+            isNull(refreshTokens.revokedAt),
+          ),
+        );
+      return { error: new AppError(401, 'ACCOUNT_INACTIVE', VOCABULARY.ACCOUNT_INACTIVE) };
+    }
+
+    // Generate new refresh token
+    const rawRefreshToken = randomBytes(64).toString('hex');
+    const newTokenHash = hashToken(rawRefreshToken);
+    const expiresMs = parseExpiry(env.REFRESH_TOKEN_EXPIRY);
+    const expiresAt = new Date(Date.now() + expiresMs);
+
+    await tx.insert(refreshTokens).values({
+      id: generateUuidv7(),
+      userId: user.id,
+      tokenHash: newTokenHash,
+      expiresAt,
+      lastUsedAt: new Date(),
+    });
+
+    // Generate new access token with current user claims
+    const accessToken = signAccessToken({
+      userId: user.id,
+      email: user.email,
+      role: user.role,
+      mdaId: user.mdaId,
+    });
+
+    return {
+      data: {
+        accessToken,
+        refreshToken: {
+          raw: rawRefreshToken,
+          expiresMs,
+        },
+      },
+    };
+  });
+
+  if ('error' in txResult) throw txResult.error;
+  return txResult.data;
+}
+
+export async function logout(userId: string): Promise<void> {
+  await revokeAllUserTokens(userId);
+}
+
+export async function changePassword(userId: string, newPasswordHash: string): Promise<void> {
+  await db.update(users)
+    .set({ hashedPassword: newPasswordHash, updatedAt: new Date() })
+    .where(eq(users.id, userId));
+  await revokeAllUserTokens(userId);
 }
