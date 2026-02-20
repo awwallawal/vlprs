@@ -3,8 +3,14 @@ stepsCompleted: [1, 2, 3, 4]
 lastStep: 4
 status: 'complete'
 completedAt: '2026-02-14'
-lastEdited: '2026-02-18'
+lastEdited: '2026-02-20'
 editHistory:
+  - date: '2026-02-20'
+    changes: 'About page, FR82, CMS & integration readiness: Added About the Programme page (/about) to Story 14.2 with Mission, Vision, Core Values, Programme Leadership (AG, Deputy AG, Director), Programme Governance (Vehicle Loan Committee, AG oversight — absorbs former /scheme/ag-office content), Institutional Story. Added "About" as top-level nav item in Story 14.1. Removed "Role of the AG''s Office" from The Scheme dropdown (content merged into /about). Renamed Story 14.2 to "About & Scheme Information Pages". Updated footer column 1 to include About link. Net page count unchanged (AgOfficePage removed, AboutPage added). Added FR82 (About the Programme page) to FR requirements inventory and FR coverage map. Updated Epic 14 FRs covered: FR76-FR81 → FR76-FR82. Updated Epic 14 description: added About page, content directory pattern (src/content/*.ts), Sanity CMS migration readiness, "About" nav item.'
+  - date: '2026-02-20'
+    changes: 'Public Website & Scheme Information Portal: Added Epic 14 (3 stories: 14.1 Homepage & Navigation Shell, 14.2 Scheme Information Pages, 14.3 Resources/Support/Legal Pages). Added FR76-FR81 to requirements inventory and FR coverage map. Inserted Epic 14 as Sprint 2 in sprint sequence — shifted existing Sprints 2-13 to Sprints 3-14. Updated totals: 13→14 epics, 58→61 stories, 13→14 sprints (~28 weeks). Updated critical path (Epic 14 depends on Epic 1 only). Updated demonstrability milestones (Sprint 2 delivers institutional public face). Updated MVP feature count from 12 to 13.'
+  - date: '2026-02-19'
+    changes: 'User invitation & account lifecycle pull-forward: Added Stories 1.9a (User Account Lifecycle API & Email Invitation) and 1.9b (User Administration Interface, Profile Self-Service & First-Login Flow) to Epic 1. Implements downward-only management hierarchy: super_admin manages dept_admin + mda_officer; dept_admin manages mda_officer; super_admin accounts CLI-only. Full account state machine (Active ↔ Deactivated → Deleted). Resend welcome email with temp credentials. Forced first-login password change. Profile self-service. Removed Stories 13.1 (User Account Management) and 13.2 (Password Reset) from Epic 13 — absorbed into 1.9a/1.9b. Epic 13 renamed to Staff ID Governance (2 stories: 13.3, 13.4). FR72/FR73 moved from Epic 13 to Epic 1 in coverage map. Epic 1: 9→11 stories. Epic 13: 4→2 stories. Net total unchanged: 58 stories. Added ux-design-directions.html as canonical visual reference in UX spec. Sprint 1 milestone updated to include user invitation capability.'
   - date: '2026-02-18'
     changes: 'OSLRS playbook integration: Split Story 1.8 into 1.8a (Design Foundation, Components, Mock Data Layer) and 1.8b (Role-Specific Screens, Demo Seed, Wiring Map) per story sizing guardrail (>15 tasks → split). Added spike-first validation criterion to Story 1.7 (deploy Hello World through full pipeline before production Dockerfiles). Added production seed from env vars criterion to Story 1.7. Added Playwright E2E smoke tests to Story 1.6 (login as each role, verify correct home screen). Added packages/testing shared test package criterion to Story 1.1. Updated story counts: 57→58, Epic 1: 8→9 stories.'
   - date: '2026-02-17'
@@ -98,10 +104,17 @@ This document provides the complete epic and story breakdown for VLPRS, decompos
 - FR69: System can mark an early exit computation as expired if it reaches its expiry date without recorded payment. Expired computations retained in audit history. Staff commitment without payment by deadline flagged as attention item
 - FR70: MDA Reporting Officers can upload historical monthly deduction records via CSV using the same 8-field format. System validates, timestamps as historical, and cross-references against migration baseline data. Variances surfaced in reconciliation report for Department Admin review
 - FR71: System can generate a Service Status Verification Report during migration listing all imported staff whose computed retirement date is before the import date with active loan status. Report includes: staff name, Staff ID, MDA, computed retirement date, months past retirement, and outstanding balance
-- FR72: Department Admin can create, deactivate, and reassign MDA Reporting Officer accounts including MDA assignment. Super Admin can create, deactivate, and reassign accounts at all levels. All account lifecycle changes audit-logged
-- FR73: Department Admin can initiate password reset for MDA Reporting Officer accounts. Super Admin can initiate password reset for all account levels. Password reset events audit-logged
+- FR72: User account lifecycle management with downward-only hierarchy. Super Admin can create, deactivate, reactivate, soft-delete, and reassign Department Admin and MDA Reporting Officer accounts. Department Admin can create, deactivate, reactivate, soft-delete, and reassign MDA Reporting Officer accounts only. Super Admin accounts managed exclusively via CLI. No user can modify their own account through management endpoints. Account states: Active, Deactivated (reversible), Deleted (soft, one-way). Welcome email via Resend with temporary credentials on account creation. Forced first-login password change. Profile self-service (view own details, change own password). All account lifecycle changes audit-logged
+- FR73: Admin-initiated password reset scoped by management hierarchy. Department Admin resets MDA Reporting Officer passwords. Super Admin resets Department Admin and MDA Reporting Officer passwords. Generates temporary password, sends reset email via Resend, sets must_change_password flag, revokes all refresh tokens. Password reset events audit-logged
 - FR74: MDA Reporting Officers can add or update Staff ID for loan records within their assigned MDA only. Department Admin and Super Admin can search and update Staff IDs system-wide. All Staff ID changes audit-logged
 - FR75: System can detect duplicate Staff IDs when a Staff ID is added or updated by checking all existing records. If match found, system displays warning with existing loan reference. User can proceed (with justification note logged) or cancel
+- FR76: Public homepage with hero section, Official Programme Notice card, trust strip, How It Works 4-step journey, loan category cards, key capabilities, repayment & settlement rules, Who VLPRS Serves, trust & compliance, endorsement placeholder, news section, and final CTA. Neutral language only
+- FR77: Responsive navigation bar with 2-level dropdown structure, login modal (Staff Portal active, Beneficiary Portal and EOI as Phase 2 placeholders), hamburger mobile menu, and 4-column footer with legal strip and Programme Disclaimer
+- FR78: Scheme information pages: Programme Overview, About VLPRS, Eligibility & Loan Categories (4 tiers with amounts), Repayment & Settlement Rules (accordion), How It Works (4-step visual with disclaimer)
+- FR79: Resources and support pages: FAQ (categorised, minimum 15 questions), MDA Submission Guide, Downloads & Forms, News & Announcements, Help & Support (contact info)
+- FR80: Legal and compliance pages: Privacy & Data Protection (NDPR), Programme Disclaimer, Accessibility Statement (WCAG 2.1 AA)
+- FR81: All public pages include semantic HTML, meta tags (title, description, Open Graph), proper heading hierarchy, mobile-responsive layout, and 44x44px minimum touch targets
+- FR82: About the Programme page (/about) — top-level navigation item. Mission, Vision, Core Values. Programme Leadership section with role-title-prominent card design (AG, Deputy AG, Director — role and institutional description permanent, name swappable for personnel change resilience). Programme Governance section (Vehicle Loan Committee, AG oversight — absorbs former /scheme/ag-office content). Institutional Story section. Content extracted to src/content/about.ts for future CMS migration. Template A (Content Page) layout
 
 ### NonFunctional Requirements
 
@@ -293,10 +306,17 @@ This document provides the complete epic and story breakdown for VLPRS, decompos
 | FR69 | Epic 12 | Early exit computation expiry and attention flagging |
 | FR70 | Epic 11 | MDA historical data upload and cross-validation |
 | FR71 | Epic 10 | Service Status Verification Report during migration |
-| FR72 | Epic 13 | User account management (create, deactivate, reassign) |
-| FR73 | Epic 13 | Password reset for MDA officers and all account levels |
+| FR72 | Epic 1 | User account lifecycle with downward-only hierarchy, invitation email, profile self-service |
+| FR73 | Epic 1 | Admin-initiated password reset scoped by hierarchy, forced first-login change |
 | FR74 | Epic 13 | Staff ID management (add, update, audit-logged) |
 | FR75 | Epic 13 | Duplicate Staff ID detection and warning |
+| FR76 | Epic 14 | Public homepage with hero, programme notice, trust strip, scheme info sections |
+| FR77 | Epic 14 | Responsive navigation, login modal, footer with legal strip |
+| FR78 | Epic 14 | Scheme information pages (programme overview, eligibility, repayment, how it works) |
+| FR79 | Epic 14 | Resources and support pages (FAQ, MDA guide, downloads, news, help) |
+| FR80 | Epic 14 | Legal and compliance pages (privacy/NDPR, disclaimer, accessibility) |
+| FR81 | Epic 14 | Semantic HTML, meta tags, and accessibility on all public pages |
+| FR82 | Epic 14 | About the Programme page (mission, vision, leadership, governance) |
 
 ## Sprint Sequence (Solo Developer — 2-Week Sprints)
 
@@ -304,25 +324,27 @@ Implementation order derived from PRD Build Sequence (14 steps). Each sprint map
 
 | Sprint | Epic | Stories | PRD Build Step | Key Dependency | Milestone |
 |--------|------|---------|----------------|----------------|-----------|
-| 1 | Epic 1: Foundation & Secure Access | 9 | Step 3 | None — first sprint | Dev environment, auth, RBAC, CI/CD, demo-ready UI shell operational |
-| 2 | Epic 2: Loan Data & Financial Computation | 7 | Steps 1-2 | Epic 1 (auth + audit) | Immutable ledger, computation engine verified |
-| 3 | Epic 10: Staff Temporal Profile & Retirement | 4 | Step 4 | Epic 2 (loan master records) | Retirement dates computed, gratuity receivable tracked |
-| 4 | Epic 3: Data Migration & Legacy Import | 5 | Step 5 | Epic 10 (temporal validation for post-retirement scan) | All 63 MDAs imported with temporal profiles |
-| 5 | Epic 4: Executive Dashboard | 4 | Step 6 | Epic 3 (real data in system) | AG can see headline numbers — political shield active |
-| 6 | Epic 6: Reporting & PDF Export | 4 | Step 7 | Epic 4 (dashboard data sources) | System provably correct through reports |
-| 7 | Epic 5: MDA Monthly Submission | 5 | Steps 8, 10 | Epic 2 (ledger for deduction posting) | 8-field CSV + validation operational |
-| 8 | Epic 11: Pre-Submission & Mid-Cycle Events | 4 | Step 9 | Epic 5 (submission interface), Epic 10 (retirement data) | Checkpoint, event filing, reconciliation live |
-| 9 | Epic 7: Exception Management & Annotations | 3 | — | Epic 5 (submission data), Epic 4 (drill-down views) | Exception queue, auto-flagging, annotations |
-| 10 | Epic 8: Auto-Stop Certificate | 3 | Step 11 | Epic 2 (zero-balance detection) | "Never over-deducted again" guarantee tangible |
-| 11 | Epic 12: Early Exit Processing | 3 | Step 12 | Epic 8 (Auto-Stop Certificate generation) | Full loan completion paths operational |
-| 12 | Epic 9: Notifications & Alerts | 3 | Step 13 | Epic 8 (completion notifications) | Operational loop complete |
-| 13 | Epic 13: User Admin & Staff ID Governance | 4 | Step 14 | Epic 1 (user management foundation) | Administrative self-sufficiency achieved |
+| 1 | Epic 1: Foundation & Secure Access | 11 | Step 3 | None — first sprint | Dev environment, auth, RBAC, CI/CD, demo-ready UI shell, user invitation & management operational |
+| 2 | Epic 14: Public Website & Scheme Information | 3 | Step 4 | Epic 1 (design system, CI/CD, PublicLayout) | Institutional public face live — AG forwards URL to Commissioner and IT Assessors see government-grade portal |
+| 3 | Epic 2: Loan Data & Financial Computation | 7 | Steps 1-2 | Epic 1 (auth + audit) | Immutable ledger, computation engine verified |
+| 4 | Epic 10: Staff Temporal Profile & Retirement | 4 | Step 5 | Epic 2 (loan master records) | Retirement dates computed, gratuity receivable tracked |
+| 5 | Epic 3: Data Migration & Legacy Import | 5 | Step 6 | Epic 10 (temporal validation for post-retirement scan) | All 63 MDAs imported with temporal profiles |
+| 6 | Epic 4: Executive Dashboard | 4 | Step 7 | Epic 3 (real data in system) | AG can see headline numbers — political shield active |
+| 7 | Epic 6: Reporting & PDF Export | 4 | Step 8 | Epic 4 (dashboard data sources) | System provably correct through reports |
+| 8 | Epic 5: MDA Monthly Submission | 5 | Steps 9, 11 | Epic 2 (ledger for deduction posting) | 8-field CSV + validation operational |
+| 9 | Epic 11: Pre-Submission & Mid-Cycle Events | 4 | Step 10 | Epic 5 (submission interface), Epic 10 (retirement data) | Checkpoint, event filing, reconciliation live |
+| 10 | Epic 7: Exception Management & Annotations | 3 | — | Epic 5 (submission data), Epic 4 (drill-down views) | Exception queue, auto-flagging, annotations |
+| 11 | Epic 8: Auto-Stop Certificate | 3 | Step 12 | Epic 2 (zero-balance detection) | Automatic deduction cessation at loan completion — guaranteed |
+| 12 | Epic 12: Early Exit Processing | 3 | Step 13 | Epic 8 (Auto-Stop Certificate generation) | Full loan completion paths operational |
+| 13 | Epic 9: Notifications & Alerts | 3 | Step 14 | Epic 8 (completion notifications) | Operational loop complete |
+| 14 | Epic 13: Staff ID Governance | 2 | Step 15 | Epic 1 (user management foundation) | Staff ID data quality self-sufficiency achieved |
 
-**Total:** 13 sprints, 58 stories, ~26 weeks (6.5 months)
+**Total:** 14 sprints, 61 stories, ~28 weeks (7 months)
 
 ### Critical Path
 
 ```
+Epic 1 → Epic 14 (public site — parallel-safe, no backend dependency)
 Epic 1 → Epic 2 → Epic 10 → Epic 3 → Epic 4 → Epic 5 → Epic 11
                                               ↘ Epic 6
                                     Epic 2 → Epic 8 → Epic 12
@@ -331,25 +353,26 @@ Epic 1 → Epic 2 → Epic 10 → Epic 3 → Epic 4 → Epic 5 → Epic 11
                          Epic 4 + Epic 5 → Epic 7
 ```
 
-**Longest path:** Epic 1 → 2 → 10 → 3 → 4 → 5 → 11 (8 sprints / 16 weeks to full submission workflow)
+**Longest path:** Epic 1 → 2 → 10 → 3 → 4 → 5 → 11 (8 sprints / 16 weeks to full submission workflow — unchanged, Epic 14 runs on a parallel track after Epic 1)
 
 ### Demonstrability Milestones
 
 | After Sprint | What's Demonstrable |
 |-------------|---------------------|
-| Sprint 1 | **Live product shell** — branded login, role-specific screens with mock data, 5 seeded demo accounts, hosted on client domain. AG can open dashboard on her phone. |
-| Sprint 2 | Mathematical core verified — computation engine + immutable ledger |
-| Sprint 4 | Real data in system — all 63 MDAs migrated with temporal profiles |
-| Sprint 5 | **AG Demo** — dashboard with real numbers, drill-down, 30-second truth |
-| Sprint 7 | MDA officers can submit monthly data — adoption engine live |
-| Sprint 10 | Auto-Stop Certificates — the "never over-deducted" promise delivered |
-| Sprint 13 | Full MVP — all 75 FRs, all 12 features, administrative self-sufficiency |
+| Sprint 1 | **Live product shell** — branded login, role-specific screens with mock data, 5 seeded demo accounts, hosted on client domain. User invitation system operational — AG can create dept admin and MDA officer accounts via UI with welcome emails. AG can open dashboard on her phone. |
+| Sprint 2 | **Institutional public face live** — AG forwards URL to Commissioner or IT Assessors and they see a government-grade portal: scheme information, eligibility, repayment rules, FAQ, legal pages, trust signals. Professional first impression before login. |
+| Sprint 3 | Mathematical core verified — computation engine + immutable ledger |
+| Sprint 5 | Real data in system — all 63 MDAs migrated with temporal profiles |
+| Sprint 6 | **AG Demo** — dashboard with real numbers, drill-down, 30-second truth |
+| Sprint 8 | MDA officers can submit monthly data — adoption engine live |
+| Sprint 11 | Auto-Stop Certificates — automatic deduction cessation at loan completion |
+| Sprint 14 | Full MVP — all 82 FRs, all 13 features, administrative self-sufficiency |
 
 ## Epic List
 
 ### Epic 1: Project Foundation & Secure Access
-Users can securely log into VLPRS with role-appropriate access. All actions are audit-logged. The development/deployment infrastructure is fully operational. A demo-ready frontend with role-specific screens, mock data, and seeded credentials is deployed to the client's domain — enabling continuous client visibility from Sprint 1. Includes monorepo scaffold (architecture starter template), Docker setup, database foundation, JWT auth with refresh token rotation, RBAC middleware, audit logging, CI/CD pipeline, and frontend screen scaffolding with mock data layer.
-**FRs covered:** FR42, FR43, FR44, FR45, FR46, FR47, FR48
+Users can securely log into VLPRS with role-appropriate access. All actions are audit-logged. The development/deployment infrastructure is fully operational. A demo-ready frontend with role-specific screens, mock data, and seeded credentials is deployed to the client's domain — enabling continuous client visibility from Sprint 1. Super Admin and Department Admin can invite new users with welcome emails and manage account lifecycle (deactivate, reactivate, reassign, delete) through a downward-only hierarchy. Includes monorepo scaffold (architecture starter template), Docker setup, database foundation, JWT auth with refresh token rotation, RBAC middleware, audit logging, CI/CD pipeline, frontend screen scaffolding with mock data layer, user invitation system with Resend email integration, and user administration interface with profile self-service.
+**FRs covered:** FR42, FR43, FR44, FR45, FR46, FR47, FR48, FR72, FR73
 
 ### Epic 2: Loan Data Management & Financial Computation
 System maintains an immutable financial record and computes accurate loan schedules, balances, and repayment breakdowns for all 4 grade-level tiers. Any balance is reconstructable from the ledger. Loan lifecycle is fully tracked. The mathematical core — decimal.js arithmetic, 3-layer immutable ledger enforcement, UUIDv7 keys, computed views. Must be 100% accurate before any data enters the system.
@@ -395,9 +418,13 @@ MDA Reporting Officers review a mandatory checkpoint screen before each submissi
 Department Admin can compute a lump-sum payoff for active loans, record staff commitment and payment, and close loans through the early exit workflow. Computations expire at month-end if unpaid; expired commitments flagged as attention items. Upon confirmed payment, Auto-Stop Certificate is triggered. State machine: Computed → Committed → Paid → Closed (or → Expired).
 **FRs covered:** FR67, FR68, FR69
 
-### Epic 13: User Administration & Staff ID Governance
-Department Admin and Super Admin can manage user accounts (create, deactivate, reassign MDA officers) and initiate password resets. MDA officers can manage Staff IDs within their assigned MDA; admin users can manage Staff IDs system-wide. Duplicate Staff ID detection warns before assignment. All changes audit-logged. Administrative self-sufficiency without developer intervention.
-**FRs covered:** FR72, FR73, FR74, FR75
+### Epic 13: Staff ID Governance
+MDA officers can manage Staff IDs within their assigned MDA; admin users can manage Staff IDs system-wide. Duplicate Staff ID detection warns before assignment. All changes audit-logged. Staff ID data quality self-sufficiency. (Note: User account management — FR72, FR73 — moved to Epic 1, Stories 1.9a/1.9b.)
+**FRs covered:** FR74, FR75
+
+### Epic 14: Public Website & Scheme Information Portal
+The institutional public face of VLPRS — a comprehensive, government-grade multi-page public website that the AG, IT Assessors, and the general public encounter before login. Homepage with hero section, Official Programme Notice, trust strip, 4-step "How It Works" beneficiary journey, loan category cards (4 tiers), repayment & settlement rules, key capabilities, and trust & compliance signals. Top-level About the Programme page with Mission, Vision, Core Values, Programme Leadership (role-title-prominent cards for AG, Deputy AG, Director), Programme Governance, and Institutional Story. Sub-pages for programme information, eligibility, repayment rules, FAQ, MDA submission guide, downloads, news, help & support, and legal/compliance pages. Responsive navigation with 2-level dropdown structure, "About" as top-level nav item, login modal, and 4-column footer with legal strip. All copy follows the neutral language rule — describes what VLPRS enables, never what was broken. Static content extracted to `src/content/*.ts` files for future Sanity CMS migration. Uses Sprint 1 design system — no backend API dependencies.
+**FRs covered:** FR76, FR77, FR78, FR79, FR80, FR81, FR82
 
 ---
 
@@ -648,24 +675,43 @@ So that I can access the system's features relevant to my role.
 
 **Acceptance Criteria:**
 
+**Given** `apps/client/src/lib/authContext.tsx` exists
+**When** I inspect its exports
+**Then** it exports an `AuthProvider` React context that holds `accessToken` (in-memory, never localStorage — XSS-safe), `user` (id, email, name), and `role` from the JWT claims
+**And** it exports a `useAuth` hook providing: `login(email, password)`, `logout()`, `refresh()`, `isAuthenticated`, `user`, and `role`
+**And** `AuthProvider` wraps the entire app at the router level
+
+**Given** `apps/client/src/lib/apiClient.ts` exists
+**When** I inspect its exports
+**Then** it exports a typed `fetch` wrapper that: attaches the access token from `useAuth` context as `Authorization: Bearer <token>` on every request, types responses using interfaces from `@vlprs/shared`, normalises errors into a consistent `{ code, message, details? }` shape
+**And** on a 401 response, it automatically calls `POST /api/auth/refresh`, stores the new access token, and retries the original request once
+**And** if the refresh itself fails (expired/revoked refresh token), it clears auth state and redirects to `/login`
+
+**Given** a global `ErrorBoundary` component wraps the entire React app
+**When** an unhandled runtime error occurs in any component
+**Then** the `ErrorBoundary` catches it and renders a user-friendly fallback screen (not a white page or raw stack trace)
+
 **Given** the React SPA with shadcn/ui + Tailwind CSS and Oyo Crimson palette
 **When** an unauthenticated user visits any protected route
-**Then** they are redirected to the login page
+**Then** the `AuthGuard` component (at the `/dashboard` layout level) checks `isAuthenticated` from `useAuth` and redirects to the login page
 
 **Given** the login page
-**When** a user enters valid credentials and submits
-**Then** the access token is stored in React state (not localStorage), the refresh token is set as httpOnly cookie by the server, and the user is redirected to their role-appropriate dashboard view
+**When** a user enters credentials and submits
+**Then** the form uses React Hook Form with `loginSchema` from `@vlprs/shared` (via `@hookform/resolvers/zod`) for client-side validation before submission
 **And** the login page includes Google reCAPTCHA v3 (invisible)
+**And** on success, the access token is stored in auth context (React state), the refresh token is set as httpOnly cookie by the server, and the user is redirected to their role-appropriate dashboard view
+
+**Given** the login page
+**When** a user submits invalid credentials and the server returns 401
+**Then** an inline error message is displayed below the form: "Invalid email or password" (matching the server's non-enumerating response)
+**And** when the server returns 429 (account locked or rate limited), the message displays: "Too many attempts. Please try again later"
+**And** form fields retain their values so the user doesn't have to re-type their email
 
 **Given** an authenticated user
 **When** they view the application shell
-**Then** the Oyo Crimson sidebar (desktop) or header bar (mobile) displays navigation items appropriate to their role
+**Then** the Oyo Crimson sidebar (desktop) or header bar (mobile) displays navigation items appropriate to their role (imported from `ROLES` in `@vlprs/shared`)
 **And** the sidebar shows the user's name and role badge
-**And** a "Logout" action is available
-
-**Given** the access token is about to expire (or has expired)
-**When** the client makes an API call that returns 401
-**Then** the client automatically calls `/api/auth/refresh`, obtains a new access token, and retries the original request silently
+**And** a "Logout" action is available that calls `useAuth().logout()`, which hits `POST /api/auth/logout` and redirects to the landing page
 
 **Given** a Public Zone exists
 **When** an unauthenticated user visits the root URL
@@ -681,6 +727,7 @@ So that I can access the system's features relevant to my role.
 - Login as `super_admin` → lands on Executive Dashboard
 - Login as `dept_admin` → lands on Operations Hub
 - Login as `mda_officer` → lands on Submission View scoped to assigned MDA
+- Failed login → inline error message displayed, form retains email value
 - Logout → returns to landing page
 **And** each test validates the correct home screen heading and role badge are visible
 **And** Playwright config is committed to the repo with CI-compatible settings
@@ -701,9 +748,16 @@ So that the system is always live with the latest verified code and deployments 
 **And** the full pipeline path is validated end-to-end before investing in production-quality Dockerfiles
 **And** SSL termination via Let's Encrypt + Certbot is confirmed working
 
-**Given** a GitHub Actions workflow file
+**Given** a GitHub Actions workflow file (`.github/workflows/deploy.yml`)
 **When** a PR is merged to `main`
-**Then** the pipeline runs: lint → typecheck → test → build Docker images → push to ghcr.io → SSH to DigitalOcean Droplet → `docker compose pull && docker compose up -d`
+**Then** the pipeline runs: lint → typecheck → test → `drizzle-kit migrate` (apply pending database migrations) → build Docker images (tagged with commit SHA) → push to ghcr.io → SSH to DigitalOcean Droplet → `docker compose pull && docker compose up -d`
+**And** Docker images are tagged with both the git commit SHA and `latest` — the SHA tag enables rollback to any specific deploy
+
+**Given** the following GitHub Actions secrets are configured in the repository settings
+**When** I inspect the required secrets list
+**Then** the pipeline requires: `GHCR_TOKEN` (GitHub Container Registry push/pull), `DROPLET_SSH_KEY` (SSH private key for deploy), `DROPLET_IP` (Droplet public IP)
+**And** the production `.env` file on the Droplet contains: `DATABASE_URL`, `JWT_SECRET`, `SUPER_ADMIN_EMAIL`, `SUPER_ADMIN_PASSWORD`, `RECAPTCHA_SECRET_KEY`, `RESEND_API_KEY` — never committed to the repository
+**And** `.env.example` is committed as a template documenting all required variables (without values)
 
 **Given** multi-stage Dockerfiles for `apps/server` and `apps/client`
 **When** Docker images are built
@@ -713,14 +767,45 @@ So that the system is always live with the latest verified code and deployments 
 **Given** a `docker-compose.prod.yml`
 **When** deployed on the Droplet
 **Then** Nginx serves the React SPA, proxies `/api/*` to the Express container, and terminates SSL via Let's Encrypt + Certbot
+**And** the Express service is configured with `restart: unless-stopped` so Docker auto-restarts it on crash
+**And** the Express service has a Docker `HEALTHCHECK` instruction that polls `GET /api/health` — Docker marks the container as unhealthy if the check fails 3 consecutive times
 
 **Given** the health check endpoint `GET /api/health`
 **When** the server is running
 **Then** it returns `{ status: "ok", timestamp: "..." }` with 200
 
+**Rollback**
+
+**Given** a production deploy causes issues
+**When** a rollback is needed
+**Then** running `docker compose -f docker-compose.prod.yml pull ghcr.io/…/server:<previous-commit-sha> && docker compose -f docker-compose.prod.yml up -d` reverts to the previous working version
+**And** the rollback procedure is documented in the repository README or `docs/` folder
+
 **Given** branch protection on `main`
 **When** a developer attempts to push directly to `main`
 **Then** the push is rejected — changes must go through a PR with CI passing
+
+**Backup & Disaster Recovery**
+
+**Given** DigitalOcean Managed PostgreSQL is the production database
+**When** the database is provisioned
+**Then** automated daily backups are enabled with 7-day retention and point-in-time recovery (NFR-REL-2, NFR-REL-3)
+
+**Given** a weekly backup cron job on the Droplet
+**When** the cron fires (e.g., Sunday 2:00 AM WAT)
+**Then** `pg_dump` creates a compressed backup, uploads it to DigitalOcean Spaces (object storage), and retains the last 4 weekly backups
+**And** the backup script logs success/failure and the backup file size
+
+**Given** a disaster recovery scenario
+**When** a database restore is needed
+**Then** recovery can be completed within 4 hours using either Managed PG point-in-time recovery or the weekly `pg_dump` from DO Spaces (NFR-REL-4)
+
+**Monitoring**
+
+**Given** the production environment is live
+**When** monitoring is configured
+**Then** UptimeRobot (free tier) pings `GET /api/health` every 5 minutes and sends email alerts on downtime — tracking the 99.5% availability SLA (NFR-REL-1)
+**And** DigitalOcean built-in monitoring alerts on: CPU >80%, memory >85%, disk >90%
 
 **Production Initial Seed**
 
@@ -897,6 +982,581 @@ VITE_NEXT_MILESTONE="Sprint 2 — Loan Computation Engine (real numbers)"
 | `useExceptionQueue()` | `GET /api/exceptions` | Sprint 9 (Epic 7) |
 
 **And** each wiring event is a hook-level change only (swap mock source for API call) — zero UI component modifications required
+
+### Story 1.9a: User Account Lifecycle API & Email Invitation
+
+As a **Super Admin or Department Admin**,
+I want to create user accounts that send welcome emails with temporary credentials, and manage account lifecycle (deactivate, reactivate, reassign, delete, password reset),
+So that authorised personnel can be onboarded and managed without developer intervention, while respecting the role hierarchy.
+
+**Acceptance Criteria:**
+
+**Role Hierarchy Enforcement**
+
+**Given** the management hierarchy: `super_admin` manages `dept_admin` + `mda_officer`; `dept_admin` manages `mda_officer` only
+**When** any user management endpoint is called
+**Then** the system enforces downward-only management — the acting user's role must be strictly above the target user's role in the hierarchy (FR72)
+**And** attempting to manage a peer or superior role returns 403 with message "Insufficient permissions to manage this account level"
+**And** attempting to manage one's own account returns 403 with message "Cannot modify own account through this endpoint"
+
+**Given** the `super_admin` role
+**When** any attempt is made to create, deactivate, reactivate, delete, or reset password for another `super_admin` via API
+**Then** the request is rejected with 403 — super admin accounts are managed exclusively via CLI commands
+
+**Account Creation with Invitation Email**
+
+**Given** `POST /api/users` with body `{ email, name, role, mdaId? }`
+**When** a `super_admin` creates a `dept_admin` or `mda_officer`, or a `dept_admin` creates an `mda_officer`
+**Then** the account is created with: UUIDv7 PK, email (unique), name, bcrypt-hashed temporary password (system-generated, 12 chars, meeting FR42 password policy), role, `mda_id` (required for `mda_officer`, null for `dept_admin`), `is_active = true`, `must_change_password = true` (FR72)
+**And** a welcome email is sent via Resend containing: login URL, temporary credentials, instruction to change password on first login, and a brief description of their role's capabilities
+**And** the creation event is audit-logged with: acting user, new user ID, assigned role, assigned MDA
+
+**Given** `POST /api/users` with an email that already exists (active, deactivated, or soft-deleted)
+**When** the request is processed
+**Then** it returns 409 Conflict with message "Email already registered"
+
+**Given** `POST /api/users` with role `mda_officer` but no `mdaId`
+**When** the request is processed
+**Then** it returns 422 with message "MDA assignment required for MDA Reporting Officer accounts"
+
+**Forced Password Change on First Login**
+
+**Given** a user with `must_change_password = true`
+**When** they successfully authenticate via `POST /api/auth/login`
+**Then** the response includes `{ mustChangePassword: true }` alongside the access token
+**And** all API endpoints except `POST /api/auth/change-password` and `POST /api/auth/logout` return 403 with code `PASSWORD_CHANGE_REQUIRED` until the password is changed
+**And** after changing password, `must_change_password` is set to false and normal access resumes
+
+**Account Deactivation**
+
+**Given** `POST /api/users/:id/deactivate` with optional body `{ reason: string }`
+**When** a permitted admin deactivates an account
+**Then** `is_active` is set to false, all refresh tokens for that user are revoked, any active sessions are terminated immediately (FR72)
+**And** the deactivation is audit-logged with: acting user, target user, reason, timestamp, IP
+
+**Given** a deactivated user
+**When** they attempt to log in with correct credentials
+**Then** the response returns 401 with the same generic "Invalid email or password" message (no status enumeration)
+
+**Account Reactivation**
+
+**Given** `POST /api/users/:id/reactivate`
+**When** a permitted admin reactivates a previously deactivated account
+**Then** `is_active` is set to true and the user can log in again (FR72)
+**And** the reactivation is audit-logged
+**And** the user's password is NOT reset — they use their existing password (if they forgot it, admin does a separate password reset)
+
+**Given** a soft-deleted account (`deleted_at IS NOT NULL`)
+**When** a reactivation is attempted
+**Then** the request returns 422 with message "Deleted accounts cannot be reactivated — create a new account instead"
+
+**Account Soft Delete**
+
+**Given** `DELETE /api/users/:id` with required body `{ confirmEmail: string }` (must match target user's email as confirmation)
+**When** a permitted admin deletes an account
+**Then** `deleted_at` is set to current timestamp, `is_active` is set to false, all refresh tokens revoked, all sessions terminated (FR72)
+**And** the deletion is audit-logged with enhanced detail: acting user, target user full profile snapshot, reason, timestamp
+**And** the deleted user is excluded from all user list queries (but preserved in DB for audit trail and referential integrity)
+
+**Given** `DELETE /api/users/:id` where `confirmEmail` does not match the target user's email
+**When** the request is processed
+**Then** it returns 422 with message "Confirmation email does not match — deletion aborted"
+
+**MDA Reassignment**
+
+**Given** `PATCH /api/users/:id` with body `{ mdaId: newMdaId }`
+**When** a permitted admin reassigns an `mda_officer` to a different MDA
+**Then** the user's `mda_id` is updated and all subsequent API calls are scoped to the new MDA (FR72)
+**And** the reassignment is audit-logged with: old MDA, new MDA, acting user, timestamp
+
+**Given** a reassignment of a non-`mda_officer` user
+**When** `mdaId` is provided
+**Then** the request returns 422 with message "MDA assignment is only applicable to MDA Reporting Officer accounts"
+
+**Admin-Initiated Password Reset**
+
+**Given** `POST /api/users/:id/reset-password`
+**When** a permitted admin initiates a password reset
+**Then** a new temporary password is generated, bcrypt-hashed and stored, `must_change_password` set to true, all refresh tokens revoked (FR73)
+**And** a password reset email is sent via Resend with: temporary credentials, login URL, instruction to change password immediately
+**And** the reset is audit-logged with acting user and timestamp
+
+**Email Service (Resend Integration)**
+
+**Given** `apps/server/src/lib/email.ts` (or `services/emailService.ts`)
+**When** a welcome email or password reset email is triggered
+**Then** the email is sent via Resend SDK using `RESEND_API_KEY` from environment variables
+**And** if Resend API fails, the error is logged but the account creation/reset still succeeds (fire-and-forget with logged failure — email delivery does not block account operations)
+**And** the email sender is configurable via `EMAIL_FROM` environment variable (e.g., `noreply@vlprs.oyo.gov.ng`)
+
+**User Listing**
+
+**Given** `GET /api/users` with optional query params `{ role?, mdaId?, status?, page?, pageSize? }`
+**When** a `super_admin` calls the endpoint
+**Then** they see all non-deleted users across all roles (except the acting user's own record is flagged `isSelf: true` but still visible)
+**And** response uses the standard pagination envelope
+
+**Given** `GET /api/users`
+**When** a `dept_admin` calls the endpoint
+**Then** they see only `mda_officer` accounts (their manageable scope)
+
+**Super Admin CLI Management**
+
+**Given** the production server has access to CLI commands
+**When** an administrator runs `pnpm user:create-admin --email ag@vlprs.oyo.gov.ng --name "Accountant General"`
+**Then** a `super_admin` account is created with a system-generated temporary password displayed in the terminal output (never emailed for super admin accounts — communicated in person or via secure channel)
+**And** the account has `must_change_password = true`
+**And** the creation is audit-logged as `SYSTEM_CLI` actor
+
+**Given** the CLI
+**When** an administrator runs `pnpm user:deactivate-admin --email deputy.ag@vlprs.oyo.gov.ng`
+**Then** the super admin account is deactivated following the same rules as API deactivation (sessions terminated, tokens revoked)
+**And** the command requires interactive confirmation: "You are about to deactivate a Super Admin account. Type the email again to confirm:"
+
+**Given** the CLI
+**When** the deactivation would leave zero active super admin accounts
+**Then** the command is rejected with: "Cannot deactivate — this is the last active Super Admin. Create a replacement first."
+
+**Validation Schemas**
+
+**Given** `packages/shared/src/validators/userSchemas.ts`
+**When** I inspect its exports
+**Then** it exports: `createUserSchema`, `updateUserSchema`, `deactivateUserSchema`, `deleteUserSchema`, `resetPasswordSchema`
+**And** both `apps/server` and `apps/client` import them from `@vlprs/shared`
+
+**Tests**
+
+**Given** Story 1.9a is implemented
+**When** I run `pnpm test` from the monorepo root
+**Then** unit tests pass for: role hierarchy enforcement (all role combinations), temporary password generation (meets FR42 policy), `must_change_password` enforcement, and last-super-admin guardrail
+**And** integration tests pass for: `super_admin` creating `dept_admin` (201), `super_admin` creating `mda_officer` (201), `dept_admin` creating `mda_officer` (201), `dept_admin` creating `dept_admin` (403), `mda_officer` creating anyone (403), `super_admin` managing another `super_admin` (403), self-management attempt (403), deactivation + session termination, reactivation, soft delete with email confirmation, soft delete with wrong email (422), reactivation of deleted account (422), MDA reassignment, password reset + token revocation, duplicate email (409), `mda_officer` without `mdaId` (422), forced password change flow (login → `PASSWORD_CHANGE_REQUIRED` → change password → normal access), and user listing with role-based scoping
+
+### Story 1.9b: User Administration Interface, Profile Self-Service & First-Login Flow
+
+As a **Super Admin or Department Admin**,
+I want a user management screen where I can view, create, and manage user accounts with clear visual indicators of account status and role hierarchy,
+So that user administration is self-service, intuitive, and transparent.
+
+**Depends on:** Story 1.9a (API endpoints and email integration must exist)
+
+**Acceptance Criteria:**
+
+**User Management Page**
+
+**Given** a `super_admin` navigates to `/admin/users`
+**When** the page renders
+**Then** a table displays all non-deleted users with columns: Name, Email, Role (badge), MDA (if applicable), Status (Active/Deactivated badge), Last Login, Created Date
+**And** the table supports: sorting by any column, filtering by role (`dept_admin`, `mda_officer`), filtering by status (Active, Deactivated), filtering by MDA, and text search on name/email
+**And** super admin accounts are visible in the list but their action menus show only "View Details" — no deactivate/delete/reset actions (with a tooltip: "Super Admin accounts are managed via system administration")
+**And** a prominent "Invite User" button is visible as the primary action (crimson)
+
+**Given** a `dept_admin` navigates to `/admin/users`
+**When** the page renders
+**Then** only `mda_officer` accounts are listed (their manageable scope)
+**And** no `super_admin` or `dept_admin` accounts are visible
+
+**Invite User Dialog**
+
+**Given** the "Invite User" button is clicked
+**When** the create user dialog opens
+**Then** it displays a form with: Name (required), Email (required, validated), Role (dropdown — options limited to what the acting user can create), MDA (dropdown — required when Role is MDA Reporting Officer, hidden otherwise)
+**And** a preview note states: "A welcome email with temporary login credentials will be sent to this address"
+**And** submitting the form calls `POST /api/users` and shows a success toast: "Invitation sent to [email]"
+**And** the user list refreshes to show the new account
+
+**User Detail / Action Menu**
+
+**Given** a user row in the table
+**When** the admin clicks the action menu (three-dot icon)
+**Then** available actions are shown based on the hierarchy:
+- **Active account:** "Reset Password", "Reassign MDA" (if `mda_officer`), "Deactivate", "Delete"
+- **Deactivated account:** "Reactivate", "Delete"
+**And** each destructive action (Deactivate, Delete) opens a confirmation dialog with the user's name and email displayed prominently
+
+**Deactivate Confirmation Dialog**
+
+**Given** the "Deactivate" action is selected
+**When** the confirmation dialog opens
+**Then** it shows: "Deactivate [Name]'s account? They will be logged out immediately and unable to sign in until reactivated."
+**And** an optional "Reason" text field is available
+**And** confirming calls `POST /api/users/:id/deactivate` and updates the table row's status badge to "Deactivated"
+
+**Delete Confirmation Dialog**
+
+**Given** the "Delete" action is selected
+**When** the confirmation dialog opens
+**Then** it shows: "Permanently remove [Name]'s account? This action cannot be undone. Type their email to confirm:" with an email input field
+**And** the confirm button is disabled until the typed email matches exactly
+**And** the confirm button uses the destructive style (red — this is a genuine irreversible action, appropriate use of red per UX spec)
+**And** confirming calls `DELETE /api/users/:id` and removes the row from the table
+
+**Password Reset Confirmation**
+
+**Given** the "Reset Password" action is selected
+**When** the confirmation dialog opens
+**Then** it shows: "Send a temporary password to [email]? Their current sessions will be terminated."
+**And** confirming calls `POST /api/users/:id/reset-password` and shows a success toast: "Password reset email sent to [email]"
+
+**MDA Reassignment Dialog**
+
+**Given** the "Reassign MDA" action is selected for an `mda_officer`
+**When** the dialog opens
+**Then** it shows: current MDA assignment, a dropdown to select the new MDA, and a note: "The officer's data access will immediately switch to the new MDA"
+**And** confirming calls `PATCH /api/users/:id` and updates the MDA column in the table
+
+**First-Login Password Change Screen**
+
+**Given** a user logs in with `must_change_password = true`
+**When** they are authenticated
+**Then** instead of the normal dashboard, they see a full-screen "Set Your Password" form with: current temporary password field, new password field, confirm password field
+**And** the new password is validated against FR42 rules (min 8 chars, 1 uppercase, 1 lowercase, 1 digit) with inline validation feedback
+**And** the page cannot be navigated away from — sidebar and header show but all navigation links redirect back to this screen
+**And** after successful password change, the user is redirected to their role-appropriate home screen with a welcome toast: "Password updated. Welcome to VLPRS."
+
+**Profile Self-Service**
+
+**Given** any authenticated user clicks their name/avatar in the sidebar (desktop) or header (mobile)
+**When** the profile dropdown opens
+**Then** it shows: "My Profile" link, "Change Password" link, and "Logout"
+
+**Given** a user navigates to `/profile`
+**When** the page renders
+**Then** it displays their account details as read-only fields: Full Name, Email, Role (badge), MDA assignment (if `mda_officer`), Account Created date, Last Login timestamp
+**And** a "Change Password" button is visible
+**And** role, email, and MDA fields show a subtle lock icon with tooltip: "Contact your administrator to update"
+
+**Given** the "Change Password" button is clicked
+**When** the password change form opens (dialog or inline section)
+**Then** it shows: Current Password (required), New Password (required), Confirm New Password (required)
+**And** the new password is validated inline against FR42 rules (min 8 chars, 1 uppercase, 1 lowercase, 1 digit) with real-time feedback as the user types
+**And** submitting calls `POST /api/auth/change-password` (from Story 1.3)
+**And** on success: toast "Password updated successfully", all other sessions terminated (existing Story 1.3 behaviour), user remains logged in on current session
+**And** on wrong current password: inline error "Current password is incorrect"
+
+**Navigation Integration**
+
+**Given** the application sidebar
+**When** a `super_admin` or `dept_admin` views navigation
+**Then** a "User Management" item is visible in the sidebar (below Reports, above Logout)
+**And** `mda_officer` users do NOT see this navigation item
+
+**Given** any authenticated user
+**When** they view the sidebar (desktop) or header (mobile)
+**Then** their profile area shows: name, role badge, and (if `mda_officer`) their assigned MDA name — so they always know which MDA they're scoped to
+
+**Responsive Design**
+
+**Given** the user management page on mobile (<768px)
+**When** the table renders
+**Then** it uses a card layout (one user per card) instead of a horizontal table, with the action menu accessible via a button on each card
+**And** all touch targets are ≥44x44px
+**And** dialogs render as full-screen sheets on mobile
+
+**Visual Design Compliance**
+
+**Given** the user management interface
+**When** any screen is rendered
+**Then** it follows the client-approved visual design established in `_bmad-output/planning-artifacts/ux-design-directions.html` — the canonical visual reference for all VLPRS UI implementation. Specific adherence: Oyo Crimson sidebar, neutral content area, status badges with colour + icon + text, button hierarchy (crimson primary, teal secondary, ghost tertiary, red destructive only for irreversible actions), Inter typography, and all component patterns (cards, tables, badges, dialogs) matching the approved mockup styles
+
+**Empty State**
+
+**Given** the user management page with no users matching filters
+**When** the table has zero results
+**Then** an empty state is shown: "No users found matching your filters" with a "Clear Filters" action — not a blank table
+
+**Tests**
+
+**Given** Story 1.9b is implemented
+**When** I run `pnpm test` from the monorepo root
+**Then** integration/E2E tests verify: `super_admin` sees all manageable users + invite button, `dept_admin` sees only `mda_officer` accounts, `mda_officer` does not see the User Management nav item, invite dialog submits and refreshes list, deactivate flow works end-to-end, delete flow requires email confirmation, first-login password change screen appears and redirects after change, super admin rows show restricted action menu, profile page displays correct user details, and password change form validates and submits correctly
+
+---
+
+## Epic 14: Public Website & Scheme Information Portal
+
+The institutional public face of VLPRS — a comprehensive multi-page public website that the AG, IT Assessors, and the general public encounter before login. Uses the Sprint 1 design system (Oyo Crimson, Inter typography, shadcn/ui components). No backend API dependencies — all static content pages rendered within the SPA.
+
+### Story 14.1: Homepage & Navigation Shell
+
+As the **Accountant General**,
+I want the VLPRS public URL to present a professional, government-grade homepage with clear navigation and login access,
+So that when I forward this URL to the Commissioner, IT Assessors, or Governor's office, it immediately signals institutional credibility and architectural seriousness.
+
+**Depends on:** Story 1.8a (design foundation, Oyo Crimson tokens, Inter typography, shadcn/ui components must exist)
+
+**Acceptance Criteria:**
+
+**Navigation Bar**
+
+**Given** an unauthenticated user visits the VLPRS public URL
+**When** the page renders
+**Then** a sticky header displays: Oyo State Government crest + "Vehicle Loan Scheme" wordmark with "Accountant-General's Office" subtitle, primary navigation items (Home, About, The Scheme ▾, How It Works, Resources ▾, Help & Support), and a "Staff Login" CTA button (Oyo Crimson)
+**And** "About" is a direct link to `/about` (not a dropdown)
+**And** "The Scheme" dropdown shows: Programme Overview, About VLPRS, Eligibility & Loan Categories, Repayment & Settlement Rules
+**And** "Resources" dropdown shows: Frequently Asked Questions, MDA Submission Guide, Downloads & Forms, News & Announcements, Approved Beneficiary Lists (with "Coming Soon" badge)
+**And** on mobile (<768px), the navigation collapses to a hamburger menu with all items accessible in a slide-out Sheet overlay
+**And** the header uses glassmorphism effect (semi-transparent background with backdrop blur) matching the design system
+
+**Login Modal**
+
+**Given** the user clicks "Staff Login"
+**When** the login modal opens
+**Then** it displays 3 entry points in a clean dialog: Staff Portal (active — "For authorised MDA officers, department staff, and administrators" with a "Login to Dashboard" button linking to `/login`), Beneficiary Portal ("View your loan status and documents" with "Coming Soon — Phase 2" badge), Expression of Interest ("Register interest in the scheme" with "Coming Soon — Phase 2" badge)
+**And** a footer note: "All portal access is role-based. Contact your department for account setup."
+**And** the modal has proper accessibility: `role="dialog"`, `aria-modal="true"`, focus trap, Escape to close
+
+**Hero Section**
+
+**Given** the homepage renders
+**When** the hero section loads
+**Then** it displays: Oyo State Government crest (prominent), "Vehicle Loan Scheme" as H1 (44px desktop / 32px mobile), subtext: "An official staff welfare programme administered through the Accountant-General's Office. VLPRS provides structured record-keeping, transparent reporting, and auditable repayment tracking.", primary CTA "Staff Login", secondary CTA "Learn How It Works →"
+**And** alongside the hero copy (desktop) or below (mobile), an "Official Programme Notice" card displays: "Approvals remain committee-based and policy-led", "Repayment is primarily through payroll deductions; retirement cases are handled via gratuity settlement", "Records are maintained with audit trails for accuracy and accountability", and NDPR fine print: "Data is handled in accordance with applicable data protection requirements (NDPR)"
+**And** the hero section has a subtle background gradient (not a stock photo)
+
+**Trust Strip**
+
+**Given** the hero section is visible
+**When** the user scrolls past it (or it appears below hero on first render)
+**Then** a trust strip displays: "Administered by the Accountant-General's Office" with 3 pill-shaped trust badges: "NDPR-aligned handling", "Audit-ready reporting", "Committee approvals preserved"
+
+**How It Works Section**
+
+**Given** the homepage
+**When** the "How It Works" section renders
+**Then** 4 step cards display in a horizontal row (desktop) or stacked (mobile): Step 1 "Expression of Interest" → Step 2 "Administrative Review" → Step 3 "Committee Decision" → Step 4 "Payroll Repayment"
+**And** each card has: step number badge, title, and 2-line description
+**And** the section header includes a disclaimer: "Expression of Interest submission does not constitute loan approval"
+
+**Loan Category Cards**
+
+**Given** the homepage
+**When** the "Eligibility & Loan Categories" section renders
+**Then** 4 cards display the grade-level tiers: Levels 1-6 (Up to ₦250,000), Levels 7-8 (Up to ₦450,000), Levels 9-10 (Up to ₦600,000), Levels 12+ (Up to ₦750,000)
+**And** each card shows: grade level range, maximum loan amount (formatted with ₦ and thousands separator), "Standard tenure: 60 months", and a "See repayment rules" link to the Repayment section/page
+**And** a note below: "Eligibility is subject to scheme rules, including tenure-to-retirement provisions"
+
+**Key Capabilities Section**
+
+**Given** the homepage
+**When** the capabilities section renders
+**Then** 6 feature cards display in a 3x2 grid (desktop) or stacked (mobile): Immutable Financial Ledger ("Banking-grade record integrity — every transaction append-only, auditor-verifiable"), Computed Balances ("Derived from ledger entries — never stored, never manually edited. One formula for all"), Auto-Stop Certificates ("Automatic deduction cessation upon loan completion — guaranteed"), Real-Time Executive Dashboard ("Scheme-wide status visible on any device in under 3 seconds"), Non-Punitive Design ("Comparisons, not accusations. Variances, not mistakes. Adoption through trust"), Audit-Ready from Day One ("Every action logged. Full computation chain reconstructable by any auditor")
+
+**Repayment & Settlement Rules Section**
+
+**Given** the homepage
+**When** the repayment section renders
+**Then** a 2-column layout displays: left column with accordion/expandable items (Standard Repayment 60 months, Accelerated Repayment shorter tenure, Early Principal Settlement with interest forfeiture, Retirement & Gratuity Settlement), right column with a "Key Clarification" panel: "VLPRS supports record accuracy and reconciliation. It does not replace payroll authority or gratuity processing procedures." with a link to FAQ
+**And** on mobile, the layout stacks vertically
+
+**Who VLPRS Serves Section**
+
+**Given** the homepage
+**When** the "Who VLPRS Serves" section renders
+**Then** 5 role cards display: Accountant General ("Instant scheme-wide visibility from any device"), Deputy AG ("Pattern detection and exception investigation"), Car Loan Department ("Reports in seconds, not days"), MDA Officers — 63 ("Submit 8 fields instead of computing 17 columns"), Beneficiaries — 3,100+ ("Protection from over-deduction — guaranteed")
+
+**Trust & Compliance Section**
+
+**Given** the homepage
+**When** the trust section renders
+**Then** 3 trust pillar cards display: NDPR Compliant (privacy notices, data minimisation, consent capture), Audit-Ready (every action logged with user, timestamp, role, and IP), Immutable Ledger (no record can be altered or deleted — ever)
+
+**Endorsement Banner**
+
+**Given** the homepage
+**When** the endorsement section renders
+**Then** a styled blockquote banner displays a placeholder quote attributed to "— Accountant General, Oyo State" with a visual treatment that distinguishes it from regular content (background colour, larger quote marks, etc.)
+
+**News Section**
+
+**Given** the homepage
+**When** the news section renders
+**Then** 3 announcement cards display with: title, date, short excerpt, and "Read more" link
+**And** initial content uses placeholder announcements (e.g., "System deployed to 63 MDAs", "Migration Phase 1 underway", "Beneficiary Portal coming Phase 2")
+
+**Final CTA Section**
+
+**Given** the homepage
+**When** the final CTA section renders
+**Then** a full-width banner displays: "Ready to access VLPRS?" with two buttons: "Staff Login" (primary) and "Contact Support" (secondary)
+
+**Footer**
+
+**Given** any public page
+**When** the footer renders
+**Then** it displays a 4-column layout: Column 1 — About & Scheme (About the Programme, Programme Overview, Eligibility, Repayment, How It Works, About VLPRS), Column 2 — Resources (FAQs, MDA Guide, Downloads, News), Column 3 — Contact (Accountant-General's Office, Ibadan Oyo State, email, phone, office hours Mon-Fri 8am-6pm WAT), Column 4 — Staff Portal (login link)
+**And** below the columns, a legal strip displays: Programme Disclaimer ("This portal provides general programme information. Loan approvals, payroll deductions, and gratuity processing remain subject to applicable government procedures and committee decisions."), links to Privacy & Data Protection, Accessibility Statement, and Programme Disclaimer pages
+**And** bottom bar: "© 2026 Oyo State Government. All rights reserved." with office hours
+
+**Performance & Accessibility**
+
+**Given** the homepage
+**When** loaded on a 4G mobile connection
+**Then** First Contentful Paint is <2 seconds — hero section is visible immediately
+**And** all touch targets are ≥44x44px, all images have alt text, all heading hierarchy is semantic (h1 → h2 → h3), colour contrast meets WCAG AA (4.5:1 body, 3:1 large), and all interactive elements are keyboard-navigable
+**And** the page includes: `<title>Vehicle Loan Scheme — Oyo State Government</title>`, meta description, and Open Graph tags
+
+### Story 14.2: About & Scheme Information Pages
+
+As a **government worker considering the vehicle loan scheme**,
+I want to read detailed information about the programme's leadership, mission, eligibility, and repayment rules on the public website,
+So that I understand the scheme and who stands behind it without visiting the Car Loan Department in person.
+
+**Depends on:** Story 14.1 (navigation shell, PublicLayout, footer must exist)
+
+**Acceptance Criteria:**
+
+**Programme Overview Page (`/scheme`)**
+
+**Given** a user navigates to the Programme Overview page
+**When** the page renders
+**Then** it displays: scheme objectives (eliminating manual record-keeping, centralising loan administration, establishing auditable records), policy basis (Vehicle Loan Committee governance, Accountant-General's Office administration), benefits to staff (reduced administrative burden, transparent record-keeping, automatic deduction cessation at loan completion, structured grievance resolution), and the role of the Accountant-General's Office (scheme oversight, financial reporting, fund management)
+**And** all content follows the neutral language rule — no references to past errors, disputes, or institutional failures
+**And** a sidebar or callout displays: "VLPRS is classified as an administrative support system. It records and administers decisions — it does not make them. All loan approvals, rejections, and policy determinations remain the exclusive responsibility of the designated approval authorities."
+
+**About VLPRS Page (`/scheme/about-vlprs`)**
+
+**Given** a user navigates to the About VLPRS page
+**When** the page renders
+**Then** it displays: what VLPRS is (the digital system of record for the Oyo State Government Car Loan Scheme), the core principle ("MDAs submit facts. VLPRS computes truth. Reports are generated views."), what VLPRS does (6 items: centralised record-keeping, automated computation, retirement obligation tracking, anomaly detection, transparent reporting, audit-ready records), what VLPRS does NOT do (6 items: does not approve or reject loans, does not change loan policy, does not impose sanctions, does not replace payroll systems, does not process gratuity payments, does not impose retrospective sanctions on legacy data)
+**And** the "Does / Does Not" section uses a clear two-column or two-card layout
+
+**Eligibility & Loan Categories Page (`/scheme/eligibility`)**
+
+**Given** a user navigates to the Eligibility page
+**When** the page renders
+**Then** it displays the 4 loan tier cards (same as homepage but with expanded detail): Levels 1-6 up to ₦250,000, Levels 7-8 up to ₦450,000, Levels 9-10 up to ₦600,000, Levels 12+ up to ₦750,000 — each with: grade level range, maximum loan amount, standard tenure (60 months), and interest rate information
+**And** eligibility conditions are listed: active government service, grade level qualification, no existing active loan (one loan at a time), committee approval required
+**And** a retirement provision note: "Staff within 24 months to retirement may be processed under gratuity settlement procedures where applicable"
+**And** a disclaimer: "Eligibility is determined by scheme rules and committee decision. This page provides general information only."
+
+**Repayment & Settlement Rules Page (`/scheme/repayment`)**
+
+**Given** a user navigates to the Repayment Rules page
+**When** the page renders
+**Then** it displays an expanded version of the homepage accordion with full detail for each settlement path: Standard Repayment (60-month tenure, monthly principal + interest via payroll deduction, 2-month moratorium at loan start), Accelerated Repayment (shorter tenure option, reduced total interest, higher monthly payments), Early Principal Settlement (lump-sum payoff of outstanding principal, interest waiver as incentive), Retirement & Gratuity Settlement (outstanding balance recovered from gratuity for staff retiring before loan completion)
+**And** each path includes a brief plain-language example (e.g., "A Level 9 officer with ₦600,000 principal over 60 months pays approximately ₦10,000 per month in principal plus monthly interest")
+**And** the Key Clarification panel is displayed: "VLPRS supports record accuracy and reconciliation. It does not replace payroll authority or gratuity processing procedures. Adjustments follow administrative review and applicable regulations."
+
+**How It Works Page (`/how-it-works`)**
+
+**Given** a user navigates to How It Works
+**When** the page renders
+**Then** it displays an expanded 4-step visual journey with more detail than the homepage version: Step 1 — Expression of Interest ("Submit your interest digitally and receive a reference number for administrative tracking"), Step 2 — Administrative Review ("Applications are screened and prepared for committee consideration under established procedures"), Step 3 — Committee Decision ("Approvals are determined by the designated committee. The portal does not approve loans."), Step 4 — Payroll Repayment ("Approved loans are repaid through payroll deductions. Completion triggers clearance documentation and automatic deduction cessation.")
+**And** a "What happens after completion?" section explains: "When your loan balance reaches zero, VLPRS automatically generates a Clearance Certificate and notifies your MDA to cease deductions. No manual intervention required."
+**And** the disclaimer is prominent: "Expression of Interest submission does not constitute loan approval. All approvals remain subject to committee decision under existing government procedures."
+
+**About the Programme Page (`/about`)**
+
+**Given** a user navigates to the About page
+**When** the page renders
+**Then** it displays:
+- **Mission Statement** (2-3 sentences — what the programme exists to achieve)
+- **Vision Statement** (2-3 sentences — what success looks like for Oyo State civil servants)
+- **Core Values** (3-5 values: Transparency, Accountability, Accuracy, Fairness, Institutional Trust)
+- **Programme Leadership** section showing the principal team who conceptualized and champion the programme: Accountant-General, Deputy Accountant-General, Director (Car Loan Department) — each displayed with role title (prominent, permanent), name of current office holder (swappable), optional official photo, and brief institutional description of the role (1-2 sentences, permanent)
+- **Programme Governance** section showing: the Vehicle Loan Committee structure (who sits on it, decision authority), how VLPRS supports the committee's process (record-keeping, not decision-making), and the AG's Office role in scheme oversight, financial reporting, and fund management (absorbs former `/scheme/ag-office` content)
+- **Institutional Story** — brief, neutral-language narrative of what the programme aims to achieve (what is being built, not what was broken)
+**And** the Programme Leadership section uses a card layout: role title as H3, name below, institutional description below name — role title and description are permanent institutional text, only the name line changes when personnel rotate
+**And** the Programme Governance section includes a callout: "The AG's Office is the authority. VLPRS is the tool that serves that authority."
+**And** all content follows the neutral language rule — describes what the programme enables, never what was broken
+**And** the page uses Template A (Content Page) with 8-col main content and 4-col sidebar containing quick links to Eligibility, How It Works, FAQ, and Contact
+
+**Cross-Page Requirements**
+
+**Given** any scheme information page
+**When** the page renders
+**Then** it uses the PublicLayout (navigation + footer from Story 14.1), has a unique `<title>` tag and meta description, has breadcrumb navigation showing: Home > [Section] > [Page], and all content is accessible (semantic HTML, heading hierarchy, keyboard navigable, WCAG AA contrast)
+**And** the page renders in <500ms as a client-side SPA transition from any other public page
+
+### Story 14.3: Resources, Support & Legal Pages
+
+As an **MDA Reporting Officer visiting the VLPRS website**,
+I want to find FAQs, submission guides, downloadable forms, and contact information,
+So that I can prepare for using the system without needing a phone call or office visit.
+
+**Depends on:** Story 14.1 (navigation shell, PublicLayout, footer must exist)
+
+**Acceptance Criteria:**
+
+**FAQ Page (`/resources/faq`)**
+
+**Given** a user navigates to the FAQ page
+**When** the page renders
+**Then** questions are organised in collapsible accordion groups by audience: "For Beneficiaries" (e.g., How do I check my loan balance? What happens when my loan is paid off? What is an Auto-Stop Certificate?), "For MDA Officers" (e.g., How do I submit monthly deduction data? What is the 8-field CSV format? What happens if I make an error in my submission? When is the submission deadline?), "General" (e.g., What is VLPRS? Who administers the scheme? How is my data protected? What is an Expression of Interest?)
+**And** a minimum of 15 questions are included across all categories
+**And** each question uses the `<details>`/`<summary>` pattern or equivalent accessible accordion
+**And** a search/filter input allows filtering questions by keyword
+
+**MDA Submission Guide Page (`/resources/mda-guide`)**
+
+**Given** a user navigates to the MDA Guide page
+**When** the page renders
+**Then** it displays a step-by-step guide for the monthly 8-field CSV submission process: what each field means (Staff ID, Month, Amount Deducted, Payroll Batch Reference, MDA Code, Event Flag, Event Effective Date, Deduction Cessation Reason), which fields are conditional (Event Effective Date required when Event Flag ≠ NONE; Cessation Reason required when Amount = ₦0 AND Event Flag = NONE), the submission deadline (28th of each month), what to expect after upload (confirmation, comparison summary), and common questions
+**And** a "Download CSV Template" button links to a downloadable `.csv` file with correct headers and one example row
+**And** screenshots/illustrations placeholder sections are included (to be populated with actual UI screenshots after Sprint 8)
+
+**Downloads & Forms Page (`/resources/downloads`)**
+
+**Given** a user navigates to Downloads
+**When** the page renders
+**Then** it displays a list of downloadable resources as cards: CSV Submission Template (.csv, with description), Policy Summary (placeholder — PDF to be provided by AG's Office), MDA Officer Quick Reference Guide (placeholder — to be created post-training), and Training Materials (placeholder — to be created for rollout)
+**And** each card shows: document name, format badge (CSV, PDF), file size (where available), and download button
+**And** placeholder items show: "Coming Soon" badge instead of download button
+
+**News & Announcements Page (`/resources/news`)**
+
+**Given** a user navigates to News
+**When** the page renders
+**Then** it displays announcement cards in reverse chronological order with: title, date, excerpt (first 2-3 sentences), and "Read more" link
+**And** clicking "Read more" navigates to a detail page showing the full announcement text
+**And** initial content includes 3 placeholder announcements with realistic titles and dates
+**And** announcements are stored as static content within the codebase (no CMS or database — content updates via code commits and CI/CD deploy)
+
+**Approved Beneficiary Lists Page (`/resources/beneficiary-lists`)**
+
+**Given** a user navigates to Approved Beneficiary Lists
+**When** the page renders
+**Then** it displays a "Coming Soon — Phase 2" placeholder with: explanation of what this page will contain (published approved batch lists, searchable by name or Staff ID, with NDPR-compliant masked identifiers), expected availability timeline, and a link back to the main Resources page
+**And** the page is fully styled — not a bare placeholder — to signal roadmap intentionality
+
+**Help & Support Page (`/support`)**
+
+**Given** a user navigates to Help & Support
+**When** the page renders
+**Then** it displays: contact information (Accountant-General's Office address in Ibadan, email address, phone number, office hours Mon-Fri 8am-6pm WAT), a "Need help?" section with guidance for different audiences ("If you're an MDA officer, see the Submission Guide. If you have a loan enquiry, contact the Car Loan Department. For technical issues, email support."), and links to FAQ and MDA Guide
+**And** the support section uses a prominent banner design (matching the design system) to be visually distinct
+
+**Privacy & Data Protection Page (`/privacy`)**
+
+**Given** a user navigates to Privacy
+**When** the page renders
+**Then** it displays the NDPR compliance statement covering: what personal data is collected and why (data minimisation), how data is processed (loan administration only), who has access (role-based, need-to-know), data retention policy (minimum 7 years for financial records per government regulations), right of access (beneficiaries can view their own data), consent capture practices, data security measures (encryption at rest AES-256, encryption in transit TLS 1.2+), and contact for data protection enquiries
+
+**Programme Disclaimer Page (`/disclaimer`)**
+
+**Given** a user navigates to Programme Disclaimer
+**When** the page renders
+**Then** it displays: system scope ("This portal provides general programme information and administrative record-keeping"), committee authority preservation ("All loan approvals, rejections, and policy determinations remain the exclusive responsibility of the Vehicle Loan Committee and designated approval authorities"), EOI disclaimer ("Expression of Interest submission does not constitute, imply, or guarantee loan approval"), no legal commitment ("Information on this portal is for general guidance. Specific loan terms are governed by applicable government policies and committee decisions"), and payroll/gratuity scope ("VLPRS records and tracks deductions. It does not execute payroll changes or process gratuity payments — these remain subject to established government procedures")
+
+**Accessibility Statement Page (`/accessibility`)**
+
+**Given** a user navigates to Accessibility
+**When** the page renders
+**Then** it displays: WCAG 2.1 AA compliance commitment, accessibility features (keyboard navigation, screen reader support, colour contrast, text resizing, touch targets), known limitations (if any), contact for accessibility issues, and a commitment to continuous improvement
+
+**Expression of Interest Placeholder Page (`/eoi`)**
+
+**Given** a user navigates to Expression of Interest
+**When** the page renders
+**Then** it displays a "Coming Soon — Phase 2" placeholder with: explanation of what EOI registration will enable, note that "Expression of Interest ≠ approval", link to "How It Works" for the current process, and link to Contact for current enquiries
+**And** the page is fully styled with the design system
+
+**Cross-Page Requirements**
+
+**Given** any resources, support, or legal page
+**When** the page renders
+**Then** it uses the PublicLayout (navigation + footer from Story 14.1), has a unique `<title>` tag and meta description, has breadcrumb navigation, and meets all WCAG AA accessibility requirements
+**And** the page renders in <500ms as a client-side SPA transition
 
 ---
 
@@ -1881,57 +2541,11 @@ So that I can track which staff are in the process of settling early and follow 
 
 ---
 
-## Epic 13: User Administration & Staff ID Governance
+## Epic 13: Staff ID Governance
 
-Department Admin and Super Admin can manage user accounts and Staff IDs. Administrative self-sufficiency without developer intervention.
+MDA officers can manage Staff IDs within their assigned MDA; admin users can manage Staff IDs system-wide. Staff ID data quality self-sufficiency.
 
-### Story 13.1: User Account Management
-
-As a **Department Admin**,
-I want to create, deactivate, and reassign MDA Reporting Officer accounts,
-So that I can manage system access without developer intervention.
-
-**Acceptance Criteria:**
-
-**Given** the user administration page at `/admin/users`
-**When** Department Admin creates a new MDA Reporting Officer account
-**Then** the account is created with: email, name, role (`mda_officer`), assigned MDA, and a system-generated temporary password (FR72)
-**And** the new user receives an email with login credentials and a forced password change on first login
-
-**Given** a user account
-**When** Department Admin deactivates it
-**Then** the account's `is_active` flag is set to false, all refresh tokens are revoked, and the user can no longer authenticate (FR72)
-**And** the deactivation is audit-logged with acting user, timestamp, and reason
-
-**Given** an MDA Reporting Officer account
-**When** Department Admin reassigns it to a different MDA
-**Then** the user's `mda_id` is updated and all subsequent API calls are scoped to the new MDA (FR72)
-**And** the reassignment is audit-logged
-
-**Given** a Super Admin
-**When** they access user administration
-**Then** they can create, deactivate, and reassign accounts at ALL levels including Department Admin (FR72)
-
-### Story 13.2: Password Reset
-
-As a **Department Admin**,
-I want to initiate a password reset for MDA Reporting Officer accounts,
-So that locked-out officers can regain access without developer intervention.
-
-**Acceptance Criteria:**
-
-**Given** an MDA Reporting Officer account
-**When** Department Admin initiates a password reset via `POST /api/users/:id/reset-password`
-**Then** a temporary password is generated and sent to the user's email, with forced password change on next login (FR73)
-**And** the reset event is audit-logged with acting user and timestamp
-
-**Given** a Super Admin
-**When** they initiate a password reset
-**Then** they can reset passwords for all account levels including Department Admin (FR73)
-
-**Given** a password reset
-**When** the temporary password is generated
-**Then** all existing refresh tokens for that user are revoked (same security policy as voluntary password change)
+> **Note:** Stories 13.1 (User Account Management) and 13.2 (Password Reset) were moved to Epic 1 as Stories 1.9a and 1.9b. See Epic 1 for full user account lifecycle and invitation system.
 
 ### Story 13.3: Staff ID Management
 

@@ -22,6 +22,14 @@ project_name: 'vlprs'
 user_name: 'Awwal'
 date: '2026-02-15'
 editHistory:
+  - date: '2026-02-20'
+    changes: 'About page, CMS readiness & integration extension points: Added /about route and AboutPage.tsx to public pages. Removed /scheme/ag-office (content absorbed into /about). Updated routing decision and directory structure. Updated FR inventory 81→82 (FR82 = About the Programme). Added src/content/ directory convention for CMS migration readiness (static content files → future Sanity headless CMS). Added Extension Points & Future Integration section: data ingestion abstraction (DeductionRecord[] interface), API consumer readiness (versioning path, API key auth slot), domain isolation convention (infrastructure vs domain services), event emission pattern (loan.completed, submission.processed). Added Sanity CMS to deferred technologies.'
+  - date: '2026-02-20'
+    changes: 'Public Website wireframes formalization: Added components/public/ directory (8 shared public components: PublicNavBar, LoginModal, PublicFooter, BreadcrumbNav, PageHeader, CtaBanner, DisclaimerCallout, ProgrammeDisclaimer). Added public zone page template pattern (4 templates: Content Page, Card Grid, Placeholder, Homepage) to Pattern Categories. Updated routing decision to reference page templates. Updated PublicLayout description. Added wireframes-epic-14.md as canonical wireframe reference. No architectural decisions changed.'
+  - date: '2026-02-20'
+    changes: 'Epic 14 (Public Website & Scheme Information) integration: Expanded public zone routing from 4 routes to full public site (/, /scheme/*, /how-it-works, /resources/*, /support, /privacy, /disclaimer, /accessibility, /eoi, /login). Expanded pages/public/ directory from 4 files to 20 files organised in scheme/, resources/, legal/ subdirectories. All sprint references incremented by 1 (Sprint 2 now reserved for Epic 14). Updated FR inventory references (FR76-FR81). No architectural decisions changed.'
+  - date: '2026-02-19'
+    changes: 'User invitation pull-forward: emailService.ts (Resend integration) now required in Sprint 1 for welcome emails and password reset emails (previously deferred to Epic 9/13). Added EMAIL_FROM to environment variables. Added userAdminService.ts to Sprint 1 scope. Added CLI commands pnpm user:create-admin and pnpm user:deactivate-admin for super admin lifecycle management. Added must_change_password column to users table. Elevated ux-design-directions.html to canonical visual reference for all UI implementation. No architectural decisions changed.'
   - date: '2026-02-18'
     changes: 'OSLRS playbook integration: Added Playwright to testing strategy (three-layer quality: Vitest → Playwright → UAT). Added packages/testing/ shared test utilities workspace (factories, helpers, setup). Added role constants single source of truth convention (rule 8 — never hardcode role strings). Added TanStack Query hook naming convention (rule 9 — use<Action><Entity>). Added seed-production.ts for initial super admin from env vars. Added SUPER_ADMIN_EMAIL + SUPER_ADMIN_PASSWORD to environment variables. No architectural decisions changed.'
   - date: '2026-02-17'
@@ -38,7 +46,7 @@ _This document builds collaboratively through step-by-step discovery. Sections a
 
 ### Requirements Overview
 
-**Functional Requirements (75 FRs across 15 categories):**
+**Functional Requirements (82 FRs across 16 categories):**
 
 | Category | FRs | Architectural Weight |
 |----------|-----|---------------------|
@@ -57,6 +65,7 @@ _This document builds collaboratively through step-by-step discovery. Sections a
 | Historical Data & Migration Reconciliation | FR70-FR71 | Medium — historical CSV upload, cross-reference against migration baseline, service status verification report |
 | User & Account Administration | FR72-FR73 | Medium — user CRUD by Dept Admin/Super Admin, password reset, account lifecycle audit logging |
 | Staff ID Governance | FR74-FR75 | Medium — Staff ID add/update with system-wide duplicate detection, justification logging |
+| Public Website & Scheme Information | FR76-FR82 | Medium — static public zone pages (homepage, about, scheme info, resources, legal), responsive navigation, login modal, 4-column footer, semantic HTML, WCAG 2.1 AA. No backend API dependencies |
 
 **Non-Functional Requirements Driving Architecture:**
 
@@ -316,7 +325,7 @@ vlprs/
 |----------|--------|-----------|
 | **Server state** | TanStack Query v5 | Cache dashboard hero metrics, auto-refetch on window focus, stale-while-revalidate for drill-downs. Deduplicates concurrent requests. Perfect for the AG checking dashboard on phone |
 | **Client state** | Zustand (minimal store) | Only for ephemeral UI state: sidebar toggle, active tab, modal visibility, filter selections. All server data lives in TanStack Query cache |
-| **Routing** | React Router v7 with lazy routes | Two route groups: public (`/`, `/about`, `/eoi`) and protected (`/dashboard/*`). Each dashboard sub-route lazy-loaded via `React.lazy()` + `Suspense`. Auth guard at `/dashboard` layout level |
+| **Routing** | React Router v7 with lazy routes | Two route groups: public (`/`, `/about`, `/scheme/*`, `/how-it-works`, `/resources/*`, `/support`, `/privacy`, `/disclaimer`, `/accessibility`, `/eoi`, `/login`) and protected (`/dashboard/*`). Public pages share a `PublicLayout` (nav + footer) and are built from 4 page templates: Content Page (8+4 col with sidebar), Card Grid (responsive cards), Placeholder (Coming Soon), Homepage (unique). 8 shared public components in `components/public/`. See wireframes-epic-14.md for full wireframes and component mapping. Each dashboard sub-route lazy-loaded via `React.lazy()` + `Suspense`. Auth guard at `/dashboard` layout level |
 | **Forms** | React Hook Form + `@hookform/resolvers/zod` | Zod schemas from `packages/shared` power both client-side validation and server-side validation. Single source of truth for: CSV column mapping form, exception annotation form, loan parameter form |
 | **Code splitting** | Vite dynamic imports + React.lazy per major route | Dashboard, submissions, exceptions, reports, admin — each a separate chunk. Target: dashboard route <150KB gzipped per UX performance budget |
 | **PDF generation** | Server-side via `@react-pdf/renderer` | Branded PDFs with Oyo State crest rendered on server. Client requests PDF → server generates → returns as `application/pdf` download. No client-side PDF libraries in bundle |
@@ -351,11 +360,12 @@ vlprs/
 3. **Auth system** — JWT sign/verify, bcrypt, refresh token table, RBAC middleware
 4. **API skeleton** — Express 5 with middleware chain (helmet → cors → rate-limit → auth → audit)
 5. **CI/CD pipeline** — GitHub Actions auto-deploy on merge to `main`. Deployed before frontend so every subsequent commit auto-deploys to client domain
-6. **Frontend shell + screen scaffolding** — Vite + React 18 + shadcn/ui + React Router, auth flow, design system (Oyo Crimson tokens, Inter/JetBrains Mono typography, extended Badge variants), role-specific skeleton screens (Executive Dashboard, MDA Submission, Operations Hub, MDA Detail, Loan Detail) with mock data layer, demo seed script (5 accounts, 63 MDAs, mock loans). All data access through hook abstractions returning mock data from `src/mocks/` — each hook switchable to real API with zero UI component changes
-7. **Computation engine** — `decimal.js` financial calculations, ledger INSERT logic. Wire `useLoanDetail` and `useLoanSearch` hooks to real endpoints
-8. **Dashboard wiring** — Replace mock data in `useDashboardMetrics`, `useMdaComplianceGrid`, `useAttentionItems` hooks with TanStack Query calls to real dashboard API endpoints
-9. **Submission workflow** — CSV upload → validate → atomic ledger insert → comparison engine. Wire `useSubmissionHistory` hook to real endpoints
-10. **Remaining features** — exceptions, reports, PDF, notifications, migration tool. Each feature wires its corresponding mock hooks to real APIs
+6. **Public website & scheme information** — Static public zone pages (homepage with hero/Programme Notice/loan tiers/CTA, scheme information pages, resources, legal). Responsive navigation with login modal, 4-column footer. No backend API dependencies — purely client-side content pages within the SPA. First public impression for AG, IT Assessors, and stakeholders
+7. **Frontend shell + screen scaffolding** — Vite + React 18 + shadcn/ui + React Router, auth flow, design system (Oyo Crimson tokens, Inter/JetBrains Mono typography, extended Badge variants), role-specific skeleton screens (Executive Dashboard, MDA Submission, Operations Hub, MDA Detail, Loan Detail) with mock data layer, demo seed script (5 accounts, 63 MDAs, mock loans). All data access through hook abstractions returning mock data from `src/mocks/` — each hook switchable to real API with zero UI component changes
+8. **Computation engine** — `decimal.js` financial calculations, ledger INSERT logic. Wire `useLoanDetail` and `useLoanSearch` hooks to real endpoints
+9. **Dashboard wiring** — Replace mock data in `useDashboardMetrics`, `useMdaComplianceGrid`, `useAttentionItems` hooks with TanStack Query calls to real dashboard API endpoints
+10. **Submission workflow** — CSV upload → validate → atomic ledger insert → comparison engine. Wire `useSubmissionHistory` hook to real endpoints
+11. **Remaining features** — exceptions, reports, PDF, notifications, migration tool. Each feature wires its corresponding mock hooks to real APIs
 
 **Cross-Component Dependencies:**
 
@@ -437,7 +447,7 @@ apps/server/src/services/
 apps/client/src/
 ├── components/
 │   ├── ui/                    ← shadcn/ui components (auto-generated)
-│   ├── shared/                ← custom shared components
+│   ├── shared/                ← custom shared components (dashboard zone)
 │   │   ├── HeroMetricCard.tsx           ← Sprint 1 (mock data)
 │   │   ├── NairaDisplay.tsx             ← Sprint 1 (mock data)
 │   │   ├── AttentionItemCard.tsx        ← Sprint 1 (mock data)
@@ -445,19 +455,40 @@ apps/client/src/
 │   │   ├── MigrationProgressCard.tsx    ← Sprint 1 (mock data)
 │   │   ├── ExceptionQueueRow.tsx        ← Sprint 1 (mock data)
 │   │   └── NonPunitiveVarianceDisplay.tsx ← built with Epic 5
+│   ├── public/                ← shared public zone components (Sprint 2, Epic 14)
+│   │   ├── PublicNavBar.tsx             ← NavigationMenu + Sheet (mobile)
+│   │   ├── LoginModal.tsx              ← Dialog with 3 portal entry points
+│   │   ├── PublicFooter.tsx            ← 4-column footer + legal strip
+│   │   ├── BreadcrumbNav.tsx           ← Breadcrumb for all inner pages
+│   │   ├── PageHeader.tsx              ← H1 + subtitle (reused by all content pages)
+│   │   ├── CtaBanner.tsx               ← Full-width CTA section (primary + secondary)
+│   │   ├── DisclaimerCallout.tsx       ← Teal info callout (Key Clarification pattern)
+│   │   └── ProgrammeDisclaimer.tsx     ← Standard programme disclaimer text
 │   └── layout/                ← layout components (Sidebar, Header, AuthGuard)
+├── content/                   ← static content files (Sprint 2, CMS migration target)
+│   ├── about.ts              ← mission, vision, values, leadership, governance
+│   ├── news.ts               ← announcements (title, date, body, slug)
+│   ├── faq.ts                ← questions grouped by audience category
+│   ├── downloads.ts          ← document list (name, format, url, status)
+│   └── homepage.ts           ← endorsement quote, capabilities text
 ├── mocks/                     ← mock data for Sprint 1 screen scaffolding
-│   ├── dashboardMetrics.ts    ← Target: GET /api/dashboard/metrics (Sprint 5)
-│   ├── mdaComplianceGrid.ts   ← Target: GET /api/dashboard/compliance (Sprint 5)
-│   ├── attentionItems.ts      ← Target: GET /api/dashboard/attention (Sprint 5)
-│   ├── migrationStatus.ts     ← Target: GET /api/migration/status (Sprint 4)
-│   ├── loanSearch.ts          ← Target: GET /api/loans/search (Sprint 2)
-│   ├── submissionHistory.ts   ← Target: GET /api/submissions (Sprint 7)
-│   └── exceptionQueue.ts      ← Target: GET /api/exceptions (Sprint 9)
+│   ├── dashboardMetrics.ts    ← Target: GET /api/dashboard/metrics (Sprint 6)
+│   ├── mdaComplianceGrid.ts   ← Target: GET /api/dashboard/compliance (Sprint 6)
+│   ├── attentionItems.ts      ← Target: GET /api/dashboard/attention (Sprint 6)
+│   ├── migrationStatus.ts     ← Target: GET /api/migration/status (Sprint 5)
+│   ├── loanSearch.ts          ← Target: GET /api/loans/search (Sprint 3)
+│   ├── submissionHistory.ts   ← Target: GET /api/submissions (Sprint 8)
+│   └── exceptionQueue.ts      ← Target: GET /api/exceptions (Sprint 10)
 ├── pages/
-│   ├── public/                ← public zone routes
-│   │   ├── HomePage.tsx
-│   │   └── EoiPage.tsx
+│   ├── public/                ← public zone routes (FR76-FR82)
+│   │   ├── HomePage.tsx       ← hero, programme notice, loan tiers, CTA
+│   │   ├── AboutPage.tsx      ← mission, vision, leadership, governance (FR82)
+│   │   ├── HowItWorksPage.tsx ← 4-step beneficiary journey
+│   │   ├── EoiPage.tsx        ← expression of interest (Phase 2 placeholder)
+│   │   ├── LoginPage.tsx      ← login modal with role-based portals
+│   │   ├── scheme/            ← programme overview, about VLPRS, eligibility, repayment
+│   │   ├── resources/         ← FAQ, MDA guide, downloads, news, beneficiary lists
+│   │   └── legal/             ← support, privacy, disclaimer, accessibility
 │   └── dashboard/             ← protected zone routes
 │       ├── DashboardPage.tsx
 │       ├── MdaDetailPage.tsx
@@ -764,6 +795,22 @@ docker compose -f docker-compose.dev.yml exec server pnpm db:seed
 | Historical Data & Migration | FR70-FR71 | `services/migrationService.ts` (extended) | `pages/dashboard/MigrationPage.tsx` (extended) |
 | User & Account Administration | FR72-FR73 | `services/userAdminService.ts`, `routes/userRoutes.ts` (extended) | `pages/dashboard/AdminPage.tsx` (extended) |
 | Staff ID Governance | FR74-FR75 | `services/staffIdService.ts` | `pages/dashboard/components/StaffIdManager.tsx` |
+| Public Website & Scheme Information | FR76-FR82 | N/A (static content, no backend) | `pages/public/HomePage.tsx`, `pages/public/AboutPage.tsx`, `pages/public/scheme/*`, `pages/public/resources/*`, `pages/public/legal/*` |
+
+### Public Zone Page Templates
+
+> 20 public pages share 4 layout templates. Implement templates first, then each page is content. Full wireframes with component annotations in `wireframes-epic-14.md`.
+
+| Template | Layout | Used By | Tailwind Grid |
+|----------|--------|---------|---------------|
+| **Content Page** | 8-col main + 4-col sidebar (optional) + CTA banner | About the Programme, Programme Overview, About VLPRS, Eligibility, Repayment, How It Works, MDA Guide, Privacy, Disclaimer, Accessibility, Help & Support (11 pages) | `grid grid-cols-1 lg:grid-cols-12 gap-8` |
+| **Card Grid** | Page header + responsive card grid | Downloads & Forms, News & Announcements (2 pages) | `grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6` |
+| **Placeholder** | Centred styled "Coming Soon" card with icon, description, related links | Approved Beneficiary Lists, Expression of Interest (2 pages) | `max-w-lg mx-auto text-center py-24` |
+| **Homepage** | Unique full-page layout — 13 sections, each with distinct grid | Homepage only (1 page) | Varies per section — see wireframes |
+
+**Shared Public Components (8):** All public pages compose from `components/public/`: `PublicNavBar`, `LoginModal`, `PublicFooter`, `BreadcrumbNav`, `PageHeader`, `CtaBanner`, `DisclaimerCallout`, `ProgrammeDisclaimer`. See wireframes-epic-14.md § Shared Components for wireframes, props, and shadcn/ui mapping.
+
+**Page template file convention:** Templates are not separate files — they are layout patterns documented in wireframes. Each page `.tsx` file composes the pattern directly using the shared components. No abstract `<ContentPageTemplate>` wrapper needed — keep it simple.
 
 ### Complete Project Directory Structure
 
@@ -804,7 +851,7 @@ vlprs/
 │   │       │   │   ├── tooltip.tsx
 │   │       │   │   └── ...               # Added via `npx shadcn@latest add <component>`
 │   │       │   │
-│   │       │   ├── shared/               # Custom shared components (used across pages)
+│   │       │   ├── shared/               # Custom shared components (dashboard zone)
 │   │       │   │   ├── NairaDisplay.tsx               # Formatted ₦ display, NUMERIC→string
 │   │       │   │   ├── NonPunitiveVarianceDisplay.tsx  # Variance with approved terminology
 │   │       │   │   ├── FileUploadZone.tsx             # CSV drag-drop upload
@@ -813,21 +860,50 @@ vlprs/
 │   │       │   │   ├── AutoStopCertificate.tsx        # Loan completion certificate
 │   │       │   │   └── MigrationProgressCard.tsx      # Migration status display
 │   │       │   │
+│   │       │   ├── public/              # Shared public zone components (Sprint 2, Epic 14)
+│   │       │   │   ├── PublicNavBar.tsx              # FR77: Sticky nav, 2-level dropdowns, mobile Sheet
+│   │       │   │   ├── LoginModal.tsx               # FR77: Dialog with Staff/Beneficiary/EOI portals
+│   │       │   │   ├── PublicFooter.tsx             # FR77: 4-column footer + legal strip + disclaimer
+│   │       │   │   ├── BreadcrumbNav.tsx            # FR81: Home > Section > Page breadcrumb
+│   │       │   │   ├── PageHeader.tsx               # FR81: H1 + subtitle, reused by all content pages
+│   │       │   │   ├── CtaBanner.tsx                # FR76: Full-width CTA ("Ready to access VLPRS?")
+│   │       │   │   ├── DisclaimerCallout.tsx        # FR78: Teal info callout (Key Clarification)
+│   │       │   │   └── ProgrammeDisclaimer.tsx      # FR80: Standard programme disclaimer text
+│   │       │   │   # NOTE: These 8 components are reused across all 20 public pages.
+│   │       │   │   # See wireframes-epic-14.md § Shared Components for wireframes and props.
+│   │       │   │
 │   │       │   └── layout/               # Layout components
 │   │       │       ├── AuthGuard.tsx      # Redirect to /login if no accessToken
 │   │       │       ├── RoleGuard.tsx      # Redirect to /dashboard if insufficient role
 │   │       │       ├── DashboardLayout.tsx # Sidebar + header + main content area
 │   │       │       ├── Sidebar.tsx        # Desktop sidebar navigation
 │   │       │       ├── MobileHeader.tsx   # Mobile header with sheet navigation
-│   │       │       ├── Breadcrumb.tsx     # Contextual breadcrumb trail
-│   │       │       └── PublicLayout.tsx   # Public zone layout (header + footer)
+│   │       │       ├── Breadcrumb.tsx     # Contextual breadcrumb trail (dashboard zone)
+│   │       │       └── PublicLayout.tsx   # Public zone layout — wraps PublicNavBar + <Outlet /> + PublicFooter
 │   │       │
 │   │       ├── pages/
 │   │       │   ├── public/               # ─── PUBLIC ZONE (unauthenticated) ───
-│   │       │   │   ├── HomePage.tsx       # Landing page with scheme information
-│   │       │   │   ├── AboutPage.tsx      # Scheme overview, FAQ
-│   │       │   │   ├── EoiPage.tsx        # Expression of Interest form + reCAPTCHA
-│   │       │   │   └── LoginPage.tsx      # Login form + reCAPTCHA
+│   │       │   │   ├── HomePage.tsx       # FR76: Hero, Programme Notice, trust strip, How It Works, loan tiers, CTA
+│   │       │   │   ├── AboutPage.tsx     # FR82: Mission, Vision, Leadership, Governance (absorbs AG Office)
+│   │       │   │   ├── HowItWorksPage.tsx # FR76: 4-step beneficiary journey (EOI → Review → Decision → Repayment)
+│   │       │   │   ├── EoiPage.tsx        # FR78: Expression of Interest placeholder (Phase 2)
+│   │       │   │   ├── LoginPage.tsx      # FR77: Login modal with role-based portal access + reCAPTCHA
+│   │       │   │   ├── scheme/            # ─── Scheme Information Pages ───
+│   │       │   │   │   ├── ProgrammeOverviewPage.tsx  # FR78: Scheme summary, mission, objectives
+│   │       │   │   │   ├── AboutVlprsPage.tsx         # FR78: System capabilities, design philosophy
+│   │       │   │   │   ├── EligibilityPage.tsx        # FR78: 4 loan tiers with amounts, eligibility criteria
+│   │       │   │   │   └── RepaymentRulesPage.tsx     # FR78: Accordion rules, Key Clarification panel
+│   │       │   │   ├── resources/         # ─── Resources & Information ───
+│   │       │   │   │   ├── FaqPage.tsx               # FR79: Min 15 categorised questions
+│   │       │   │   │   ├── MdaGuidePage.tsx          # FR79: MDA submission walkthrough
+│   │       │   │   │   ├── DownloadsPage.tsx         # FR79: Forms & document templates
+│   │       │   │   │   ├── NewsPage.tsx              # FR79: Announcements & updates
+│   │       │   │   │   └── BeneficiaryListsPage.tsx  # FR79: Approved lists placeholder (Phase 2)
+│   │       │   │   └── legal/             # ─── Support & Legal ───
+│   │       │   │       ├── SupportPage.tsx           # FR79: Help, contact info, office hours
+│   │       │   │       ├── PrivacyPage.tsx           # FR80: Privacy policy, NDPR compliance
+│   │       │   │       ├── DisclaimerPage.tsx        # FR80: Programme disclaimer
+│   │       │   │       └── AccessibilityPage.tsx     # FR80: WCAG 2.1 AA compliance statement
 │   │       │   │
 │   │       │   └── dashboard/            # ─── PROTECTED ZONE (role-based) ───
 │   │       │       ├── DashboardPage.tsx  # FR32-41: hero metrics (incl. early exit + gratuity), attention items, charts
@@ -859,16 +935,16 @@ vlprs/
 │   │       │
 │   │       ├── hooks/
 │   │       │   ├── useAuth.ts            # Access token state, login/logout/refresh
-│   │       │   ├── useDashboard.ts       # Sprint 1: returns mock data; Sprint 5: TanStack Query → real API
-│   │       │   ├── useSubmissions.ts     # Sprint 1: returns mock data; Sprint 7: TanStack Query → real API
-│   │       │   ├── useLoans.ts           # Sprint 1: returns mock data; Sprint 2: TanStack Query → real API
-│   │       │   ├── useExceptions.ts      # Sprint 1: returns mock data; Sprint 9: TanStack Query → real API
-│   │       │   ├── useMigration.ts       # Sprint 1: returns mock data; Sprint 4: TanStack Query → real API
-│   │       │   ├── useEmploymentEvents.ts # TanStack Query hooks for mid-cycle events (Sprint 8)
-│   │       │   ├── useEarlyExit.ts       # TanStack Query hooks for early exit workflow (Sprint 11)
-│   │       │   ├── usePreSubmission.ts   # TanStack Query hooks for pre-submission checkpoint (Sprint 8)
-│   │       │   ├── useStaffId.ts         # TanStack Query hooks for Staff ID operations (Sprint 13)
-│   │       │   ├── useUserAdmin.ts       # TanStack Query hooks for user account management (Sprint 13)
+│   │       │   ├── useDashboard.ts       # Sprint 1: returns mock data; Sprint 6: TanStack Query → real API
+│   │       │   ├── useSubmissions.ts     # Sprint 1: returns mock data; Sprint 8: TanStack Query → real API
+│   │       │   ├── useLoans.ts           # Sprint 1: returns mock data; Sprint 3: TanStack Query → real API
+│   │       │   ├── useExceptions.ts      # Sprint 1: returns mock data; Sprint 10: TanStack Query → real API
+│   │       │   ├── useMigration.ts       # Sprint 1: returns mock data; Sprint 5: TanStack Query → real API
+│   │       │   ├── useEmploymentEvents.ts # TanStack Query hooks for mid-cycle events (Sprint 9)
+│   │       │   ├── useEarlyExit.ts       # TanStack Query hooks for early exit workflow (Sprint 12)
+│   │       │   ├── usePreSubmission.ts   # TanStack Query hooks for pre-submission checkpoint (Sprint 9)
+│   │       │   ├── useStaffId.ts         # TanStack Query hooks for Staff ID operations (Sprint 14)
+│   │       │   ├── useUserAdmin.ts       # TanStack Query hooks for user account management (Sprint 14)
 │   │       │   └── useDebounce.ts        # Debounced search input
 │   │       │   # NOTE: Hooks marked "Sprint 1: returns mock data" implement a mock-first pattern.
 │   │       │   # They import from src/mocks/ initially. When the target API is delivered,
@@ -1294,7 +1370,7 @@ No contradictory decisions found. No version conflicts.
 
 ### Requirements Coverage Validation
 
-**Functional Requirements: 75/75 covered**
+**Functional Requirements: 82/82 covered**
 
 | Category | FRs | Coverage | Architectural Support |
 |----------|-----|---------|----------------------|
@@ -1313,6 +1389,7 @@ No contradictory decisions found. No version conflicts.
 | Historical Data & Migration | FR70-FR71 | 2/2 | `migrationService.ts` (extended) + historical CSV upload + service status verification report |
 | User & Account Admin | FR72-FR73 | 2/2 | `userAdminService.ts` + `userRoutes.ts` + account lifecycle audit logging |
 | Staff ID Governance | FR74-FR75 | 2/2 | `staffIdService.ts` + system-wide duplicate detection + justification logging |
+| Public Website & Scheme Info | FR76-FR82 | 7/7 | Static public zone pages (no backend) — `pages/public/` with AboutPage, scheme/, resources/, legal/ subdirectories + responsive nav + login modal + footer |
 
 **Non-Functional Requirements: 10/10 covered**
 
@@ -1341,12 +1418,90 @@ No contradictory decisions found. No version conflicts.
 
 **Critical Gaps:** None.
 
-**Deferred (documented with triggers):** Redis, BullMQ, API versioning, CDN, SMS provider.
+**Deferred (documented with triggers):** Redis, BullMQ, API versioning, CDN, SMS provider, Sanity CMS (headless).
+
+### Extension Points & Future Integration
+
+> Cheap conventions now that make future integrations a bolt-on, not a rewrite. None of these add current code complexity — they are organisational patterns for the code already being written.
+
+**1. Content Management Readiness (→ Sanity CMS)**
+
+Public page content that may need non-developer editing is extracted to `src/content/*.ts` files:
+
+```
+apps/client/src/
+├── content/                    # Static content — future CMS migration target
+│   ├── about.ts               # Mission, vision, values, leadership, governance
+│   ├── news.ts                # Announcements (title, date, body, slug)
+│   ├── faq.ts                 # Questions grouped by audience category
+│   ├── downloads.ts           # Document list (name, format, url, status)
+│   └── homepage.ts            # Endorsement quote, capabilities text
+```
+
+- **Today:** Components import from `content/*.ts`. Content changes = code commit + CI/CD deploy.
+- **Future:** Components import from `useCmsContent()` hook → Sanity API. Content changes = edit in Sanity Studio.
+- **Migration scope:** ~half day. Create Sanity schema → import content → swap imports for API calls. Zero template/layout changes.
+- **CMS choice:** Sanity (free tier: 3 users, 100K API calls/month; TypeScript-first; GROQ queries; self-hostable Studio for data sovereignty).
+
+**2. Data Ingestion Abstraction (→ State Payroll Database)**
+
+The submission processing pipeline has a clean boundary between "receive/parse data" and "validate and write to ledger":
+
+```
+CSV Upload ──→ parse ──→ DeductionRecord[] ──→ validate ──→ ledger INSERT
+                              ↑ clean boundary
+Future Payroll API ──→ normalize ──→ DeductionRecord[] ──→ (same pipeline)
+```
+
+- **Convention:** `submissionService.processRecords(records: DeductionRecord[])` accepts normalised records regardless of source. The CSV parsing happens *before* this function in a separate ingestion adapter.
+- **Future:** A `payrollAdapter.ts` normalises Payroll DB data into the same `DeductionRecord[]` shape. Validation and ledger logic untouched.
+- **`DeductionRecord` interface** lives in `packages/shared/src/types/` — importable by any future adapter.
+
+**3. API Consumer Readiness (→ Payroll Office, External Systems)**
+
+- **Response envelope consistency:** All API responses use `{ data, meta, error }` envelope (already enforced). External consumers can use the same endpoints as the frontend.
+- **API versioning path:** Routes are structured as `/api/route`. When external consumers arrive, prefix with `/api/v1/route`. Deferred until first external consumer (trigger: external system requests API access).
+- **External auth slot:** Auth middleware checks JWT for human users. When external system access is needed, add API key authentication as a parallel auth strategy (same middleware chain, different token type). Do not embed frontend-specific concerns in API responses — return data, let consumers decide presentation.
+
+**4. Domain Isolation (→ AG Office Platform Expansion)**
+
+| Infrastructure (domain-agnostic, reusable) | Domain (vehicle-loan-specific) |
+|---|---|
+| Auth / JWT / sessions (`lib/jwt.ts`, `middleware/authenticate.ts`) | Computation engine (`services/computationEngine.ts`) |
+| RBAC middleware (`middleware/authorise.ts`) | Loan tier parameters (`shared/constants/`) |
+| Audit logging (`middleware/auditLog.ts`) | Submission CSV parsing (`services/submissionService.ts`) |
+| Email service (`services/emailService.ts`) | Auto-Stop logic (`services/autoStopService.ts`) |
+| PDF generation | Vehicle Loan Committee rules |
+| Immutable ledger pattern (`db/schema.ts` ledger tables) | MDA monthly reporting |
+| File upload / storage | Exception categorisation |
+
+- **Convention:** Infrastructure services NEVER import from domain services. Domain services import from infrastructure.
+- **RBAC is resource-based:** Permissions are `resource:action` pairs (`loan:read`, `submission:create`), not hardcoded loan-specific checks. Adding a new domain = adding new resource permissions, not rewriting auth.
+- **Database namespacing:** Vehicle loan tables use clear domain names (`loans`, `ledger_entries`, `mda_submissions`). Future domains use their own namespace (`staff_advances`, `procurement_*`, etc.).
+- **Future:** A new AG Office module (e.g., "Staff Advance Tracking") reuses auth + audit + ledger + email + PDF. Only needs new domain services.
+
+**5. Event Emission Pattern (→ Webhooks, Message Queues)**
+
+Key domain events are emitted as named events within the application:
+
+```typescript
+// services/eventBus.ts — simple typed event emitter (Node EventEmitter wrapper)
+type DomainEvents = {
+  'loan.completed': { loanId: string; staffId: string; mdaId: string };
+  'submission.processed': { submissionId: string; mdaId: string; period: string };
+  'autostop.triggered': { loanId: string; certificateId: string };
+  'exception.flagged': { exceptionId: string; priority: string };
+};
+```
+
+- **Today:** Events consumed internally (e.g., `loan.completed` triggers Auto-Stop Certificate generation + notification).
+- **Future:** Events forwarded to webhook endpoints or message queues (BullMQ, already on deferred list) for external system consumption.
+- **Convention:** All service methods that complete a significant workflow emit a domain event. Listeners are registered in a central `eventListeners.ts` file.
 
 ### Architecture Completeness Checklist
 
 **Requirements Analysis**
-- [x] Project context analysed (75 FRs, 10 NFRs, 10 constraints, 9 cross-cutting concerns)
+- [x] Project context analysed (81 FRs, 10 NFRs, 10 constraints, 9 cross-cutting concerns)
 - [x] Scale assessed (3,100 beneficiaries, 63 MDAs, 189K ledger rows/5yr)
 - [x] Technical constraints identified (solo dev, 4G, data sovereignty, immutable ledger, temporal data required)
 - [x] Cross-cutting concerns mapped (audit, RBAC, precision, immutability, vocabulary, validation, atomicity, temporal validation, Staff ID uniqueness)
@@ -1365,11 +1520,12 @@ No contradictory decisions found. No version conflicts.
 - [x] 11 mandatory enforcement rules
 
 **Project Structure**
-- [x] Complete directory tree with annotations (including new services, routes, pages for FR60-FR75)
-- [x] FR → file mapping (15 categories, 75 FRs)
+- [x] Complete directory tree with annotations (including new services, routes, pages for FR60-FR82)
+- [x] FR → file mapping (16 categories, 82 FRs)
 - [x] Service boundaries with ownership rules (16 services)
 - [x] Data flows documented (submission lifecycle with pre-submission checkpoint, early exit lifecycle, mid-cycle event flow)
 - [x] External integrations with env vars
+- [x] Public zone: 4 page templates, 8 shared components, 20 pages with wireframes (wireframes-epic-14.md)
 
 ### Architecture Readiness Assessment
 

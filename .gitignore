@@ -28,5 +28,8 @@ coverage/
 # Logs
 *.log
 
+# Debug artifacts
+error.txt
+
 # TypeScript
 *.tsbuildinfo

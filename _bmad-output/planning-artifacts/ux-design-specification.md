@@ -18,6 +18,8 @@ date: '2026-02-15'
 author: Awwal
 project_name: vlprs
 editHistory:
+  - date: '2026-02-19'
+    changes: 'Elevated ux-design-directions.html to canonical visual reference — client-approved during live demo. All UI implementation MUST match the visual patterns, component styles, colour usage, and layout structures defined in this HTML mockup. Added User Management screen pattern requirements (invite dialog, user table, action menus, profile page). Added CANONICAL VISUAL REFERENCE section with binding implementation directive.'
   - date: '2026-02-15'
     changes: 'PRD cascade (FR60-FR75): Updated all 6-field references to 8-field CSV with conditional logic. Added pre-submission checkpoint to Journey 2 (MDA Submission). Expanded Journey 4 (Migration) with temporal data requirements, post-retirement detection, historical upload. Expanded Journey 5 (Dept Admin Daily Ops) with early exit workflow, mid-cycle event filing, user account management, Staff ID governance. Added 6 new custom components (12-17): PreSubmissionChecklist, EmploymentEventForm, EarlyExitComputationCard, RetirementProfileCard, GratuityReceivableCard, StaffIdManager. Updated gap analysis, component roadmap (4 phases), navigation structure, effortless interactions table, and journey patterns.'
 ---
@@ -507,6 +509,23 @@ Six complementary design directions were generated as interactive HTML mockups (
 - All colour values use CSS custom properties for theme consistency
 - Components map directly to shadcn/ui equivalents (Card, Badge, Table, Button, Dialog)
 - Mobile dashboard layout tested at 375px width (iPhone SE/standard)
+
+### CANONICAL VISUAL REFERENCE
+
+**`_bmad-output/planning-artifacts/ux-design-directions.html` is the binding visual reference for all VLPRS UI implementation.** This interactive HTML mockup was presented to and approved by the client team during a live demo. All implementing agents, developers, and stories MUST follow the visual patterns established in this file:
+
+1. **No deviation** from the approved visual design without explicit client sign-off
+2. **Component styles** — card borders, shadows, border-radius, padding, typography sizes — must match the HTML mockup pixel-for-pixel where shadcn/ui allows
+3. **Colour application** — Oyo Crimson (`#9C1E23`) for sidebar/header/primary buttons only; neutral surfaces for data content; gold for attention; teal for info; green for success/completion only; red for destructive actions only (never for data variances)
+4. **Layout structure** — 256px crimson sidebar (desktop), crimson header bar (mobile), neutral `#F8FAFC` content area, hero metrics as the first rendered content
+5. **Badge patterns** — `badge-attention` (gold), `badge-info` (teal), `badge-success` (green), status dots with text labels
+6. **Table patterns** — uppercase header text, `tabular-nums` for financial columns, hover row highlight, status dots with colour + text
+7. **Non-punitive enforcement** — information icons (ℹ) for variances (never warning triangles), "Comparison Summary" headers (never "Errors Found"), amber/gold for attention (never red)
+8. **Certificate treatment** — gold border, crimson crest, green success panel, structured detail table, QR placeholder
+
+**This directive applies to every story that produces UI output.** When a story's acceptance criteria describe a screen or component, the implementing agent should open `ux-design-directions.html` and verify visual alignment before marking the story as complete.
+
+**New screens not covered by the 6 directions** (e.g., User Management, Profile page) must follow the same design language: crimson sidebar, neutral content area, same card/table/badge/button patterns, same typography and spacing.
 
 ## User Journey Flows
 
