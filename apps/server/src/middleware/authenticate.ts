@@ -3,14 +3,6 @@ import { verifyAccessToken } from '../lib/jwt';
 import { AppError } from '../lib/appError';
 import { VOCABULARY } from '@vlprs/shared';
 
-declare global {
-  namespace Express {
-    interface Request {
-      user?: { userId: string; email: string; role: string; mdaId: string | null };
-    }
-  }
-}
-
 export function authenticate(req: Request, _res: Response, next: NextFunction) {
   const authHeader = req.headers.authorization;
 

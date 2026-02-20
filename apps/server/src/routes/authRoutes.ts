@@ -1,10 +1,11 @@
 import { Router, type Request, type Response } from 'express';
 import { authenticate } from '../middleware/authenticate';
+import { authorise } from '../middleware/authorise';
+import { scopeToMda } from '../middleware/scopeToMda';
 import { validate } from '../middleware/validate';
 import { authLimiter } from '../middleware/rateLimiter';
 import { doubleCsrfProtection, generateCsrfToken, CSRF_COOKIE_NAME } from '../middleware/csrf';
-import { loginSchema, registerSchema, ROLES, VOCABULARY } from '@vlprs/shared';
-import { AppError } from '../lib/appError';
+import { loginSchema, registerSchema, ROLES } from '@vlprs/shared';
 import { env } from '../config/env';
 import * as authService from '../services/authService';
 
@@ -14,12 +15,8 @@ const router = Router();
 router.post(
   '/auth/register',
   authenticate,
-  (req: Request, _res: Response, next) => {
-    if (req.user?.role !== ROLES.SUPER_ADMIN) {
-      throw new AppError(403, 'INSUFFICIENT_PERMISSIONS', VOCABULARY.INSUFFICIENT_PERMISSIONS);
-    }
-    next();
-  },
+  authorise(ROLES.SUPER_ADMIN),
+  scopeToMda,
   validate(registerSchema),
   async (req: Request, res: Response) => {
     const user = await authService.register(req.body);
