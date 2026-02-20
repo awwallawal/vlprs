@@ -181,6 +181,7 @@ export async function login(data: LoginRequest): Promise<LoginResult> {
     userId: user.id,
     tokenHash,
     expiresAt,
+    lastUsedAt: new Date(),
   });
 
   return {
@@ -341,8 +342,17 @@ export async function logout(userId: string): Promise<void> {
 }
 
 export async function changePassword(userId: string, newPasswordHash: string): Promise<void> {
-  await db.update(users)
-    .set({ hashedPassword: newPasswordHash, updatedAt: new Date() })
-    .where(eq(users.id, userId));
-  await revokeAllUserTokens(userId);
+  await db.transaction(async (tx) => {
+    await tx.update(users)
+      .set({ hashedPassword: newPasswordHash, updatedAt: new Date() })
+      .where(eq(users.id, userId));
+    await tx.update(refreshTokens)
+      .set({ revokedAt: new Date() })
+      .where(
+        and(
+          eq(refreshTokens.userId, userId),
+          isNull(refreshTokens.revokedAt),
+        ),
+      );
+  });
 }

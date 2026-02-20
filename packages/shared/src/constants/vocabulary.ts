@@ -12,6 +12,9 @@ export const VOCABULARY = {
   AUTHENTICATION_REQUIRED: 'Please provide a valid access token.',
   TOKEN_EXPIRED: 'Your session has expired. Please log in again.',
   INSUFFICIENT_PERMISSIONS: 'You do not have permission to perform this action.',
+  // RBAC (Story 1.4)
+  MDA_ACCESS_DENIED: 'You can only access data for your assigned organisation.',
+  MDA_NOT_ASSIGNED: 'Your account is not assigned to any organisation. Please contact your administrator.',
   // Registration
   EMAIL_ALREADY_EXISTS: 'An account with this email address already exists.',
   // Validation
@@ -22,6 +25,7 @@ export const VOCABULARY = {
   REFRESH_TOKEN_EXPIRED: 'Your session has expired. Please log in again.',
   REFRESH_TOKEN_INVALID: 'Your session could not be verified. Please log in again.',
   CSRF_VALIDATION_FAILED: 'Your request could not be verified. Please refresh the page and try again.',
+  LOGOUT_SUCCESSFUL: 'You have been successfully logged out.',
   // Rate Limiting
   RATE_LIMIT_EXCEEDED: 'Too many requests. Please wait before trying again.',
 } as const;

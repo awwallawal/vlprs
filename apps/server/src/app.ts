@@ -4,6 +4,7 @@ import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import healthRoutes from './routes/healthRoutes';
 import authRoutes from './routes/authRoutes';
+import userRoutes from './routes/userRoutes';
 import { AppError } from './lib/appError';
 import { VOCABULARY } from '@vlprs/shared';
 
@@ -21,6 +22,7 @@ app.use(express.urlencoded({ extended: true, limit: '1mb' }));
 // Routes
 app.use('/api', healthRoutes);
 app.use('/api', authRoutes);
+app.use('/api', userRoutes);
 
 // 404 handler
 app.use((_req: Request, res: Response) => {
@@ -45,6 +47,7 @@ app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
   }
 
   // Map csrf-csrf errors to the AC-specified response format
+  // csrf-csrf v4 sets err.code = 'EBADCSRFTOKEN' (matching legacy csurf convention)
   if ('code' in err && (err as Error & { code: string }).code === 'EBADCSRFTOKEN') {
     res.status(403).json({
       success: false,

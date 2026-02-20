@@ -72,6 +72,7 @@ export const refreshTokens = pgTable(
     revokedAt: timestamp('revoked_at', { withTimezone: true }),
   },
   (table) => [
+    index('idx_refresh_tokens_token_hash').on(table.tokenHash),
     index('idx_refresh_tokens_user_revoked').on(table.userId, table.revokedAt),
   ],
 );

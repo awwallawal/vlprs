@@ -25,3 +25,10 @@ const envSchema = z.object({
 });
 
 export const env = envSchema.parse(process.env);
+
+if (env.NODE_ENV === 'production' && env.CSRF_SECRET === 'change-csrf-secret-in-production') {
+  throw new Error('CSRF_SECRET must be set to a unique value in production');
+}
+if (env.NODE_ENV === 'production' && env.JWT_SECRET === 'change-me-in-production') {
+  throw new Error('JWT_SECRET must be set to a unique value in production');
+}

@@ -1,13 +1,12 @@
 import { describe, it, expect, beforeAll, beforeEach, afterAll } from 'vitest';
 import request from 'supertest';
-import express from 'express';
-import { rateLimit } from 'express-rate-limit';
 import app from '../app';
 import { db } from '../db/index';
 import { users, mdas, refreshTokens } from '../db/schema';
 import { hashPassword } from '../lib/password';
 import { signAccessToken } from '../lib/jwt';
 import { generateUuidv7 } from '../lib/uuidv7';
+import { resetRateLimiters } from '../middleware/rateLimiter';
 
 let testMdaId: string;
 
@@ -21,6 +20,7 @@ beforeAll(async () => {
 });
 
 beforeEach(async () => {
+  resetRateLimiters();
   await db.delete(refreshTokens);
   await db.delete(users);
 });
@@ -166,6 +166,34 @@ describe('POST /api/auth/register', () => {
     expect(res.status).toBe(401);
   });
 
+  it('returns 403 for dept_admin (authorise middleware enforces super_admin only)', async () => {
+    const deptAdmin = await createTestUser({
+      email: 'deptadmin@test.com',
+      role: 'dept_admin',
+    });
+    const token = signAccessToken({
+      userId: deptAdmin.id,
+      email: deptAdmin.email,
+      role: 'dept_admin',
+      mdaId: null,
+    });
+
+    const res = await request(app)
+      .post('/api/auth/register')
+      .set('Authorization', `Bearer ${token}`)
+      .send({
+        email: 'newreg2@test.com',
+        password: 'SecurePass1',
+        firstName: 'New',
+        lastName: 'Reg',
+        role: 'mda_officer',
+        mdaId: testMdaId,
+      });
+
+    expect(res.status).toBe(403);
+    expect(res.body.error.code).toBe('INSUFFICIENT_PERMISSIONS');
+  });
+
   it('returns 403 with non-super_admin JWT', async () => {
     const officer = await createTestUser({
       email: 'officer@test.com',
@@ -238,42 +266,24 @@ describe('POST /api/auth/register', () => {
   });
 });
 
-describe('Rate limiting on auth endpoints', () => {
-  // Note: The actual app skips rate limiting in test mode (NODE_ENV=test) to prevent
-  // rate limiter state from bleeding between tests. This test uses a standalone Express
-  // app to verify express-rate-limit behavior with the same config as production.
-  it('returns 429 after exceeding rate limit', async () => {
-    const rateLimitedApp = express();
-    rateLimitedApp.use(express.json({ limit: '1mb' }));
+describe('Rate limiting on /api/auth/login', () => {
+  it('returns 429 after exceeding auth rate limit', async () => {
+    await createTestUser({ email: 'ratelimit@test.com' });
 
-    // Add a real rate limiter with low limit
-    const testLimiter = rateLimit({
-      windowMs: 15 * 60 * 1000,
-      limit: 5,
-      standardHeaders: 'draft-7',
-      legacyHeaders: false,
-      message: {
-        success: false,
-        error: { code: 'RATE_LIMIT_EXCEEDED', message: 'Too many requests.' },
-      },
-    });
-
-    rateLimitedApp.post('/api/auth/login', testLimiter, (_req, res) => {
-      res.status(401).json({ success: false, error: { code: 'LOGIN_UNSUCCESSFUL', message: 'test' } });
-    });
-
-    // Make 5 requests (within limit)
+    // Make 5 requests (at the limit)
     for (let i = 0; i < 5; i++) {
-      await request(rateLimitedApp)
+      await request(app)
         .post('/api/auth/login')
-        .send({ email: 'rate@test.com', password: 'WrongPass1' });
+        .send({ email: 'ratelimit@test.com', password: 'WrongPass1' });
     }
 
     // 6th request should be rate limited
-    const res = await request(rateLimitedApp)
+    const res = await request(app)
       .post('/api/auth/login')
-      .send({ email: 'rate@test.com', password: 'WrongPass1' });
+      .send({ email: 'ratelimit@test.com', password: 'WrongPass1' });
 
     expect(res.status).toBe(429);
+    expect(res.body.success).toBe(false);
+    expect(res.body.error.code).toBe('RATE_LIMIT_EXCEEDED');
   });
 });

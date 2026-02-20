@@ -63,15 +63,15 @@ development_status:
   epic-1: in-progress
   1-1-monorepo-scaffold-development-environment: done
   1-2-user-registration-login: done
-  1-3-session-security-token-refresh: review
-  1-4-role-based-access-control: ready-for-dev
+  1-3-session-security-token-refresh: done
+  1-4-role-based-access-control: review
   1-5-audit-logging-action-tracking: ready-for-dev
   1-6-frontend-authentication-shell: ready-for-dev
   1-7-cicd-pipeline-production-infrastructure: ready-for-dev
   1-8a-design-foundation-components-mock-data-layer: ready-for-dev
-  1-8b-role-specific-screens-demo-seed-wiring-map: backlog
-  1-9a-user-account-lifecycle-api-email-invitation: backlog
-  1-9b-user-administration-interface-profile-first-login: backlog
+  1-8b-role-specific-screens-demo-seed-wiring-map: ready-for-dev
+  1-9a-user-account-lifecycle-api-email-invitation: ready-for-dev
+  1-9b-user-administration-interface-profile-first-login: ready-for-dev
   epic-1-retrospective: optional
 
   # Epic 2: Loan Data Management & Financial Computation

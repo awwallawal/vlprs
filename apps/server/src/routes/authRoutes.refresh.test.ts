@@ -6,6 +6,7 @@ import { db } from '../db/index';
 import { users, mdas, refreshTokens } from '../db/schema';
 import { hashPassword } from '../lib/password';
 import { generateUuidv7 } from '../lib/uuidv7';
+import { resetRateLimiters } from '../middleware/rateLimiter';
 
 beforeAll(async () => {
   await db.delete(refreshTokens);
@@ -14,6 +15,7 @@ beforeAll(async () => {
 });
 
 beforeEach(async () => {
+  resetRateLimiters();
   await db.delete(refreshTokens);
   await db.delete(users);
 });
@@ -209,6 +211,62 @@ describe('POST /api/auth/logout', () => {
 
     expect(res.status).toBe(403);
     expect(res.body.error.code).toBe('CSRF_VALIDATION_FAILED');
+  });
+});
+
+describe('CSRF bypass for non-state-changing methods', () => {
+  it('OPTIONS request to /api/auth/refresh is not blocked by CSRF', async () => {
+    const res = await request(app)
+      .options('/api/auth/refresh');
+
+    // OPTIONS should not return 403 CSRF error — it's in the ignoredMethods list
+    expect(res.status).not.toBe(403);
+  });
+
+  it('HEAD request to /api/auth/refresh is not blocked by CSRF', async () => {
+    const res = await request(app)
+      .head('/api/auth/refresh');
+
+    expect(res.status).not.toBe(403);
+  });
+});
+
+describe('Rate limiting on /api/auth/refresh', () => {
+  it('returns 429 after exceeding auth rate limit', async () => {
+    const user = await createTestUser({ email: 'refresh-ratelimit@test.com' });
+    const tokens = await loginAndGetTokens(user.email);
+
+    // authLimiter allows 5 requests per 15 min window
+    // loginAndGetTokens already consumed 1 request (the login hits authLimiter too)
+    // Send 4 more to hit the limit
+    for (let i = 0; i < 4; i++) {
+      const res = await request(app)
+        .post('/api/auth/refresh')
+        .set('Cookie', tokens.cookieHeader)
+        .set('X-CSRF-Token', tokens.csrfToken);
+
+      // Update tokens after successful refresh for next iteration
+      if (res.status === 200) {
+        const rawNew = res.headers['set-cookie'];
+        const newCookies = (Array.isArray(rawNew) ? rawNew : [rawNew].filter(Boolean)) as string[];
+        const newRefreshCookie = newCookies?.find((c: string) => c.startsWith('refreshToken='));
+        const newCsrfCookie = newCookies?.find((c: string) => c.startsWith('__csrf='));
+        if (newRefreshCookie && newCsrfCookie) {
+          tokens.cookieHeader = `${extractCookieValue(newRefreshCookie)}; ${extractCookieValue(newCsrfCookie)}`;
+          tokens.csrfToken = extractCookieValue(newCsrfCookie).split('=').slice(1).join('=');
+        }
+      }
+    }
+
+    // 6th request (1 login + 4 refresh + this one) should be rate-limited
+    const res = await request(app)
+      .post('/api/auth/refresh')
+      .set('Cookie', tokens.cookieHeader)
+      .set('X-CSRF-Token', tokens.csrfToken);
+
+    expect(res.status).toBe(429);
+    expect(res.body.success).toBe(false);
+    expect(res.body.error.code).toBe('RATE_LIMIT_EXCEEDED');
   });
 });
 
