@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeAll, beforeEach, afterAll } from 'vitest';
 import request from 'supertest';
+import { sql } from 'drizzle-orm';
 import app from '../app';
 import { db } from '../db/index';
 import { users, mdas, refreshTokens } from '../db/schema';
@@ -11,6 +12,7 @@ import { resetRateLimiters } from '../middleware/rateLimiter';
 let testMdaId: string;
 
 beforeAll(async () => {
+  await db.execute(sql`TRUNCATE audit_log`);
   await db.delete(refreshTokens);
   await db.delete(users);
   await db.delete(mdas);
@@ -21,11 +23,13 @@ beforeAll(async () => {
 
 beforeEach(async () => {
   resetRateLimiters();
+  await db.execute(sql`TRUNCATE audit_log`);
   await db.delete(refreshTokens);
   await db.delete(users);
 });
 
 afterAll(async () => {
+  await db.execute(sql`TRUNCATE audit_log`);
   await db.delete(refreshTokens);
   await db.delete(users);
   await db.delete(mdas);

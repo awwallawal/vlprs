@@ -1,12 +1,6 @@
 import app from './app';
 import { env } from './config/env';
-import { pino } from 'pino';
-
-const logger = pino(
-  env.NODE_ENV === 'development'
-    ? { transport: { target: 'pino-pretty', options: { colorize: true } } }
-    : {},
-);
+import { logger } from './lib/logger';
 
 const server = app.listen(env.PORT, () => {
   logger.info(`VLPRS server running on port ${env.PORT}`);

@@ -76,3 +76,31 @@ export const refreshTokens = pgTable(
     index('idx_refresh_tokens_user_revoked').on(table.userId, table.revokedAt),
   ],
 );
+
+// ─── Audit Log (Story 1.5) ─────────────────────────────────────────
+// Append-only, immutable audit trail. No updated_at, no deleted_at.
+// Immutability enforced by DB trigger (fn_prevent_modification).
+export const auditLog = pgTable(
+  'audit_log',
+  {
+    id: uuid('id').primaryKey().$defaultFn(generateUuidv7),
+    userId: uuid('user_id').references(() => users.id),
+    email: varchar('email', { length: 255 }),
+    role: varchar('role', { length: 50 }),
+    mdaId: uuid('mda_id'),
+    action: varchar('action', { length: 100 }).notNull(),
+    resource: varchar('resource', { length: 255 }),
+    method: varchar('method', { length: 10 }),
+    requestBodyHash: varchar('request_body_hash', { length: 64 }),
+    responseStatus: integer('response_status'),
+    ipAddress: varchar('ip_address', { length: 45 }).notNull(),
+    userAgent: text('user_agent'),
+    durationMs: integer('duration_ms'),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    index('idx_audit_log_user_id').on(table.userId),
+    index('idx_audit_log_created_at').on(table.createdAt),
+    index('idx_audit_log_action').on(table.action),
+  ],
+);

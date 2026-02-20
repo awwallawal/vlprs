@@ -2,6 +2,7 @@ import { Router, type Request, type Response } from 'express';
 import { authenticate } from '../middleware/authenticate';
 import { authorise } from '../middleware/authorise';
 import { scopeToMda } from '../middleware/scopeToMda';
+import { auditLog } from '../middleware/auditLog';
 import { ROLES } from '@vlprs/shared';
 import { listUsers } from '../services/userService';
 
@@ -16,6 +17,7 @@ router.get(
   authenticate,
   authorise(ROLES.SUPER_ADMIN, ROLES.DEPT_ADMIN),
   scopeToMda,
+  auditLog,
   async (req: Request, res: Response) => {
     const users = await listUsers(req.mdaScope ?? null);
     res.json({ success: true, data: users });

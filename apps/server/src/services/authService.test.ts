@@ -9,7 +9,8 @@ import * as authService from './authService';
 let testMdaId: string;
 
 beforeAll(async () => {
-  // Clean up tables
+  // Clean up tables (truncate audit_log first — FK + immutability trigger)
+  await db.execute(sql`TRUNCATE audit_log`);
   await db.delete(refreshTokens);
   await db.delete(users);
   await db.delete(mdas);
@@ -20,11 +21,13 @@ beforeAll(async () => {
 });
 
 beforeEach(async () => {
+  await db.execute(sql`TRUNCATE audit_log`);
   await db.delete(refreshTokens);
   await db.delete(users);
 });
 
 afterAll(async () => {
+  await db.execute(sql`TRUNCATE audit_log`);
   await db.delete(refreshTokens);
   await db.delete(users);
   await db.delete(mdas);

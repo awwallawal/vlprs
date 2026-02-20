@@ -7,8 +7,12 @@ import authRoutes from './routes/authRoutes';
 import userRoutes from './routes/userRoutes';
 import { AppError } from './lib/appError';
 import { VOCABULARY } from '@vlprs/shared';
+import { requestLogger } from './middleware/requestLogger';
 
 const app = express();
+
+// Trust proxy for correct IP extraction behind Nginx
+app.set('trust proxy', 'loopback');
 
 // Security middleware
 app.use(helmet());
@@ -18,6 +22,9 @@ app.use(cookieParser());
 // Body parsing with size limits
 app.use(express.json({ limit: '1mb' }));
 app.use(express.urlencoded({ extended: true, limit: '1mb' }));
+
+// Structured request logging (global — logs all requests)
+app.use(requestLogger);
 
 // Routes
 app.use('/api', healthRoutes);

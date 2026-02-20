@@ -14,6 +14,8 @@ declare global {
       };
       /** Set by scopeToMda middleware — null means unscoped (super_admin/dept_admin) */
       mdaScope?: string | null;
+      /** Can be set by route handlers to override action derivation in auditLog middleware */
+      auditAction?: string;
     }
   }
 }

@@ -8,6 +8,8 @@ import { doubleCsrfProtection, generateCsrfToken, CSRF_COOKIE_NAME } from '../mi
 import { loginSchema, registerSchema, ROLES } from '@vlprs/shared';
 import { env } from '../config/env';
 import * as authService from '../services/authService';
+import { extractClientIp } from '../lib/extractIp';
+import { auditLog } from '../middleware/auditLog';
 
 const router = Router();
 
@@ -18,6 +20,7 @@ router.post(
   authorise(ROLES.SUPER_ADMIN),
   scopeToMda,
   validate(registerSchema),
+  auditLog,
   async (req: Request, res: Response) => {
     const user = await authService.register(req.body);
     res.status(201).json({ success: true, data: user });
@@ -30,7 +33,8 @@ router.post(
   authLimiter,
   validate(loginSchema),
   async (req: Request, res: Response) => {
-    const result = await authService.login(req.body);
+    const auditCtx = { ipAddress: extractClientIp(req), userAgent: req.get('user-agent') ?? null };
+    const result = await authService.login(req.body, auditCtx);
 
     // Set refresh token in httpOnly cookie
     res.cookie('refreshToken', result.refreshToken.raw, {
@@ -63,7 +67,8 @@ router.post(
   doubleCsrfProtection,
   async (req: Request, res: Response) => {
     const tokenFromCookie = req.cookies?.refreshToken;
-    const result = await authService.refreshToken(tokenFromCookie);
+    const auditCtx = { ipAddress: extractClientIp(req), userAgent: req.get('user-agent') ?? null };
+    const result = await authService.refreshToken(tokenFromCookie, auditCtx);
 
     // Set new refresh token in httpOnly cookie
     res.cookie('refreshToken', result.refreshToken.raw, {
@@ -91,7 +96,8 @@ router.post(
   authenticate,
   doubleCsrfProtection,
   async (req: Request, res: Response) => {
-    await authService.logout(req.user!.userId);
+    const auditCtx = { ipAddress: extractClientIp(req), userAgent: req.get('user-agent') ?? null };
+    await authService.logout(req.user!.userId, req.user!.email, req.user!.role, auditCtx);
 
     // Clear refresh token cookie
     res.clearCookie('refreshToken', {
