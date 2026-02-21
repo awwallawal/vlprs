@@ -1,6 +1,6 @@
 # Story 1.6: Frontend Authentication Shell
 
-Status: ready-for-dev
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 <!-- Generated: 2026-02-19 | Epic: 1 — Project Foundation & Secure Access | Sprint: 1 -->
@@ -142,104 +142,117 @@ Then the following flows pass:
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Install frontend dependencies (AC: all)
-  - [ ] 1.1 Install runtime dependencies: `react-router` (v7 — NOT react-router-dom, it's deprecated in v7), `@tanstack/react-query`, `zustand`, `react-hook-form`, `@hookform/resolvers` (must be ^5.2.2 for Zod 4 compatibility), `react-google-recaptcha-v3`, `lucide-react`
-  - [ ] 1.2 Install dev dependencies: `@playwright/test`, `@tanstack/react-query-devtools`
-  - [ ] 1.3 Add shadcn/ui components via `npx shadcn@latest add`: input, label, card, badge, sheet, dialog, separator, skeleton, sonner (toast), form
-  - [ ] 1.4 Run `npx playwright install --with-deps` to install browser binaries
-  - [ ] 1.5 Add `VITE_API_URL` and `VITE_RECAPTCHA_SITE_KEY` to `.env.example` with documentation comments
-  - [ ] 1.6 Verify `pnpm typecheck` and `pnpm test` still pass after installs
+- [x] Task 1: Install frontend dependencies (AC: all)
+  - [x] 1.1 Install runtime dependencies: `react-router` (v7 — NOT react-router-dom, it's deprecated in v7), `@tanstack/react-query`, `zustand`, `react-hook-form`, `@hookform/resolvers` (must be ^5.2.2 for Zod 4 compatibility), `react-google-recaptcha-v3`, `lucide-react`
+  - [x] 1.2 Install dev dependencies: `@playwright/test`, `@tanstack/react-query-devtools`
+  - [x] 1.3 Add shadcn/ui components via `npx shadcn@latest add`: input, label, card, badge, sheet, dialog, separator, skeleton, sonner (toast), form
+  - [x] 1.4 Run `npx playwright install --with-deps` to install browser binaries
+  - [x] 1.5 Add `VITE_API_URL` and `VITE_RECAPTCHA_SITE_KEY` to `.env.example` with documentation comments
+  - [x] 1.6 Verify `pnpm typecheck` and `pnpm test` still pass after installs
 
-- [ ] Task 2: Auth store — Zustand (AC: #2, #4)
-  - [ ] 2.1 Create `apps/client/src/stores/authStore.ts` — Zustand store with `accessToken: string | null`, `user: User | null`, `setAuth(token, user)`, `clearAuth()`, `isAuthenticated` computed via `get()`
-  - [ ] 2.2 Store must NOT use Zustand `persist` middleware — access token stays in memory only (XSS protection)
-  - [ ] 2.3 Export `useAuthStore` hook for React components and `useAuthStore.getState()` pattern for API client (outside React tree)
-  - [ ] 2.4 Import `User` type from `@vlprs/shared` — never redeclare types that exist in shared
-  - [ ] 2.5 Create `apps/client/src/stores/authStore.test.ts` — test setAuth, clearAuth, isAuthenticated
+- [x] Task 2: Auth store — Zustand (AC: #2, #4)
+  - [x] 2.1 Create `apps/client/src/stores/authStore.ts` — Zustand store with `accessToken: string | null`, `user: User | null`, `setAuth(token, user)`, `clearAuth()`, `isAuthenticated` computed via `get()`
+  - [x] 2.2 Store must NOT use Zustand `persist` middleware — access token stays in memory only (XSS protection)
+  - [x] 2.3 Export `useAuthStore` hook for React components and `useAuthStore.getState()` pattern for API client (outside React tree)
+  - [x] 2.4 Import `User` type from `@vlprs/shared` — never redeclare types that exist in shared
+  - [x] 2.5 Create `apps/client/src/stores/authStore.test.ts` — test setAuth, clearAuth, isAuthenticated
 
-- [ ] Task 3: API client with JWT + refresh interceptor (AC: #4)
-  - [ ] 3.1 Create `apps/client/src/lib/apiClient.ts` — typed fetch wrapper using native `fetch` (NOT axios)
-  - [ ] 3.2 Attach `Authorization: Bearer {accessToken}` from `useAuthStore.getState()` on every request
-  - [ ] 3.3 On 401 response: call `POST /api/auth/refresh` (cookie sent automatically), store new accessToken in auth store, retry original request with new token
-  - [ ] 3.4 On refresh failure (401): call `clearAuth()`, redirect to `/login` via `window.location.href` (not React Router — outside React tree)
-  - [ ] 3.5 Always include `credentials: 'include'` on fetch calls (required for httpOnly cookie to be sent cross-origin)
-  - [ ] 3.6 Parse response envelope: `{ success: true, data }` → return `data`; `{ success: false, error }` → throw typed `ApiError`
-  - [ ] 3.7 Implement request queue to prevent multiple simultaneous refresh calls (only one refresh in-flight at a time; queue other 401s behind it)
-  - [ ] 3.8 Create `apps/client/src/lib/apiClient.test.ts` — test JWT attachment, 401 refresh retry, refresh failure redirect, request queuing
+- [x] Task 3: API client with JWT + refresh interceptor (AC: #4)
+  - [x] 3.1 Create `apps/client/src/lib/apiClient.ts` — typed fetch wrapper using native `fetch` (NOT axios)
+  - [x] 3.2 Attach `Authorization: Bearer {accessToken}` from `useAuthStore.getState()` on every request
+  - [x] 3.3 On 401 response: call `POST /api/auth/refresh` (cookie sent automatically), store new accessToken in auth store, retry original request with new token
+  - [x] 3.4 On refresh failure (401): call `clearAuth()`, redirect to `/login` via `window.location.href` (not React Router — outside React tree)
+  - [x] 3.5 Always include `credentials: 'include'` on fetch calls (required for httpOnly cookie to be sent cross-origin)
+  - [x] 3.6 Parse response envelope: `{ success: true, data }` → return `data`; `{ success: false, error }` → throw typed `ApiError`
+  - [x] 3.7 Implement request queue to prevent multiple simultaneous refresh calls (only one refresh in-flight at a time; queue other 401s behind it)
+  - [x] 3.8 Create `apps/client/src/lib/apiClient.test.ts` — test JWT attachment, 401 refresh retry, refresh failure redirect, request queuing
 
-- [ ] Task 4: TanStack Query + React Router setup (AC: #1, #2)
-  - [ ] 4.1 Create `apps/client/src/lib/queryClient.ts` — `new QueryClient()` with `staleTime: 5 * 60 * 1000`, `retry: 1`
-  - [ ] 4.2 Create `apps/client/src/router.tsx` — `createBrowserRouter` with public routes (`/`, `/login`) and protected route group (`/dashboard/*`, `/operations/*`, `/submissions/*`)
-  - [ ] 4.3 Create `apps/client/src/components/layout/AuthGuard.tsx` — checks `useAuthStore` for accessToken; if missing, `<Navigate to="/login" replace />`; if loading, render Skeleton
-  - [ ] 4.4 Protected route group uses `AuthGuard` as layout element wrapping `<Outlet />`
-  - [ ] 4.5 Use `lazy` property on route objects for code splitting — each lazy module exports `{ Component }` (React Router v7 pattern)
-  - [ ] 4.6 Update `apps/client/src/App.tsx` — replace demo content with `<QueryClientProvider>`, `<GoogleReCaptchaProvider>`, `<RouterProvider>`, `<Toaster>` wrapper stack
-  - [ ] 4.7 Update `apps/client/src/main.tsx` if needed — keep StrictMode, ensure providers are correct
-  - [ ] 4.8 Create `apps/client/src/components/layout/AuthGuard.test.tsx` — test redirect when unauthenticated, render children when authenticated
+- [x] Task 4: TanStack Query + React Router setup (AC: #1, #2)
+  - [x] 4.1 Create `apps/client/src/lib/queryClient.ts` — `new QueryClient()` with `staleTime: 5 * 60 * 1000`, `retry: 1`
+  - [x] 4.2 Create `apps/client/src/router.tsx` — `createBrowserRouter` with public routes (`/`, `/login`) and protected route group (`/dashboard/*`, `/operations/*`, `/submissions/*`)
+  - [x] 4.3 Create `apps/client/src/components/layout/AuthGuard.tsx` — checks `useAuthStore` for accessToken; if missing, `<Navigate to="/login" replace />`; if loading, render Skeleton
+  - [x] 4.4 Protected route group uses `AuthGuard` as layout element wrapping `<Outlet />`
+  - [x] 4.5 Use `lazy` property on route objects for code splitting — each lazy module exports `{ Component }` (React Router v7 pattern)
+  - [x] 4.6 Update `apps/client/src/App.tsx` — replace demo content with `<QueryClientProvider>`, `<GoogleReCaptchaProvider>`, `<RouterProvider>`, `<Toaster>` wrapper stack
+  - [x] 4.7 Update `apps/client/src/main.tsx` if needed — keep StrictMode, ensure providers are correct
+  - [x] 4.8 Create `apps/client/src/components/layout/AuthGuard.test.tsx` — test redirect when unauthenticated, render children when authenticated
 
-- [ ] Task 5: Login page (AC: #2, #5)
-  - [ ] 5.1 Create `apps/client/src/pages/public/LoginPage.tsx` — centered Card layout (max-width 640px), Oyo State crest above form, email + password fields, "Login" primary button
-  - [ ] 5.2 Use React Hook Form with `zodResolver(loginSchema)` — import `loginSchema` from `@vlprs/shared` (already exists, uses Zod 4 via `zod/v4`)
-  - [ ] 5.3 Validate on blur (NOT keystroke) — set RHF `mode: 'onBlur'`
-  - [ ] 5.4 Integrate `useGoogleReCaptcha` hook — call `executeRecaptcha('login')` on submit, include token in login request body
-  - [ ] 5.5 On success: call `authStore.setAuth(accessToken, user)`, then navigate to role-appropriate route using React Router's `useNavigate()`
-  - [ ] 5.6 On error: display non-punitive message from `VOCABULARY` constants (e.g., `VOCABULARY.LOGIN_UNSUCCESSFUL`). Show in amber text below form.
-  - [ ] 5.7 Disable submit button while request is in-flight (loading state)
-  - [ ] 5.8 Handle reCAPTCHA gracefully in development: if `VITE_RECAPTCHA_SITE_KEY` is empty/undefined, skip reCAPTCHA token (send empty string or omit)
-  - [ ] 5.9 Accessibility: labels on all inputs, focus ring (2px teal), 16px minimum font, 44x44px button touch target, `aria-live` for error messages
+- [x] Task 5: Login page (AC: #2, #5)
+  - [x] 5.1 Create `apps/client/src/pages/public/LoginPage.tsx` — centered Card layout (max-width 640px), Oyo State crest above form, email + password fields, "Login" primary button
+  - [x] 5.2 Use React Hook Form with `zodResolver(loginSchema)` — import `loginSchema` from `@vlprs/shared` (already exists, uses Zod 4 via `zod/v4`)
+  - [x] 5.3 Validate on blur (NOT keystroke) — set RHF `mode: 'onBlur'`
+  - [x] 5.4 Integrate `useGoogleReCaptcha` hook — call `executeRecaptcha('login')` on submit, include token in login request body
+  - [x] 5.5 On success: call `authStore.setAuth(accessToken, user)`, then navigate to role-appropriate route using React Router's `useNavigate()`
+  - [x] 5.6 On error: display non-punitive message from `VOCABULARY` constants (e.g., `VOCABULARY.LOGIN_UNSUCCESSFUL`). Show in amber text below form.
+  - [x] 5.7 Disable submit button while request is in-flight (loading state)
+  - [x] 5.8 Handle reCAPTCHA gracefully in development: if `VITE_RECAPTCHA_SITE_KEY` is empty/undefined, skip reCAPTCHA token (send empty string or omit)
+  - [x] 5.9 Accessibility: labels on all inputs, focus ring (2px teal), 16px minimum font, 44x44px button touch target, `aria-live` for error messages
 
-- [ ] Task 6: Application shell layout (AC: #3)
-  - [ ] 6.1 Create `apps/client/src/components/layout/DashboardLayout.tsx` — flexbox wrapper: Sidebar (desktop) + main content area with `<Outlet />`
-  - [ ] 6.2 Create `apps/client/src/components/layout/Sidebar.tsx` — 256px fixed width, crimson `#9C1E23` background, white text/icons. Sections: brand (crest + "VLPRS"), user info (name + Badge with role label), role-based nav items (use `ROLES` from `@vlprs/shared`), logout at bottom
-  - [ ] 6.3 Create `apps/client/src/components/layout/MobileHeader.tsx` — sticky crimson header bar (56px), hamburger icon (left), "VLPRS" title (center), role Badge (right)
-  - [ ] 6.4 Create `apps/client/src/components/layout/MobileNav.tsx` — shadcn/ui Sheet triggered by hamburger, slides from left, 85% width, same nav items as Sidebar, close button
-  - [ ] 6.5 Navigation items: use lucide-react icons, `NavLink` from `react-router` for active state highlighting (white left border + `rgba(255,255,255,0.15)` background)
-  - [ ] 6.6 Role-based nav item filtering: define `NAV_ITEMS` array with `{ label, path, icon, roles: Role[] }`, filter by `user.role` from auth store
-  - [ ] 6.7 Logout handler: call `POST /api/auth/logout` via apiClient, then `authStore.clearAuth()`, then `navigate('/login')`
-  - [ ] 6.8 Responsive breakpoint: use Tailwind `lg:` prefix (1024px) to toggle sidebar vs mobile header. Hide sidebar on mobile, hide mobile header on desktop.
-  - [ ] 6.9 Breadcrumb placeholder: create `apps/client/src/components/layout/Breadcrumb.tsx` — renders breadcrumb trail from route path (max 3 levels). Wire into DashboardLayout above `<Outlet />`.
+- [x] Task 6: Application shell layout (AC: #3)
+  - [x] 6.1 Create `apps/client/src/components/layout/DashboardLayout.tsx` — flexbox wrapper: Sidebar (desktop) + main content area with `<Outlet />`
+  - [x] 6.2 Create `apps/client/src/components/layout/Sidebar.tsx` — 256px fixed width, crimson `#9C1E23` background, white text/icons. Sections: brand (crest + "VLPRS"), user info (name + Badge with role label), role-based nav items (use `ROLES` from `@vlprs/shared`), logout at bottom
+  - [x] 6.3 Create `apps/client/src/components/layout/MobileHeader.tsx` — sticky crimson header bar (56px), hamburger icon (left), "VLPRS" title (center), role Badge (right)
+  - [x] 6.4 Create `apps/client/src/components/layout/MobileNav.tsx` — shadcn/ui Sheet triggered by hamburger, slides from left, 85% width, same nav items as Sidebar, close button
+  - [x] 6.5 Navigation items: use lucide-react icons, `NavLink` from `react-router` for active state highlighting (white left border + `rgba(255,255,255,0.15)` background)
+  - [x] 6.6 Role-based nav item filtering: define `NAV_ITEMS` array with `{ label, path, icon, roles: Role[] }`, filter by `user.role` from auth store
+  - [x] 6.7 Logout handler: call `POST /api/auth/logout` via apiClient, then `authStore.clearAuth()`, then `navigate('/login')`
+  - [x] 6.8 Responsive breakpoint: use Tailwind `lg:` prefix (1024px) to toggle sidebar vs mobile header. Hide sidebar on mobile, hide mobile header on desktop.
+  - [x] 6.9 Breadcrumb placeholder: create `apps/client/src/components/layout/Breadcrumb.tsx` — renders breadcrumb trail from route path (max 3 levels). Wire into DashboardLayout above `<Outlet />`.
 
-- [ ] Task 7: Public landing page (AC: #5)
-  - [ ] 7.1 Create `apps/client/src/pages/public/HomePage.tsx` — hero section with Oyo State crest, "VLPRS" heading, scheme description, "Staff Login" crimson Button linking to `/login`
-  - [ ] 7.2 Add "Beneficiary Portal — Coming Soon (Phase 2)" placeholder section below hero (grey surface background, muted text)
-  - [ ] 7.3 Create `apps/client/src/components/layout/PublicLayout.tsx` — simple centered layout for public pages (header with crest, main content, footer)
-  - [ ] 7.4 Mobile responsive: single column, full-width, stacked content
+- [x] Task 7: Public landing page (AC: #5)
+  - [x] 7.1 Create `apps/client/src/pages/public/HomePage.tsx` — hero section with Oyo State crest, "VLPRS" heading, scheme description, "Staff Login" crimson Button linking to `/login`
+  - [x] 7.2 Add "Beneficiary Portal — Coming Soon (Phase 2)" placeholder section below hero (grey surface background, muted text)
+  - [x] 7.3 Create `apps/client/src/components/layout/PublicLayout.tsx` — simple centered layout for public pages (header with crest, main content, footer)
+  - [x] 7.4 Mobile responsive: single column, full-width, stacked content
 
-- [ ] Task 8: Session timeout handling (AC: #6)
-  - [ ] 8.1 Create `apps/client/src/hooks/useSessionTimeout.ts` — tracks last activity timestamp, resets on user interaction (click, keypress, scroll, API call)
-  - [ ] 8.2 Warning threshold: 29 minutes (60 seconds before 30-min server timeout). Show Dialog modal.
-  - [ ] 8.3 "Continue Working" button: call refresh endpoint via apiClient, reset activity timer, close dialog
-  - [ ] 8.4 "Log Out Now" button: trigger logout flow (same as sidebar logout)
-  - [ ] 8.5 Auto-logout: if no action taken within 60 seconds of warning, auto-logout with toast notification
-  - [ ] 8.6 Dialog uses `onOpenChange` disabled (no Escape/backdrop dismiss) — user must explicitly choose
-  - [ ] 8.7 Mount `useSessionTimeout` in `DashboardLayout` (only active when authenticated)
+- [x] Task 8: Session timeout handling (AC: #6)
+  - [x] 8.1 Create `apps/client/src/hooks/useSessionTimeout.ts` — tracks last activity timestamp, resets on user interaction (click, keypress, scroll, API call)
+  - [x] 8.2 Warning threshold: 29 minutes (60 seconds before 30-min server timeout). Show Dialog modal.
+  - [x] 8.3 "Continue Working" button: call refresh endpoint via apiClient, reset activity timer, close dialog
+  - [x] 8.4 "Log Out Now" button: trigger logout flow (same as sidebar logout)
+  - [x] 8.5 Auto-logout: if no action taken within 60 seconds of warning, auto-logout with toast notification
+  - [x] 8.6 Dialog uses `onOpenChange` disabled (no Escape/backdrop dismiss) — user must explicitly choose
+  - [x] 8.7 Mount `useSessionTimeout` in `DashboardLayout` (only active when authenticated)
 
-- [ ] Task 9: Placeholder dashboard pages (AC: #2, #3)
-  - [ ] 9.1 Create `apps/client/src/pages/dashboard/DashboardPage.tsx` — heading "Executive Dashboard", placeholder text "Dashboard content coming in Story 1.8b"
-  - [ ] 9.2 Create `apps/client/src/pages/dashboard/OperationsPage.tsx` — heading "Operations Hub", same placeholder pattern
-  - [ ] 9.3 Create `apps/client/src/pages/dashboard/SubmissionsPage.tsx` — heading "Monthly Submissions" with MDA name from auth store user.mdaId context, same placeholder
-  - [ ] 9.4 Create generic `apps/client/src/pages/dashboard/PlaceholderPage.tsx` — reusable "Coming in Sprint [N]" component for unimplemented nav items
-  - [ ] 9.5 Wire all pages into router.tsx with lazy loading
+- [x] Task 9: Placeholder dashboard pages (AC: #2, #3)
+  - [x] 9.1 Create `apps/client/src/pages/dashboard/DashboardPage.tsx` — heading "Executive Dashboard", placeholder text "Dashboard content coming in Story 1.8b"
+  - [x] 9.2 Create `apps/client/src/pages/dashboard/OperationsPage.tsx` — heading "Operations Hub", same placeholder pattern
+  - [x] 9.3 Create `apps/client/src/pages/dashboard/SubmissionsPage.tsx` — heading "Monthly Submissions" with MDA name from auth store user.mdaId context, same placeholder
+  - [x] 9.4 Create generic `apps/client/src/pages/dashboard/PlaceholderPage.tsx` — reusable "Coming in Sprint [N]" component for unimplemented nav items
+  - [x] 9.5 Wire all pages into router.tsx with lazy loading
 
-- [ ] Task 10: Unit tests (AC: #7)
-  - [ ] 10.1 Create `apps/client/src/test/setup.ts` — import `@testing-library/jest-dom/vitest` for DOM matchers. Update `vite.config.ts` setupFiles.
-  - [ ] 10.2 Verify auth store tests pass (Task 2.5)
-  - [ ] 10.3 Verify API client tests pass (Task 3.8)
-  - [ ] 10.4 Verify AuthGuard tests pass (Task 4.8)
-  - [ ] 10.5 Create `apps/client/src/pages/public/LoginPage.test.tsx` — render form, validate error display on blur, verify submit calls API
-  - [ ] 10.6 Run `pnpm test` from monorepo root — all 4 workspaces pass
+- [x] Task 10: Unit tests (AC: #7)
+  - [x] 10.1 Create `apps/client/src/test/setup.ts` — import `@testing-library/jest-dom/vitest` for DOM matchers. Update `vite.config.ts` setupFiles.
+  - [x] 10.2 Verify auth store tests pass (Task 2.5)
+  - [x] 10.3 Verify API client tests pass (Task 3.8)
+  - [x] 10.4 Verify AuthGuard tests pass (Task 4.8)
+  - [x] 10.5 Create `apps/client/src/pages/public/LoginPage.test.tsx` — render form, validate error display on blur, verify submit calls API
+  - [x] 10.6 Run `pnpm test` from monorepo root — all 4 workspaces pass
 
-- [ ] Task 11: Playwright E2E smoke tests (AC: #7)
-  - [ ] 11.1 Create `apps/client/playwright.config.ts` — CI-compatible, headless, baseURL `http://localhost:5173`, retries 2 on CI, reporter `github` on CI / `html` locally, `webServer` starts both client and server
-  - [ ] 11.2 Create `apps/client/e2e/setup/globalSetup.ts` — seed test accounts via direct API calls or DB operations before test suite runs (super_admin, dept_admin, mda_officer)
-  - [ ] 11.3 Create `apps/client/e2e/auth.spec.ts` — 5 test flows:
+- [x] Task 11: Playwright E2E smoke tests (AC: #7)
+  - [x] 11.1 Create `apps/client/playwright.config.ts` — CI-compatible, headless, baseURL `http://localhost:5173`, retries 2 on CI, reporter `github` on CI / `html` locally, `webServer` starts both client and server
+  - [x] 11.2 Create `apps/client/e2e/setup/globalSetup.ts` — seed test accounts via direct API calls or DB operations before test suite runs (super_admin, dept_admin, mda_officer)
+  - [x] 11.3 Create `apps/client/e2e/auth.spec.ts` — 5 test flows:
     - Test 1: Visit /dashboard unauthenticated → redirected to /login
     - Test 2: Login as super_admin → lands on /dashboard → heading "Executive Dashboard" → role badge "Super Admin"
     - Test 3: Login as dept_admin → lands on /operations → heading "Operations Hub" → role badge "Department Admin"
     - Test 4: Login as mda_officer → lands on /submissions → heading "Monthly Submissions" → role badge "MDA Officer"
     - Test 5: Authenticated user clicks Logout → redirected to /login → visiting /dashboard redirects to /login again
-  - [ ] 11.4 Add `e2e` script to `apps/client/package.json`: `"e2e": "playwright test"`
-  - [ ] 11.5 Add `.gitignore` entries for `playwright-report/`, `test-results/`, `blob-report/`
+  - [x] 11.4 Add `e2e` script to `apps/client/package.json`: `"e2e": "playwright test"`
+  - [x] 11.5 Add `.gitignore` entries for `playwright-report/`, `test-results/`, `blob-report/`
+
+### Review Follow-ups (AI)
+
+- [x] [AI-Review][HIGH] useSessionTimeout: Auto-logout timer cleared on re-render — logoutTimerRef cleared by useEffect cleanup when showWarning state changes [hooks/useSessionTimeout.ts:56-84]
+- [x] [AI-Review][HIGH] AuthGuard: Missing CSRF token (x-csrf-token) on session restoration POST /auth/refresh — will 403 on page refresh [components/layout/AuthGuard.tsx:17-20]
+- [x] [AI-Review][MEDIUM] Missing "Skip to main content" accessibility link in DashboardLayout — WCAG 2.1 AA requirement [components/layout/DashboardLayout.tsx]
+- [x] [AI-Review][MEDIUM] No route-change focus management — focus should move to page h1 on navigation [router.tsx / DashboardLayout.tsx]
+- [x] [AI-Review][MEDIUM] apiClient does not reset session timeout timer on successful API calls — story spec requires resetActivityTimer integration [lib/apiClient.ts + hooks/useSessionTimeout.ts]
+- [x] [AI-Review][MEDIUM] Session timeout logout does not call POST /api/auth/logout — refresh token remains valid server-side (security gap) [hooks/useSessionTimeout.ts:25-31]
+- [x] [AI-Review][LOW] Sidebar has double navigation landmark — aside role="navigation" wraps nested nav element [components/layout/Sidebar.tsx:33-66]
+- [x] [AI-Review][LOW] Desktop sidebar nav items missing min-h-[44px] touch target [components/layout/Sidebar.tsx:71-84]
+- [x] [AI-Review][LOW] PlaceholderPage SPRINT_MAP numbers shifted by Epic 14 insertion [pages/dashboard/PlaceholderPage.tsx:3-8]
+- [x] [AI-Review][LOW] pnpm-lock.yaml modified but not in Dev Agent Record File List [story file]
 
 ## Dev Notes
 
@@ -1095,14 +1108,86 @@ All vocabulary constants are already defined in `packages/shared/src/constants/v
 - [Source: _bmad-output/implementation-artifacts/1-4-role-based-access-control.md#Middleware Architecture]
 - [Source: _bmad-output/implementation-artifacts/1-5-audit-logging-action-tracking.md#Middleware Chain]
 
+## Change Log
+
+- **2026-02-20**: Code review fixes — 10 issues resolved (2 HIGH, 4 MEDIUM, 4 LOW). Fixed useSessionTimeout auto-logout timer bug (split into 2 effects), AuthGuard CSRF token on refresh, added skip-to-content link, route-change focus management, apiClient session timer reset, session timeout server logout, sidebar landmark/touch targets, PlaceholderPage sprint numbers, File List gap.
+- **2026-02-20**: Story implemented — all 11 tasks complete. Auth store, API client, router, login page, application shell, session timeout, placeholder pages, unit tests (26 client), Playwright E2E smoke tests. 181 total monorepo tests pass.
+
 ## Dev Agent Record
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+Claude Opus 4.6 (claude-opus-4-6)
 
 ### Debug Log References
 
+- shadcn/ui button overwrite: Restored crimson/teal variants after `npx shadcn@latest add` overwrote Button.tsx
+- AuthGuard test spinner: Used `querySelector('.animate-spin')` instead of `getByRole('status')` (spinner div has no ARIA role)
+- App.test.tsx: Mocked router + RouterProvider to avoid jsdom AbortSignal incompatibility with React Router v7's `createBrowserRouter`
+- App.test.tsx: Added `window.matchMedia` mock for Sonner toast compatibility in jsdom
+- TypeScript: Created `src/vite-env.d.ts` for `import.meta.env` type support
+- TypeScript: Added `@vlprs/shared@workspace:^` as client dependency and removed `rootDir` from tsconfig.json
+- Vitest: Added `exclude: ['e2e/**', 'node_modules/**']` to vite.config.ts test config to prevent Playwright specs from being collected by Vitest
+
 ### Completion Notes List
 
+- All 11 tasks and 66 subtasks completed
+- 26 client unit tests pass (5 test files: authStore, apiClient, AuthGuard, App, LoginPage)
+- 5 Playwright E2E smoke tests created (auth redirect, 3 role-based logins, logout flow)
+- 181 total monorepo tests pass (26 client + 141 server + 12 shared + 2 testing)
+- Typecheck passes for client workspace
+- No server files modified (per story constraints)
+- reCAPTCHA gracefully skipped when VITE_RECAPTCHA_SITE_KEY not set
+
 ### File List
+
+**New files:**
+- `apps/client/src/vite-env.d.ts` — Vite client type declarations
+- `apps/client/src/test/setup.ts` — Testing library jest-dom setup
+- `apps/client/src/stores/authStore.ts` — Zustand auth store (in-memory only)
+- `apps/client/src/stores/authStore.test.ts` — Auth store unit tests (5 tests)
+- `apps/client/src/lib/apiClient.ts` — Typed fetch wrapper with JWT + refresh
+- `apps/client/src/lib/apiClient.test.ts` — API client unit tests (9 tests)
+- `apps/client/src/lib/queryClient.ts` — TanStack Query client config
+- `apps/client/src/router.tsx` — React Router v7 browser router config
+- `apps/client/src/components/layout/AuthGuard.tsx` — Protected route guard with session restoration
+- `apps/client/src/components/layout/AuthGuard.test.tsx` — AuthGuard unit tests (4 tests)
+- `apps/client/src/components/layout/PublicLayout.tsx` — Public route wrapper
+- `apps/client/src/components/layout/DashboardLayout.tsx` — Dashboard shell with sidebar + mobile nav + session timeout
+- `apps/client/src/components/layout/Sidebar.tsx` — 256px crimson sidebar
+- `apps/client/src/components/layout/MobileHeader.tsx` — Sticky mobile header
+- `apps/client/src/components/layout/MobileNav.tsx` — Sheet-based mobile navigation
+- `apps/client/src/components/layout/Breadcrumb.tsx` — Route-based breadcrumb
+- `apps/client/src/components/layout/navItems.ts` — Role-filtered navigation items + role labels
+- `apps/client/src/pages/public/LoginPage.tsx` — Login form with RHF + Zod + reCAPTCHA
+- `apps/client/src/pages/public/LoginPage.test.tsx` — Login page unit tests (6 tests)
+- `apps/client/src/hooks/useSessionTimeout.ts` — 29-min warning + auto-logout hook
+- `apps/client/src/components/ui/form.tsx` — shadcn/ui RHF form integration
+- `apps/client/src/components/ui/input.tsx` — shadcn/ui input
+- `apps/client/src/components/ui/label.tsx` — shadcn/ui label
+- `apps/client/src/components/ui/card.tsx` — shadcn/ui card
+- `apps/client/src/components/ui/badge.tsx` — shadcn/ui badge
+- `apps/client/src/components/ui/sheet.tsx` — shadcn/ui sheet
+- `apps/client/src/components/ui/dialog.tsx` — shadcn/ui dialog
+- `apps/client/src/components/ui/separator.tsx` — shadcn/ui separator
+- `apps/client/src/components/ui/skeleton.tsx` — shadcn/ui skeleton
+- `apps/client/src/components/ui/sonner.tsx` — shadcn/ui toast (Sonner)
+- `apps/client/playwright.config.ts` — Playwright E2E config
+- `apps/client/e2e/setup/globalSetup.ts` — E2E test account seeding
+- `apps/client/e2e/auth.spec.ts` — E2E auth smoke tests (5 tests)
+
+**Modified files:**
+- `apps/client/package.json` — Added runtime/dev deps, e2e script
+- `apps/client/vite.config.ts` — Added setupFiles + e2e exclude
+- `apps/client/tsconfig.json` — Removed rootDir constraint
+- `apps/client/src/App.tsx` — Provider stack (QueryClient, reCAPTCHA, Router, Toaster)
+- `apps/client/src/App.test.tsx` — Updated for mocked router + matchMedia
+- `apps/client/src/components/ui/Button.tsx` — Restored crimson/teal variants after shadcn overwrite
+- `apps/client/src/pages/public/HomePage.tsx` — Hero landing page
+- `apps/client/src/pages/dashboard/DashboardPage.tsx` — Executive Dashboard heading
+- `apps/client/src/pages/dashboard/OperationsPage.tsx` — Operations Hub heading
+- `apps/client/src/pages/dashboard/SubmissionsPage.tsx` — Monthly Submissions with MDA context
+- `apps/client/src/pages/dashboard/PlaceholderPage.tsx` — Coming in Sprint N
+- `.env.example` — Added VITE_RECAPTCHA_SITE_KEY
+- `.gitignore` — Added playwright-report/, test-results/, blob-report/
+- `pnpm-lock.yaml` — Updated from new dependency installs
