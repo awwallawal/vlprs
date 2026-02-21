@@ -1,4 +1,4 @@
-import { ROLES, type Role } from './roles';
+import { ROLES, type Role } from './roles.js';
 
 /**
  * Centralised permission matrix — maps resource:action pairs to allowed roles.
