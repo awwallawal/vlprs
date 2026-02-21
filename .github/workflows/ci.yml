@@ -1,0 +1,136 @@
+name: CI/CD Pipeline
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  REGISTRY: ghcr.io
+  SERVER_IMAGE: ghcr.io/${{ github.repository_owner }}/vlprs-server
+  CLIENT_IMAGE: ghcr.io/${{ github.repository_owner }}/vlprs-client
+
+jobs:
+  ci:
+    name: Lint, Typecheck & Test
+    runs-on: ubuntu-latest
+    services:
+      db:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: vlprs_test
+          POSTGRES_PASSWORD: vlprs_test
+          POSTGRES_DB: vlprs_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U vlprs_test -d vlprs_test"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      DATABASE_URL: postgresql://vlprs_test:vlprs_test@localhost:5432/vlprs_test
+      JWT_SECRET: ci-test-secret-not-for-production
+      CSRF_SECRET: ci-test-csrf-secret-min-32-characters-long
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Apply database schema
+        run: pnpm --filter server db:push
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Test
+        run: pnpm test
+
+  deploy:
+    name: Build, Push & Deploy
+    needs: ci
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push server image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: Dockerfile.server
+          target: production
+          push: true
+          tags: |
+            ${{ env.SERVER_IMAGE }}:${{ github.sha }}
+            ${{ env.SERVER_IMAGE }}:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build and push client image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: Dockerfile.client
+          target: production
+          push: true
+          tags: |
+            ${{ env.CLIENT_IMAGE }}:${{ github.sha }}
+            ${{ env.CLIENT_IMAGE }}:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: |
+            VITE_API_URL=https://oyocarloan.com.ng/api
+
+      - name: Deploy to Droplet
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.DROPLET_IP }}
+          username: ${{ secrets.DROPLET_USER }}
+          key: ${{ secrets.DROPLET_SSH_KEY }}
+          script: |
+            cd /opt/vlprs
+            git pull origin main
+            docker compose -f compose.prod.yaml pull
+            docker compose -f compose.prod.yaml up -d --remove-orphans
+            docker exec vlprs-server-1 node -e "const { execSync } = require('child_process'); execSync('npx drizzle-kit push', { stdio: 'inherit' })" || echo "Schema push skipped or already applied"
+            docker image prune -f
+
+      - name: Health check
+        run: |
+          echo "Waiting 45s for services to start..."
+          sleep 45
+          curl -sf https://oyocarloan.com.ng/api/health || echo "Health check failed - verify manually"

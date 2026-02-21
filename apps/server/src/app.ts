@@ -1,19 +1,79 @@
-import express from 'express';
+import express, { type Request, type Response, type NextFunction } from 'express';
 import helmet from 'helmet';
 import cors from 'cors';
+import cookieParser from 'cookie-parser';
 import healthRoutes from './routes/healthRoutes';
+import authRoutes from './routes/authRoutes';
+import userRoutes from './routes/userRoutes';
+import { AppError } from './lib/appError';
+import { VOCABULARY } from '@vlprs/shared';
+import { requestLogger } from './middleware/requestLogger';
 
 const app = express();
+
+// Trust proxy for correct IP extraction behind Nginx
+app.set('trust proxy', 'loopback');
 
 // Security middleware
 app.use(helmet());
 app.use(cors());
+app.use(cookieParser());
 
-// Body parsing
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+// Body parsing with size limits
+app.use(express.json({ limit: '1mb' }));
+app.use(express.urlencoded({ extended: true, limit: '1mb' }));
+
+// Structured request logging (global — logs all requests)
+app.use(requestLogger);
 
 // Routes
 app.use('/api', healthRoutes);
+app.use('/api', authRoutes);
+app.use('/api', userRoutes);
+
+// 404 handler
+app.use((_req: Request, res: Response) => {
+  res.status(404).json({
+    success: false,
+    error: { code: 'NOT_FOUND', message: 'The requested resource was not found' },
+  });
+});
+
+// Global error handler
+app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
+  if (err instanceof AppError) {
+    res.status(err.statusCode).json({
+      success: false,
+      error: {
+        code: err.code,
+        message: err.message,
+        ...(err.details ? { details: err.details } : {}),
+      },
+    });
+    return;
+  }
+
+  // Map csrf-csrf errors to the AC-specified response format
+  // csrf-csrf v4 sets err.code = 'EBADCSRFTOKEN' (matching legacy csurf convention)
+  if ('code' in err && (err as Error & { code: string }).code === 'EBADCSRFTOKEN') {
+    res.status(403).json({
+      success: false,
+      error: {
+        code: 'CSRF_VALIDATION_FAILED',
+        message: VOCABULARY.CSRF_VALIDATION_FAILED,
+      },
+    });
+    return;
+  }
+
+  const status = 'statusCode' in err ? (err as Error & { statusCode: number }).statusCode : 500;
+  res.status(status).json({
+    success: false,
+    error: {
+      code: 'INTERNAL_ERROR',
+      message: process.env.NODE_ENV === 'production' ? 'An unexpected error occurred' : err.message,
+    },
+  });
+});
 
 export default app;

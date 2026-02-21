@@ -1,24 +1,41 @@
 /**
  * Test factory for creating user objects.
  * Returns a minimal user shape for testing purposes.
- * Will be expanded as the User model evolves in Story 1.2+.
+ * Aligned with Story 1.2 User type.
  */
 export interface TestUser {
   id: string;
   email: string;
-  name: string;
-  role: string;
+  firstName: string;
+  lastName: string;
+  role: 'super_admin' | 'dept_admin' | 'mda_officer';
+  mdaId: string | null;
+  isActive: boolean;
+  createdAt: string;
 }
 
-let counter = 0;
-
 export function createTestUser(overrides: Partial<TestUser> = {}): TestUser {
-  counter++;
+  const uid = crypto.randomUUID().slice(0, 8);
   return {
-    id: `test-user-${counter}`,
-    email: `user${counter}@test.vlprs.gov.ng`,
-    name: `Test User ${counter}`,
-    role: 'viewer',
+    id: `test-user-${uid}`,
+    email: `user-${uid}@test.vlprs.gov.ng`,
+    firstName: `Test`,
+    lastName: `User-${uid}`,
+    role: 'mda_officer',
+    mdaId: null,
+    isActive: true,
+    createdAt: new Date().toISOString(),
+    ...overrides,
+  };
+}
+
+export function createTestJwt(overrides: Partial<{ userId: string; email: string; role: string; mdaId: string | null }> = {}) {
+  const uid = crypto.randomUUID().slice(0, 8);
+  return {
+    userId: `test-user-${uid}`,
+    email: `user-${uid}@test.vlprs.gov.ng`,
+    role: 'super_admin',
+    mdaId: null,
     ...overrides,
   };
 }

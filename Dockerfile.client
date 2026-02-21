@@ -17,11 +17,16 @@ EXPOSE 5173
 
 # Stage 4: Build
 FROM deps AS build
+ARG VITE_API_URL
 COPY . .
 RUN pnpm --filter shared build && pnpm --filter client build
 
 # Stage 5: Production (Nginx)
 FROM nginx:alpine AS production
+RUN apk add --no-cache curl
 COPY --from=build /app/apps/client/dist /usr/share/nginx/html
-COPY nginx.conf /etc/nginx/conf.d/default.conf
-EXPOSE 80
+COPY nginx/nginx.prod.conf /etc/nginx/conf.d/default.conf
+EXPOSE 80 443
+HEALTHCHECK --interval=30s --timeout=5s \
+  CMD curl -sf http://localhost:80/ || exit 1
+CMD ["nginx", "-g", "daemon off;"]

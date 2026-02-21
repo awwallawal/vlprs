@@ -1,15 +1,25 @@
-function App() {
+import { QueryClientProvider } from '@tanstack/react-query';
+import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
+import { GoogleReCaptchaProvider } from 'react-google-recaptcha-v3';
+import { RouterProvider } from 'react-router';
+import { Toaster } from '@/components/ui/sonner';
+import { queryClient } from '@/lib/queryClient';
+import { router } from '@/router';
+
+export default function App() {
+  const recaptchaKey = import.meta.env.VITE_RECAPTCHA_SITE_KEY || '';
+
   return (
-    <div className="min-h-screen bg-background text-text-primary font-sans">
-      <header className="bg-crimson text-white p-4">
-        <h1 className="text-xl font-bold">VLPRS</h1>
-        <p className="text-sm opacity-80">Vehicle Loan Processing & Receivables System</p>
-      </header>
-      <main className="p-6">
-        <p className="text-text-secondary">System initialising…</p>
-      </main>
-    </div>
+    <QueryClientProvider client={queryClient}>
+      {recaptchaKey ? (
+        <GoogleReCaptchaProvider reCaptchaKey={recaptchaKey}>
+          <RouterProvider router={router} />
+        </GoogleReCaptchaProvider>
+      ) : (
+        <RouterProvider router={router} />
+      )}
+      <Toaster position="bottom-right" />
+      {import.meta.env.DEV && <ReactQueryDevtools initialIsOpen={false} />}
+    </QueryClientProvider>
   );
 }
-
-export default App;

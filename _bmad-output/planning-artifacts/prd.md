@@ -27,8 +27,16 @@ documentCounts:
   brainstorming: 1
   projectDocs: 11
 workflowType: 'prd'
-lastEdited: '2026-02-17'
+lastEdited: '2026-02-20'
 editHistory:
+  - date: '2026-02-20'
+    changes: 'About page & integration readiness: Added FR82 (About the Programme page — Mission, Vision, Core Values, Programme Leadership, Programme Governance, Institutional Story). Added /about as top-level nav item. Removed /scheme/ag-office (content absorbed into /about Programme Governance section). Updated FR77 nav structure (added About direct link, The Scheme dropdown now 4 items). Updated FR78 (removed AG Office from scheme pages). Updated FR count 81→82. Added content directory convention (src/content/*.ts) for CMS migration readiness. Added Extension Points & Future Integration section to architecture (data ingestion abstraction, API consumer readiness, domain isolation, event emission pattern). Added Sanity as deferred headless CMS choice. Added Phase 2/3 integration scenarios (State Payroll DB forward integration, API consumer backward integration, AG Office platform expansion).'
+  - date: '2026-02-20'
+    changes: 'Public Website wireframes & implementation guide: Added wireframes-epic-14.md with ASCII wireframes for all 20 public pages, 4 reusable page templates (Content Page, Card Grid, Placeholder, Homepage), 8 shared public components (PublicNavBar, LoginModal, PublicFooter, BreadcrumbNav, PageHeader, CtaBanner, DisclaimerCallout, ProgrammeDisclaimer), shadcn/ui component mapping, responsive breakpoint annotations, pre-written SEO meta tags for all 17 routes, and recommended build order. Updated FR77 to reference shared component inventory. Updated FR81 to reference wireframes and page templates. Updated SEO Strategy with meta tag table reference. Updated build sequence step 4 with implementation artifacts. No new FRs added.'
+  - date: '2026-02-20'
+    changes: 'Public Website & Scheme Information Portal: Expanded Public Zone from minimal landing page to comprehensive multi-page public website. Added 6 new FRs (FR76-FR81): homepage with institutional branding, navigation architecture with login modal, scheme information pages (eligibility, loan tiers, repayment rules, How It Works), resources & support pages (FAQ, MDA guide, downloads, news), legal & compliance pages (privacy/NDPR, disclaimer, accessibility), and footer architecture. Elevated Public Zone from "functional but minimal" to full institutional portal — IT assessors and AG see a government-grade public presence before login. Updated MVP Feature Set (12→13 features). Updated Application Architecture section. Added public page performance NFR. Updated SEO Strategy to include MVP public pages. Updated Solo Developer Build Sequence (14→15 steps). Updated Phase 2 scope to remove items now covered in MVP Public Zone. De-escalated confrontational language: all public-facing copy uses neutral framing (what VLPRS enables, not what was broken). Added "Expression of Interest" language rule — never "Apply for Loan" on public surfaces. Added Programme Disclaimer requirement. Total: FR76-FR81 added, 1 NFR added.'
+  - date: '2026-02-19'
+    changes: 'User invitation & account lifecycle: Rewrote FR72 with downward-only management hierarchy (super_admin manages dept_admin + mda_officer; dept_admin manages mda_officer; super_admin accounts CLI-only), full account state machine (Active ↔ Deactivated → Deleted), welcome email via Resend with temporary credentials, forced first-login password change, profile self-service (view own details, change own password). Rewrote FR73 with admin-initiated password reset scoped by hierarchy, must_change_password flag. Moved FR72/FR73 from Epic 13 (Sprint 13) to Epic 1 (Sprint 1) — user invitation is a Sprint 1 foundation requirement. Added canonical visual reference to client-approved ux-design-directions.html. No new FRs added.'
   - date: '2026-02-18'
     changes: 'OSLRS playbook integration: Added Structured UAT Checkpoints section under Client Visibility Strategy — formalized "What to Test" checklists sent to client after every 2-3 stories. No FR changes.'
   - date: '2026-02-17'
@@ -200,23 +208,24 @@ VLPRS separates fact submission from computation authority. MDAs submit 8 fields
 | 1 | Database Schema (Loan Master + Repayment Ledger) | Data foundation established |
 | 2 | Computation Engine (all 4 tiers, all settlement paths) | Mathematical core verified |
 | 3 | RBAC + Authentication + CI/CD + Frontend Screen Scaffolding | Access control operational, CI/CD deploying to client domain, all role-specific screens live with mock data — dashboard, submission, migration, loan detail. Design system established. Demo seed credentials active. |
-| 4 | Staff Temporal Profile & Event Model | Temporal data foundation for migration |
-| 5 | Snapshot-Forward Migration Tool | Real data in system — all 63 MDAs |
-| 6 | AG Executive Dashboard (wired to real data) | Mock dashboard numbers replaced with live data — flagship experience with real numbers |
-| 7 | Core Reports | System provably correct |
-| 8 | MDA Submission Interface (8-field CSV + manual) | Ongoing operations enabled |
-| 9 | Pre-Submission Checkpoint & Mid-Cycle Events | Accountability and event tracking operational |
-| 10 | Basic Validation Engine | Data quality enforced |
-| 11 | Auto-Stop Certificate | Core problem solved — no more over-deduction |
-| 12 | Early Exit Workflow | Full loan completion paths operational |
-| 13 | Basic Notifications (email first, SMS fast-follow) | Operational loop complete |
-| 14 | User & Staff Record Management | Administrative self-sufficiency achieved |
+| 4 | Public Website & Scheme Information Portal | Institutional public face live — homepage, scheme info, eligibility, repayment rules, FAQ, legal pages. AG and IT Assessors see a government-grade portal at the URL before login. Implementation follows wireframes-epic-14.md: 4 page templates (Content Page, Card Grid, Placeholder, Homepage), 8 shared components, 20 pages across 3 stories. |
+| 5 | Staff Temporal Profile & Event Model | Temporal data foundation for migration |
+| 6 | Snapshot-Forward Migration Tool | Real data in system — all 63 MDAs |
+| 7 | AG Executive Dashboard (wired to real data) | Mock dashboard numbers replaced with live data — flagship experience with real numbers |
+| 8 | Core Reports | System provably correct |
+| 9 | MDA Submission Interface (8-field CSV + manual) | Ongoing operations enabled |
+| 10 | Pre-Submission Checkpoint & Mid-Cycle Events | Accountability and event tracking operational |
+| 11 | Basic Validation Engine | Data quality enforced |
+| 12 | Auto-Stop Certificate | Automatic deduction cessation at loan completion — guaranteed |
+| 13 | Early Exit Workflow | Full loan completion paths operational |
+| 14 | Basic Notifications (email first, SMS fast-follow) | Operational loop complete |
+| 15 | User & Staff Record Management | Administrative self-sufficiency achieved |
 
-**Demonstrability milestone:** Feature 3 delivers a demo-ready product shell hosted on the client's domain — role-specific screens with mock data, seeded demo credentials, responsive on mobile. The AG can open the dashboard on her phone from Sprint 1. Features 4-7 progressively replace mock data with real data — DOB, appointment dates, computed retirement dates, real MDA figures. Features 8-14 complete operational loops: submission, event tracking, validation, auto-stop, early exit, notifications, and administrative self-service. Each sprint's merge to `main` auto-deploys, so the client watches the product evolve in real time.
+**Demonstrability milestone:** Feature 3 delivers a demo-ready product shell hosted on the client's domain — role-specific screens with mock data, seeded demo credentials, responsive on mobile. The AG can open the dashboard on her phone from Sprint 1. Feature 4 delivers the institutional public face — when the AG forwards the URL to the Commissioner or IT Assessors, they see a government-grade portal that signals architectural seriousness before reaching the login screen. Features 5-8 progressively replace mock data with real data — DOB, appointment dates, computed retirement dates, real MDA figures. Features 9-15 complete operational loops: submission, event tracking, validation, auto-stop, early exit, notifications, and administrative self-service. Each sprint's merge to `main` auto-deploys, so the client watches the product evolve in real time.
 
 ### MVP Feature Set (Phase 1)
 
-All 12 features confirmed as must-have after pressure testing:
+All 13 features confirmed as must-have after pressure testing:
 
 1. **Computation Engine** — all 4 tiers, all settlement paths, moratorium, auto-split, last payment adjustment
 2. **Loan Master + Immutable Repayment Ledger** — canonical data stores, computed views
@@ -231,7 +240,9 @@ All 12 features confirmed as must-have after pressure testing:
 11. **Staff Temporal Profile & Employment Event Tracking** — Date of birth, date of first appointment, computed retirement date on every loan record. Date-bearing employment events (Retired, Deceased, Suspended, Absconded, Transferred Out, Dismissed, LWOP) reported via mid-cycle event form or monthly CSV. Pre-submission checkpoint. Cross-validation engine.
 12. **User & Staff Record Management** — User account lifecycle management (create, deactivate, reassign MDA officers). Staff ID management (add, update, duplicate detection). MDA historical data upload for cross-validation against migration baseline.
 
-**Public Zone (MVP):** Landing page with scheme branding, staff login, public login placeholder ("Coming Soon — Phase 2"). Functional but minimal — design time prioritised for the protected dashboard experience.
+13. **Public Website & Scheme Information Portal** — Multi-page public zone serving as the institutional face of VLPRS. Homepage with Oyo State Government branding, Official Programme Notice, "How It Works" beneficiary journey, loan category cards (4 tiers with amounts), repayment & settlement rules, key capabilities, trust & compliance section, endorsement placeholder, and news section. Sub-pages: Programme Overview, About VLPRS, Eligibility & Loan Categories, Repayment & Settlement Rules, FAQ, MDA Submission Guide, Downloads & Forms, News & Announcements, Help & Support, Privacy & Data Protection, Programme Disclaimer, Accessibility Statement. Responsive navigation with login modal (Staff Portal active, Beneficiary Portal and EOI as "Coming Soon — Phase 2" placeholders). Footer with 4-column layout and legal strip. Designed to signal institutional credibility to the AG, IT Assessors, and the public before login.
+
+**Public Zone Language Rule:** All public-facing copy describes what VLPRS enables — never what was broken. Prohibited on public pages: references to past errors, calculation discrepancies, disputes, or institutional failures. Required framing: "VLPRS centralises..." not "Before VLPRS, MDAs had inconsistent...". "Expression of Interest" — never "Apply for Loan" (creates legal expectations). Programme Disclaimer required on homepage and EOI-related pages: "Submission does not constitute loan approval. Committee decisions remain final under existing government procedures."
 
 ### MVP User Journey Coverage
 
@@ -251,7 +262,7 @@ All 12 features confirmed as must-have after pressure testing:
 ### Phase 2 — Growth (Continuous Deployment After MVP)
 
 - Beneficiary Dashboard — login, status, history, statements, grievance submission (extends Journey 7: Beneficiary — Completion; stakeholder: Beneficiaries)
-- Public Education Portal — expanding Public Zone: EOI form, approved lists, calculator (stakeholder: general public; discovery: Cabinet Presentation)
+- Public Education Portal Expansion — adding interactive features to the MVP Public Zone: EOI form (digital submission with reference number), Approved Beneficiary Lists (searchable, published by batch with NDPR-compliant masked identifiers), and loan repayment calculator (stakeholder: general public; discovery: Cabinet Presentation). Note: static scheme information pages (eligibility, loan tiers, repayment rules, FAQ) are delivered in MVP Public Zone
 - Guarantor Tracking — entity model, relationships, circular detection (discovery: Governance Pack guarantor requirements)
 - Full Staff Employment Status Taxonomy — expand from 7 MVP event types to 13 statuses with detailed workflow rules and automated status transitions (extends MVP FR60-FR67 temporal profile foundation)
 - Transfer Handshake Protocol — paired Transfer Out/In between MDAs (extends Journey 4: Dept Admin — Daily Ops event handling)
@@ -264,6 +275,7 @@ All 12 features confirmed as must-have after pressure testing:
 - Share as PDF — branded output with Oyo State crest (extends MVP FR54 PDF generation)
 - Committee Admin, Front Desk Officer, Auditor/Oversight roles (enables Journeys 8-10)
 - Variance Trend Tracking — month-over-month patterns (extends Journey 2: Deputy AG — Pattern Hunter)
+- Sanity CMS Integration — migrate static public website content from `src/content/*.ts` files to Sanity headless CMS. Enables non-developer content updates (news, FAQ, downloads, leadership changes). MVP content directory pattern ensures zero template/layout changes — only data source swaps (discovery: content update frequency concern; MVP preparation: content directory convention and Sanity as deferred technology in architecture)
 
 ### Phase 3 — Vision
 
@@ -274,7 +286,9 @@ All 12 features confirmed as must-have after pressure testing:
 - Full Notification Escalation Engine — T-3 to T+7 ladder (extends MVP notification foundation; stakeholder: all roles)
 - Upload Resilience Protocol — offline email fallback, status page (discovery: MDA connectivity challenges noted in rollout planning)
 - System Self-Correction Protocol — append-only corrections, transparency playbook (extends immutable ledger architecture)
-- Payroll Cross-Verification — future payroll data feed integration (discovery: payroll-deduction reconciliation concept from brainstorming)
+- State Payroll Database Direct Integration — replace CSV uploads with direct data pull from payroll system. MVP `DeductionRecord[]` abstraction means computation engine is data-source agnostic (discovery: Deputy AG directive on payroll database linkage; MVP preparation: data ingestion abstraction in architecture)
+- AG Office Platform Expansion — extract VLPRS infrastructure services (auth, audit, RBAC, email, PDF) as shared foundation for other AG internal tools (discovery: AG vision for expanded internal tool role; MVP preparation: domain isolation convention in architecture)
+- External API Consumer Programme — expose read-only reporting and forecasting APIs to authorised external consumers (Payroll Office, oversight bodies) via API key authentication (discovery: Payroll Office interest in VLPRS granular data; MVP preparation: versioned API envelope pattern in architecture)
 
 ### Risk Mitigation Strategy
 
@@ -721,11 +735,23 @@ Her audit report: "The VLPRS system maintains an immutable repayment ledger from
 - System is intentionally standalone to avoid dependency on other government systems
 - Export capabilities (CSV, PDF) for data portability
 
-**Future (Phase 2+):**
-- Payroll cross-verification data feed (when payroll systems are ready)
+**Future (Phase 2+) — Three Integration Vectors:**
+
+*Forward Integration (Data Ingestion — State Payroll Database):*
+- Direct connection to State Payroll Database to pull monthly deduction data, replacing CSV uploads from 63 MDAs
+- MVP preparation: all submission processing normalises to a `DeductionRecord[]` interface — CSV parser and future payroll API adapter both produce the same shape. No computation engine changes required when data source switches
+- Payroll cross-verification data feed enables real-time variance detection instead of monthly batch comparison
 - Gratuity-processing ministry data exchange for retirement receivables
+
+*Backward Integration (API Consumers — Payroll Office & External Systems):*
+- Payroll Office accesses VLPRS granular reporting and forecasting capabilities via API
+- MVP preparation: consistent API response envelopes (`{ data, meta, error }`) and versioned route structure (`/api/v1/`) enable future external consumers without breaking internal clients. External auth slot (API key header) reserved in middleware chain but not activated until needed
 - Potential integration with government identity systems for staff verification
-- API-first architecture in MVP to enable future integrations without architectural changes
+
+*Lateral Integration (AG Office Platform Expansion):*
+- VLPRS infrastructure (auth, audit, RBAC, email, PDF generation) available as shared foundation for other AG Office internal tools
+- MVP preparation: strict domain isolation — infrastructure services (auth, audit, RBAC, email, PDF) never import from domain services (loan computation, submission parsing). This means infrastructure can be extracted into a shared package without pulling loan-specific code
+- Event emission pattern (`loan.completed`, `submission.processed`, `autostop.triggered`) enables future webhook/queue consumers without modifying core services
 
 ---
 
@@ -733,11 +759,11 @@ Her audit report: "The VLPRS system maintains an immutable repayment ledger from
 
 ### Application Architecture
 
-**Single Page Application (SPA) with Public Shell:**
-- Two-zone architecture: **Public Zone** (unauthenticated) and **Protected Zone** (authenticated dashboard)
-- Public Zone in MVP: landing page with scheme branding, staff login, public login placeholder ("Coming Soon — Phase 2"), basic scheme information
+**Single Page Application (SPA) with Public Website:**
+- Two-zone architecture: **Public Zone** (unauthenticated, multi-page) and **Protected Zone** (authenticated dashboard)
+- Public Zone in MVP: comprehensive institutional website — homepage with hero section, Official Programme Notice, "How It Works" (4-step beneficiary journey), loan category cards (4 tiers with amounts), repayment & settlement rules (accordion), key capabilities, trust & compliance, endorsement placeholder, news section, and final CTA. Sub-pages for programme information, eligibility, repayment rules, FAQ, MDA guide, downloads, news, help & support, and legal/compliance pages. Responsive navigation with 2-level dropdown structure and login modal (Staff Portal active; Beneficiary Portal and EOI as Phase 2 placeholders). 4-column footer with legal strip and Programme Disclaimer
 - Protected Zone: full dashboard experience per RBAC role
-- Routing and layout designed for Phase 2 expansion — public portal, beneficiary dashboard, and EOI form slot into the existing Public Zone without architectural changes
+- Routing designed for Phase 2 expansion — Beneficiary Portal, EOI form, and Approved Beneficiary Lists slot into the existing Public Zone navigation without architectural changes
 - PWA: basic installability only (manifest + service worker for home screen icon, no complex offline caching)
 
 ### Browser Compatibility
@@ -763,8 +789,8 @@ Modern evergreen browsers only. No polyfills for legacy browsers.
 
 ### SEO Strategy
 
-- **MVP:** Not applicable — authenticated SPA behind login
-- **Phase 2 Public Portal:** Basic SEO for scheme information pages, EOI form discoverability, meta tags, semantic HTML
+- **MVP Public Zone:** Basic SEO for all public pages — semantic HTML, meta tags (title, description, Open Graph), descriptive page titles, heading hierarchy. Public pages should be crawlable and indexable. Target: "VLPRS Oyo State" and "Oyo State Vehicle Loan Scheme" searches return the homepage. Pre-defined `<title>` and meta description for all 17 public routes documented in wireframes-epic-14.md § SEO & Meta Tags. Use `react-helmet-async` or React Router `<Meta>` for SPA meta tag management
+- **Phase 2 Public Portal Expansion:** Extended SEO for EOI form discoverability, Approved Beneficiary Lists, and dynamic news/announcements pages
 
 ### Design Quality Standard
 
@@ -910,13 +936,23 @@ VLPRS will be evaluated by the State ICT Team and serves as a professional portf
 
 ### User & Account Administration
 
-- FR72: Department Admin can create, deactivate, and reassign MDA Reporting Officer accounts including MDA assignment. Super Admin can create, deactivate, and reassign accounts at all levels including Department Admin. All account lifecycle changes audit-logged with acting user, timestamp, and action
-- FR73: Department Admin can initiate password reset for MDA Reporting Officer accounts. Super Admin can initiate password reset for all account levels. Password reset events audit-logged
+- FR72: User account lifecycle management with downward-only hierarchy. Super Admin can create, deactivate, reactivate, soft-delete, and reassign Department Admin and MDA Reporting Officer accounts. Department Admin can create, deactivate, reactivate, soft-delete, and reassign MDA Reporting Officer accounts only. Super Admin accounts are managed exclusively via CLI commands requiring server access — no Super Admin can manage another Super Admin through the UI (political safety, separation of duties). No user can modify their own account through user management endpoints (self-protection). Account states: Active (can log in), Deactivated (login disabled, sessions terminated, reversible), Deleted (soft delete, one-way, preserved for audit). On account creation, system generates temporary password and sends welcome email via Resend with login URL and credentials. New users must change password on first login (`must_change_password` flag enforced at API level). All account lifecycle changes audit-logged with acting user, target user, action, timestamp, and IP. Last-active-super-admin guardrail prevents deactivation/deletion that would leave zero active super admins. Profile self-service: all users can view their own profile details (name, email, role, MDA, created date, last login) and change their own password
+- FR73: Admin-initiated password reset scoped by management hierarchy. Department Admin can reset passwords for MDA Reporting Officer accounts. Super Admin can reset passwords for Department Admin and MDA Reporting Officer accounts. On reset, system generates temporary password, sends reset email via Resend, sets `must_change_password = true`, and revokes all existing refresh tokens for that user. Password reset events audit-logged with acting user and timestamp
 
 ### Staff ID Governance
 
 - FR74: MDA Reporting Officers can add or update Staff ID for loan records within their assigned MDA only. Department Admin and Super Admin can search and update Staff IDs system-wide. All Staff ID changes audit-logged with old value, new value, acting user, and timestamp
 - FR75: System can detect duplicate Staff IDs when a Staff ID is added or updated by checking all existing records. If a match is found, system displays: "This Staff ID is already assigned to loan record [VLPRS reference]. Please verify before proceeding." User can proceed (with justification note logged) or cancel the update
+
+### Public Website & Scheme Information
+
+- FR76: System renders a public homepage with: hero section (Oyo State Government branding, scheme title, value proposition, primary CTAs for Staff Login and scheme information), Official Programme Notice card (committee-based approvals, payroll deduction repayment, audit-trail record-keeping, NDPR note), trust strip ("Administered by the Accountant-General's Office" with 3 trust badges: NDPR-aligned, Audit-ready reporting, Committee approvals preserved), "How It Works" 4-step beneficiary journey (Expression of Interest → Administrative Review → Committee Decision → Payroll Repayment), loan category cards (4 tiers with grade levels and maximum amounts), key capabilities section (6 cards: Immutable Ledger, Computed Balances, Auto-Stop Certificates, Real-Time Dashboard, Non-Punitive Design, Audit-Ready), repayment & settlement rules accordion (Standard, Accelerated, Early Principal Settlement, Retirement & Gratuity — with Key Clarification panel), "Who VLPRS Serves" role cards (AG, Deputy AG, Car Loan Dept, MDA Officers, Beneficiaries), trust & compliance section (NDPR, audit logging, immutable ledger), endorsement/authority placeholder, news section (3 latest announcements), and final CTA. All copy follows the neutral language rule: describes what VLPRS enables, never what was broken
+- FR77: System renders a responsive navigation bar with: Oyo State crest + "Vehicle Loan Scheme" wordmark, top-level navigation items (Home, About as direct link to `/about`, The Scheme and Resources as dropdowns, How It Works and Help & Support as direct links), and a login CTA button that opens a modal dialog with 3 entry points: Staff Portal (active — links to `/login`), Beneficiary Portal (Coming Soon — Phase 2), Expression of Interest (Coming Soon — Phase 2). Navigation collapses to hamburger menu on mobile (<768px). Footer renders a 4-column layout (The Scheme, Resources, Contact, Staff Portal link) with legal strip containing: Programme Disclaimer ("This portal provides general programme information. Loan approvals, payroll deductions, and gratuity processing remain subject to applicable government procedures and committee decisions"), Privacy & Data Protection link, Accessibility link, and copyright notice. Navigation, login modal, footer, breadcrumb, page header, CTA banner, disclaimer callout, and programme disclaimer are implemented as 8 shared public components (see wireframes-epic-14.md § Shared Components) reused across all 20 public pages via 4 page templates (Content Page, Card Grid, Placeholder, Homepage)
+- FR78: System renders scheme information pages: Programme Overview (scheme objectives, policy basis, governance structure), About VLPRS (the digital system, "MDAs submit facts, VLPRS computes truth" philosophy, what VLPRS does and does not do), Eligibility & Loan Categories (4 grade-level tiers with loan amounts ₦250k/₦450k/₦600k/₦750k, standard 60-month tenure, eligibility conditions including tenure-to-retirement provisions), Repayment & Settlement Rules (accordion: Standard 60-month, Accelerated shorter tenure, Early Principal Settlement with interest forfeiture, Retirement & Gratuity Settlement — with Key Clarification: "VLPRS supports record accuracy and reconciliation. It does not replace payroll authority or gratuity processing procedures"), and How It Works (4-step visual: EOI → Review → Committee Decision → Payroll Repayment, with disclaimer: "Expression of Interest submission does not constitute loan approval"). Note: former "Role of the AG's Office" page content is absorbed into FR82 (About the Programme) Programme Governance section
+- FR79: System renders resources and support pages: Frequently Asked Questions (categorised by audience: beneficiaries, MDA officers, general public — minimum 15 questions), MDA Submission Guide (step-by-step 8-field CSV submission process with screenshots placeholder, downloadable CSV template), Downloads & Forms (CSV template, policy summary PDF, training materials placeholder), News & Announcements (card-based list with title, date, excerpt, and detail view), and Help & Support (contact information: physical office address, email, phone, office hours Mon-Fri 8am-6pm WAT)
+- FR80: System renders legal and compliance pages: Privacy & Data Protection (NDPR compliance statement — privacy notices, consent capture, data minimisation, right of access, retention policy), Programme Disclaimer (system scope, committee authority preservation, no legal commitment from EOI), and Accessibility Statement (WCAG 2.1 AA commitment, accessibility features, contact for accessibility issues)
+- FR81: All public pages include: descriptive `<title>` tags, meta description tags, Open Graph tags for social sharing (pre-defined for all 17 routes — see wireframes-epic-14.md § SEO & Meta Tags), semantic HTML structure (proper heading hierarchy, landmark regions, nav/main/footer elements), and mobile-responsive layout with minimum 44x44px touch targets. Public pages are served as part of the SPA with client-side routing but use semantic HTML and meta tags for crawlability. All public pages are built from 4 reusable page templates with responsive breakpoints at <768px (mobile), 768–1024px (tablet), >1024px (desktop) — see wireframes-epic-14.md § Page Templates and § Responsive Behaviour Summary
+- FR82: System renders an About the Programme page (`/about`) with: Mission Statement (2-3 sentences), Vision Statement (2-3 sentences), Core Values (Transparency, Accountability, Accuracy, Fairness, Institutional Trust), Programme Leadership section (Accountant-General, Deputy Accountant-General, Director Car Loan Department — each with prominent role title, name of current office holder, optional photo, and institutional role description), Programme Governance section (Vehicle Loan Committee structure, decision authority, AG's Office oversight role — absorbs former `/scheme/ag-office` content), and Institutional Story (neutral-language narrative of programme objectives). Leadership cards display role title and institutional description as permanent text, name as swappable text — designed for zero-effort personnel updates. Page accessible via top-level "About" navigation item (not nested in a dropdown). Content extracted to `src/content/about.ts` for future CMS migration readiness
 
 ---
 
@@ -938,6 +974,8 @@ VLPRS will be evaluated by the State ICT Team and serves as a professional portf
 | Pre-submission checkpoint load | <3 seconds | Time from "Submit Monthly Data" click to checkpoint screen rendered |
 | Early exit computation | <3 seconds | Time from initiation to payoff amount displayed |
 | Historical data upload (100 rows) | <15 seconds | Time from upload to cross-reference report generated |
+| Public homepage load (4G mobile) | <2 seconds FCP | Time from navigation to first meaningful content painted (hero section visible) |
+| Public page navigation | <500ms | Time from click to content rendered (client-side SPA transition) |
 
 ### Security
 

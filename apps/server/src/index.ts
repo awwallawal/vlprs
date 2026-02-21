@@ -1,15 +1,18 @@
 import app from './app';
-import { pino } from 'pino';
+import { env } from './config/env';
+import { logger } from './lib/logger';
 
-const logger = pino({
-  transport: {
-    target: 'pino-pretty',
-    options: { colorize: true },
-  },
+const server = app.listen(env.PORT, () => {
+  logger.info(`VLPRS server running on port ${env.PORT}`);
 });
 
-const PORT = Number(process.env.PORT) || 3001;
+function gracefulShutdown(signal: string) {
+  logger.info(`${signal} received — shutting down gracefully`);
+  server.close(() => {
+    logger.info('Server closed');
+    process.exit(0);
+  });
+}
 
-app.listen(PORT, () => {
-  logger.info(`VLPRS server running on port ${PORT}`);
-});
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));

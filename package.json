@@ -4,6 +4,10 @@
   "private": true,
   "description": "Vehicle Loan Processing & Receivables System — Oyo State Government",
   "scripts": {
+    "dev": "pnpm dev:db && pnpm -r --parallel run dev",
+    "dev:db": "docker compose -f compose.dev.yaml up -d db",
+    "dev:db:down": "docker compose -f compose.dev.yaml down",
+    "dev:local": "pnpm -r --parallel run dev",
     "lint": "eslint .",
     "typecheck": "pnpm -r run typecheck",
     "test": "pnpm -r run test",
@@ -19,6 +23,7 @@
     "eslint-config-prettier": "^10.1.5",
     "prettier": "^3.5.3"
   },
+  "packageManager": "pnpm@9.15.0",
   "pnpm": {
     "onlyBuiltDependencies": ["bcrypt"]
   }
