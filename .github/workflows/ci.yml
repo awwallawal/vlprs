@@ -129,7 +129,7 @@ jobs:
             git pull origin main
             docker compose -f compose.prod.yaml pull
             docker compose -f compose.prod.yaml up -d --remove-orphans
-            docker exec vlprs-server-1 node -e "const { execSync } = require('child_process'); execSync('npx drizzle-kit push', { stdio: 'inherit' })" || echo "Schema push skipped or already applied"
+            docker exec -i vlprs-db-1 psql -U vlprs -d vlprs_prod < scripts/init-schema.sql || echo "Schema push skipped or already applied"
             docker image prune -f
 
       - name: Health check
