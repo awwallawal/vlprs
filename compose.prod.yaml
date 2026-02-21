@@ -18,7 +18,7 @@ services:
       - internal
 
   server:
-    image: ghcr.io/awwallawal/vlprs-server:latest
+    image: ghcr.io/awwallawal/vlprs-server:${IMAGE_TAG:-latest}
     env_file: .env
     expose:
       - "3001"
@@ -36,7 +36,7 @@ services:
       - internal
 
   client:
-    image: ghcr.io/awwallawal/vlprs-client:latest
+    image: ghcr.io/awwallawal/vlprs-client:${IMAGE_TAG:-latest}
     ports:
       - "80:80"
       - "443:443"

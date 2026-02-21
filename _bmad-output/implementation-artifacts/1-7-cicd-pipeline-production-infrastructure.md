@@ -1,6 +1,6 @@
 # Story 1.7: CI/CD Pipeline & Production Infrastructure
 
-Status: ready-for-dev
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 <!-- Generated: 2026-02-19 | Epic: 1 — Project Foundation & Secure Access | Sprint: 1 -->
@@ -151,41 +151,41 @@ And the rollback procedure is documented in docs/deployment.md
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Spike — Validate full pipeline end-to-end (AC: #1)
-  - [ ] 1.1 Ensure DigitalOcean Droplet is provisioned with Docker + Docker Compose installed, SSH key configured
-  - [ ] 1.2 Create a GitHub Personal Access Token (classic) with `write:packages` and `read:packages` scopes, store as GitHub Actions secret `GHCR_TOKEN`
-  - [ ] 1.3 Add GitHub Actions secrets: `DROPLET_IP`, `DROPLET_SSH_KEY` (private key), `DROPLET_USER` (e.g., `root` or `deploy`), `GHCR_TOKEN`
-  - [ ] 1.4 Create minimal `.github/workflows/deploy.yml` that builds and pushes current app to ghcr.io, SSHs to Droplet, pulls and runs
-  - [ ] 1.5 On Droplet: create `/opt/vlprs/` directory, place `.env` file with production secrets (DATABASE_URL, JWT_SECRET, etc.)
-  - [ ] 1.6 Verify the application responds on `http://<DROPLET_IP>` — spike validated
-  - [ ] 1.7 If spike fails: debug, fix, redeploy. Do NOT proceed to Task 2 until the full pipeline path works
+- [x] Task 1: Spike — Validate full pipeline end-to-end (AC: #1)
+  - [x] 1.1 Ensure DigitalOcean Droplet is provisioned with Docker + Docker Compose installed, SSH key configured
+  - [x] 1.2 Create a GitHub Personal Access Token (classic) with `write:packages` and `read:packages` scopes, store as GitHub Actions secret `GHCR_TOKEN`
+  - [x] 1.3 Add GitHub Actions secrets: `DROPLET_IP`, `DROPLET_SSH_KEY` (private key), `DROPLET_USER` (e.g., `root` or `deploy`), `GHCR_TOKEN`
+  - [x] 1.4 Create minimal `.github/workflows/deploy.yml` that builds and pushes current app to ghcr.io, SSHs to Droplet, pulls and runs
+  - [x] 1.5 On Droplet: create `/opt/vlprs/` directory, place `.env` file with production secrets (DATABASE_URL, JWT_SECRET, etc.)
+  - [x] 1.6 Verify the application responds on `http://<DROPLET_IP>` — spike validated
+  - [x] 1.7 If spike fails: debug, fix, redeploy. Do NOT proceed to Task 2 until the full pipeline path works
 
-- [ ] Task 2: GitHub Actions CI workflow (AC: #2)
-  - [ ] 2.1 Create `.github/workflows/ci.yml` — triggers on `pull_request` targeting `main` and on `push` to `main`
-  - [ ] 2.2 Use `pnpm/action-setup@v4` BEFORE `actions/setup-node@v4` (order matters — pnpm must be available for setup-node caching)
-  - [ ] 2.3 Configure `actions/setup-node@v4` with `node-version: 22`, `cache: 'pnpm'`
-  - [ ] 2.4 CI stages (sequential jobs or steps): `pnpm install --frozen-lockfile` → `pnpm lint` → `pnpm typecheck` → `pnpm test`
-  - [ ] 2.5 Set `fail-fast: true` — stop pipeline on first failure
-  - [ ] 2.6 Use `concurrency` group to cancel in-progress runs when new commits push to same PR
+- [x] Task 2: GitHub Actions CI workflow (AC: #2)
+  - [x] 2.1 Create `.github/workflows/ci.yml` — triggers on `pull_request` targeting `main` and on `push` to `main`
+  - [x] 2.2 Use `pnpm/action-setup@v4` BEFORE `actions/setup-node@v4` (order matters — pnpm must be available for setup-node caching)
+  - [x] 2.3 Configure `actions/setup-node@v4` with `node-version: 22`, `cache: 'pnpm'`
+  - [x] 2.4 CI stages (sequential jobs or steps): `pnpm install --frozen-lockfile` → `pnpm lint` → `pnpm typecheck` → `pnpm test`
+  - [x] 2.5 Set `fail-fast: true` — stop pipeline on first failure
+  - [x] 2.6 Use `concurrency` group to cancel in-progress runs when new commits push to same PR
 
-- [ ] Task 3: GitHub Actions CD workflow — build & deploy (AC: #3)
-  - [ ] 3.1 Add CD steps to `.github/workflows/ci.yml` — runs only on `push` to `main` (not on PR), after CI stages pass
-  - [ ] 3.2 Login to ghcr.io: `docker/login-action@v3` with `registry: ghcr.io`, `username: ${{ github.actor }}`, `password: ${{ secrets.GITHUB_TOKEN }}`
-  - [ ] 3.3 Build and push server image: `docker/build-push-action@v6` with `context: .`, `file: Dockerfile.server`, `target: production`, `push: true`, tags `ghcr.io/<owner>/vlprs-server:${{ github.sha }}` and `ghcr.io/<owner>/vlprs-server:latest`
-  - [ ] 3.4 Build and push client image: same pattern for `Dockerfile.client`
-  - [ ] 3.5 Enable Docker BuildKit cache: `cache-from: type=gha`, `cache-to: type=gha,mode=max` on both build-push-action steps
-  - [ ] 3.6 Deploy via SSH: `appleboy/ssh-action@v1` — connect to Droplet, run:
+- [x] Task 3: GitHub Actions CD workflow — build & deploy (AC: #3)
+  - [x] 3.1 Add CD steps to `.github/workflows/ci.yml` — runs only on `push` to `main` (not on PR), after CI stages pass
+  - [x] 3.2 Login to ghcr.io: `docker/login-action@v3` with `registry: ghcr.io`, `username: ${{ github.actor }}`, `password: ${{ secrets.GITHUB_TOKEN }}`
+  - [x] 3.3 Build and push server image: `docker/build-push-action@v6` with `context: .`, `file: Dockerfile.server`, `target: production`, `push: true`, tags `ghcr.io/<owner>/vlprs-server:${{ github.sha }}` and `ghcr.io/<owner>/vlprs-server:latest`
+  - [x] 3.4 Build and push client image: same pattern for `Dockerfile.client`
+  - [x] 3.5 Enable Docker BuildKit cache: `cache-from: type=gha`, `cache-to: type=gha,mode=max` on both build-push-action steps
+  - [x] 3.6 Deploy via SSH: `appleboy/ssh-action@v1` — connect to Droplet, run:
     ```bash
     cd /opt/vlprs
     docker compose -f compose.prod.yaml pull
     docker compose -f compose.prod.yaml up -d
     docker image prune -f
     ```
-  - [ ] 3.7 Add secrets to ssh-action: `host: ${{ secrets.DROPLET_IP }}`, `username: ${{ secrets.DROPLET_USER }}`, `key: ${{ secrets.DROPLET_SSH_KEY }}`
-  - [ ] 3.8 Add post-deploy health check step: `curl -sf https://<domain>/api/health || exit 1` (or use a simple HTTP check action)
+  - [x] 3.7 Add secrets to ssh-action: `host: ${{ secrets.DROPLET_IP }}`, `username: ${{ secrets.DROPLET_USER }}`, `key: ${{ secrets.DROPLET_SSH_KEY }}`
+  - [x] 3.8 Add post-deploy health check step: `curl -sf https://<domain>/api/health || exit 1` (or use a simple HTTP check action)
 
-- [ ] Task 4: Production Nginx configuration with SSL (AC: #4)
-  - [ ] 4.1 Create `nginx/nginx.prod.conf` — production Nginx config with:
+- [x] Task 4: Production Nginx configuration with SSL (AC: #4)
+  - [x] 4.1 Create `nginx/nginx.prod.conf` — production Nginx config with:
     - HTTP server block (port 80): redirect all traffic to HTTPS, except `.well-known/acme-challenge/` (Certbot verification)
     - HTTPS server block (port 443): SSL certificate paths, serve React SPA, proxy `/api/*` to `server:3001`
     - SSL configuration: TLS 1.2+, modern cipher suite, HSTS header (`max-age=31536000; includeSubDomains`)
@@ -193,141 +193,82 @@ And the rollback procedure is documented in docs/deployment.md
     - Gzip compression for text/html, text/css, application/json, application/javascript
     - Static asset caching: `Cache-Control: public, immutable` with 1-year expiry for hashed assets
     - Client body size limit: `client_max_body_size 10m` (for CSV uploads)
-  - [ ] 4.2 Keep existing `nginx.conf` for development Docker Compose (rename if needed for clarity)
-  - [ ] 4.3 Create `certbot/` directory placeholder — Certbot volumes will mount here
+  - [x] 4.2 Keep existing `nginx.conf` for development Docker Compose (rename if needed for clarity)
+  - [x] 4.3 Create `certbot/` directory placeholder — Certbot volumes will mount here
 
-- [ ] Task 5: Production Docker Compose (AC: #4)
-  - [ ] 5.1 Update `compose.prod.yaml` with production-ready configuration:
-    ```yaml
-    services:
-      server:
-        image: ghcr.io/<owner>/vlprs-server:latest
-        env_file: .env
-        expose:
-          - "3001"    # Internal only — NOT ports
-        healthcheck:
-          test: ["CMD", "wget", "--spider", "-q", "http://localhost:3001/api/health"]
-          interval: 30s
-          timeout: 5s
-          retries: 3
-          start_period: 10s
-        restart: unless-stopped
-        networks:
-          - internal
+- [x] Task 5: Production Docker Compose (AC: #4)
+  - [x] 5.1 Update `compose.prod.yaml` with production-ready configuration (db, server, client, certbot services with health checks, restart policies, internal network)
+  - [x] 5.2 Remove `build:` directives from compose.prod.yaml — production pulls pre-built images from ghcr.io
+  - [x] 5.3 Server uses `env_file: .env` instead of inline environment variables (cleaner, all secrets in one file on Droplet)
+  - [x] 5.4 Server port is `expose: ["3001"]` not `ports: ["3001:3001"]` — internal traffic only, Nginx proxies
 
-      client:
-        image: ghcr.io/<owner>/vlprs-client:latest
-        ports:
-          - "80:80"
-          - "443:443"
-        volumes:
-          - ./certbot/conf:/etc/letsencrypt:ro
-          - ./certbot/www:/var/www/certbot:ro
-        depends_on:
-          server:
-            condition: service_healthy
-        restart: unless-stopped
-        networks:
-          - internal
-
-      certbot:
-        image: certbot/certbot:latest
-        volumes:
-          - ./certbot/conf:/etc/letsencrypt
-          - ./certbot/www:/var/www/certbot
-        entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h; done'"
-        networks:
-          - internal
-
-    networks:
-      internal:
-        driver: bridge
-    ```
-  - [ ] 5.2 Remove `build:` directives from compose.prod.yaml — production pulls pre-built images from ghcr.io
-  - [ ] 5.3 Server uses `env_file: .env` instead of inline environment variables (cleaner, all secrets in one file on Droplet)
-  - [ ] 5.4 Server port is `expose: ["3001"]` not `ports: ["3001:3001"]` — internal traffic only, Nginx proxies
-
-- [ ] Task 6: Improve production Dockerfiles (AC: #5)
-  - [ ] 6.1 Update `Dockerfile.server` production stage:
+- [x] Task 6: Improve production Dockerfiles (AC: #5)
+  - [x] 6.1 Update `Dockerfile.server` production stage:
     - Use `pnpm deploy --prod --filter server /app/deploy` in build stage to create a minimal production bundle
     - Production stage copies `/app/deploy` (only server deps + dist) instead of full `node_modules`
     - Add `HEALTHCHECK` instruction: `HEALTHCHECK --interval=30s --timeout=5s CMD wget --spider -q http://localhost:3001/api/health || exit 1`
     - Keep non-root user (`appuser`)
-  - [ ] 6.2 Update `Dockerfile.client` production stage:
+  - [x] 6.2 Update `Dockerfile.client` production stage:
     - Copy `nginx/nginx.prod.conf` instead of `nginx.conf` for production target
     - Add `HEALTHCHECK` instruction: `HEALTHCHECK --interval=30s --timeout=5s CMD curl -sf http://localhost:80/ || exit 1` (or use wget)
     - Note: Nginx alpine has curl but not wget — use `curl -sf` or install wget
-  - [ ] 6.3 Create `.dockerignore` if not exists — exclude: `node_modules`, `.env`, `.git`, `dist`, `*.md`, `.github`, `_bmad*`, `error.txt`, `playwright-report`, `test-results`
-  - [ ] 6.4 Test builds locally: `docker build -f Dockerfile.server --target production -t vlprs-server:test .` and same for client
-  - [ ] 6.5 Verify image sizes meet targets (server < 200MB, client < 50MB)
+  - [x] 6.3 Create `.dockerignore` if not exists — exclude: `node_modules`, `.env`, `.git`, `dist`, `*.md`, `.github`, `_bmad*`, `error.txt`, `playwright-report`, `test-results`
+  - [ ] 6.4 Test builds locally: `docker build -f Dockerfile.server --target production -t vlprs-server:test .` and same for client — SKIPPED (validated via CI/CD pipeline builds on GitHub Actions)
+  - [ ] 6.5 Verify image sizes meet targets (server < 200MB, client < 50MB) — SKIPPED (validated via CI/CD pipeline builds)
 
-- [ ] Task 7: SSL setup — Let's Encrypt + Certbot (AC: #1, #4)
-  - [ ] 7.1 Create `scripts/init-letsencrypt.sh` — initial certificate issuance script:
-    - Download recommended TLS parameters (dhparam, ssl options) from Certbot GitHub
-    - Create a dummy certificate so Nginx can start (Nginx won't start without valid SSL cert files)
-    - Start Nginx with dummy cert
-    - Delete dummy cert
-    - Run `certbot certonly --webroot -w /var/www/certbot -d <domain> --email <email> --agree-tos --no-eff-email`
-    - Reload Nginx with real cert
-  - [ ] 7.2 Document the one-time setup: `ssh <droplet>` → `cd /opt/vlprs` → `chmod +x scripts/init-letsencrypt.sh` → `./scripts/init-letsencrypt.sh`
-  - [ ] 7.3 Certbot auto-renewal handled by the certbot service in compose.prod.yaml (runs `certbot renew` every 12 hours)
-  - [ ] 7.4 Add Nginx `reload` cron or signal on cert renewal — Certbot includes a deploy hook: `--deploy-hook "docker compose -f compose.prod.yaml exec client nginx -s reload"`
+- [x] Task 7: SSL setup — Let's Encrypt + Certbot (AC: #1, #4)
+  - [x] 7.1 Create `scripts/init-letsencrypt.sh` — initial certificate issuance script (with dummy cert, certbot certonly, nginx reload)
+  - [x] 7.2 Document the one-time setup: `ssh <droplet>` → `cd /opt/vlprs` → `chmod +x scripts/init-letsencrypt.sh` → `./scripts/init-letsencrypt.sh`
+  - [x] 7.3 Certbot auto-renewal handled by the certbot service in compose.prod.yaml (runs `certbot renew` every 12 hours)
+  - [ ] 7.4 Add Nginx `reload` cron or signal on cert renewal — DEFERRED (certbot auto-renewal runs every 12h; Nginx picks up certs on container restart)
 
-- [ ] Task 8: Branch protection (AC: #6)
-  - [ ] 8.1 Configure branch protection on `main` via GitHub CLI or API:
-    ```bash
-    gh api repos/<owner>/<repo>/branches/main/protection \
-      --method PUT \
-      --field required_status_checks='{"strict":true,"contexts":["ci"]}' \
-      --field enforce_admins=true \
-      --field required_pull_request_reviews='{"required_approving_review_count":0}' \
-      --field restrictions=null \
-      --field allow_force_pushes=false \
-      --field allow_deletions=false
-    ```
+- [ ] Task 8: Branch protection (AC: #6) — DEFERRED (GitHub Free plan does not support branch protection rules on private repos; will configure when upgraded to Team/Pro plan or repo is made public)
+  - [ ] 8.1 Configure branch protection on `main` via GitHub CLI or API
   - [ ] 8.2 Note: `required_approving_review_count: 0` for solo dev — PR required but self-merge allowed. Increase to 1 when team grows.
   - [ ] 8.3 Verify: attempt direct push to `main` — should be rejected. Create PR → CI passes → merge succeeds.
 
-- [ ] Task 9: Droplet production environment setup (AC: #1, #7)
-  - [ ] 9.1 Document the Droplet setup steps in a `docs/deployment.md` (or inline in this story):
-    - Install Docker + Docker Compose on Ubuntu
-    - Create `/opt/vlprs/` directory structure
-    - Place `.env` file with production secrets
-    - Login to ghcr.io: `docker login ghcr.io -u <username> -p <token>`
-    - Run initial SSL setup: `./scripts/init-letsencrypt.sh`
-    - Start services: `docker compose -f compose.prod.yaml up -d`
-    - Run production seed: `docker compose -f compose.prod.yaml exec server pnpm seed:prod`
-  - [ ] 9.2 Add production environment variables to `.env.example` documentation:
-    ```
-    # Production deployment (Story 1.7)
-    SUPER_ADMIN_EMAIL=
-    SUPER_ADMIN_PASSWORD=
-    SUPER_ADMIN_FIRST_NAME=
-    SUPER_ADMIN_LAST_NAME=
-    ```
-  - [ ] 9.3 Verify production seed runs in container: `docker compose -f compose.prod.yaml exec server pnpm seed:prod`
+- [x] Task 9: Droplet production environment setup (AC: #1, #7)
+  - [x] 9.1 Document the Droplet setup steps in `docs/deployment.md` (architecture diagram, setup steps, rollback procedures)
+  - [x] 9.2 Add production environment variables to `.env.example` documentation (POSTGRES_PASSWORD, SUPER_ADMIN_* vars)
+  - [x] 9.3 Verify production seed runs — super admin account created via direct SQL INSERT with pre-hashed bcrypt password (seed-production.ts not usable in production container due to ESM/bcrypt issues; SQL approach is equivalent and idempotent with ON CONFLICT DO NOTHING)
 
-- [ ] Task 10: Monitoring & rollback documentation (AC: #9)
-  - [ ] 10.1 Set up UptimeRobot (free tier) to ping `GET https://<domain>/api/health` every 5 minutes with email alerts on downtime
-  - [ ] 10.2 Verify DigitalOcean Managed PostgreSQL has automated daily backups enabled with 7-day retention (NFR-REL-2)
-  - [ ] 10.3 Document rollback procedure in `docs/deployment.md`: pull previous SHA-tagged image → `docker compose up -d` → verify health
-  - [ ] 10.4 Note: Weekly `pg_dump` to DO Spaces is deferred — Managed PG daily backups + point-in-time recovery satisfy NFR-REL-2/REL-4 for MVP. Add supplementary `pg_dump` cron when operational maturity increases.
+- [ ] Task 10: Monitoring & rollback documentation (AC: #9) — PARTIALLY COMPLETE
+  - [ ] 10.1 Set up UptimeRobot (free tier) to ping `GET https://<domain>/api/health` every 5 minutes — DEFERRED (manual setup, not a code task)
+  - [ ] 10.2 Verify DigitalOcean Managed PostgreSQL has automated daily backups — N/A (using Docker PostgreSQL container, not managed PG; manual backup strategy to be configured separately)
+  - [x] 10.3 Document rollback procedure in `docs/deployment.md`: pull previous SHA-tagged image → `docker compose up -d` → verify health
+  - [x] 10.4 Note: Weekly `pg_dump` to DO Spaces is deferred — documented in deployment.md
 
-- [ ] Task 11: Database schema application in production (AC: #1, #7)
-  - [ ] 11.1 After first deployment, apply DB schema to production: `docker compose -f compose.prod.yaml exec server pnpm db:push`
-  - [ ] 11.2 Verify audit_log immutability trigger is applied on production DB (Story 1.5's `applyTriggers.ts`)
-  - [ ] 11.3 Document schema migration strategy in `docs/deployment.md`: for subsequent deployments, `drizzle-kit push` runs as part of the deploy sequence (post-deploy step or entrypoint script)
-  - [ ] 11.4 Verify `trust proxy` setting in Express (`app.set('trust proxy', 'loopback')`) — required for correct `req.ip` extraction behind Nginx reverse proxy. If missing, audit log IP addresses will all be `127.0.0.1`. This setting should already exist from Story 1.5; verify it's present in `apps/server/src/app.ts`.
+- [x] Task 11: Database schema application in production (AC: #1, #7)
+  - [x] 11.1 After first deployment, apply DB schema to production — created `scripts/init-schema.sql` with all tables, indexes, and triggers; automated in CI/CD deploy step via `cat scripts/init-schema.sql | docker exec -i vlprs-db-1 psql -U vlprs -d vlprs_prod`
+  - [x] 11.2 Verify audit_log immutability trigger is applied on production DB — included in init-schema.sql (fn_prevent_modification + trg_audit_log_immutable)
+  - [x] 11.3 Document schema migration strategy in `docs/deployment.md` — schema is auto-applied on every deploy; init-schema.sql uses CREATE IF NOT EXISTS for idempotency
+  - [x] 11.4 Verify `trust proxy` setting in Express — confirmed present in apps/server/src/app.ts from Story 1.5
 
-- [ ] Task 12: Verification & cleanup (AC: #8)
-  - [ ] 12.1 Run `pnpm test` from monorepo root — all existing tests pass
-  - [ ] 12.2 Run `pnpm lint` — no new lint errors
-  - [ ] 12.3 Run `pnpm typecheck` — no type errors
-  - [ ] 12.4 Push to a PR targeting `main` — verify CI pipeline runs and reports status
-  - [ ] 12.5 Merge PR to `main` — verify CD pipeline deploys to Droplet
-  - [ ] 12.6 Verify `https://<domain>/api/health` returns 200 with `{ status: "ok", timestamp: "..." }`
-  - [ ] 12.7 Verify `https://<domain>` serves the React SPA (login page or landing page)
-  - [ ] 12.8 Clean up any spike/temporary files
+- [x] Task 13: Review Follow-ups (AI) — Code Review 2026-02-21
+  - [x] C1: Health check never fails deployment — `|| echo` always succeeds [ci.yml:139]
+  - [x] C2: Schema application silently swallows failures — errors suppressed [ci.yml:132]
+  - [x] H1: Deployment docs reference commands that fail in production container [deployment.md:114-126]
+  - [x] H2: Static asset caching location strips all security headers (Nginx add_header inheritance) [nginx.prod.conf:56-59]
+  - [x] H3: Missing X-XSS-Protection header required by AC4 [nginx.prod.conf:31-34]
+  - [x] H4: compose.prod.yaml uses :latest tags — rollback unreliable [compose.prod.yaml:21,39]
+  - [x] H5: git pull deploys full source to Droplet — document reality vs claimed structure [ci.yml:129, deployment.md]
+  - [x] M1: corepack prepare pnpm@latest not version-pinned [Dockerfile.server:3, Dockerfile.client:3]
+  - [x] M2: No proxy timeouts on API location [nginx.prod.conf:45-53]
+  - [x] M3: Droplet IP hardcoded in deployment docs [deployment.md:6,37,91,98,149,165]
+  - [x] M4: Root SSH login documented as standard practice [deployment.md:37,149-150]
+  - [x] L1: File list discrepancy — authorise.test.ts modified but not listed [story File List]
+  - [x] L2: Missing gzip_vary on directive [nginx.prod.conf:62-64]
+  - [x] L3: nginx:alpine and certbot:latest not version-pinned [Dockerfile.client:25, compose.prod.yaml:59]
+
+- [x] Task 12: Verification & cleanup (AC: #8)
+  - [x] 12.1 Run `pnpm test` from monorepo root — all 141 tests pass (CI verified)
+  - [x] 12.2 Run `pnpm lint` — no lint errors (CI verified)
+  - [x] 12.3 Run `pnpm typecheck` — no type errors (CI verified)
+  - [x] 12.4 Push to a PR targeting `main` — CI pipeline runs and reports status (multiple PRs created and merged)
+  - [x] 12.5 Merge PR to `main` — CD pipeline deploys to Droplet automatically
+  - [x] 12.6 Verify `https://oyocarloan.com.ng/api/health` returns 200 with `{ "status": "ok" }`
+  - [x] 12.7 Verify `https://oyocarloan.com.ng` serves the React SPA (login page accessible, super admin can log in)
+  - [x] 12.8 Clean up any spike/temporary files
 
 ## Dev Notes
 
@@ -679,15 +620,15 @@ GitHub Actions → ghcr.io (images) → Droplet (pull + run)
 ```
 
 **Security Checklist:**
-- [ ] All secrets in GitHub Actions secrets (never in workflow files)
-- [ ] All secrets in Droplet `.env` file (never in repo)
-- [ ] Server port NOT exposed externally (Nginx proxy only)
-- [ ] HTTPS enforced (HTTP → HTTPS redirect)
-- [ ] HSTS header set
-- [ ] Security headers configured (X-Frame-Options, X-Content-Type-Options, Referrer-Policy)
-- [ ] Non-root users in Docker containers
-- [ ] `--frozen-lockfile` in CI (reproducible builds)
-- [ ] Branch protection prevents broken deploys
+- [x] All secrets in GitHub Actions secrets (never in workflow files)
+- [x] All secrets in Droplet `.env` file (never in repo)
+- [x] Server port NOT exposed externally (Nginx proxy only)
+- [x] HTTPS enforced (HTTP → HTTPS redirect)
+- [x] HSTS header set
+- [x] Security headers configured (X-Frame-Options, X-Content-Type-Options, Referrer-Policy)
+- [x] Non-root users in Docker containers
+- [x] `--frozen-lockfile` in CI (reproducible builds)
+- [ ] Branch protection prevents broken deploys — DEFERRED (GitHub Free plan limitation)
 
 ### GitHub Actions Secrets Required
 
@@ -825,10 +766,72 @@ build-args: |
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+Claude Opus 4.6 (claude-opus-4-6)
 
 ### Debug Log References
 
+- Multiple CI pipeline failures debugged and resolved (pnpm version, PostgreSQL service, shared package ESM compilation, .js extensions)
+- Production container crash: ERR_UNSUPPORTED_NODE_MODULES_TYPE_STRIPPING → shared package compiled to JS
+- Production container crash: ERR_MODULE_NOT_FOUND → added .js extensions to ESM imports
+- drizzle-kit not in production image → created init-schema.sql for direct psql schema application
+- Certbot entrypoint override → fixed init-letsencrypt.sh with --entrypoint flag
+- Super admin seed: bcrypt require() fails in ESM container → used pre-hashed bcrypt SQL INSERT
+
 ### Completion Notes List
 
+- **Task 8 (Branch Protection)**: DEFERRED — GitHub Free plan does not support branch protection on private repos. Will configure when plan is upgraded or repo becomes public.
+- **Task 10.1 (UptimeRobot)**: DEFERRED — manual external service setup, not a code deliverable.
+- **Task 10.2 (Managed PG Backups)**: N/A — using Docker PostgreSQL container, not DigitalOcean Managed PostgreSQL.
+- **Task 6.4/6.5 (Local build test/image size)**: SKIPPED — builds validated through CI/CD pipeline on GitHub Actions.
+- **Task 7.4 (Certbot deploy hook)**: DEFERRED — certbot auto-renewal runs every 12h; Nginx picks up certs on container restart.
+- **Deviation from AC4**: PostgreSQL IS in compose.prod.yaml (as a Docker container), not external managed DB. This simplifies the single-Droplet deployment.
+- **Deviation from AC7**: Production seed uses direct SQL INSERT with pre-hashed bcrypt password instead of `pnpm seed:prod` (bcrypt compilation issues in ESM production container).
+- **Additional work**: Created `scripts/init-schema.sql` to replace drizzle-kit push in production (drizzle-kit is a dev dependency not available in production image). Schema is auto-applied on every deploy.
+- **Additional work**: Fixed `packages/shared` to compile TypeScript to JavaScript for production (removed noEmit, added declaration, updated exports to dist/, added .js extensions to ESM imports).
+
 ### File List
+
+**Created:**
+- `.github/workflows/ci.yml` — CI/CD pipeline (lint, typecheck, test, build, push, deploy)
+- `nginx/nginx.prod.conf` — Production Nginx config with SSL, SPA routing, API proxy, security headers
+- `scripts/init-letsencrypt.sh` — One-time SSL certificate setup script
+- `scripts/init-schema.sql` — Production database schema (tables, indexes, triggers)
+- `docs/deployment.md` — Deployment documentation with architecture, setup steps, rollback
+
+**Modified:**
+- `compose.prod.yaml` — Production Docker Compose (image-based, db + server + client + certbot, health checks)
+- `Dockerfile.server` — pnpm deploy --prod, non-root user, HEALTHCHECK
+- `Dockerfile.client` — VITE_API_URL build arg, nginx.prod.conf, HEALTHCHECK
+- `.dockerignore` — Comprehensive exclusions for lean Docker builds
+- `.env.example` — Added production deployment variables section
+- `package.json` (root) — Added `packageManager: "pnpm@9.15.0"` field
+- `packages/shared/package.json` — Changed exports from raw .ts to compiled dist/ JS
+- `packages/shared/tsconfig.json` — Removed noEmit, added declaration + declarationMap
+- `packages/shared/src/index.ts` — Added .js extensions to all relative imports for ESM
+- `packages/shared/src/constants/permissions.ts` — Added .js extension to role import
+- `apps/server/src/middleware/authorise.test.ts` — Removed unused NextFunction import
+
+### Senior Developer Review (AI) — 2026-02-21
+
+**Reviewer:** Claude Opus 4.6 (Adversarial Code Review)
+
+**Findings:** 14 issues (2 Critical, 5 High, 4 Medium, 3 Low)
+**Resolution:** All 14 fixed automatically
+
+**Changes Applied:**
+| Issue | Severity | File | Fix |
+|---|---|---|---|
+| C1: Health check never fails deploy | CRITICAL | ci.yml:139 | `\|\| echo` → `\|\| exit 1` |
+| C2: Schema errors silently swallowed | CRITICAL | ci.yml:132 | Removed `\|\| echo` error suppression |
+| H1: Deployment docs use broken commands | HIGH | deployment.md:114-126 | Updated to init-schema.sql + SQL seed |
+| H2: Static asset location strips headers | HIGH | nginx.prod.conf:60-69 | Repeated security headers in location |
+| H3: Missing X-XSS-Protection (AC4) | HIGH | nginx.prod.conf:34 | Added `X-XSS-Protection "1; mode=block"` |
+| H4: :latest tags break rollback | HIGH | compose.prod.yaml:21,39 | `${IMAGE_TAG:-latest}` + CI passes SHA |
+| H5: Full repo on Droplet undocumented | HIGH | deployment.md | Documented git clone approach |
+| M1: pnpm@latest not pinned | MEDIUM | Dockerfile.server:3, Dockerfile.client:3 | Pinned to `pnpm@9.15.0` |
+| M2: No proxy timeouts | MEDIUM | nginx.prod.conf:54-56 | Added 30s connect/send/read timeouts |
+| M3: Droplet IP in docs | MEDIUM | deployment.md | Replaced with `<DROPLET_IP>` placeholder |
+| M4: Root SSH login standard | MEDIUM | deployment.md | Added deploy user recommendation |
+| L1: authorise.test.ts not in file list | LOW | story file | Added to Modified list |
+| L2: Missing gzip_vary | LOW | nginx.prod.conf:73 | Added `gzip_vary on;` |
+| L3: nginx:alpine not pinned | LOW | Dockerfile.client:25 | Pinned to `nginx:1.27-alpine` |

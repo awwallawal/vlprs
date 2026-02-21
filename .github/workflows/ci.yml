@@ -127,13 +127,14 @@ jobs:
           script: |
             cd /opt/vlprs
             git pull origin main
+            export IMAGE_TAG=${{ github.sha }}
             docker compose -f compose.prod.yaml pull
             docker compose -f compose.prod.yaml up -d --remove-orphans
-            cat scripts/init-schema.sql | docker exec -i vlprs-db-1 psql -U vlprs -d vlprs_prod || echo "Schema push skipped or already applied"
+            cat scripts/init-schema.sql | docker exec -i vlprs-db-1 psql -U vlprs -d vlprs_prod
             docker image prune -f
 
       - name: Health check
         run: |
           echo "Waiting 45s for services to start..."
           sleep 45
-          curl -sf https://oyocarloan.com.ng/api/health || echo "Health check failed - verify manually"
+          curl -sf https://oyocarloan.com.ng/api/health || exit 1
