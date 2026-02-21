@@ -52,7 +52,7 @@ echo "### Requesting Let's Encrypt certificate for $DOMAIN..."
 
 if [ $STAGING != "0" ]; then STAGING_ARG="--staging"; fi
 
-docker compose -f compose.prod.yaml run --rm certbot certonly \
+docker compose -f compose.prod.yaml run --rm --entrypoint "certbot certonly \
   --webroot \
   -w /var/www/certbot \
   -d $DOMAIN \
@@ -60,7 +60,7 @@ docker compose -f compose.prod.yaml run --rm certbot certonly \
   --agree-tos \
   --no-eff-email \
   --force-renewal \
-  $STAGING_ARG
+  $STAGING_ARG" certbot
 
 echo "### Reloading nginx with real certificate..."
 docker compose -f compose.prod.yaml exec client nginx -s reload
