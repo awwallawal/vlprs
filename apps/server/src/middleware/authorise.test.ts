@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import type { Request, Response, NextFunction } from 'express';
+import type { Request, Response } from 'express';
 import { authorise } from './authorise';
 import { AppError } from '../lib/appError';
 import { ROLES, ALL_ROLES, VOCABULARY } from '@vlprs/shared';

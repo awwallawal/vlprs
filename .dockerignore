@@ -2,6 +2,7 @@ node_modules
 .git
 .env
 .env.local
+.env.*.local
 dist
 coverage
 *.log
@@ -10,3 +11,13 @@ Thumbs.db
 _bmad
 _bmad-output
 docs
+.github
+.claude
+.vscode
+playwright-report
+test-results
+error.txt
+*.md
+!pnpm-workspace.yaml
+certbot
+scripts
