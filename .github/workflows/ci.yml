@@ -19,6 +19,24 @@ jobs:
   ci:
     name: Lint, Typecheck & Test
     runs-on: ubuntu-latest
+    services:
+      db:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: vlprs_test
+          POSTGRES_PASSWORD: vlprs_test
+          POSTGRES_DB: vlprs_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U vlprs_test -d vlprs_test"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      DATABASE_URL: postgresql://vlprs_test:vlprs_test@localhost:5432/vlprs_test
+      JWT_SECRET: ci-test-secret-not-for-production
+      CSRF_SECRET: ci-test-csrf-secret-min-32-characters-long
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -35,6 +53,9 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Apply database schema
+        run: pnpm --filter server db:push
+
       - name: Lint
         run: pnpm lint
 
@@ -43,10 +64,6 @@ jobs:
 
       - name: Test
         run: pnpm test
-        env:
-          DATABASE_URL: postgresql://test:test@localhost:5432/test
-          JWT_SECRET: ci-test-secret-not-for-production
-          CSRF_SECRET: ci-test-csrf-secret-min-32-characters-long
 
   deploy:
     name: Build, Push & Deploy
@@ -109,7 +126,7 @@ jobs:
             git pull origin main
             docker compose -f compose.prod.yaml pull
             docker compose -f compose.prod.yaml up -d --remove-orphans
-            docker exec vlprs-server-1 node -e "const { execSync } = require('child_process'); execSync('npx prisma migrate deploy', { stdio: 'inherit' })" || echo "Migration skipped or already applied"
+            docker exec vlprs-server-1 node -e "const { execSync } = require('child_process'); execSync('npx drizzle-kit push', { stdio: 'inherit' })" || echo "Schema push skipped or already applied"
             docker image prune -f
 
       - name: Health check
