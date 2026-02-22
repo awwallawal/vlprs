@@ -225,7 +225,7 @@ export function DashboardLayout() {
       </Sidebar>
 
       {/* Main content area */}
-      <div className="flex flex-1 flex-col min-h-svh">
+      <main id="main-content" className="relative flex min-w-0 flex-1 flex-col bg-background min-h-svh">
         {/* Mobile header bar */}
         <header className="sticky top-0 z-40 flex items-center gap-2 h-14 px-4 bg-crimson text-white md:hidden">
           <SidebarTrigger className="text-white hover:bg-white/10 hover:text-white" />
@@ -246,7 +246,7 @@ export function DashboardLayout() {
           </Badge>
         </header>
 
-        <main id="main-content" role="main" className="flex-1">
+        <div role="main" className="flex-1">
           <div className="p-4 lg:p-6 space-y-4">
             {/* Global search bar */}
             <search role="search" aria-label="Global search">
@@ -274,8 +274,8 @@ export function DashboardLayout() {
               <Outlet />
             </div>
           </div>
-        </main>
-      </div>
+        </div>
+      </main>
 
       {/* Session timeout warning dialog */}
       <Dialog open={showWarning} onOpenChange={() => {}}>

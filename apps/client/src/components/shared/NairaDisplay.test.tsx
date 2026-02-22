@@ -8,10 +8,17 @@ describe('NairaDisplay', () => {
     expect(screen.getByText('₦1,840,000.00')).toBeInTheDocument();
   });
 
-  it('renders hero variant with correct classes', () => {
-    render(<NairaDisplay amount="1000" variant="hero" />);
-    const el = screen.getByText('₦1,000.00');
-    expect(el).toHaveClass('text-4xl', 'font-bold', 'font-mono');
+  it('renders hero variant with compact notation and tooltip', () => {
+    render(<NairaDisplay amount="2418350000" variant="hero" />);
+    const el = screen.getByText('₦2.42B');
+    expect(el).toHaveClass('text-2xl', 'font-bold', 'font-mono');
+    expect(el).toHaveAttribute('title', '₦2,418,350,000.00');
+    expect(el).toHaveAttribute('aria-label', '₦2,418,350,000.00');
+  });
+
+  it('renders hero variant for smaller amounts', () => {
+    render(<NairaDisplay amount="48250000" variant="hero" />);
+    expect(screen.getByText('₦48.3M')).toBeInTheDocument();
   });
 
   it('renders table variant with correct classes', () => {

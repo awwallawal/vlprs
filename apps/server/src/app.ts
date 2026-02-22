@@ -16,7 +16,14 @@ app.set('trust proxy', 'loopback');
 
 // Security middleware
 app.use(helmet());
-app.use(cors());
+app.use(
+  cors({
+    origin: process.env.NODE_ENV === 'production'
+      ? process.env.CLIENT_ORIGIN || 'https://vlprs.oyo.gov.ng'
+      : ['http://localhost:5173', 'http://127.0.0.1:5173'],
+    credentials: true,
+  }),
+);
 app.use(cookieParser());
 
 // Body parsing with size limits
