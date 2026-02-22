@@ -14,8 +14,8 @@ import { Label } from '@/components/ui/label';
 
 const ROLE_ROUTES: Record<string, string> = {
   [ROLES.SUPER_ADMIN]: '/dashboard',
-  [ROLES.DEPT_ADMIN]: '/operations',
-  [ROLES.MDA_OFFICER]: '/submissions',
+  [ROLES.DEPT_ADMIN]: '/dashboard/operations',
+  [ROLES.MDA_OFFICER]: '/dashboard/submissions',
 };
 
 export function LoginPage() {

@@ -44,9 +44,7 @@ describe('authStore', () => {
     expect(useAuthStore.getState().accessToken).toBe('outside-react-token');
   });
 
-  it('does not persist state (no persist middleware)', () => {
-    // Verify the store does not have persist middleware by checking
-    // that there is no 'persist' property on the store API
-    expect((useAuthStore as unknown as Record<string, unknown>).persist).toBeUndefined();
+  it('persists state to localStorage via persist middleware', () => {
+    expect((useAuthStore as unknown as Record<string, unknown>).persist).toBeDefined();
   });
 });

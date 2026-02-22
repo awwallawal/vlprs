@@ -4,6 +4,7 @@ import { Info, FileText } from 'lucide-react';
 import { useAuthStore } from '@/stores/authStore';
 import { useSubmissionHistory } from '@/hooks/useSubmissionData';
 import { FileUploadZone } from '@/components/shared/FileUploadZone';
+import { WelcomeGreeting } from '@/components/shared/WelcomeGreeting';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -61,12 +62,15 @@ export function SubmissionsPage() {
 
   return (
     <div className="space-y-8">
-      {/* Page heading */}
-      <div>
-        <h1 className="text-2xl font-bold text-text-primary">Monthly Submissions</h1>
-        <p className="mt-1 text-sm text-text-secondary">
-          You are viewing data for: <span className="font-medium">{mdaName}</span>
-        </p>
+      {/* Welcome greeting + page heading */}
+      <div className="space-y-3">
+        <WelcomeGreeting subtitle="Manage your MDA submissions" />
+        <div>
+          <h1 className="text-2xl font-bold text-text-primary">Monthly Submissions</h1>
+          <p className="mt-1 text-sm text-text-secondary">
+            You are viewing data for: <span className="font-medium">{mdaName}</span>
+          </p>
+        </div>
       </div>
 
       {/* Pre-Submission Checkpoint */}
