@@ -8,7 +8,7 @@ import { loginSchema, VOCABULARY, ROLES } from '@vlprs/shared';
 import type { LoginRequest, LoginResponse } from '@vlprs/shared';
 import { apiClient } from '@/lib/apiClient';
 import { useAuthStore } from '@/stores/authStore';
-import { Button } from '@/components/ui/Button';
+import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 

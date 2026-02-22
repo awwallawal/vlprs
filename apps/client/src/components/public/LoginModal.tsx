@@ -1,6 +1,6 @@
 import { Link } from 'react-router';
 import { LayoutDashboard, User, FileEdit, ArrowRight } from 'lucide-react';
-import { Button } from '@/components/ui/Button';
+import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
   Dialog,

@@ -162,55 +162,77 @@ export const router = createBrowserRouter([
     element: <AuthGuard />,
     children: [
       {
+        path: '/dashboard',
         lazy: DashboardLayoutModule,
         children: [
           {
-            path: '/dashboard',
+            index: true,
             lazy: () =>
               import('@/pages/dashboard/DashboardPage').then((m) => ({
                 Component: m.DashboardPage,
               })),
           },
           {
-            path: '/operations',
+            path: 'mda/:mdaId',
             lazy: () =>
-              import('@/pages/dashboard/OperationsPage').then((m) => ({
-                Component: m.OperationsPage,
+              import('@/pages/dashboard/MdaDetailPage').then((m) => ({
+                Component: m.MdaDetailPage,
               })),
           },
           {
-            path: '/submissions',
+            path: 'mda/:mdaId/loan/:loanId',
+            lazy: () =>
+              import('@/pages/dashboard/LoanDetailPage').then((m) => ({
+                Component: m.LoanDetailPage,
+              })),
+          },
+          {
+            path: 'submissions',
             lazy: () =>
               import('@/pages/dashboard/SubmissionsPage').then((m) => ({
                 Component: m.SubmissionsPage,
               })),
           },
           {
-            path: '/reports',
+            path: 'operations',
             lazy: () =>
-              import('@/pages/dashboard/PlaceholderPage').then((m) => ({
-                Component: m.default,
+              import('@/pages/dashboard/OperationsHubPage').then((m) => ({
+                Component: m.OperationsHubPage,
               })),
           },
           {
-            path: '/exceptions',
+            path: 'migration',
             lazy: () =>
-              import('@/pages/dashboard/PlaceholderPage').then((m) => ({
-                Component: m.default,
+              import('@/pages/dashboard/MigrationPage').then((m) => ({
+                Component: m.MigrationPage,
               })),
           },
           {
-            path: '/migration',
+            path: 'exceptions',
             lazy: () =>
-              import('@/pages/dashboard/PlaceholderPage').then((m) => ({
-                Component: m.default,
+              import('@/pages/dashboard/ExceptionsPage').then((m) => ({
+                Component: m.ExceptionsPage,
               })),
           },
           {
-            path: '/history',
+            path: 'reports',
+            lazy: () =>
+              import('@/pages/dashboard/ReportsPage').then((m) => ({
+                Component: m.ReportsPage,
+              })),
+          },
+          {
+            path: 'admin',
+            lazy: () =>
+              import('@/pages/dashboard/AdminPage').then((m) => ({
+                Component: m.AdminPage,
+              })),
+          },
+          {
+            path: 'placeholder/:feature',
             lazy: () =>
               import('@/pages/dashboard/PlaceholderPage').then((m) => ({
-                Component: m.default,
+                Component: m.PlaceholderPage,
               })),
           },
         ],
