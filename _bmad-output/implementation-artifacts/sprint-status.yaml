@@ -76,9 +76,9 @@ development_status:
 
   # Epic 14: Public Website & Scheme Information (Sprint 2)
   epic-14: in-progress
-  14-1-homepage-navigation-shell: ready-for-dev
-  14-2-scheme-information-pages: ready-for-dev
-  14-3-resources-support-legal-pages: ready-for-dev
+  14-1-homepage-navigation-shell: review
+  14-2-scheme-information-pages: review
+  14-3-resources-support-legal-pages: review
   epic-14-retrospective: optional
 
   # Epic 2: Loan Data Management & Financial Computation

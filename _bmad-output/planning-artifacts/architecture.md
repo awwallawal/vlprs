@@ -22,6 +22,8 @@ project_name: 'vlprs'
 user_name: 'Awwal'
 date: '2026-02-15'
 editHistory:
+  - date: '2026-02-21'
+    changes: 'Asset inventory & leadership roster: Added public/images/ directory structure (branding/ for Oyo crest in SVG/WebP/PNG, team/ for 6 leadership photos with web-friendly slugs). Source images in docs/team_pics/ mapped to target paths. Leadership order reflects organisational hierarchy (AG → Dir Finance & Accounts → Dir Inspectorate → Dir Treasury → Dir Admin & Supplies → Head PFMU). Updated content/about.ts description to reference 6-leader roster with photos.'
   - date: '2026-02-20'
     changes: 'About page, CMS readiness & integration extension points: Added /about route and AboutPage.tsx to public pages. Removed /scheme/ag-office (content absorbed into /about). Updated routing decision and directory structure. Updated FR inventory 81→82 (FR82 = About the Programme). Added src/content/ directory convention for CMS migration readiness (static content files → future Sanity headless CMS). Added Extension Points & Future Integration section: data ingestion abstraction (DeductionRecord[] interface), API consumer readiness (versioning path, API key auth slot), domain isolation convention (infrastructure vs domain services), event emission pattern (loan.completed, submission.processed). Added Sanity CMS to deferred technologies.'
   - date: '2026-02-20'
@@ -831,8 +833,19 @@ vlprs/
 │   │   ├── public/
 │   │   │   ├── manifest.json             # PWA manifest
 │   │   │   ├── sw.js                     # Service worker (basic PWA installability)
-│   │   │   ├── oyo-crest.svg             # Oyo State crest for branding
-│   │   │   └── favicon.ico
+│   │   │   ├── favicon.ico
+│   │   │   └── images/
+│   │   │       ├── branding/
+│   │   │       │   ├── oyo-crest.svg     # Oyo State crest (vector — nav, footer, fallback)
+│   │   │       │   ├── oyo-crest.webp    # Oyo State crest (raster — hero, OG image)
+│   │   │       │   └── oyo-crest.png     # Oyo State crest (PNG fallback)
+│   │   │       └── team/
+│   │   │           ├── adegoke-ka.jpeg   # AG: Mrs. K. A. Adegoke (FCA)
+│   │   │           ├── kilanko-oo.jpeg   # Dir Finance & Accounts: Mr. O. O. Kilanko
+│   │   │           ├── adewole-ra.jpeg   # Dir Inspectorate & Mgmt Services: Mr. R. A. Adewole
+│   │   │           ├── adebayo-tg.jpeg   # Dir Treasury: Mr. T. G. Adebayo
+│   │   │           ├── adebiyi-ao.jpeg   # Dir Admin & Supplies: Mrs. A. O. Adebiyi
+│   │   │           └── fadipe-cf.jpeg    # Head PFMU: Mrs. C. F. Fadipe
 │   │   └── src/
 │   │       ├── main.tsx                  # React entry: providers, router mount
 │   │       ├── App.tsx                   # Root component: router outlet
@@ -1431,7 +1444,7 @@ Public page content that may need non-developer editing is extracted to `src/con
 ```
 apps/client/src/
 ├── content/                    # Static content — future CMS migration target
-│   ├── about.ts               # Mission, vision, values, leadership, governance
+│   ├── about.ts               # Mission, vision, values, leadership roster (6 leaders w/ photos), governance
 │   ├── news.ts                # Announcements (title, date, body, slug)
 │   ├── faq.ts                 # Questions grouped by audience category
 │   ├── downloads.ts           # Document list (name, format, url, status)
