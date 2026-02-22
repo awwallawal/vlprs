@@ -51,6 +51,12 @@
   --color-green-50: #F0FDF4;
 
   /* shadcn semantic tokens */
+  --color-primary: #9C1E23;
+  --color-primary-foreground: #FFFFFF;
+  --color-secondary: #F1F5F9;
+  --color-secondary-foreground: #1E293B;
+  --color-destructive: #DC2626;
+  --color-destructive-foreground: #FFFFFF;
   --color-foreground: #1E293B;
   --color-popover: #FFFFFF;
   --color-popover-foreground: #1E293B;
@@ -58,6 +64,8 @@
   --color-accent-foreground: #1E293B;
   --color-muted: #F1F5F9;
   --color-muted-foreground: #64748B;
+  --color-input: #E2E8F0;
+  --color-ring: #9C1E23;
 
   /* Extended crimson palette */
   --color-crimson-900: #6B1518;
