@@ -1,4 +1,4 @@
-import { Button } from '@/components/ui/Button';
+import { Button } from '@/components/ui/button';
 import { BreadcrumbNav } from '@/components/public/BreadcrumbNav';
 import { ContentPageHeader } from '@/components/public/ContentPageHeader';
 import { CtaBanner } from '@/components/public/CtaBanner';

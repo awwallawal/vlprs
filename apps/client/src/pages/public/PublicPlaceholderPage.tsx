@@ -1,7 +1,7 @@
 import { useLocation } from 'react-router';
 import { Link } from 'react-router';
 import { Construction } from 'lucide-react';
-import { Button } from '@/components/ui/Button';
+import { Button } from '@/components/ui/button';
 import { BreadcrumbNav } from '@/components/public/BreadcrumbNav';
 
 const ROUTE_STORIES: Record<string, string> = {
