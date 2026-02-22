@@ -32,11 +32,45 @@
   /* Focus */
   --color-focus-ring: #0D7377;
 
+  /* Non-punitive semantic tokens */
+  --color-variance-bg: #F1F5F9;
+  --color-variance-icon: #0D7377;
+  --color-attention-bg: #FDF8E8;
+  --color-attention-text: #92400E;
+
+  /* Status colours (non-punitive) */
+  --color-status-active: #0D7377;
+  --color-status-complete: #16A34A;
+  --color-status-pending: #6B7280;
+  --color-status-review: #D4A017;
+  --color-status-overdue: #D4A017;
+
+  /* Extended palette */
+  --color-green-50: #F0FDF4;
+
   /* Typography */
-  --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+  --font-sans: "Inter Variable", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-mono: "JetBrains Mono Variable", "JetBrains Mono", ui-monospace, monospace;
 
   /* Spacing */
   --radius-card: 8px;
   --radius-button: 6px;
+}
+
+/* Touch target sizing (NFR-ACCESS-4: 44x44px min) */
+@media (pointer: coarse) {
+  button,
+  [role="button"],
+  [role="link"] {
+    min-height: 48px;
+    min-width: 48px;
+  }
+}
+
+@media (pointer: fine) {
+  button,
+  [role="button"],
+  [role="link"] {
+    min-height: 40px;
+  }
 }

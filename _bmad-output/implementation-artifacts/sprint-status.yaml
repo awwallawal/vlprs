@@ -67,8 +67,8 @@ development_status:
   1-4-role-based-access-control: done
   1-5-audit-logging-action-tracking: done
   1-6-frontend-authentication-shell: done
-  1-7-cicd-pipeline-production-infrastructure: in-progress
-  1-8a-design-foundation-components-mock-data-layer: ready-for-dev
+  1-7-cicd-pipeline-production-infrastructure: done
+  1-8a-design-foundation-components-mock-data-layer: done
   1-8b-role-specific-screens-demo-seed-wiring-map: ready-for-dev
   1-9a-user-account-lifecycle-api-email-invitation: ready-for-dev
   1-9b-user-administration-interface-profile-first-login: ready-for-dev

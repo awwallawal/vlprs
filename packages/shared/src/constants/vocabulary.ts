@@ -29,3 +29,14 @@ export const VOCABULARY = {
   // Rate Limiting
   RATE_LIMIT_EXCEEDED: 'Too many requests. Please wait before trying again.',
 } as const;
+
+export const UI_COPY = {
+  UPLOAD_ERROR_HEADER: 'Upload needs attention',
+  UPLOAD_SUCCESS_HEADER: 'Upload Complete',
+  COMPARISON_COMPLETE: 'Comparison Complete',
+  VARIANCE_LABEL: 'Variance',
+  ATTENTION_LABEL: 'Review',
+  EMPTY_ATTENTION: 'No attention items — all systems normal',
+  EMPTY_EXCEPTIONS: 'No exceptions — all issues resolved',
+  EMPTY_MIGRATION: 'No MDAs in migration pipeline',
+} as const;
