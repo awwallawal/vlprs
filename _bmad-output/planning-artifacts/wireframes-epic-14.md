@@ -3,7 +3,15 @@ title: 'Epic 14 — Public Website Wireframes & Implementation Guide'
 epic: 14
 stories: [14.1, 14.2, 14.3]
 status: approved
-date: '2026-02-20'
+date: '2026-02-21'
+lastEdited: '2026-02-21'
+editHistory:
+  - date: '2026-02-21'
+    changes: 'Asset inventory & actual leadership roster: Replaced placeholder names/photos with actual AG Office leadership (6 officers from docs/team_pics/). Added Section 10 — Asset Inventory with source→target file mapping, image optimisation requirements (240x240 retina team photos, SVG/WebP/PNG crest variants), naming convention, and usage matrix. Updated About page wireframe with all 6 leadership cards showing real names, full office titles, institutional role descriptions, and photo slugs. Added card ordering note (hierarchy = display order, do not re-sort). Updated leadership card component notes with full-title requirement and personnel rotation guidance.'
+  - date: '2026-02-20'
+    changes: 'About page wireframe: Added About the Programme page replacing AG Office page. Updated PublicNavBar (About as top-level item, AG Office removed from The Scheme dropdown). Updated footer. Added leadership card wireframe with role-title-prominent design.'
+  - date: '2026-02-20'
+    changes: 'Initial creation: ASCII wireframes for all 20 public pages, 4 page templates, 8 shared components, SEO meta tags, responsive annotations, build order.'
 ---
 
 # Epic 14 — Public Website Wireframes & Implementation Guide
@@ -1111,14 +1119,14 @@ Breadcrumb: Home > About the Programme
 │  │  Programme Leadership  (H2)  │  │                          │   │
 │  │                              │  │                          │   │
 │  │  ┌────────────────────────┐ │  │                          │   │
-│  │  │  ┌──────┐              │ │  │                          │   │
-│  │  │  │Photo │ Accountant-  │ │  │                          │   │
-│  │  │  │ or   │ General      │ │  │                          │   │
-│  │  │  │Crest │  ↑ H3, bold  │ │  │                          │   │
-│  │  │  │      │              │ │  │                          │   │
-│  │  │  └──────┘ Mr. F. Last  │ │  │                          │   │
-│  │  │           ↑ text-lg    │ │  │                          │   │
-│  │  │                        │ │  │                          │   │
+│  │  │  ┌──────┐ Accountant-  │ │  │                          │   │
+│  │  │  │ Photo│ General      │ │  │                          │   │
+│  │  │  │adego-│  ↑ H3, bold  │ │  │                          │   │
+│  │  │  │ke-ka │              │ │  │                          │   │
+│  │  │  └──────┘ Mrs. K. A.   │ │  │                          │   │
+│  │  │    80x80  Adegoke (FCA)│ │  │                          │   │
+│  │  │  rounded  ↑ text-lg    │ │  │                          │   │
+│  │  │  -full                 │ │  │                          │   │
 │  │  │  Provides strategic    │ │  │                          │   │
 │  │  │  oversight of the      │ │  │                          │   │
 │  │  │  Vehicle Loan Scheme   │ │  │                          │   │
@@ -1130,28 +1138,79 @@ Breadcrumb: Home > About the Programme
 │  │  └────────────────────────┘ │  │                          │   │
 │  │                              │  │                          │   │
 │  │  ┌────────────────────────┐ │  │                          │   │
-│  │  │  ┌──────┐              │ │  │                          │   │
-│  │  │  │Photo │ Deputy       │ │  │                          │   │
-│  │  │  │ or   │ Accountant-  │ │  │                          │   │
-│  │  │  │Crest │ General      │ │  │                          │   │
-│  │  │  └──────┘ Mrs. F. Last │ │  │                          │   │
-│  │  │  [role description]    │ │  │                          │   │
+│  │  │  ┌──────┐ Director,    │ │  │                          │   │
+│  │  │  │ Photo│ Finance and  │ │  │                          │   │
+│  │  │  │kilan-│ Accounts     │ │  │                          │   │
+│  │  │  │ko-oo │  ↑ H3, bold  │ │  │                          │   │
+│  │  │  └──────┘ Mr. O. O.    │ │  │                          │   │
+│  │  │           Kilanko      │ │  │                          │   │
+│  │  │  Oversees the finan-   │ │  │                          │   │
+│  │  │  cial operations of    │ │  │                          │   │
+│  │  │  the AG's Office and   │ │  │                          │   │
+│  │  │  the programme's       │ │  │                          │   │
+│  │  │  fiscal management.    │ │  │                          │   │
 │  │  └────────────────────────┘ │  │                          │   │
 │  │                              │  │                          │   │
 │  │  ┌────────────────────────┐ │  │                          │   │
-│  │  │  ┌──────┐              │ │  │                          │   │
-│  │  │  │Photo │ Director,    │ │  │                          │   │
-│  │  │  │ or   │ Car Loan     │ │  │                          │   │
-│  │  │  │Crest │ Department   │ │  │                          │   │
-│  │  │  └──────┘ Mr. F. Last  │ │  │                          │   │
-│  │  │  [role description]    │ │  │                          │   │
+│  │  │  ┌──────┐ Director,    │ │  │                          │   │
+│  │  │  │ Photo│ Inspectorate │ │  │                          │   │
+│  │  │  │adewo-│ and Manage-  │ │  │                          │   │
+│  │  │  │le-ra │ ment Service │ │  │                          │   │
+│  │  │  └──────┘ Mr. R. A.    │ │  │                          │   │
+│  │  │           Adewole      │ │  │                          │   │
+│  │  │  Responsible for       │ │  │                          │   │
+│  │  │  inspectorate over-    │ │  │                          │   │
+│  │  │  sight and management  │ │  │                          │   │
+│  │  │  service delivery.     │ │  │                          │   │
+│  │  └────────────────────────┘ │  │                          │   │
+│  │                              │  │                          │   │
+│  │  ┌────────────────────────┐ │  │                          │   │
+│  │  │  ┌──────┐ Director,    │ │  │                          │   │
+│  │  │  │ Photo│ Treasury     │ │  │                          │   │
+│  │  │  │ adeb-│  ↑ H3, bold  │ │  │                          │   │
+│  │  │  │ayo-tg│              │ │  │                          │   │
+│  │  │  └──────┘ Mr. T. G.    │ │  │                          │   │
+│  │  │           Adebayo      │ │  │                          │   │
+│  │  │  Manages treasury      │ │  │                          │   │
+│  │  │  operations and fund   │ │  │                          │   │
+│  │  │  disbursement for the  │ │  │                          │   │
+│  │  │  loan programme.       │ │  │                          │   │
+│  │  └────────────────────────┘ │  │                          │   │
+│  │                              │  │                          │   │
+│  │  ┌────────────────────────┐ │  │                          │   │
+│  │  │  ┌──────┐ Director,    │ │  │                          │   │
+│  │  │  │ Photo│ Administra-  │ │  │                          │   │
+│  │  │  │ adeb-│ tion and     │ │  │                          │   │
+│  │  │  │iyi-ao│ Supplies     │ │  │                          │   │
+│  │  │  └──────┘ Mrs. A. O.   │ │  │                          │   │
+│  │  │           Adebiyi      │ │  │                          │   │
+│  │  │  Oversees administra-  │ │  │                          │   │
+│  │  │  tive operations and   │ │  │                          │   │
+│  │  │  supply chain manage-  │ │  │                          │   │
+│  │  │  ment within the AG's  │ │  │                          │   │
+│  │  │  Office.               │ │  │                          │   │
+│  │  └────────────────────────┘ │  │                          │   │
+│  │                              │  │                          │   │
+│  │  ┌────────────────────────┐ │  │                          │   │
+│  │  │  ┌──────┐ Head, Project│ │  │                          │   │
+│  │  │  │ Photo│ Financial    │ │  │                          │   │
+│  │  │  │fadip-│ Management   │ │  │                          │   │
+│  │  │  │e-cf  │ Unit (PFMU)  │ │  │                          │   │
+│  │  │  └──────┘ Mrs. C. F.   │ │  │                          │   │
+│  │  │           Fadipe       │ │  │                          │   │
+│  │  │  Leads project finan-  │ │  │                          │   │
+│  │  │  cial management,      │ │  │                          │   │
+│  │  │  reporting, and donor  │ │  │                          │   │
+│  │  │  fund coordination.    │ │  │                          │   │
 │  │  └────────────────────────┘ │  │                          │   │
 │  │                              │  │                          │   │
 │  │  Component: Card per leader │  │                          │   │
 │  │  Photo: 80x80 rounded-full │  │                          │   │
-│  │  or Oyo crest as fallback   │  │                          │   │
+│  │  Oyo crest as fallback      │  │                          │   │
 │  │  Layout: flex row (desktop) │  │                          │   │
 │  │  stacks on mobile           │  │                          │   │
+│  │  Order = visual hierarchy   │  │                          │   │
+│  │  (do not re-sort)           │  │                          │   │
 │  │                              │  │                          │   │
 │  │  ════════════════════════   │  │                          │   │
 │  │                              │  │                          │   │
@@ -1188,12 +1247,24 @@ Breadcrumb: Home > About the Programme
 ```
 
 **Leadership card component notes:**
-- Role title (H3, `font-semibold`) — permanent, institutional
+- Role title (H3, `font-semibold`) — permanent, institutional. Use full office title (e.g. "Director, Finance and Accounts" not just "Director")
 - Name (`text-lg`) — swappable when personnel rotate
 - Role description (`text-slate-600`) — permanent, institutional
-- Photo: 80x80px `rounded-full` with Oyo State crest as fallback
+- Photo: 80x80px `rounded-full` from `images/team/{slug}.jpeg`. Oyo State crest as fallback if image fails to load
 - Card: `flex flex-row items-start gap-4` (desktop), stacks on mobile
-- **CMS migration note:** Leadership data is a prime candidate for `src/content/leadership.ts` extraction → future Sanity migration
+- **Card order is deliberate** — reflects organisational hierarchy. Do not alphabetise or re-sort
+- **CMS migration note:** Leadership data extracted to `src/content/about.ts` → future Sanity migration. Name/photo are the only fields that change on personnel rotation
+
+**Leadership roster (6 cards, in display order):**
+
+| # | Image Source | Image Target | Role Title | Name |
+|---|---|---|---|---|
+| 1 | `docs/team_pics/Mrs. K. A. Adegoke (FCA) - Accountant General.jpeg` | `images/team/adegoke-ka.jpeg` | Accountant-General | Mrs. K. A. Adegoke (FCA) |
+| 2 | `docs/team_pics/Mr. O. O. Kilanko - Director, Finance and Accounts.jpeg` | `images/team/kilanko-oo.jpeg` | Director, Finance and Accounts | Mr. O. O. Kilanko |
+| 3 | `docs/team_pics/Mr. R. A. Adewole - Director, Inspectorate  and Management Service.jpeg` | `images/team/adewole-ra.jpeg` | Director, Inspectorate and Management Service | Mr. R. A. Adewole |
+| 4 | `docs/team_pics/Mr. T. G. Adebayo - Director, Treasury.jpeg` | `images/team/adebayo-tg.jpeg` | Director, Treasury | Mr. T. G. Adebayo |
+| 5 | `docs/team_pics/Mrs. A. O. Adebiyi - Director, Administration and Supplies.jpeg` | `images/team/adebiyi-ao.jpeg` | Director, Administration and Supplies | Mrs. A. O. Adebiyi |
+| 6 | `docs/team_pics/Mrs. C. F. Fadipe - Head, Project Financial Management Unit.jpeg` | `images/team/fadipe-cf.jpeg` | Head, Project Financial Management Unit (PFMU) | Mrs. C. F. Fadipe |
 
 ---
 
@@ -1811,3 +1882,65 @@ Use `react-helmet-async` or React Router's `<Meta>` for SPA meta tag management.
 | Disclaimer | Programme Disclaimer — Vehicle Loan Scheme | Important information about the scope and limitations of this portal. |
 | Accessibility | Accessibility Statement — Vehicle Loan Scheme | WCAG 2.1 AA compliance commitment and accessibility features. |
 | EOI | Expression of Interest — Vehicle Loan Scheme | Digital Expression of Interest registration — coming in Phase 2. |
+
+---
+
+## 10. Asset Inventory & Image Preparation
+
+> Source files are in `docs/team_pics/`. During Story 14.1 (or the first Epic 14 story that touches images), copy, rename, and optimise into the target directory. This section is the single source of truth for asset mapping.
+
+### Target Directory Structure
+
+```
+apps/client/public/images/
+├── branding/
+│   ├── oyo-crest.svg          # Vector — navbar, footer, leadership fallback (convert from source)
+│   ├── oyo-crest.webp         # Raster — hero section, OG social image (source: oyo_logo.webp)
+│   └── oyo-crest.png          # PNG fallback — PDF exports, email templates (source: oyo_logo_png.png)
+└── team/
+    ├── adegoke-ka.jpeg        # AG: Mrs. K. A. Adegoke (FCA)
+    ├── kilanko-oo.jpeg        # Dir, Finance & Accounts: Mr. O. O. Kilanko
+    ├── adewole-ra.jpeg        # Dir, Inspectorate & Mgmt Service: Mr. R. A. Adewole
+    ├── adebayo-tg.jpeg        # Dir, Treasury: Mr. T. G. Adebayo
+    ├── adebiyi-ao.jpeg        # Dir, Admin & Supplies: Mrs. A. O. Adebiyi
+    └── fadipe-cf.jpeg         # Head, PFMU: Mrs. C. F. Fadipe
+```
+
+### Source → Target Mapping
+
+| Source File (`docs/team_pics/`) | Target File (`public/images/`) | Used On |
+|---|---|---|
+| `oyo_logo.webp` | `branding/oyo-crest.webp` | Homepage hero, OG social image |
+| `oyo_logo_png.png` | `branding/oyo-crest.png` | PDF exports, email templates, PNG fallback |
+| *(convert from PNG or source SVG)* | `branding/oyo-crest.svg` | PublicNavBar, PublicFooter, leadership photo fallback |
+| `Mrs. K. A. Adegoke (FCA) - Accountant General.jpeg` | `team/adegoke-ka.jpeg` | About page — leadership card #1 |
+| `Mr. O. O. Kilanko - Director, Finance and Accounts.jpeg` | `team/kilanko-oo.jpeg` | About page — leadership card #2 |
+| `Mr. R. A. Adewole - Director, Inspectorate  and Management Service.jpeg` | `team/adewole-ra.jpeg` | About page — leadership card #3 |
+| `Mr. T. G. Adebayo - Director, Treasury.jpeg` | `team/adebayo-tg.jpeg` | About page — leadership card #4 |
+| `Mrs. A. O. Adebiyi - Director, Administration and Supplies.jpeg` | `team/adebiyi-ao.jpeg` | About page — leadership card #5 |
+| `Mrs. C. F. Fadipe - Head, Project Financial Management Unit.jpeg` | `team/fadipe-cf.jpeg` | About page — leadership card #6 |
+
+### Image Optimisation Requirements
+
+| Category | Max Dimensions | Format | Quality | Notes |
+|---|---|---|---|---|
+| Team photos | 240x240px | JPEG | 80% | Crop to square, centre on face. Displayed at 80x80 CSS but serve 3x for retina |
+| Oyo crest (raster) | 400x400px | WebP + PNG | 85% | Hero section uses larger; nav/footer use via CSS `background-size` |
+| Oyo crest (vector) | n/a | SVG | n/a | Preferred for nav/footer — scales perfectly, smallest file size |
+
+### Naming Convention
+
+Pattern: `{surname-lowercase}-{initials-lowercase}.jpeg`
+
+Examples: `adegoke-ka.jpeg`, `kilanko-oo.jpeg`
+
+This convention survives personnel changes — when a new AG is appointed, add `newsurname-xy.jpeg` and update `src/content/about.ts`. No component changes needed.
+
+### Where Each Asset Appears
+
+| Asset | PublicNavBar | Homepage Hero | About Page | PublicFooter | PDF Export | OG Image |
+|---|---|---|---|---|---|---|
+| `oyo-crest.svg` | Logo (left) | — | Fallback | Logo | — | — |
+| `oyo-crest.webp` | — | Background/accent | — | — | — | `og:image` |
+| `oyo-crest.png` | — | — | — | — | Header crest | Fallback |
+| `team/*.jpeg` | — | — | Leadership cards | — | — | — |

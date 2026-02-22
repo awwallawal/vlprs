@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useNavigate } from 'react-router';
+import { Link, useNavigate } from 'react-router';
 import { useGoogleReCaptcha } from 'react-google-recaptcha-v3';
+import { ArrowLeft } from 'lucide-react';
 import { loginSchema, VOCABULARY, ROLES } from '@vlprs/shared';
 import type { LoginRequest, LoginResponse } from '@vlprs/shared';
 import { apiClient } from '@/lib/apiClient';
@@ -10,7 +11,6 @@ import { useAuthStore } from '@/stores/authStore';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
 
 const ROLE_ROUTES: Record<string, string> = {
   [ROLES.SUPER_ADMIN]: '/dashboard',
@@ -68,96 +68,126 @@ export function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-surface px-4">
-      <Card className="w-full max-w-[640px]">
-        <CardHeader className="items-center space-y-4 pb-2">
-          <img
-            src="/oyo-crest.svg"
-            alt="Oyo State Government Crest"
-            className="h-16 w-16"
-            onError={(e) => {
-              (e.target as HTMLImageElement).style.display = 'none';
-            }}
-          />
-          <div className="text-center">
-            <h1 className="text-2xl font-bold text-text-primary">VLPRS</h1>
-            <p className="text-sm text-text-secondary">
-              Vehicle Loan Processing & Receivables System
+    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-gradient-to-b from-crimson-25 to-white px-4 py-12">
+      {/* Decorative blobs */}
+      <div className="absolute top-0 left-1/4 w-96 h-96 bg-crimson-50 rounded-full blur-3xl opacity-60 -translate-y-1/2" />
+      <div className="absolute bottom-0 right-1/4 w-80 h-80 bg-crimson-50 rounded-full blur-3xl opacity-40 translate-y-1/2" />
+
+      <div className="relative w-full max-w-md">
+        {/* Back link */}
+        <Link
+          to="/"
+          className="inline-flex items-center gap-1 text-sm text-slate-500 hover:text-crimson transition-colors mb-6"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Back to homepage
+        </Link>
+
+        {/* Login card */}
+        <div className="rounded-2xl border border-slate-200 bg-white shadow-md overflow-hidden">
+          {/* Crimson top bar */}
+          <div className="h-2 bg-gradient-to-r from-crimson to-crimson-dark" />
+
+          {/* Card header */}
+          <div className="pt-8 pb-4 px-8 text-center">
+            <img
+              src="/oyo-crest.png"
+              alt="Oyo State Government Crest"
+              className="h-16 w-16 mx-auto mb-4"
+              onError={(e) => {
+                (e.target as HTMLImageElement).style.display = 'none';
+              }}
+            />
+            <h1 className="text-2xl font-brand font-bold text-slate-900">
+              Vehicle Loan Scheme
+            </h1>
+            <p className="text-sm text-slate-500 mt-1">
+              Staff Portal Login
             </p>
           </div>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
-            <div className="space-y-2">
-              <Label htmlFor="email" className="text-base">
-                Email Address
-              </Label>
-              <Input
-                id="email"
-                type="email"
-                autoComplete="email"
-                className="text-base focus-visible:ring-2 focus-visible:ring-teal"
-                {...register('email')}
-                aria-describedby={errors.email ? 'email-error' : undefined}
-                aria-invalid={!!errors.email}
-              />
-              {errors.email && (
-                <p
-                  id="email-error"
-                  className="text-sm text-gold-dark"
-                  role="alert"
-                  aria-live="polite"
-                >
-                  {errors.email.message}
-                </p>
-              )}
-            </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="password" className="text-base">
-                Password
-              </Label>
-              <Input
-                id="password"
-                type="password"
-                autoComplete="current-password"
-                className="text-base focus-visible:ring-2 focus-visible:ring-teal"
-                {...register('password')}
-                aria-describedby={errors.password ? 'password-error' : undefined}
-                aria-invalid={!!errors.password}
-              />
-              {errors.password && (
-                <p
-                  id="password-error"
-                  className="text-sm text-gold-dark"
-                  role="alert"
-                  aria-live="polite"
-                >
-                  {errors.password.message}
-                </p>
-              )}
-            </div>
+          {/* Form */}
+          <div className="px-8 pb-8">
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-5" noValidate>
+              <div className="space-y-2">
+                <Label htmlFor="email" className="text-sm font-medium text-slate-700">
+                  Email Address
+                </Label>
+                <Input
+                  id="email"
+                  type="email"
+                  autoComplete="email"
+                  placeholder="you@oyo.gov.ng"
+                  className="text-base h-11 focus-visible:ring-2 focus-visible:ring-teal"
+                  {...register('email')}
+                  aria-describedby={errors.email ? 'email-error' : undefined}
+                  aria-invalid={!!errors.email}
+                />
+                {errors.email && (
+                  <p
+                    id="email-error"
+                    className="text-sm text-gold-dark"
+                    role="alert"
+                    aria-live="polite"
+                  >
+                    {errors.email.message}
+                  </p>
+                )}
+              </div>
 
-            {serverError && (
-              <p
-                className="text-sm text-gold-dark text-center"
-                role="alert"
-                aria-live="polite"
+              <div className="space-y-2">
+                <Label htmlFor="password" className="text-sm font-medium text-slate-700">
+                  Password
+                </Label>
+                <Input
+                  id="password"
+                  type="password"
+                  autoComplete="current-password"
+                  className="text-base h-11 focus-visible:ring-2 focus-visible:ring-teal"
+                  {...register('password')}
+                  aria-describedby={errors.password ? 'password-error' : undefined}
+                  aria-invalid={!!errors.password}
+                />
+                {errors.password && (
+                  <p
+                    id="password-error"
+                    className="text-sm text-gold-dark"
+                    role="alert"
+                    aria-live="polite"
+                  >
+                    {errors.password.message}
+                  </p>
+                )}
+              </div>
+
+              {serverError && (
+                <div className="rounded-lg bg-crimson-50 border border-crimson-300 px-4 py-3">
+                  <p
+                    className="text-sm text-crimson-dark text-center"
+                    role="alert"
+                    aria-live="polite"
+                  >
+                    {serverError}
+                  </p>
+                </div>
+              )}
+
+              <Button
+                type="submit"
+                className="w-full h-12 text-base min-h-[44px]"
+                disabled={isSubmitting}
               >
-                {serverError}
-              </p>
-            )}
+                {isSubmitting ? 'Logging in...' : 'Login'}
+              </Button>
+            </form>
 
-            <Button
-              type="submit"
-              className="w-full h-12 text-base min-h-[44px]"
-              disabled={isSubmitting}
-            >
-              {isSubmitting ? 'Logging in...' : 'Login'}
-            </Button>
-          </form>
-        </CardContent>
-      </Card>
+            <p className="text-xs text-slate-400 text-center mt-6">
+              Access is restricted to authorised personnel only.
+              Contact the Car Loan Department for account enquiries.
+            </p>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

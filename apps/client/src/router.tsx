@@ -27,6 +27,134 @@ export const router = createBrowserRouter([
             Component: m.LoginPage,
           })),
       },
+      // Story 14.2 — Scheme information pages
+      {
+        path: '/about',
+        lazy: () =>
+          import('@/pages/public/AboutPage').then((m) => ({
+            Component: m.AboutPage,
+          })),
+      },
+      {
+        path: '/scheme',
+        lazy: () =>
+          import('@/pages/public/scheme/ProgrammeOverviewPage').then((m) => ({
+            Component: m.ProgrammeOverviewPage,
+          })),
+      },
+      {
+        path: '/scheme/overview',
+        lazy: () =>
+          import('@/pages/public/scheme/ProgrammeOverviewPage').then((m) => ({
+            Component: m.ProgrammeOverviewPage,
+          })),
+      },
+      {
+        path: '/scheme/about-vlprs',
+        lazy: () =>
+          import('@/pages/public/scheme/AboutVlprsPage').then((m) => ({
+            Component: m.AboutVlprsPage,
+          })),
+      },
+      {
+        path: '/scheme/eligibility',
+        lazy: () =>
+          import('@/pages/public/scheme/EligibilityPage').then((m) => ({
+            Component: m.EligibilityPage,
+          })),
+      },
+      {
+        path: '/scheme/repayment',
+        lazy: () =>
+          import('@/pages/public/scheme/RepaymentRulesPage').then((m) => ({
+            Component: m.RepaymentRulesPage,
+          })),
+      },
+      {
+        path: '/how-it-works',
+        lazy: () =>
+          import('@/pages/public/HowItWorksPage').then((m) => ({
+            Component: m.HowItWorksPage,
+          })),
+      },
+      // Story 14.3 — Resources, support & legal pages
+      {
+        path: '/resources/faq',
+        lazy: () =>
+          import('@/pages/public/resources/FaqPage').then((m) => ({
+            Component: m.FaqPage,
+          })),
+      },
+      {
+        path: '/resources/submission-guide',
+        lazy: () =>
+          import('@/pages/public/resources/MdaGuidePage').then((m) => ({
+            Component: m.MdaGuidePage,
+          })),
+      },
+      {
+        path: '/resources/downloads',
+        lazy: () =>
+          import('@/pages/public/resources/DownloadsPage').then((m) => ({
+            Component: m.DownloadsPage,
+          })),
+      },
+      {
+        path: '/resources/news',
+        lazy: () =>
+          import('@/pages/public/resources/NewsPage').then((m) => ({
+            Component: m.NewsPage,
+          })),
+      },
+      {
+        path: '/resources/news/:slug',
+        lazy: () =>
+          import('@/pages/public/resources/NewsDetailPage').then((m) => ({
+            Component: m.NewsDetailPage,
+          })),
+      },
+      {
+        path: '/resources/beneficiary-lists',
+        lazy: () =>
+          import('@/pages/public/resources/BeneficiaryListsPage').then((m) => ({
+            Component: m.BeneficiaryListsPage,
+          })),
+      },
+      {
+        path: '/support',
+        lazy: () =>
+          import('@/pages/public/SupportPage').then((m) => ({
+            Component: m.SupportPage,
+          })),
+      },
+      {
+        path: '/privacy',
+        lazy: () =>
+          import('@/pages/public/legal/PrivacyPage').then((m) => ({
+            Component: m.PrivacyPage,
+          })),
+      },
+      {
+        path: '/accessibility',
+        lazy: () =>
+          import('@/pages/public/legal/AccessibilityPage').then((m) => ({
+            Component: m.AccessibilityPage,
+          })),
+      },
+      {
+        path: '/disclaimer',
+        lazy: () =>
+          import('@/pages/public/legal/DisclaimerPage').then((m) => ({
+            Component: m.DisclaimerPage,
+          })),
+      },
+      {
+        path: '/eoi',
+        lazy: () =>
+          import('@/pages/public/EoiPage').then((m) => ({
+            Component: m.EoiPage,
+          })),
+      },
     ],
   },
   // Protected routes
@@ -89,6 +217,6 @@ export const router = createBrowserRouter([
       },
     ],
   },
-  // Catch-all → login
-  { path: '*', element: <Navigate to="/login" replace /> },
+  // Catch-all → homepage
+  { path: '*', element: <Navigate to="/" replace /> },
 ]);

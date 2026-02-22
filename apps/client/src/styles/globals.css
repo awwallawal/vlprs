@@ -48,8 +48,23 @@
   /* Extended palette */
   --color-green-50: #F0FDF4;
 
+  /* shadcn semantic tokens */
+  --color-foreground: #1E293B;
+  --color-popover: #FFFFFF;
+  --color-popover-foreground: #1E293B;
+  --color-accent: #F1F5F9;
+  --color-accent-foreground: #1E293B;
+  --color-muted: #F1F5F9;
+  --color-muted-foreground: #64748B;
+
+  /* Extended crimson palette */
+  --color-crimson-900: #6B1518;
+  --color-crimson-300: #E85D61;
+  --color-crimson-25: #FEF6F6;
+
   /* Typography */
   --font-sans: "Inter Variable", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-brand: "Poppins", "Inter Variable", "Inter", sans-serif;
   --font-mono: "JetBrains Mono Variable", "JetBrains Mono", ui-monospace, monospace;
 
   /* Spacing */
@@ -58,10 +73,11 @@
 }
 
 /* Touch target sizing (NFR-ACCESS-4: 44x44px min) */
+/* Exclude aria-disabled elements — they aren't interactive */
 @media (pointer: coarse) {
   button,
   [role="button"],
-  [role="link"] {
+  [role="link"]:not([aria-disabled="true"]) {
     min-height: 48px;
     min-width: 48px;
   }
@@ -70,7 +86,7 @@
 @media (pointer: fine) {
   button,
   [role="button"],
-  [role="link"] {
+  [role="link"]:not([aria-disabled="true"]) {
     min-height: 40px;
   }
 }
