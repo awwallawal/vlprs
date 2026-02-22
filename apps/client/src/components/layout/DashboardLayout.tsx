@@ -32,6 +32,7 @@ import { useAuthStore } from '@/stores/authStore';
 import { apiClient } from '@/lib/apiClient';
 import { useSessionTimeout } from '@/hooks/useSessionTimeout';
 import { NAV_ITEMS, ROLE_LABELS, ROLE_HOME_ROUTES } from './navItems';
+import { ScrollToTop } from './ScrollToTop';
 import { Breadcrumb } from './Breadcrumb';
 import { BuildStatus } from '@/components/shared/BuildStatus';
 import { cn } from '@/lib/utils';
@@ -121,6 +122,7 @@ export function DashboardLayout() {
 
   return (
     <SidebarProvider>
+      <ScrollToTop />
       {/* Skip to main content link */}
       <a
         href="#main-content"
