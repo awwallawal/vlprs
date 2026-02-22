@@ -5,6 +5,7 @@ import { useMigrationStatus } from '@/hooks/useMigrationData';
 import { useLoanSearch } from '@/hooks/useLoanData';
 import { useExceptionQueue } from '@/hooks/useExceptionData';
 import { MigrationProgressCard } from '@/components/shared/MigrationProgressCard';
+import { WelcomeGreeting } from '@/components/shared/WelcomeGreeting';
 import { ExceptionQueueRow, ExceptionEmptyState } from '@/components/shared/ExceptionQueueRow';
 import { NairaDisplay } from '@/components/shared/NairaDisplay';
 import { Button } from '@/components/ui/button';
@@ -52,7 +53,8 @@ export function OperationsHubPage() {
 
   return (
     <div className="space-y-10">
-      {/* Page heading */}
+      {/* Welcome greeting + page heading */}
+      <WelcomeGreeting subtitle="Here's your operations overview" />
       <h1 className="text-2xl font-bold text-text-primary">Operations Hub</h1>
 
       {/* Migration Dashboard */}

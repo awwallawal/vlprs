@@ -6,6 +6,7 @@ import { useDashboardMetrics } from '@/hooks/useDashboardData';
 import { useMdaComplianceGrid } from '@/hooks/useMdaData';
 import { useAttentionItems } from '@/hooks/useAttentionItems';
 import { HeroMetricCard } from '@/components/shared/HeroMetricCard';
+import { WelcomeGreeting } from '@/components/shared/WelcomeGreeting';
 import { AttentionItemCard, AttentionEmptyState } from '@/components/shared/AttentionItemCard';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -31,11 +32,13 @@ export function DashboardPage() {
 
   return (
     <div className="space-y-8">
-      {/* Page header */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <h1 className="text-2xl font-bold text-text-primary">
-          Executive Dashboard
-        </h1>
+      {/* Welcome greeting + page header */}
+      <div className="space-y-3">
+        <WelcomeGreeting subtitle="Here's your executive overview" />
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <h1 className="text-2xl font-bold text-text-primary">
+            Executive Dashboard
+          </h1>
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
@@ -51,6 +54,7 @@ export function DashboardPage() {
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>
+        </div>
       </div>
 
       {/* Hero metrics grid */}
