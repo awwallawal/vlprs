@@ -1,8 +1,8 @@
 import { cn } from '@/lib/utils';
-import { formatNaira } from '@/lib/formatters';
+import { formatNaira, formatCompactNaira } from '@/lib/formatters';
 
 const variantStyles = {
-  hero: 'text-4xl font-bold',
+  hero: 'text-2xl sm:text-3xl xl:text-4xl font-bold',
   body: 'text-base',
   table: 'text-sm',
   compact: 'text-sm',
@@ -15,7 +15,14 @@ interface NairaDisplayProps {
 }
 
 export function NairaDisplay({ amount, variant = 'body', className }: NairaDisplayProps) {
-  let displayValue = formatNaira(amount);
+  const fullValue = formatNaira(amount);
+
+  let displayValue = fullValue;
+
+  // Hero variant: use compact notation (₦2.42B) for large numbers
+  if (variant === 'hero') {
+    displayValue = formatCompactNaira(amount);
+  }
 
   // Compact variant: strip trailing .00 for round numbers
   if (variant === 'compact' && displayValue.endsWith('.00')) {
@@ -26,7 +33,8 @@ export function NairaDisplay({ amount, variant = 'body', className }: NairaDispl
     <span
       className={cn('font-mono', variantStyles[variant], className)}
       style={{ fontVariantNumeric: 'tabular-nums' }}
-      aria-label={formatNaira(amount)}
+      title={variant === 'hero' ? fullValue : undefined}
+      aria-label={fullValue}
     >
       {displayValue}
     </span>

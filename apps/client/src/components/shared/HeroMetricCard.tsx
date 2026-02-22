@@ -124,7 +124,7 @@ export function HeroMetricCard({
       }}
     >
       <p className="text-sm text-text-secondary mb-1">{label}</p>
-      <div className="mb-1">{displayValue()}</div>
+      <div className="mb-1 min-w-0 overflow-hidden">{displayValue()}</div>
       {trend && (
         <p className={cn('text-xs', trendConfig[trend.direction].color)}>
           <span aria-hidden="true">{trendConfig[trend.direction].arrow}</span>{' '}

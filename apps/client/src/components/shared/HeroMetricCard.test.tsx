@@ -24,10 +24,12 @@ describe('HeroMetricCard', () => {
     mockMatchMedia(true); // default to reduced motion for deterministic tests
   });
 
-  it('renders currency format with NairaDisplay', () => {
+  it('renders currency format with compact NairaDisplay', () => {
     render(<HeroMetricCard label="Total Exposure" value="2418350000" format="currency" />);
     expect(screen.getByText('Total Exposure')).toBeInTheDocument();
-    expect(screen.getByText('₦2,418,350,000.00')).toBeInTheDocument();
+    // Hero cards use compact notation with full value in tooltip
+    expect(screen.getByText('₦2.42B')).toBeInTheDocument();
+    expect(screen.getByText('₦2.42B')).toHaveAttribute('title', '₦2,418,350,000.00');
   });
 
   it('renders count format', () => {
