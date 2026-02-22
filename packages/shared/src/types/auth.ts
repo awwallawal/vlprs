@@ -1,19 +1,23 @@
+import type { Role } from '../constants/roles';
+
 export interface User {
   id: string;
   email: string;
   firstName: string;
   lastName: string;
-  role: 'super_admin' | 'dept_admin' | 'mda_officer';
+  role: Role;
   mdaId: string | null;
   isActive: boolean;
+  mustChangePassword: boolean;
   createdAt: string;
 }
 
 export interface JwtPayload {
   userId: string;
   email: string;
-  role: 'super_admin' | 'dept_admin' | 'mda_officer';
+  role: Role;
   mdaId: string | null;
+  mustChangePassword?: boolean;
 }
 
 export interface LoginRequest {
@@ -24,6 +28,7 @@ export interface LoginRequest {
 export interface LoginResponse {
   accessToken: string;
   user: User;
+  mustChangePassword: boolean;
 }
 
 export interface RegisterRequest {
@@ -31,7 +36,7 @@ export interface RegisterRequest {
   password: string;
   firstName: string;
   lastName: string;
-  role: 'super_admin' | 'dept_admin' | 'mda_officer';
+  role: Role;
   mdaId?: string | null;
 }
 

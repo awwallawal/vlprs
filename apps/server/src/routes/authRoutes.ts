@@ -5,11 +5,13 @@ import { scopeToMda } from '../middleware/scopeToMda';
 import { validate } from '../middleware/validate';
 import { authLimiter } from '../middleware/rateLimiter';
 import { doubleCsrfProtection, generateCsrfToken, CSRF_COOKIE_NAME } from '../middleware/csrf';
-import { loginSchema, registerSchema, ROLES } from '@vlprs/shared';
+import { loginSchema, registerSchema, changePasswordSchema, ROLES, VOCABULARY } from '@vlprs/shared';
 import { env } from '../config/env';
 import * as authService from '../services/authService';
 import { extractClientIp } from '../lib/extractIp';
 import { auditLog } from '../middleware/auditLog';
+import { hashPassword, comparePassword } from '../lib/password';
+import { AppError } from '../lib/appError';
 
 const router = Router();
 
@@ -55,6 +57,7 @@ router.post(
       data: {
         accessToken: result.accessToken,
         user: result.user,
+        mustChangePassword: result.mustChangePassword,
       },
     });
   },
@@ -114,6 +117,38 @@ router.post(
       sameSite: 'strict',
       path: '/',
     });
+
+    res.status(200).json({ success: true, data: null });
+  },
+);
+
+// POST /auth/change-password — JWT-authenticated
+router.post(
+  '/auth/change-password',
+  authenticate,
+  validate(changePasswordSchema),
+  auditLog,
+  async (req: Request, res: Response) => {
+    const { currentPassword, newPassword } = req.body;
+    const userId = req.user!.userId;
+
+    // Fetch user to verify current password
+    const { db } = await import('../db/index');
+    const { users } = await import('../db/schema');
+    const { eq } = await import('drizzle-orm');
+
+    const [user] = await db.select().from(users).where(eq(users.id, userId));
+    if (!user) {
+      throw new AppError(401, 'AUTHENTICATION_REQUIRED', VOCABULARY.AUTHENTICATION_REQUIRED);
+    }
+
+    const isValid = await comparePassword(currentPassword, user.hashedPassword);
+    if (!isValid) {
+      throw new AppError(401, 'LOGIN_UNSUCCESSFUL', VOCABULARY.LOGIN_UNSUCCESSFUL);
+    }
+
+    const newHash = await hashPassword(newPassword);
+    await authService.changePassword(userId, newHash);
 
     res.status(200).json({ success: true, data: null });
   },

@@ -17,6 +17,7 @@ const testUser: User = {
   role: 'super_admin',
   mdaId: null,
   isActive: true,
+  mustChangePassword: false,
   createdAt: '2026-01-01T00:00:00.000Z',
 };
 

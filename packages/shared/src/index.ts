@@ -2,7 +2,8 @@
 export { emailSchema } from './schemas/emailSchema.js';
 
 // Validators
-export { loginSchema, registerSchema } from './validators/authSchemas.js';
+export { loginSchema, registerSchema, changePasswordSchema } from './validators/authSchemas.js';
+export { createUserSchema, updateUserSchema, deactivateUserSchema, deleteUserSchema } from './validators/userSchemas.js';
 
 // Types
 export type { ApiResponse, ApiError, ApiResult } from './types/api.js';
@@ -15,6 +16,6 @@ export type { SubmissionRecord } from './types/submission.js';
 export type { ExceptionPriority, ExceptionCategory, ExceptionItem } from './types/exception.js';
 
 // Constants
-export { ROLES, ALL_ROLES, type Role } from './constants/roles.js';
+export { ROLES, ALL_ROLES, ROLE_HIERARCHY, getManageableRoles, canManageRole, type Role } from './constants/roles.js';
 export { VOCABULARY, UI_COPY } from './constants/vocabulary.js';
 export { PERMISSION_MATRIX, hasPermission } from './constants/permissions.js';

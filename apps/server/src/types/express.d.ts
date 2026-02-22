@@ -11,6 +11,7 @@ declare global {
         email: string;
         role: Role;
         mdaId: string | null;
+        mustChangePassword?: boolean;
       };
       /** Set by scopeToMda middleware — null means unscoped (super_admin/dept_admin) */
       mdaScope?: string | null;

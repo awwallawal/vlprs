@@ -28,6 +28,18 @@ export const VOCABULARY = {
   LOGOUT_SUCCESSFUL: 'You have been successfully logged out.',
   // Rate Limiting
   RATE_LIMIT_EXCEEDED: 'Too many requests. Please wait before trying again.',
+  // User Account Management (Story 1.9a)
+  PASSWORD_CHANGE_REQUIRED: 'You must change your password before continuing.',
+  HIERARCHY_INSUFFICIENT: 'Insufficient permissions to manage this account level.',
+  SELF_MANAGEMENT_DENIED: 'Cannot modify own account through this endpoint.',
+  SUPER_ADMIN_CLI_ONLY: 'Super Admin accounts can only be managed via system administration.',
+  MDA_REQUIRED_FOR_OFFICER: 'MDA assignment required for MDA Reporting Officer accounts.',
+  MDA_ONLY_FOR_OFFICER: 'MDA assignment is only applicable to MDA Reporting Officer accounts.',
+  DELETED_CANNOT_REACTIVATE: 'Deleted accounts cannot be reactivated — create a new account instead.',
+  DELETE_CONFIRM_MISMATCH: 'Confirmation email does not match — deletion aborted.',
+  LAST_SUPER_ADMIN: 'Cannot deactivate — this is the last active Super Admin. Create a replacement first.',
+  INVITATION_SENT: 'Invitation sent successfully.',
+  PASSWORD_RESET_SENT: 'Password reset email sent successfully.',
 } as const;
 
 export const UI_COPY = {

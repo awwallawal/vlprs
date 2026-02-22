@@ -19,9 +19,14 @@ export function authenticate(req: Request, _res: Response, next: NextFunction) {
       email: payload.email,
       role: payload.role,
       mdaId: payload.mdaId,
+      mustChangePassword: payload.mustChangePassword,
     };
     next();
-  } catch {
-    throw new AppError(401, 'TOKEN_EXPIRED', VOCABULARY.TOKEN_EXPIRED);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : '';
+    if (message.includes('expired')) {
+      throw new AppError(401, 'TOKEN_EXPIRED', VOCABULARY.TOKEN_EXPIRED);
+    }
+    throw new AppError(401, 'TOKEN_INVALID', VOCABULARY.TOKEN_INVALID ?? 'Invalid or malformed token.');
   }
 }

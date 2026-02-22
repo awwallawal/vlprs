@@ -70,7 +70,7 @@ development_status:
   1-7-cicd-pipeline-production-infrastructure: done
   1-8a-design-foundation-components-mock-data-layer: done
   1-8b-role-specific-screens-demo-seed-wiring-map: done
-  1-9a-user-account-lifecycle-api-email-invitation: ready-for-dev
+  1-9a-user-account-lifecycle-api-email-invitation: done
   1-9b-user-administration-interface-profile-first-login: ready-for-dev
   epic-1-retrospective: optional
 

@@ -20,3 +20,8 @@ export const registerSchema = z.object({
   role: z.enum(['super_admin', 'dept_admin', 'mda_officer']),
   mdaId: z.string().nullable().optional(),
 });
+
+export const changePasswordSchema = z.object({
+  currentPassword: z.string().min(1, 'Current password is required'),
+  newPassword: passwordSchema,
+});
