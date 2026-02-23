@@ -26,7 +26,7 @@ const mockSubmissions = [
 ];
 
 vi.mock('@/stores/authStore', () => ({
-  useAuthStore: (selector: any) =>
+  useAuthStore: (selector: (state: Record<string, unknown>) => unknown) =>
     selector({
       user: {
         mdaId: 'mda-003',

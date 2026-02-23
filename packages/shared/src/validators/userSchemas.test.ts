@@ -46,7 +46,7 @@ describe('createUserSchema', () => {
   });
 
   it('allows omitted mdaId', () => {
-    const { mdaId, ...rest } = validInput;
+    const { mdaId: _mdaId, ...rest } = validInput;
     const result = createUserSchema.safeParse(rest);
     expect(result.success).toBe(true);
   });
