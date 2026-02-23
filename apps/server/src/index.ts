@@ -2,8 +2,15 @@ import app from './app';
 import { env } from './config/env';
 import { logger } from './lib/logger';
 
-const server = app.listen(env.PORT, () => {
+const server = app.listen(env.PORT, async () => {
   logger.info(`VLPRS server running on port ${env.PORT}`);
+
+  // In development, auto-seed the database if the users table is empty.
+  // This prevents the recurring "can't login" issue after Docker volume wipes.
+  if (env.NODE_ENV === 'development') {
+    const { devAutoSeed } = await import('./db/devAutoSeed');
+    await devAutoSeed();
+  }
 });
 
 function gracefulShutdown(signal: string) {
