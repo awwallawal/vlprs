@@ -43,3 +43,18 @@ export interface RegisterRequest {
 export interface RefreshResponse {
   accessToken: string;
 }
+
+export interface UserListItem extends User {
+  isSelf: boolean;
+  lastLoginAt: string | null;
+}
+
+export interface PaginatedResponse<T> {
+  data: T[];
+  pagination: {
+    page: number;
+    pageSize: number;
+    totalItems: number;
+    totalPages: number;
+  };
+}

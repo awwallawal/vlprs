@@ -7,6 +7,7 @@ import {
   Upload,
   Clock,
   Database,
+  Users,
 } from 'lucide-react';
 import type { ComponentType } from 'react';
 
@@ -25,6 +26,7 @@ export const NAV_ITEMS: NavItem[] = [
   { label: 'Migration', path: '/dashboard/migration', icon: Database, roles: [ROLES.DEPT_ADMIN] },
   { label: 'Reports', path: '/dashboard/reports', icon: FileText, roles: [ROLES.SUPER_ADMIN, ROLES.DEPT_ADMIN] },
   { label: 'Exceptions', path: '/dashboard/exceptions', icon: AlertCircle, roles: [ROLES.SUPER_ADMIN, ROLES.DEPT_ADMIN] },
+  { label: 'User Management', path: '/dashboard/admin', icon: Users, roles: [ROLES.SUPER_ADMIN, ROLES.DEPT_ADMIN] },
 ];
 
 export const ROLE_LABELS: Record<Role, string> = {

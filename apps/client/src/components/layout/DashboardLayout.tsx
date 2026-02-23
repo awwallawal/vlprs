@@ -1,7 +1,7 @@
 import type { KeyboardEvent } from 'react';
 import { useEffect } from 'react';
 import { Outlet, NavLink, useLocation, useNavigate, Navigate } from 'react-router';
-import { LogOut, Search, X } from 'lucide-react';
+import { LogOut, Search, X, User as UserIcon, KeyRound } from 'lucide-react';
 import { toast } from 'sonner';
 import {
   Dialog,
@@ -12,6 +12,13 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import {
   SidebarProvider,
   Sidebar,
@@ -37,6 +44,7 @@ import { Breadcrumb } from './Breadcrumb';
 import { BuildStatus } from '@/components/shared/BuildStatus';
 import { cn } from '@/lib/utils';
 import type { Role } from '@vlprs/shared';
+import { PasswordChangeScreen } from '@/pages/dashboard/PasswordChangeScreen';
 
 /** Close button visible only when sidebar is rendered as a mobile sheet. */
 function MobileSidebarClose() {
@@ -151,17 +159,38 @@ export function DashboardLayout() {
 
         <SidebarSeparator />
 
-        {/* User info */}
-        <div className="px-4 py-3 space-y-1 group-data-[collapsible=icon]:hidden">
-          <p className="text-sm font-medium truncate">
-            {user.firstName} {user.lastName}
-          </p>
-          <Badge
-            variant="outline"
-            className="border-sidebar-border text-sidebar-foreground/80 text-[11px]"
-          >
-            {ROLE_LABELS[user.role as Role]}
-          </Badge>
+        {/* User info with profile dropdown */}
+        <div className="px-4 py-3 group-data-[collapsible=icon]:hidden">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className="w-full text-left space-y-1 rounded-md px-2 py-1.5 -mx-2 hover:bg-sidebar-accent transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring min-h-[44px]">
+                <p className="text-sm font-medium truncate">
+                  {user.firstName} {user.lastName}
+                </p>
+                <Badge
+                  variant="outline"
+                  className="border-sidebar-border text-sidebar-foreground/80 text-[11px]"
+                >
+                  {ROLE_LABELS[user.role as Role]}
+                </Badge>
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="w-48">
+              <DropdownMenuItem onClick={() => navigate('/dashboard/profile')}>
+                <UserIcon className="h-4 w-4" />
+                My Profile
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => navigate('/dashboard/profile')}>
+                <KeyRound className="h-4 w-4" />
+                Change Password
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={handleLogout}>
+                <LogOut className="h-4 w-4" />
+                Logout
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
 
         <SidebarSeparator className="group-data-[collapsible=icon]:hidden" />
@@ -273,7 +302,7 @@ export function DashboardLayout() {
 
             {/* Page content */}
             <div className="mt-2">
-              <Outlet />
+              {user.mustChangePassword ? <PasswordChangeScreen /> : <Outlet />}
             </div>
           </div>
         </div>
