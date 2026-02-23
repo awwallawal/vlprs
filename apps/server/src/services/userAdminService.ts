@@ -66,7 +66,7 @@ async function getTargetUser(targetId: string) {
     .where(eq(users.id, targetId));
 
   if (!target) {
-    throw new AppError(404, 'NOT_FOUND', VOCABULARY.USER_NOT_FOUND ?? 'User not found.');
+    throw new AppError(404, 'NOT_FOUND', VOCABULARY.USER_NOT_FOUND);
   }
   return target;
 }

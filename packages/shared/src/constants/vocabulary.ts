@@ -11,6 +11,7 @@ export const VOCABULARY = {
     'Your account is currently inactive. Please contact your administrator.',
   AUTHENTICATION_REQUIRED: 'Please provide a valid access token.',
   TOKEN_EXPIRED: 'Your session has expired. Please log in again.',
+  TOKEN_INVALID: 'Invalid or malformed token. Please log in again.',
   INSUFFICIENT_PERMISSIONS: 'You do not have permission to perform this action.',
   // RBAC (Story 1.4)
   MDA_ACCESS_DENIED: 'You can only access data for your assigned organisation.',
@@ -29,6 +30,7 @@ export const VOCABULARY = {
   // Rate Limiting
   RATE_LIMIT_EXCEEDED: 'Too many requests. Please wait before trying again.',
   // User Account Management (Story 1.9a)
+  USER_NOT_FOUND: 'The requested user account could not be found.',
   PASSWORD_CHANGE_REQUIRED: 'You must change your password before continuing.',
   HIERARCHY_INSUFFICIENT: 'Insufficient permissions to manage this account level.',
   SELF_MANAGEMENT_DENIED: 'Cannot modify own account through this endpoint.',

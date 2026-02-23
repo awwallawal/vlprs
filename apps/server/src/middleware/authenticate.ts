@@ -27,6 +27,6 @@ export function authenticate(req: Request, _res: Response, next: NextFunction) {
     if (message.includes('expired')) {
       throw new AppError(401, 'TOKEN_EXPIRED', VOCABULARY.TOKEN_EXPIRED);
     }
-    throw new AppError(401, 'TOKEN_INVALID', VOCABULARY.TOKEN_INVALID ?? 'Invalid or malformed token.');
+    throw new AppError(401, 'TOKEN_INVALID', VOCABULARY.TOKEN_INVALID);
   }
 }
