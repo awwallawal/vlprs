@@ -223,10 +223,11 @@ export const router = createBrowserRouter([
           },
           {
             path: 'admin',
-            lazy: () =>
-              import('@/pages/dashboard/AdminPage').then((m) => ({
-                Component: m.AdminPage,
-              })),
+            lazy: () => import('@/pages/dashboard/AdminPage'),
+          },
+          {
+            path: 'profile',
+            lazy: () => import('@/pages/dashboard/ProfilePage'),
           },
           {
             path: 'placeholder/:feature',

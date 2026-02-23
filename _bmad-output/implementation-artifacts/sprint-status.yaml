@@ -71,7 +71,7 @@ development_status:
   1-8a-design-foundation-components-mock-data-layer: done
   1-8b-role-specific-screens-demo-seed-wiring-map: done
   1-9a-user-account-lifecycle-api-email-invitation: done
-  1-9b-user-administration-interface-profile-first-login: ready-for-dev
+  1-9b-user-administration-interface-profile-first-login: done
   epic-1-retrospective: optional
 
   # Epic 14: Public Website & Scheme Information (Sprint 2)
