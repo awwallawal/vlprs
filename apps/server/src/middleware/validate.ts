@@ -3,7 +3,7 @@ import type { z } from 'zod/v4';
 import { AppError } from '../lib/appError';
 import { VOCABULARY } from '@vlprs/shared';
 
-export function validate(schema: z.ZodType<any>) {
+export function validate(schema: z.ZodType<unknown>) {
   return (req: Request, _res: Response, next: NextFunction) => {
     const result = schema.safeParse(req.body);
     if (!result.success) {

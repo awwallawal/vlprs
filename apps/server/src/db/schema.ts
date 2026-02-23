@@ -48,6 +48,7 @@ export const users = pgTable(
     role: roleEnum('role').notNull(),
     mdaId: uuid('mda_id').references(() => mdas.id),
     isActive: boolean('is_active').notNull().default(true),
+    mustChangePassword: boolean('must_change_password').notNull().default(false),
     failedLoginAttempts: integer('failed_login_attempts').notNull().default(0),
     lockedUntil: timestamp('locked_until', { withTimezone: true }),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),

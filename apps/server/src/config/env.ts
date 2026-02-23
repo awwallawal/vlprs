@@ -22,6 +22,9 @@ const envSchema = z.object({
   LOCKOUT_DURATION_MINUTES: z.coerce.number().default(15),
   CSRF_SECRET: z.string().min(32).default('change-csrf-secret-in-production'),
   INACTIVITY_TIMEOUT_MINUTES: z.coerce.number().default(30),
+  RESEND_API_KEY: z.string().optional(),
+  EMAIL_FROM: z.string().default('noreply@vlprs.oyo.gov.ng'),
+  APP_URL: z.string().default('http://localhost:5173'),
 });
 
 export const env = envSchema.parse(process.env);

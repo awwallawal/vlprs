@@ -15,13 +15,14 @@ import { logAuthEvent, type AuditContext } from './auditService';
 export interface LoginResult {
   accessToken: string;
   user: User;
+  mustChangePassword: boolean;
   refreshToken: {
     raw: string;
     expiresMs: number;
   };
 }
 
-function sanitiseUser(row: typeof users.$inferSelect): User {
+export function sanitiseUser(row: typeof users.$inferSelect): User {
   return {
     id: row.id,
     email: row.email,
@@ -30,6 +31,7 @@ function sanitiseUser(row: typeof users.$inferSelect): User {
     role: row.role,
     mdaId: row.mdaId,
     isActive: row.isActive,
+    mustChangePassword: row.mustChangePassword,
     createdAt: row.createdAt.toISOString(),
   };
 }
@@ -210,6 +212,7 @@ export async function login(data: LoginRequest, auditCtx?: AuditContext): Promis
     email: user.email,
     role: user.role,
     mdaId: user.mdaId,
+    mustChangePassword: user.mustChangePassword || undefined,
   });
 
   // Generate refresh token
@@ -244,6 +247,7 @@ export async function login(data: LoginRequest, auditCtx?: AuditContext): Promis
   return {
     accessToken,
     user: sanitiseUser(user),
+    mustChangePassword: user.mustChangePassword,
     refreshToken: {
       raw: rawRefreshToken,
       expiresMs,
@@ -379,6 +383,7 @@ export async function refreshToken(tokenFromCookie: string, auditCtx?: AuditCont
       email: user.email,
       role: user.role,
       mdaId: user.mdaId,
+      mustChangePassword: user.mustChangePassword || undefined,
     });
 
     return {
@@ -444,7 +449,7 @@ export async function logout(userId: string, email?: string, role?: string, audi
 export async function changePassword(userId: string, newPasswordHash: string): Promise<void> {
   await db.transaction(async (tx) => {
     await tx.update(users)
-      .set({ hashedPassword: newPasswordHash, updatedAt: new Date() })
+      .set({ hashedPassword: newPasswordHash, mustChangePassword: false, updatedAt: new Date() })
       .where(eq(users.id, userId));
     await tx.update(refreshTokens)
       .set({ revokedAt: new Date() })
