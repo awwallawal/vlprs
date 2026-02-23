@@ -76,9 +76,11 @@ const NAME_ONLY_MDAS = [
   { name: 'Technical and Vocational Training Board', code: 'TVT' },
 ];
 
-async function seedDemo() {
-  console.log('Seeding demo data...');
-
+/**
+ * Core seed logic — reusable by both CLI and dev auto-seed.
+ * Idempotent: uses onConflictDoNothing for both MDAs and users.
+ */
+export async function runDemoSeed(): Promise<{ userCount: number; mdaCount: number }> {
   const hashedPassword = await hashPassword(DEMO_PASSWORD);
   const allMdaEntries = [...FULL_MDAS, ...NAME_ONLY_MDAS];
 
@@ -136,12 +138,21 @@ async function seedDemo() {
     // TODO: Seed mock loan records when loans table is created in Epic 2
   });
 
-  console.log(`Seeded ${userCount} users, ${mdaCount} MDAs`);
-  console.log('Demo seed complete.');
-  process.exit(0);
+  return { userCount, mdaCount };
 }
 
-seedDemo().catch((err) => {
-  console.error('Seed failed:', err);
-  process.exit(1);
-});
+// CLI entry point — only runs when executed directly (not when imported)
+const isDirectRun = process.argv[1]?.includes('seed-demo');
+if (isDirectRun) {
+  console.log('Seeding demo data...');
+  runDemoSeed()
+    .then(({ userCount, mdaCount }) => {
+      console.log(`Seeded ${userCount} users, ${mdaCount} MDAs`);
+      console.log('Demo seed complete.');
+      process.exit(0);
+    })
+    .catch((err) => {
+      console.error('Seed failed:', err);
+      process.exit(1);
+    });
+}
