@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll, beforeEach, afterAll } from 'vitest';
 import { eq, sql } from 'drizzle-orm';
 import { db } from '../db/index';
-import { users, mdas, refreshTokens } from '../db/schema';
+import { users, refreshTokens } from '../db/schema';
 import { hashPassword } from '../lib/password';
 import { hashToken } from '../lib/tokenHash';
 import { generateUuidv7 } from '../lib/uuidv7';
@@ -13,16 +13,11 @@ const testEmail = 'refresh-test@test.com';
 const testPassword = 'SecurePass1';
 
 beforeAll(async () => {
-  await db.execute(sql`TRUNCATE audit_log`);
-  await db.delete(refreshTokens);
-  await db.delete(users);
-  await db.delete(mdas);
+  await db.execute(sql`TRUNCATE audit_log, refresh_tokens, users, mdas CASCADE`);
 });
 
 beforeEach(async () => {
-  await db.execute(sql`TRUNCATE audit_log`);
-  await db.delete(refreshTokens);
-  await db.delete(users);
+  await db.execute(sql`TRUNCATE audit_log, refresh_tokens, users CASCADE`);
 
   const hashed = await hashPassword(testPassword);
   testUserId = generateUuidv7();
@@ -38,10 +33,7 @@ beforeEach(async () => {
 });
 
 afterAll(async () => {
-  await db.execute(sql`TRUNCATE audit_log`);
-  await db.delete(refreshTokens);
-  await db.delete(users);
-  await db.delete(mdas);
+  await db.execute(sql`TRUNCATE audit_log, refresh_tokens, users, mdas CASCADE`);
 });
 
 async function seedRefreshToken(

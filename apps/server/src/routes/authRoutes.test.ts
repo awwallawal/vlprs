@@ -3,7 +3,7 @@ import request from 'supertest';
 import { sql } from 'drizzle-orm';
 import app from '../app';
 import { db } from '../db/index';
-import { users, mdas, refreshTokens } from '../db/schema';
+import { users, mdas } from '../db/schema';
 import { hashPassword } from '../lib/password';
 import { signAccessToken } from '../lib/jwt';
 import { generateUuidv7 } from '../lib/uuidv7';
@@ -12,10 +12,7 @@ import { resetRateLimiters } from '../middleware/rateLimiter';
 let testMdaId: string;
 
 beforeAll(async () => {
-  await db.execute(sql`TRUNCATE audit_log`);
-  await db.delete(refreshTokens);
-  await db.delete(users);
-  await db.delete(mdas);
+  await db.execute(sql`TRUNCATE audit_log, refresh_tokens, users, mdas CASCADE`);
 
   testMdaId = generateUuidv7();
   await db.insert(mdas).values({ id: testMdaId, name: 'Test MDA', code: 'TSTI' });
@@ -23,16 +20,11 @@ beforeAll(async () => {
 
 beforeEach(async () => {
   resetRateLimiters();
-  await db.execute(sql`TRUNCATE audit_log`);
-  await db.delete(refreshTokens);
-  await db.delete(users);
+  await db.execute(sql`TRUNCATE audit_log, refresh_tokens, users CASCADE`);
 });
 
 afterAll(async () => {
-  await db.execute(sql`TRUNCATE audit_log`);
-  await db.delete(refreshTokens);
-  await db.delete(users);
-  await db.delete(mdas);
+  await db.execute(sql`TRUNCATE audit_log, refresh_tokens, users, mdas CASCADE`);
 });
 
 async function createTestUser(overrides: Partial<typeof users.$inferInsert> = {}) {

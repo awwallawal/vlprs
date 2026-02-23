@@ -10,10 +10,7 @@ let testMdaId: string;
 
 beforeAll(async () => {
   // Clean up tables (truncate audit_log first — FK + immutability trigger)
-  await db.execute(sql`TRUNCATE audit_log`);
-  await db.delete(refreshTokens);
-  await db.delete(users);
-  await db.delete(mdas);
+  await db.execute(sql`TRUNCATE audit_log, refresh_tokens, users, mdas CASCADE`);
 
   // Create a test MDA
   testMdaId = generateUuidv7();
@@ -21,16 +18,11 @@ beforeAll(async () => {
 });
 
 beforeEach(async () => {
-  await db.execute(sql`TRUNCATE audit_log`);
-  await db.delete(refreshTokens);
-  await db.delete(users);
+  await db.execute(sql`TRUNCATE audit_log, refresh_tokens, users CASCADE`);
 });
 
 afterAll(async () => {
-  await db.execute(sql`TRUNCATE audit_log`);
-  await db.delete(refreshTokens);
-  await db.delete(users);
-  await db.delete(mdas);
+  await db.execute(sql`TRUNCATE audit_log, refresh_tokens, users, mdas CASCADE`);
 });
 
 describe('authService.register', () => {
