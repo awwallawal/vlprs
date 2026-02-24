@@ -27,13 +27,15 @@ RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 WORKDIR /app
 COPY --from=build /app/deploy ./
 COPY --from=build /app/apps/server/dist ./dist
+COPY --from=build /app/apps/server/drizzle ./drizzle
 
 # CLI helper — provides friendly commands for admin operations:
+#   docker exec vlprs-server-1 ./cli.sh db:migrate
 #   docker exec vlprs-server-1 ./cli.sh seed:prod
 #   docker exec vlprs-server-1 ./cli.sh seed:demo
 #   docker exec vlprs-server-1 ./cli.sh create-admin --email X --name "Y"
 #   docker exec vlprs-server-1 ./cli.sh deactivate-admin --email X
-RUN printf '#!/bin/sh\ncase "$1" in\n  seed:prod) node dist/db/seed-production.js ;;\n  seed:demo) node dist/db/seed-demo.js ;;\n  create-admin) shift; node dist/cli/createAdmin.js "$@" ;;\n  deactivate-admin) shift; node dist/cli/deactivateAdmin.js "$@" ;;\n  *) echo "VLPRS CLI commands:"; echo "  seed:prod            — Create super admin from env vars"; echo "  seed:demo            — Seed demo data (5 users, 63 MDAs)"; echo "  create-admin         — Create admin: --email <e> --name <n>"; echo "  deactivate-admin     — Deactivate admin: --email <e>" ;;\nesac\n' > cli.sh && chmod +x cli.sh
+RUN printf '#!/bin/sh\ncase "$1" in\n  db:migrate) node dist/db/migrate.js ;;\n  seed:prod) node dist/db/seed-production.js ;;\n  seed:demo) node dist/db/seed-demo.js ;;\n  create-admin) shift; node dist/cli/createAdmin.js "$@" ;;\n  deactivate-admin) shift; node dist/cli/deactivateAdmin.js "$@" ;;\n  *) echo "VLPRS CLI commands:"; echo "  db:migrate           — Run database migrations"; echo "  seed:prod            — Create super admin from env vars"; echo "  seed:demo            — Seed demo data (5 users, 63 MDAs)"; echo "  create-admin         — Create admin: --email <e> --name <n>"; echo "  deactivate-admin     — Deactivate admin: --email <e>" ;;\nesac\n' > cli.sh && chmod +x cli.sh
 
 USER appuser
 EXPOSE 3001
