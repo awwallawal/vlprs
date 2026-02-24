@@ -5,10 +5,12 @@
   "type": "module",
   "scripts": {
     "dev": "tsx watch src/index.ts",
-    "build": "tsup src/index.ts src/db/seed-production.ts src/db/seed-demo.ts src/cli/createAdmin.ts src/cli/deactivateAdmin.ts --format esm",
+    "build": "tsup src/index.ts src/db/migrate.ts src/db/seed-production.ts src/db/seed-demo.ts src/cli/createAdmin.ts src/cli/deactivateAdmin.ts --format esm",
     "start": "node dist/index.js",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "tsx src/db/migrate.ts",
     "db:triggers": "tsx src/db/applyTriggers.ts",
     "db:push": "drizzle-kit push && tsx src/db/applyTriggers.ts",
     "seed:demo": "tsx src/db/seed-demo.ts",
