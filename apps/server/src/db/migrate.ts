@@ -31,16 +31,27 @@ export async function runMigrations(): Promise<void> {
 }
 
 export async function baselineIfNeeded(migrationsFolder: string): Promise<void> {
-  // Check if __drizzle_migrations tracking table exists
+  // Drizzle ORM stores migration tracking in the "drizzle" schema, not "public".
+  // We must match this exactly or migrate() won't see our baseline record.
+
+  // Check if the "drizzle" schema tracking table exists AND has records.
+  // The table may exist but be empty if a previous deployment failed mid-migration.
   const trackingResult = await db.execute(sql`
     SELECT EXISTS (
       SELECT 1 FROM information_schema.tables
-      WHERE table_schema = 'public' AND table_name = '__drizzle_migrations'
-    ) AS "exists"
+      WHERE table_schema = 'drizzle' AND table_name = '__drizzle_migrations'
+    ) AS "table_exists"
   `);
 
-  if (trackingResult.rows[0]?.exists) {
-    return; // Already initialized
+  if (trackingResult.rows[0]?.table_exists) {
+    // Table exists — check if it has any records
+    const recordCount = await db.execute(sql`
+      SELECT count(*)::int AS "count" FROM "drizzle"."__drizzle_migrations"
+    `);
+    if (Number(recordCount.rows[0]?.count) > 0) {
+      return; // Already initialized with records — nothing to do
+    }
+    // Table exists but is empty (previous failed deployment). Fall through to insert baseline.
   }
 
   // Check if users table exists (pre-existing production DB indicator)
@@ -87,10 +98,13 @@ export async function baselineIfNeeded(migrationsFolder: string): Promise<void> 
   const sqlContent = await readFile(sqlPath, 'utf-8');
   const hash = crypto.createHash('sha256').update(sqlContent).digest('hex');
 
-  // Create tracking table and insert baseline atomically (prevents inconsistent state on crash)
+  // Create schema and tracking table matching Drizzle's internal convention,
+  // then insert baseline atomically (prevents inconsistent state on crash)
   await db.transaction(async (tx) => {
+    await tx.execute(sql`CREATE SCHEMA IF NOT EXISTS "drizzle"`);
+
     await tx.execute(sql`
-      CREATE TABLE IF NOT EXISTS "__drizzle_migrations" (
+      CREATE TABLE IF NOT EXISTS "drizzle"."__drizzle_migrations" (
         id SERIAL PRIMARY KEY,
         hash text NOT NULL,
         created_at bigint
@@ -98,11 +112,14 @@ export async function baselineIfNeeded(migrationsFolder: string): Promise<void> 
     `);
 
     await tx.execute(
-      sql`INSERT INTO "__drizzle_migrations" (hash, created_at)
+      sql`INSERT INTO "drizzle"."__drizzle_migrations" (hash, created_at)
           SELECT ${hash}, ${entry.when}
-          WHERE NOT EXISTS (SELECT 1 FROM "__drizzle_migrations" WHERE hash = ${hash})`
+          WHERE NOT EXISTS (SELECT 1 FROM "drizzle"."__drizzle_migrations" WHERE hash = ${hash})`
     );
   });
+
+  // Clean up stale tracking table in public schema if it exists (from a prior buggy baseline)
+  await db.execute(sql`DROP TABLE IF EXISTS "public"."__drizzle_migrations"`);
 
   logger.info('Baseline applied — migration 0000 marked as already applied');
 }

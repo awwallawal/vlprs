@@ -51,25 +51,41 @@ const JOURNAL_CONTENT = JSON.stringify({
 const SQL_CONTENT = 'CREATE TABLE users (id uuid);';
 const EXPECTED_HASH = crypto.createHash('sha256').update(SQL_CONTENT).digest('hex');
 
-/** Set up mockExecute to simulate "tracking table exists" scenario */
+/** Tracking table exists in "drizzle" schema AND has records */
 function mockTrackingTableExists() {
-  mockExecute.mockResolvedValueOnce({ rows: [{ exists: true }] });
+  mockExecute
+    .mockResolvedValueOnce({ rows: [{ table_exists: true }] })   // drizzle.__drizzle_migrations exists
+    .mockResolvedValueOnce({ rows: [{ count: 1 }] });            // has records
 }
 
-/** Set up mockExecute to simulate "fresh database" (no tables at all) */
+/** Fresh database — no tracking table, no users table */
 function mockFreshDatabase() {
   mockExecute
-    .mockResolvedValueOnce({ rows: [{ exists: false }] })  // __drizzle_migrations
-    .mockResolvedValueOnce({ rows: [{ exists: false }] }); // users
+    .mockResolvedValueOnce({ rows: [{ table_exists: false }] })  // drizzle.__drizzle_migrations missing
+    .mockResolvedValueOnce({ rows: [{ exists: false }] });       // users table missing
 }
 
-/** Set up mockExecute to simulate "pre-existing DB without tracking" */
+/** Pre-existing DB: no tracking table, users table exists */
 function mockPreExistingDatabase() {
   mockExecute
-    .mockResolvedValueOnce({ rows: [{ exists: false }] })  // __drizzle_migrations
-    .mockResolvedValueOnce({ rows: [{ exists: true }] })   // users
-    .mockResolvedValueOnce(undefined)                       // CREATE TABLE
-    .mockResolvedValueOnce(undefined);                      // INSERT baseline
+    .mockResolvedValueOnce({ rows: [{ table_exists: false }] })  // drizzle.__drizzle_migrations missing
+    .mockResolvedValueOnce({ rows: [{ exists: true }] })         // users table exists
+    .mockResolvedValueOnce(undefined)                             // CREATE SCHEMA
+    .mockResolvedValueOnce(undefined)                             // CREATE TABLE
+    .mockResolvedValueOnce(undefined)                             // INSERT baseline
+    .mockResolvedValueOnce(undefined);                            // DROP stale public table
+}
+
+/** Tracking table exists but is empty (failed deployment recovery) */
+function mockEmptyTrackingTable() {
+  mockExecute
+    .mockResolvedValueOnce({ rows: [{ table_exists: true }] })   // drizzle.__drizzle_migrations exists
+    .mockResolvedValueOnce({ rows: [{ count: 0 }] })             // but empty
+    .mockResolvedValueOnce({ rows: [{ exists: true }] })         // users table exists
+    .mockResolvedValueOnce(undefined)                             // CREATE SCHEMA
+    .mockResolvedValueOnce(undefined)                             // CREATE TABLE
+    .mockResolvedValueOnce(undefined)                             // INSERT baseline
+    .mockResolvedValueOnce(undefined);                            // DROP stale public table
 }
 
 /** Set up fs mocks for a valid journal + SQL file */
@@ -123,13 +139,13 @@ describe('migrate', () => {
   describe('baselineIfNeeded', () => {
     const testFolder = '/app/drizzle';
 
-    it('returns early when __drizzle_migrations table already exists', async () => {
+    it('returns early when tracking table exists with records', async () => {
       mockTrackingTableExists();
 
       await baselineIfNeeded(testFolder);
 
-      // Only one DB call (tracking table check)
-      expect(mockExecute).toHaveBeenCalledTimes(1);
+      // Two DB calls: table exists check + record count
+      expect(mockExecute).toHaveBeenCalledTimes(2);
     });
 
     it('returns early for fresh database (no users table)', async () => {
@@ -137,7 +153,7 @@ describe('migrate', () => {
 
       await baselineIfNeeded(testFolder);
 
-      // Two DB calls (tracking table + users table)
+      // Two DB calls: tracking table check + users table check
       expect(mockExecute).toHaveBeenCalledTimes(2);
     });
 
@@ -147,9 +163,19 @@ describe('migrate', () => {
 
       await baselineIfNeeded(testFolder);
 
-      // 4 DB calls: 2 EXISTS checks + CREATE TABLE + INSERT
-      expect(mockExecute).toHaveBeenCalledTimes(4);
-      // Verify readFile was called for journal and SQL
+      // 6 DB calls: table_exists + users + CREATE SCHEMA + CREATE TABLE + INSERT + DROP stale
+      expect(mockExecute).toHaveBeenCalledTimes(6);
+      expect(mockReadFile).toHaveBeenCalledTimes(2);
+    });
+
+    it('inserts baseline when tracking table exists but is empty (failed deployment recovery)', async () => {
+      mockEmptyTrackingTable();
+      mockValidFiles();
+
+      await baselineIfNeeded(testFolder);
+
+      // 7 DB calls: table_exists + count + users + CREATE SCHEMA + CREATE TABLE + INSERT + DROP stale
+      expect(mockExecute).toHaveBeenCalledTimes(7);
       expect(mockReadFile).toHaveBeenCalledTimes(2);
     });
 
@@ -164,19 +190,17 @@ describe('migrate', () => {
 
       await baselineIfNeeded(testFolder);
 
-      // The 4th db.execute call is the INSERT — verify it was called
-      const insertCall = mockExecute.mock.calls[3];
+      // The 5th db.execute call is the INSERT — verify it was called
+      const insertCall = mockExecute.mock.calls[4];
       expect(insertCall).toBeDefined();
 
       // Verify the computed hash is embedded in the INSERT SQL params.
-      // Using JSON.stringify to capture the full object tree (including Param values)
-      // without coupling to Drizzle's internal queryChunks/Param structure.
       expect(JSON.stringify(insertCall[0])).toContain(EXPECTED_HASH);
     });
 
     it('throws descriptive error when journal file is missing', async () => {
       mockExecute
-        .mockResolvedValueOnce({ rows: [{ exists: false }] })
+        .mockResolvedValueOnce({ rows: [{ table_exists: false }] })
         .mockResolvedValueOnce({ rows: [{ exists: true }] });
 
       mockAccess.mockRejectedValueOnce(new Error('ENOENT'));
@@ -188,7 +212,7 @@ describe('migrate', () => {
 
     it('throws descriptive error when SQL file is missing', async () => {
       mockExecute
-        .mockResolvedValueOnce({ rows: [{ exists: false }] })
+        .mockResolvedValueOnce({ rows: [{ table_exists: false }] })
         .mockResolvedValueOnce({ rows: [{ exists: true }] });
 
       mockAccess
@@ -204,7 +228,7 @@ describe('migrate', () => {
 
     it('throws when journal has no entries', async () => {
       mockExecute
-        .mockResolvedValueOnce({ rows: [{ exists: false }] })
+        .mockResolvedValueOnce({ rows: [{ table_exists: false }] })
         .mockResolvedValueOnce({ rows: [{ exists: true }] });
 
       mockReadFile.mockResolvedValueOnce(JSON.stringify({ entries: [] }));
@@ -216,7 +240,7 @@ describe('migrate', () => {
 
     it('throws when journal entry is malformed (missing tag or when)', async () => {
       mockExecute
-        .mockResolvedValueOnce({ rows: [{ exists: false }] })
+        .mockResolvedValueOnce({ rows: [{ table_exists: false }] })
         .mockResolvedValueOnce({ rows: [{ exists: true }] });
 
       mockReadFile.mockResolvedValueOnce(JSON.stringify({ entries: [{ idx: 0 }] }));
@@ -232,14 +256,12 @@ describe('migrate', () => {
 
       await baselineIfNeeded(testFolder);
 
-      // The INSERT call (4th execute) should use WHERE NOT EXISTS pattern
-      const insertCall = mockExecute.mock.calls[3];
+      // The INSERT call (5th execute) should use WHERE NOT EXISTS pattern
+      const insertCall = mockExecute.mock.calls[4];
       const sqlTemplate = insertCall[0];
-      // Drizzle sql`` templates store the SQL string in queryChunks or similar
       const sqlString = sqlTemplate.queryChunks
         ? sqlTemplate.queryChunks.map((c: { value?: string }) => c.value ?? '').join('')
         : String(sqlTemplate);
-      // The SQL should contain WHERE NOT EXISTS
       expect(sqlString.toLowerCase()).toContain('where not exists');
     });
   });
