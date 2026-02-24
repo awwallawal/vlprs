@@ -1,0 +1,63 @@
+1. Oyo State Hospital Management Board - OYSHMB
+2. Ministry of FInance - FINANCE
+3. Agricultural Credit Corporation of Oyo State - ACCOS 
+4. Library Board - LIBRARY 
+5. Ministry of Local Government and Chieftaincy Matters - LOCAL GOVERNMENT 
+6. Ministry of Information - INFORMATION 
+7. Public Complaints Commission - PCC 
+8. Bureau of Statistics - STATISTICS 
+9. Board for Technical and Vocational Education - BOTAVED 
+10. Ministry of Special Duties - SPECIAL DUTIES 
+11. Oyo State Housing COrporation - HOUSING 
+12. Local Government Audit Commission - LOCAL GOVERNMENT AUDIT
+13. Office of the Surveyor General - SURVEYOR GENERAL 
+14. Teaching Service Commission - TESCOM 
+15. Ministry of Women Affairs - WOMEN AFFAIRS 
+16. Oyo State Legislature - LEGISLATURE 
+17. Broadcasting Corporation of Oyo State - BCOS 
+18. Ministry of Environment - ENVIRONMENT 
+19. State Universal Basic Education Board - SUBEB 
+20. Oyo State Sports Council - SPORTS COUNCIL 
+21. House of Assembly Commission - ASSEMBLY COMMISSION 
+22. Oyo State Water Corporation - WATER CORPORATION 
+23. Board of Internal Revenue - BIR 
+24. Ministry of Budget and Economic Planning - BUDGET AND PLANNING 
+25. Oyo State Judicial Service Commission - JUDICIAL COMMISSION 
+26. Ministry of Health - HEALTH 
+27. College of Health Sciences - HEALTH COLLEGE 
+28. College of Nursing and Midwifery - NURSING AND MIDWIFERY 
+29. Oyo State Agency for Adult and Non-Formal Education - AANFE 
+30. Ministry of Energy and Mineral Resources - ENERGY RESOURCES 
+31. Oyo State Health Insurance Agency - OYSHIA 
+32. Ministry of Establishment - ESTABLISHMENT 
+33. Oyo State Investment, Public and Private Partnership Agency - OYSIPA 
+34. Oyo State Road Traffic Management Ageency - OYRTMA 
+35. Oyo State Independent Electoral Commission - OYSIEC 
+36. Oyo State Primary Healthcare Board - OYSPHB 
+37. Oyo State Mineral Development Agency - OYSMDA 
+38. Ministry of Lands and Housing - LANDS AND HOUSING 
+39. Ministry of Education - EDUCATION 
+40. Oyo State Advertising Agency - OYSAA 
+41. Oyo State Rural Electrification Board - OYSREB 
+42. Governor's Office - GOVERNOR OFFICE 
+43. Accountant General's Office - ACCOUNTANT GENERAL 
+44. Ministry of Arts and Culture - ARTS AND CULTURE 
+45. Oyo State High Court - HIGH COURT 
+46. Oyo State Agency for Youth Development - YOUTH DEVELOPMENT 
+47. Oyo State Road Maintenance Agency - OYSROMA 
+48. Head of Service Office - HOS 
+49. Oyo State Government Printing Press - PRINTING PRESS 
+50. Cocoa Development Unit - CDU 
+51. Auditor General of Oyo State - AUDITOR GENERAL 
+52. Ministry of Works and Transport - WORKS AND TRANSPORT 
+53. Oyo State Agricultural Development Agency - OYSADA 
+54. Civil Service Commission - CSC 
+55. Ministry of Youth and Sports - YOUTH AND SPORTS 
+56. Ministry of Trade, Investment and Cooperatives - TRADE 
+57. Oyo State Pensions Board - PENSIONS BOARD 
+58. Ministry of Justice - JUSTICE 
+59. Customary Court of Appeal - CCA 
+60. Ministry of Agriculture - AGRICULTURE 
+61. Audit Service Commission - AUDIT SERVICE COMMISSION 
+62. Ministry of Culture and Tourism - CULTURE AND TOURISM 
+63. Oyo State Fire Service Agency - FIRE 

@@ -1,4 +1,4 @@
 export interface LegalSection {
   title: string;
-  body: string;
+  body: string | string[];
 }

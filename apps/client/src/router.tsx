@@ -1,6 +1,35 @@
-import { createBrowserRouter, Navigate } from 'react-router';
+import { createBrowserRouter, Navigate, useRouteError } from 'react-router';
+import { AlertTriangle, RefreshCw } from 'lucide-react';
 import { AuthGuard } from '@/components/layout/AuthGuard';
 import { PublicLayout } from '@/components/layout/PublicLayout';
+
+function RouteErrorFallback() {
+  const error = useRouteError();
+  console.error('Route error:', error);
+
+  return (
+    <div className="flex min-h-[400px] items-center justify-center p-8">
+      <div className="mx-auto max-w-md text-center">
+        <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-amber-50">
+          <AlertTriangle className="h-6 w-6 text-amber-600" />
+        </div>
+        <h2 className="mb-2 text-lg font-semibold text-text-primary">
+          Something went wrong
+        </h2>
+        <p className="mb-6 text-sm text-text-secondary">
+          A temporary error occurred. This usually resolves on its own.
+        </p>
+        <button
+          onClick={() => window.location.reload()}
+          className="inline-flex items-center gap-2 rounded-lg bg-crimson px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-crimson-dark"
+        >
+          <RefreshCw className="h-4 w-4" />
+          Reload Page
+        </button>
+      </div>
+    </div>
+  );
+}
 
 // Lazy-loaded layout (imported eagerly since it wraps protected routes)
 const DashboardLayoutModule = () =>
@@ -12,6 +41,7 @@ export const router = createBrowserRouter([
   // Public routes
   {
     element: <PublicLayout />,
+    errorElement: <RouteErrorFallback />,
     children: [
       {
         path: '/',
@@ -160,10 +190,12 @@ export const router = createBrowserRouter([
   // Protected routes
   {
     element: <AuthGuard />,
+    errorElement: <RouteErrorFallback />,
     children: [
       {
         path: '/dashboard',
         lazy: DashboardLayoutModule,
+        errorElement: <RouteErrorFallback />,
         children: [
           {
             index: true,

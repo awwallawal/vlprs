@@ -32,9 +32,9 @@ describe('LoginModal', () => {
     expect(screen.getByText('Login to Dashboard')).toBeInTheDocument();
   });
 
-  it('shows disabled Beneficiary and EOI portals with Coming Soon badges', () => {
+  it('shows disabled Beneficiary and EOI portals with Coming Soon (Phase 2) badges', () => {
     renderModal();
-    const badges = screen.getAllByText(/Coming Soon/);
+    const badges = screen.getAllByText(/Coming Soon \(Phase 2\)/);
     expect(badges.length).toBe(2);
   });
 

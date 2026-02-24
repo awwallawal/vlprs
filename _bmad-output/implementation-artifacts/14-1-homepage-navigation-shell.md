@@ -1,6 +1,6 @@
 # Story 14.1: Homepage & Navigation Shell
 
-Status: review
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -236,6 +236,21 @@ So that when I forward this URL to the Commissioner, IT Assessors, or Governor's
   - [x] 10.7 Test mobile navigation Sheet interaction — Tested via PublicNavBar hamburger button render test
   - [x] 10.8 Test meta tags render correctly (title, meta description, Open Graph tags) — Verified in index.html directly
   - [x] 10.9 Test heading hierarchy (single H1 on homepage, H2 for each section, no skipped levels)
+
+### Review Follow-ups (AI) - 2026-02-24
+- [x] [AI-Review][HIGH] Fix LoginModal: add `cursor-not-allowed` to disabled portal divs, change badge text to "Coming Soon (Phase 2)" [LoginModal.tsx]
+- [x] [AI-Review][HIGH] Fix Hero subtitle: render `HERO.subtitle` ("Oyo State Government") which is defined in content but never displayed [HomePage.tsx]
+- [x] [AI-Review][HIGH] Fix Footer: change "NDPA Compliant" to "NDPR Compliant" (Nigeria Data Protection Regulation) [PublicFooter.tsx]
+- [x] [AI-Review][MEDIUM] Add FavIcon for the VLPRS public website [index.html]
+- [x] [AI-Review][LOW] Format news card dates as human-readable (e.g., "1 Feb 2026") instead of raw ISO [HomePage.tsx]
+- [ ] [AI-Review][MEDIUM] Add tests for shared components: CtaBanner, DisclaimerCallout, SectionWrapper, SectionHeading, SkipLink
+- [ ] [AI-Review][MEDIUM] Improve disclaimer icon test to actually verify Info SVG is present [HomePage.test.tsx]
+- [ ] [AI-Review][MEDIUM] Improve PublicNavBar test: test dropdown content, keyboard nav, aria-current [PublicNavBar.test.tsx]
+- [ ] [AI-Review][MEDIUM] Improve mobile Sheet test: test click interaction, not just button existence [PublicNavBar.test.tsx]
+- [x] [AI-Review][ACCEPTED] AC9 "Who VLPRS Serves" 3 cards per wireframes-epic-14.md, accepted by PM
+- [x] [AI-Review][ACCEPTED] NavBar subtitle omitted, professional design choice, accepted by PM
+- [x] [AI-Review][ACCEPTED] Hero gradient, Poppins font, card hover effects per OSLRS extraction manifest
+- [x] [AI-Review][ACCEPTED] SectionWrapper, SectionHeading, SkipLink, ScrollToTop, intentional OSLRS components
 
 ## Dev Notes
 

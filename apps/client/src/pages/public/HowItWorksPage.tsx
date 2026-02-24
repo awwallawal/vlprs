@@ -1,7 +1,6 @@
 import { BreadcrumbNav } from '@/components/public/BreadcrumbNav';
 import { ContentPageHeader } from '@/components/public/ContentPageHeader';
 import { CtaBanner } from '@/components/public/CtaBanner';
-import { ProgrammeDisclaimer } from '@/components/public/ProgrammeDisclaimer';
 import { SectionHeading } from '@/components/public/SectionHeading';
 import { usePageMeta } from '@/hooks/usePageMeta';
 import {
@@ -60,11 +59,6 @@ export function HowItWorksPage() {
             <p className="text-green-800 leading-relaxed">{POST_COMPLETION.text}</p>
           </div>
         </section>
-
-        {/* Programme Disclaimer */}
-        <div className="mb-12">
-          <ProgrammeDisclaimer />
-        </div>
 
         <p className="text-sm text-slate-500 italic mb-8">{HOW_IT_WORKS_DISCLAIMER}</p>
       </div>

@@ -170,7 +170,7 @@ export function AboutPage() {
             {INSTITUTIONAL_STORY}
           </p>
 
-          <div className="bg-crimson-50 border-l-4 border-crimson p-6 rounded-r-lg mb-10">
+          <div className="bg-crimson-50 border-l-4 border-[var(--color-primary)] p-6 rounded-r-lg mb-10">
             <p className="text-base font-brand font-medium text-slate-800 text-center">
               {AUTHORITY_CALLOUT}
             </p>

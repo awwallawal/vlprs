@@ -36,6 +36,14 @@ describe('AccessibilityPage', () => {
     expect(h2s).toHaveLength(5);
   });
 
+  it('renders accessibility features as a list', () => {
+    renderPage();
+    const listItems = screen.getAllByRole('listitem');
+    expect(listItems.length).toBeGreaterThanOrEqual(7);
+    expect(screen.getByText('Full keyboard navigation support for all interactive elements')).toBeInTheDocument();
+    expect(screen.getByText('Visible focus indicators on all interactive elements')).toBeInTheDocument();
+  });
+
   it('sets page title', () => {
     renderPage();
     expect(document.title).toBe('Accessibility Statement | Vehicle Loan Scheme');

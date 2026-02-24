@@ -90,6 +90,7 @@ export function HomePage() {
                   (e.target as HTMLImageElement).style.display = 'none';
                 }}
               />
+              <p className="text-sm font-medium text-slate-500 tracking-wide uppercase">{HERO.subtitle}</p>
               <h1 className="text-[32px] sm:text-[44px] font-brand font-bold text-slate-900 leading-tight">
                 {HERO.title}
               </h1>
@@ -339,7 +340,9 @@ export function HomePage() {
               key={item.id}
               className="rounded-xl border border-slate-200 bg-white p-6 hover:border-crimson-300 hover:shadow-md transition-all duration-200"
             >
-              <time className="text-xs text-slate-400">{item.date}</time>
+              <time dateTime={item.date} className="text-xs text-slate-400">
+                {new Date(item.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+              </time>
               <h3 className="font-semibold text-slate-900 mt-1 mb-2">
                 {item.title}
               </h3>

@@ -120,7 +120,7 @@ export function PublicFooter() {
           <div className="flex items-center gap-4">
             <span className="inline-flex items-center gap-1.5 text-xs text-slate-500">
               <Shield className="h-3.5 w-3.5" />
-              NDPA Compliant
+              NDPR Compliant
             </span>
             <p className="text-xs text-slate-500">
               &copy; 2026 Oyo State Government. All rights reserved.

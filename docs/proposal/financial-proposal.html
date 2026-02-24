@@ -1,0 +1,933 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VLPRS Financial Proposal — Core Knowledge Limited</title>
+  <style>
+    :root {
+      --crimson: #9C1E23;
+      --crimson-dark: #7A181C;
+      --crimson-light: #F9ECED;
+      --teal: #0D7377;
+      --teal-light: #E6F4F4;
+      --gold: #B8860B;
+      --gold-light: #FDF6E3;
+      --text: #1A1A1A;
+      --text-secondary: #4A4A4A;
+      --text-muted: #6B6B6B;
+      --border: #D1D5DB;
+      --bg-light: #F8F9FA;
+    }
+
+    @page {
+      size: A4;
+      margin: 2cm 2.2cm;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+      font-size: 11pt;
+      line-height: 1.65;
+      color: var(--text);
+      background: #fff;
+    }
+
+    /* ── Cover Page ─────────────────────────── */
+    .cover-page {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      text-align: center;
+      page-break-after: always;
+      padding: 3cm 2cm;
+      position: relative;
+    }
+
+    .cover-top-bar {
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 8px;
+      background: var(--crimson);
+    }
+
+    .cover-bottom-bar {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 4px;
+      background: var(--crimson);
+    }
+
+    .cover-label {
+      font-size: 10pt;
+      font-weight: 600;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--crimson);
+      margin-bottom: 1.5cm;
+      padding: 8px 24px;
+      border: 2px solid var(--crimson);
+      display: inline-block;
+    }
+
+    .cover-title {
+      font-size: 28pt;
+      font-weight: 700;
+      color: var(--crimson);
+      line-height: 1.2;
+      margin-bottom: 0.5cm;
+    }
+
+    .cover-subtitle {
+      font-size: 14pt;
+      color: var(--text-secondary);
+      font-weight: 400;
+      margin-bottom: 2cm;
+      max-width: 80%;
+    }
+
+    .cover-divider {
+      width: 80px;
+      height: 3px;
+      background: var(--gold);
+      margin: 0 auto 2cm;
+    }
+
+    .cover-meta {
+      font-size: 10.5pt;
+      color: var(--text-secondary);
+      line-height: 2;
+    }
+
+    .cover-meta strong { color: var(--text); }
+
+    .cover-ref {
+      font-size: 9pt;
+      color: var(--text-muted);
+      margin-top: 2cm;
+      letter-spacing: 1px;
+    }
+
+    .cover-confidential {
+      font-size: 8pt;
+      color: var(--crimson);
+      font-weight: 600;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin-top: 0.8cm;
+      padding: 6px 16px;
+      border: 1px solid var(--crimson);
+    }
+
+    /* ── Section Styling ────────────────────── */
+    .section {
+      page-break-before: always;
+      padding-top: 0.5cm;
+    }
+
+    .section:first-of-type {
+      page-break-before: avoid;
+    }
+
+    .section-number {
+      font-size: 10pt;
+      font-weight: 700;
+      color: var(--crimson);
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+
+    h1 {
+      font-size: 20pt;
+      font-weight: 700;
+      color: var(--crimson);
+      margin-bottom: 0.8cm;
+      padding-bottom: 0.3cm;
+      border-bottom: 2px solid var(--crimson);
+      line-height: 1.3;
+    }
+
+    h2 {
+      font-size: 13pt;
+      font-weight: 700;
+      color: var(--crimson-dark);
+      margin-top: 0.8cm;
+      margin-bottom: 0.4cm;
+    }
+
+    h3 {
+      font-size: 11.5pt;
+      font-weight: 600;
+      color: var(--text);
+      margin-top: 0.6cm;
+      margin-bottom: 0.3cm;
+    }
+
+    p {
+      margin-bottom: 0.4cm;
+      text-align: justify;
+    }
+
+    ul, ol {
+      margin: 0.3cm 0 0.5cm 1.2cm;
+    }
+
+    li { margin-bottom: 4px; }
+
+    /* ── Tables ──────────────────────────────── */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 0.6cm 0;
+      font-size: 10.5pt;
+    }
+
+    thead th {
+      background: var(--crimson);
+      color: #fff;
+      font-weight: 600;
+      padding: 10px 14px;
+      text-align: left;
+      font-size: 10pt;
+    }
+
+    tbody td {
+      padding: 9px 14px;
+      border-bottom: 1px solid var(--border);
+      vertical-align: top;
+    }
+
+    tbody tr:nth-child(even) {
+      background: var(--bg-light);
+    }
+
+    .table-caption {
+      font-size: 9.5pt;
+      color: var(--text-muted);
+      font-style: italic;
+      margin-top: 4px;
+    }
+
+    /* ── Total Row ───────────────────────────── */
+    .total-row td {
+      font-weight: 700;
+      font-size: 11pt;
+      background: var(--crimson-light) !important;
+      border-top: 2px solid var(--crimson);
+      border-bottom: 2px solid var(--crimson);
+      color: var(--crimson-dark);
+    }
+
+    .subtotal-row td {
+      font-weight: 600;
+      background: var(--bg-light) !important;
+      border-top: 1px solid var(--text-muted);
+    }
+
+    /* ── Amount Formatting ───────────────────── */
+    .amount {
+      text-align: right;
+      font-family: 'Consolas', 'Courier New', monospace;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .amount-total {
+      text-align: right;
+      font-family: 'Consolas', 'Courier New', monospace;
+      font-weight: 700;
+      font-size: 12pt;
+      white-space: nowrap;
+    }
+
+    /* ── Highlight Boxes ────────────────────── */
+    .highlight-box {
+      background: var(--crimson-light);
+      border-left: 4px solid var(--crimson);
+      padding: 16px 20px;
+      margin: 0.6cm 0;
+      font-size: 10.5pt;
+    }
+
+    .highlight-box.teal {
+      background: var(--teal-light);
+      border-left-color: var(--teal);
+    }
+
+    .highlight-box.gold {
+      background: var(--gold-light);
+      border-left-color: var(--gold);
+    }
+
+    .highlight-box p { margin-bottom: 0; }
+
+    /* ── Value Cards ─────────────────────────── */
+    .value-row {
+      display: flex;
+      gap: 16px;
+      margin: 0.6cm 0;
+    }
+
+    .value-card {
+      flex: 1;
+      background: var(--bg-light);
+      border: 1px solid var(--border);
+      border-top: 4px solid var(--crimson);
+      padding: 16px;
+      text-align: center;
+    }
+
+    .value-card .val-number {
+      font-size: 18pt;
+      font-weight: 700;
+      color: var(--crimson);
+      line-height: 1.1;
+      font-family: 'Consolas', 'Courier New', monospace;
+    }
+
+    .value-card .val-label {
+      font-size: 9pt;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-top: 6px;
+    }
+
+    /* ── Milestone Progress ──────────────────── */
+    .milestone-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 0.5cm 0;
+    }
+
+    .milestone-pct {
+      width: 50px;
+      font-size: 11pt;
+      font-weight: 700;
+      color: var(--crimson);
+      text-align: right;
+    }
+
+    .milestone-track {
+      flex: 1;
+      height: 24px;
+      background: #E5E7EB;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .milestone-fill {
+      height: 100%;
+      background: var(--crimson);
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      padding-right: 8px;
+      color: #fff;
+      font-size: 8pt;
+      font-weight: 600;
+    }
+
+    .milestone-label {
+      width: 200px;
+      font-size: 10pt;
+    }
+
+    /* ── Infrastructure Detail ───────────────── */
+    .infra-table td:first-child {
+      font-weight: 500;
+    }
+
+    .infra-table .monthly {
+      color: var(--text-muted);
+      font-size: 9.5pt;
+    }
+
+    /* ── Footer ──────────────────────────────── */
+    .doc-footer {
+      font-size: 8pt;
+      color: var(--text-muted);
+      text-align: center;
+      border-top: 1px solid var(--border);
+      padding-top: 8px;
+      margin-top: 1.5cm;
+    }
+
+    @media print {
+      .section { page-break-before: always; }
+      .cover-page { min-height: auto; height: 100vh; }
+      table, .highlight-box, .value-row { page-break-inside: avoid; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ════════════════════════════════════════════ -->
+  <!-- COVER PAGE                                   -->
+  <!-- ════════════════════════════════════════════ -->
+  <div class="cover-page">
+    <div class="cover-top-bar"></div>
+
+    <div class="cover-label">Financial Proposal</div>
+
+    <h1 class="cover-title">Vehicle Loan Processing<br>& Receivables System</h1>
+    <p class="cover-subtitle">Investment Summary, Cost Breakdown &amp; Payment Schedule</p>
+
+    <div class="cover-divider"></div>
+
+    <div class="cover-meta">
+      <strong>Submitted to:</strong><br>
+      The Office of the Accountant General<br>
+      Oyo State Government, Ibadan<br><br>
+
+      <strong>Prepared by:</strong><br>
+      Core Knowledge Limited<br>
+      Lawal Awwal — Principal Consultant &amp; Solutions Architect<br><br>
+
+      <strong>Date:</strong> February 2026
+    </div>
+
+    <div class="cover-ref">Ref: CKL/VLPRS/FP/2026/001 &nbsp;|&nbsp; Volume 2 of 2</div>
+    <div class="cover-confidential">Confidential — For Official Use Only</div>
+
+    <div class="cover-bottom-bar"></div>
+  </div>
+
+
+  <!-- ════════════════════════════════════════════ -->
+  <!-- SECTION 1: INVESTMENT SUMMARY                -->
+  <!-- ════════════════════════════════════════════ -->
+  <div class="section">
+    <div class="section-number">Section 1</div>
+    <h1>Investment Summary</h1>
+
+    <p>
+      This section presents the total investment required for the design, development, deployment, and first-year
+      operation of the Vehicle Loan Processing &amp; Receivables System (VLPRS) across all 63 MDAs, including
+      staff training, hardware procurement, and post-deployment support.
+    </p>
+
+    <table>
+      <thead>
+        <tr>
+          <th style="width: 8%;">#</th>
+          <th style="width: 52%;">Item</th>
+          <th style="width: 40%;">Amount (&#8358;)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>1</td>
+          <td><strong>Software Design, Development &amp; Deployment</strong></td>
+          <td class="amount">6,900,000</td>
+        </tr>
+        <tr>
+          <td>2</td>
+          <td><strong>Data Migration &amp; MDA Onboarding</strong></td>
+          <td class="amount">1,500,000</td>
+        </tr>
+        <tr>
+          <td>3</td>
+          <td><strong>Cloud Infrastructure &amp; Hosting (Year 1)</strong></td>
+          <td class="amount">1,293,000</td>
+        </tr>
+        <tr>
+          <td>4</td>
+          <td><strong>Staff Training &amp; Capacity Building (2-Day Workshop)</strong></td>
+          <td class="amount">850,000</td>
+        </tr>
+        <tr>
+          <td>5</td>
+          <td><strong>Hardware Procurement (Desktop Workstation)</strong></td>
+          <td class="amount">457,000</td>
+        </tr>
+        <tr>
+          <td>6</td>
+          <td><strong>Project Documentation &amp; User Manuals</strong></td>
+          <td class="amount">500,000</td>
+        </tr>
+        <tr>
+          <td>7</td>
+          <td><strong>Post-Deployment Support (90 Days)</strong></td>
+          <td class="amount">500,000</td>
+        </tr>
+        <tr class="total-row">
+          <td></td>
+          <td><strong>TOTAL PROJECT INVESTMENT</strong></td>
+          <td class="amount-total">&#8358;12,000,000</td>
+        </tr>
+      </tbody>
+    </table>
+    <p class="table-caption">Table 1: Project Investment Summary</p>
+
+    <div class="value-row">
+      <div class="value-card">
+        <div class="val-number">&#8358;12M</div>
+        <div class="val-label">Total Investment</div>
+      </div>
+      <div class="value-card">
+        <div class="val-number">&#8358;2.6B+</div>
+        <div class="val-label">Portfolio Governed</div>
+      </div>
+      <div class="value-card">
+        <div class="val-number">0.46%</div>
+        <div class="val-label">Investment-to-Portfolio Ratio</div>
+      </div>
+    </div>
+
+    <div class="highlight-box gold">
+      <p>
+        <strong>An investment of &#8358;12 million to govern a portfolio exceeding &#8358;2.6 billion — representing
+        less than half of one percent of the total obligations it safeguards.</strong>
+      </p>
+    </div>
+  </div>
+
+
+  <!-- ════════════════════════════════════════════ -->
+  <!-- SECTION 2: DETAILED COST BREAKDOWN           -->
+  <!-- ════════════════════════════════════════════ -->
+  <div class="section">
+    <div class="section-number">Section 2</div>
+    <h1>Detailed Cost Breakdown</h1>
+
+    <h2>2.1 Software Design, Development &amp; Deployment — &#8358;6,900,000</h2>
+    <p>
+      Full-stack system design and development covering 14 functional modules and 82 functional requirements,
+      delivered across 6 implementation phases over 28 weeks:
+    </p>
+    <ul>
+      <li>4-tier financial computation engine with precision arithmetic for all loan types</li>
+      <li>Immutable transaction ledger with three-layer integrity enforcement</li>
+      <li>5 role-specific user interfaces (Accountant General, Deputy AG, Department Admin, MDA Officers, System Admin)</li>
+      <li>Executive dashboard with real-time portfolio metrics optimised for mobile access</li>
+      <li>MDA monthly submission workflow with automated validation and comparison</li>
+      <li>Auto-Stop Certificate generation system with dual notifications</li>
+      <li>Exception management, automated alerts, and reporting engine</li>
+      <li>Retirement pipeline forecasting and gratuity receivable tracking</li>
+      <li>PDF report generation with Oyo State branding</li>
+      <li>Public-facing website for scheme information and transparency</li>
+      <li>Secure authentication, role-based access control, and comprehensive audit logging</li>
+      <li>Automated deployment pipeline for reliable, repeatable releases</li>
+    </ul>
+
+    <h2>2.2 Data Migration &amp; MDA Onboarding — &#8358;1,500,000</h2>
+    <p>
+      Systematic migration of legacy data from 63 MDA spreadsheets into the VLPRS system:
+    </p>
+    <ul>
+      <li>Column mapping and data transformation for up to 63 unique spreadsheet formats</li>
+      <li>Variance categorisation (Clean, Minor, Significant, Structural, Anomalous)</li>
+      <li>Non-punitive side-by-side comparison for each MDA to review and confirm their data</li>
+      <li>Baseline establishment — an agreed-upon verified starting point per MDA</li>
+      <li>Pilot onboarding (3–5 MDAs) followed by phased full deployment</li>
+    </ul>
+
+    <h2>2.3 Cloud Infrastructure &amp; Hosting (Year 1) — &#8358;1,293,000</h2>
+    <p>
+      All infrastructure is cloud-hosted, eliminating the need for on-premise server hardware. The following
+      represents actual vendor costs for the first year of operation:
+    </p>
+
+    <table class="infra-table">
+      <thead>
+        <tr>
+          <th style="width: 42%;">Infrastructure Component</th>
+          <th style="width: 22%;">Monthly (&#8358;)</th>
+          <th style="width: 22%;">Annual (&#8358;)</th>
+          <th style="width: 14%;">Vendor</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Application Server <span class="monthly">(2 vCPU, 4GB RAM)</span></td>
+          <td class="amount">40,000</td>
+          <td class="amount">480,000</td>
+          <td>DigitalOcean</td>
+        </tr>
+        <tr>
+          <td>Managed PostgreSQL Database</td>
+          <td class="amount">25,000</td>
+          <td class="amount">300,000</td>
+          <td>DigitalOcean</td>
+        </tr>
+        <tr>
+          <td>Cloud Storage &amp; Automated Backups</td>
+          <td class="amount">8,500</td>
+          <td class="amount">102,000</td>
+          <td>DigitalOcean</td>
+        </tr>
+        <tr>
+          <td>Transactional Email Service</td>
+          <td class="amount">33,000</td>
+          <td class="amount">396,000</td>
+          <td>Resend</td>
+        </tr>
+        <tr>
+          <td>Domain Name &amp; SSL Certificate</td>
+          <td class="amount">—</td>
+          <td class="amount">15,000</td>
+          <td>Various</td>
+        </tr>
+        <tr class="subtotal-row">
+          <td><strong>Infrastructure Subtotal</strong></td>
+          <td class="amount"><strong>106,500</strong></td>
+          <td class="amount"><strong>1,293,000</strong></td>
+          <td></td>
+        </tr>
+      </tbody>
+    </table>
+    <p class="table-caption">Table 2: Cloud Infrastructure Cost Breakdown (Year 1)</p>
+
+    <div class="highlight-box teal">
+      <p>
+        <strong>Transparency note:</strong> Infrastructure costs are based on actual vendor pricing and are
+        independently verifiable. These represent pass-through costs — what the vendors charge — not markups.
+        Monthly invoices from each vendor are available upon request.
+      </p>
+    </div>
+
+    <h2>2.4 Staff Training &amp; Capacity Building — &#8358;850,000</h2>
+    <ul>
+      <li>2-day hands-on training workshop covering all user roles</li>
+      <li>Printed training materials and role-specific user guides for each participant</li>
+      <li>Laminated quick-reference cards for daily operations</li>
+      <li>Workshop logistics: refreshments, catering, training supplies</li>
+      <li>Post-workshop video guides for ongoing reference and new staff onboarding</li>
+    </ul>
+
+    <h2>2.5 Hardware Procurement — &#8358;457,000</h2>
+    <ul>
+      <li>Desktop workstation for the Car Loan Department — the primary operational terminal for day-to-day system administration</li>
+      <li>Specification: suitable for web-based application use, standard office productivity, and report generation</li>
+      <li>Includes monitor, keyboard, mouse, UPS (uninterruptible power supply), and basic accessories</li>
+    </ul>
+
+    <h2>2.6 Project Documentation &amp; User Manuals — &#8358;500,000</h2>
+    <ul>
+      <li>System Administrator Guide — comprehensive technical reference for ongoing management</li>
+      <li>Role-specific User Manuals — tailored handbooks for each user type (Executive, Dept Admin, MDA Officer)</li>
+      <li>Operational Procedures Manual — standard processes for monthly cycles, exceptions, reporting</li>
+      <li>Data Dictionary and System Architecture documentation — for institutional knowledge preservation</li>
+    </ul>
+
+    <h2>2.7 Post-Deployment Support (90 Days) — &#8358;500,000</h2>
+    <ul>
+      <li>Priority resolution of reported issues and defects</li>
+      <li>Assistance with MDA onboarding questions during the stabilisation period</li>
+      <li>System performance monitoring and optimisation</li>
+      <li>Minor adjustments based on user feedback during initial live operations</li>
+    </ul>
+  </div>
+
+
+  <!-- ════════════════════════════════════════════ -->
+  <!-- SECTION 3: PAYMENT SCHEDULE                  -->
+  <!-- ════════════════════════════════════════════ -->
+  <div class="section">
+    <div class="section-number">Section 3</div>
+    <h1>Payment Schedule</h1>
+
+    <p>
+      Payment is structured against verified, demonstrable milestones. Each payment is triggered upon successful
+      delivery and demonstration of the corresponding deliverable. This ensures the Office of the Accountant General
+      pays only against confirmed progress.
+    </p>
+
+    <table>
+      <thead>
+        <tr>
+          <th style="width: 5%;">#</th>
+          <th style="width: 28%;">Milestone</th>
+          <th style="width: 8%;">%</th>
+          <th style="width: 17%;">Amount (&#8358;)</th>
+          <th style="width: 42%;">Trigger / Deliverable</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>1</td>
+          <td><strong>Contract Execution</strong></td>
+          <td>30%</td>
+          <td class="amount">3,600,000</td>
+          <td>Upon contract signing — covers infrastructure setup, development mobilisation, and initial deployment</td>
+        </tr>
+        <tr>
+          <td>2</td>
+          <td><strong>Core System Delivery</strong></td>
+          <td>25%</td>
+          <td class="amount">3,000,000</td>
+          <td>Computation engine, immutable ledger, authentication system, and executive dashboard operational and demonstrated</td>
+        </tr>
+        <tr>
+          <td>3</td>
+          <td><strong>MDA Migration &amp; Go-Live</strong></td>
+          <td>25%</td>
+          <td class="amount">3,000,000</td>
+          <td>All 63 MDA datasets migrated and baselined, system deployed to production, pilot MDAs actively submitting data</td>
+        </tr>
+        <tr>
+          <td>4</td>
+          <td><strong>Training, Full Rollout &amp; Acceptance</strong></td>
+          <td>20%</td>
+          <td class="amount">2,400,000</td>
+          <td>2-day workshop completed, all user roles active, desktop hardware delivered and installed, formal acceptance sign-off</td>
+        </tr>
+        <tr class="total-row">
+          <td></td>
+          <td><strong>Total</strong></td>
+          <td><strong>100%</strong></td>
+          <td class="amount-total">&#8358;12,000,000</td>
+          <td></td>
+        </tr>
+      </tbody>
+    </table>
+    <p class="table-caption">Table 3: Milestone-Based Payment Schedule</p>
+
+    <h2>Payment Milestone Visualisation</h2>
+
+    <div class="milestone-bar">
+      <div class="milestone-label"><strong>Milestone 1</strong> — Contract</div>
+      <div class="milestone-track">
+        <div class="milestone-fill" style="width: 30%;">&#8358;3.6M</div>
+      </div>
+      <div class="milestone-pct">30%</div>
+    </div>
+
+    <div class="milestone-bar">
+      <div class="milestone-label"><strong>Milestone 2</strong> — Core System</div>
+      <div class="milestone-track">
+        <div class="milestone-fill" style="width: 25%;">&#8358;3.0M</div>
+      </div>
+      <div class="milestone-pct">25%</div>
+    </div>
+
+    <div class="milestone-bar">
+      <div class="milestone-label"><strong>Milestone 3</strong> — Migration</div>
+      <div class="milestone-track">
+        <div class="milestone-fill" style="width: 25%;">&#8358;3.0M</div>
+      </div>
+      <div class="milestone-pct">25%</div>
+    </div>
+
+    <div class="milestone-bar">
+      <div class="milestone-label"><strong>Milestone 4</strong> — Rollout</div>
+      <div class="milestone-track">
+        <div class="milestone-fill" style="width: 20%;">&#8358;2.4M</div>
+      </div>
+      <div class="milestone-pct">20%</div>
+    </div>
+
+    <div class="highlight-box">
+      <p>
+        <strong>Risk-mitigated structure:</strong> The final 20% (&#8358;2.4M) is payable only upon completion
+        of training, hardware delivery, full system deployment, and formal acceptance sign-off. The Office of the
+        Accountant General retains leverage throughout the engagement.
+      </p>
+    </div>
+  </div>
+
+
+  <!-- ════════════════════════════════════════════ -->
+  <!-- SECTION 4: ANNUAL RECURRING COSTS            -->
+  <!-- ════════════════════════════════════════════ -->
+  <div class="section">
+    <div class="section-number">Section 4</div>
+    <h1>Annual Recurring Costs (Year 2 Onward)</h1>
+
+    <p>
+      Beyond the initial project investment, the system requires annual funding for infrastructure and ongoing
+      maintenance to remain operational, secure, and supported.
+    </p>
+
+    <table>
+      <thead>
+        <tr>
+          <th style="width: 60%;">Item</th>
+          <th style="width: 40%;">Annual Amount (&#8358;)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>
+            <strong>Cloud Infrastructure &amp; Hosting</strong><br>
+            <span style="font-size: 9.5pt; color: var(--text-muted);">Application server, managed database, backups, email service, domain &amp; SSL</span>
+          </td>
+          <td class="amount">1,293,000</td>
+        </tr>
+        <tr>
+          <td>
+            <strong>System Maintenance &amp; Technical Support</strong><br>
+            <span style="font-size: 9.5pt; color: var(--text-muted);">Security updates, performance monitoring, bug resolution, helpdesk access, minor enhancements</span>
+          </td>
+          <td class="amount">1,507,000</td>
+        </tr>
+        <tr class="total-row">
+          <td><strong>Annual Recurring Total</strong></td>
+          <td class="amount-total">&#8358;2,800,000 / year</td>
+        </tr>
+      </tbody>
+    </table>
+    <p class="table-caption">Table 4: Annual Recurring Costs</p>
+
+    <div class="highlight-box teal">
+      <p>
+        <strong>&#8358;2.8 million per year</strong> to maintain a system governing a <strong>&#8358;2.6 billion+</strong>
+        portfolio — a recurring cost of <strong>0.11%</strong> of the portfolio value it protects. This covers all
+        hosting, security maintenance, and technical support.
+      </p>
+    </div>
+  </div>
+
+
+  <!-- ════════════════════════════════════════════ -->
+  <!-- SECTION 5: VALUE ANALYSIS                    -->
+  <!-- ════════════════════════════════════════════ -->
+  <div class="section">
+    <div class="section-number">Section 5</div>
+    <h1>Value Analysis</h1>
+
+    <h2>5.1 Investment Context</h2>
+    <p>
+      The Vehicle Loan Scheme represents over &#8358;2.6 billion in active financial obligations managed on behalf
+      of 3,100+ civil servants across 63 MDAs. The &#8358;12 million investment in VLPRS represents
+      <strong>less than 0.5%</strong> of the portfolio it is designed to govern.
+    </p>
+
+    <h2>5.2 Quantifiable Returns</h2>
+
+    <table>
+      <thead>
+        <tr>
+          <th style="width: 35%;">Area</th>
+          <th style="width: 30%;">Current Cost / Impact</th>
+          <th style="width: 35%;">With VLPRS</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Report Generation</strong></td>
+          <td>2–3 working days per cycle (manual compilation from 63 sources)</td>
+          <td>Under 10 seconds, any time, from any device</td>
+        </tr>
+        <tr>
+          <td><strong>Calculation Accuracy</strong></td>
+          <td>~30% discrepancy rate in sampled records</td>
+          <td>100% computational accuracy — single verified engine</td>
+        </tr>
+        <tr>
+          <td><strong>Over-Deduction Prevention</strong></td>
+          <td>Unquantified losses — multiple incidents per year, administrative cost of investigation + refund processing</td>
+          <td>Eliminated — Auto-Stop Certificate at zero balance</td>
+        </tr>
+        <tr>
+          <td><strong>Fund Visibility</strong></td>
+          <td>No real-time view of available fund, outstanding obligations, or recovery projections</td>
+          <td>Real-time dashboard — total exposure, fund available, recovery rate</td>
+        </tr>
+        <tr>
+          <td><strong>MDA Officer Workload</strong></td>
+          <td>17-column spreadsheet with manual calculations</td>
+          <td>8-field submission — 60% workload reduction</td>
+        </tr>
+        <tr>
+          <td><strong>Audit Readiness</strong></td>
+          <td>No systematic audit trail — figures untraceable</td>
+          <td>Every transaction permanent, timestamped, attributed — fully auditable</td>
+        </tr>
+        <tr>
+          <td><strong>Retirement Recovery</strong></td>
+          <td>Reactive — discovered after the fact</td>
+          <td>Proactive — 3/6/12-month forecasting with gratuity receivable tracking</td>
+        </tr>
+      </tbody>
+    </table>
+    <p class="table-caption">Table 5: Value Comparison — Current State vs. VLPRS</p>
+
+    <h2>5.3 The Cost of Inaction</h2>
+
+    <div class="highlight-box gold">
+      <p>
+        Every month the current manual process continues:
+      </p>
+      <ul style="margin-top: 8px; margin-bottom: 0;">
+        <li>Calculation errors continue to compound across 3,100+ loans undetected</li>
+        <li>Workers risk over-deduction with no automated safeguard</li>
+        <li>The Accountant General cannot answer scheme status queries without multi-day manual compilation</li>
+        <li>Retirement obligations remain invisible until after the fact</li>
+        <li>The revolving fund operates without visibility into its own health</li>
+        <li>Every figure produced is indefensible under audit scrutiny</li>
+      </ul>
+    </div>
+
+    <p>
+      The question is not whether the State can afford this investment. The question is whether the State can afford
+      to continue administering a &#8358;2.6 billion portfolio using spreadsheets and paper files — and to bear the
+      operational, financial, and reputational consequences of doing so.
+    </p>
+  </div>
+
+
+  <!-- ════════════════════════════════════════════ -->
+  <!-- SECTION 6: TERMS & CONDITIONS                -->
+  <!-- ════════════════════════════════════════════ -->
+  <div class="section">
+    <div class="section-number">Section 6</div>
+    <h1>Terms &amp; Conditions</h1>
+
+    <h2>6.1 Proposal Validity</h2>
+    <p>
+      This financial proposal is valid for <strong>90 days</strong> from the date of submission (February 2026).
+      Pricing is subject to review beyond this period due to potential changes in vendor costs and exchange rates.
+    </p>
+
+    <h2>6.2 Scope</h2>
+    <p>
+      This proposal covers the complete design, development, deployment, data migration, training, hardware
+      procurement, documentation, and 90-day post-deployment support for VLPRS as described in Volume 1
+      (Technical Proposal, Ref: CKL/VLPRS/TP/2026/001).
+    </p>
+
+    <h2>6.3 Client Obligations</h2>
+    <p>The Office of the Accountant General will provide:</p>
+    <ul>
+      <li>Timely access to existing MDA spreadsheet data for migration</li>
+      <li>A designated project liaison from the Car Loan Department</li>
+      <li>Availability of staff for the 2-day training workshop</li>
+      <li>Reasonable cooperation of MDA reporting officers during the onboarding process</li>
+      <li>Access to a suitable location for hardware installation in the Car Loan Department</li>
+    </ul>
+
+    <h2>6.4 Intellectual Property</h2>
+    <p>
+      Upon full payment, the Office of the Accountant General retains full rights to use the VLPRS system
+      for its intended purpose within the Oyo State Government. Core Knowledge Limited retains ownership of
+      the underlying software architecture and codebase.
+    </p>
+
+    <h2>6.5 Confidentiality</h2>
+    <p>
+      All data processed by VLPRS — including beneficiary records, financial transactions, and MDA submissions —
+      is treated as confidential government information. Core Knowledge Limited commits to maintaining the
+      confidentiality and security of all data handled during and after the project.
+    </p>
+  </div>
+
+
+  <!-- ════════════════════════════════════════════ -->
+  <!-- DOCUMENT FOOTER                              -->
+  <!-- ════════════════════════════════════════════ -->
+  <div class="doc-footer">
+    Core Knowledge Limited &nbsp;&bull;&nbsp; CKL/VLPRS/FP/2026/001 &nbsp;&bull;&nbsp; Volume 2 of 2 &nbsp;&bull;&nbsp; Confidential<br>
+    Vehicle Loan Processing &amp; Receivables System — Financial Proposal &nbsp;&bull;&nbsp; February 2026
+  </div>
+
+</body>
+</html>

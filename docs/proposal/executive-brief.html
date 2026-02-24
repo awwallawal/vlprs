@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VLPRS Executive Brief — Core Knowledge Limited</title>
+  <style>
+    :root {
+      --crimson: #9C1E23;
+      --crimson-dark: #7A181C;
+      --crimson-light: #F9ECED;
+      --teal: #0D7377;
+      --teal-light: #E6F4F4;
+      --gold: #B8860B;
+      --gold-light: #FDF6E3;
+      --text: #1A1A1A;
+      --text-secondary: #4A4A4A;
+      --text-muted: #6B6B6B;
+      --border: #D1D5DB;
+      --bg-light: #F8F9FA;
+    }
+
+    @page {
+      size: A4;
+      margin: 2cm 2.2cm;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+      font-size: 11pt;
+      line-height: 1.65;
+      color: var(--text);
+      background: #fff;
+    }
+
+    /* ── Header Bar ─────────────────────────── */
+    .brief-header {
+      background: var(--crimson);
+      color: #fff;
+      padding: 24px 30px;
+      margin: -2cm -2.2cm 1cm -2.2cm;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .brief-header-title {
+      font-size: 14pt;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+    }
+
+    .brief-header-sub {
+      font-size: 9pt;
+      opacity: 0.85;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    .brief-header-right {
+      text-align: right;
+    }
+
+    .brief-header-right .label {
+      font-size: 8pt;
+      opacity: 0.7;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .brief-header-right .date {
+      font-size: 10pt;
+      font-weight: 600;
+    }
+
+    /* ── Title Block ─────────────────────────── */
+    .brief-title-block {
+      text-align: center;
+      padding: 0.5cm 0 0.8cm;
+      border-bottom: 2px solid var(--crimson);
+      margin-bottom: 0.8cm;
+    }
+
+    .brief-title-block h1 {
+      font-size: 22pt;
+      font-weight: 700;
+      color: var(--crimson);
+      line-height: 1.25;
+      margin-bottom: 6px;
+    }
+
+    .brief-title-block .subtitle {
+      font-size: 11pt;
+      color: var(--text-secondary);
+    }
+
+    /* ── Sections ────────────────────────────── */
+    h2 {
+      font-size: 12pt;
+      font-weight: 700;
+      color: var(--crimson);
+      margin-top: 0.7cm;
+      margin-bottom: 0.3cm;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      padding-bottom: 4px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    h3 {
+      font-size: 11pt;
+      font-weight: 600;
+      color: var(--text);
+      margin-top: 0.4cm;
+      margin-bottom: 0.2cm;
+    }
+
+    p {
+      margin-bottom: 0.35cm;
+      text-align: justify;
+    }
+
+    ul {
+      margin: 0.2cm 0 0.4cm 1.2cm;
+    }
+
+    li { margin-bottom: 3px; }
+
+    /* ── Stat Strip ──────────────────────────── */
+    .stat-strip {
+      display: flex;
+      gap: 0;
+      margin: 0.6cm 0;
+      border: 1px solid var(--border);
+      overflow: hidden;
+    }
+
+    .stat-strip-item {
+      flex: 1;
+      padding: 14px 12px;
+      text-align: center;
+      border-right: 1px solid var(--border);
+    }
+
+    .stat-strip-item:last-child {
+      border-right: none;
+    }
+
+    .stat-strip-item .num {
+      font-size: 18pt;
+      font-weight: 700;
+      color: var(--crimson);
+      line-height: 1.1;
+      font-family: 'Consolas', 'Courier New', monospace;
+    }
+
+    .stat-strip-item .lbl {
+      font-size: 8pt;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-top: 4px;
+    }
+
+    /* ── Before/After ────────────────────────── */
+    .ba-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0;
+      margin: 0.5cm 0;
+      border: 1px solid var(--border);
+    }
+
+    .ba-col {
+      padding: 14px 16px;
+    }
+
+    .ba-col.before {
+      background: #FFF8F8;
+      border-right: 2px solid var(--border);
+    }
+
+    .ba-col.after {
+      background: #F5FFF8;
+    }
+
+    .ba-label {
+      font-size: 8pt;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      margin-bottom: 8px;
+    }
+
+    .ba-col.before .ba-label { color: #9B2C2C; }
+    .ba-col.after .ba-label { color: #276749; }
+
+    .ba-item {
+      font-size: 10pt;
+      margin-bottom: 5px;
+      color: var(--text-secondary);
+    }
+
+    /* ── Highlight Box ───────────────────────── */
+    .highlight-box {
+      background: var(--gold-light);
+      border-left: 4px solid var(--gold);
+      padding: 14px 18px;
+      margin: 0.5cm 0;
+      font-size: 10.5pt;
+    }
+
+    .highlight-box.crimson {
+      background: var(--crimson-light);
+      border-left-color: var(--crimson);
+    }
+
+    .highlight-box.teal {
+      background: var(--teal-light);
+      border-left-color: var(--teal);
+    }
+
+    .highlight-box p { margin-bottom: 0; }
+
+    /* ── Budget Summary ──────────────────────── */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 0.4cm 0;
+      font-size: 10pt;
+    }
+
+    thead th {
+      background: var(--crimson);
+      color: #fff;
+      font-weight: 600;
+      padding: 8px 12px;
+      text-align: left;
+      font-size: 9.5pt;
+    }
+
+    tbody td {
+      padding: 7px 12px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    tbody tr:nth-child(even) { background: var(--bg-light); }
+
+    .total-row td {
+      font-weight: 700;
+      background: var(--crimson-light) !important;
+      border-top: 2px solid var(--crimson);
+      color: var(--crimson-dark);
+    }
+
+    .amount {
+      text-align: right;
+      font-family: 'Consolas', 'Courier New', monospace;
+      font-weight: 600;
+    }
+
+    /* ── Recommendation Box ──────────────────── */
+    .recommendation {
+      background: var(--crimson);
+      color: #fff;
+      padding: 20px 24px;
+      margin: 0.6cm 0;
+    }
+
+    .recommendation h3 {
+      color: #fff;
+      font-size: 11pt;
+      margin-top: 0;
+      margin-bottom: 8px;
+    }
+
+    .recommendation p {
+      color: rgba(255, 255, 255, 0.92);
+      margin-bottom: 0;
+      font-size: 10.5pt;
+    }
+
+    /* ── Footer ──────────────────────────────── */
+    .doc-footer {
+      font-size: 8pt;
+      color: var(--text-muted);
+      text-align: center;
+      border-top: 1px solid var(--border);
+      padding-top: 8px;
+      margin-top: 1cm;
+    }
+
+    /* ── Page Break ──────────────────────────── */
+    .page-break { page-break-before: always; padding-top: 0.5cm; }
+
+    @media print {
+      .brief-header {
+        margin: -2cm -2.2cm 1cm -2.2cm;
+      }
+      .stat-strip, .ba-grid, table, .highlight-box, .recommendation {
+        page-break-inside: avoid;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ═══════════ HEADER ═══════════ -->
+  <div class="brief-header">
+    <div>
+      <div class="brief-header-title">Core Knowledge Limited</div>
+      <div class="brief-header-sub">Executive Brief</div>
+    </div>
+    <div class="brief-header-right">
+      <div class="label">Date</div>
+      <div class="date">February 2026</div>
+    </div>
+  </div>
+
+  <!-- ═══════════ TITLE ═══════════ -->
+  <div class="brief-title-block">
+    <h1>Vehicle Loan Processing &amp; Receivables System</h1>
+    <div class="subtitle">A Digital System of Record for the Oyo State Government Vehicle Loan Scheme</div>
+  </div>
+
+
+  <!-- ═══════════ THE SITUATION ═══════════ -->
+  <h2>The Situation</h2>
+
+  <p>
+    The Vehicle Loan Scheme serves <strong>3,100+ civil servants</strong> across <strong>63 MDAs</strong>, with total
+    obligations exceeding <strong>&#8358;2.6 billion</strong>. Today, every aspect of this portfolio is administered
+    manually — 63 separate spreadsheets, independent calculations, paper-based records, and reports compiled over days.
+  </p>
+
+  <div class="stat-strip">
+    <div class="stat-strip-item">
+      <div class="num">63</div>
+      <div class="lbl">MDAs</div>
+    </div>
+    <div class="stat-strip-item">
+      <div class="num">3,100+</div>
+      <div class="lbl">Beneficiaries</div>
+    </div>
+    <div class="stat-strip-item">
+      <div class="num">&#8358;2.6B+</div>
+      <div class="lbl">Exposure</div>
+    </div>
+    <div class="stat-strip-item">
+      <div class="num">~30%</div>
+      <div class="lbl">Error Rate</div>
+    </div>
+  </div>
+
+  <p>
+    This manual approach produces three critical risks: <strong>workers are over-deducted</strong> beyond loan
+    completion with no automated safeguard; <strong>calculation errors compound undetected</strong> across 63
+    independent sources; and <strong>the Accountant General has no real-time visibility</strong> into the fund's
+    position, outstanding obligations, or MDA compliance — with scheme status queries requiring 2–3 days of
+    manual compilation.
+  </p>
+
+
+  <!-- ═══════════ THE SOLUTION ═══════════ -->
+  <h2>The Solution</h2>
+
+  <p>
+    <strong>VLPRS</strong> is a purpose-built, secure web application that replaces fragmented manual processes with
+    a single, authoritative digital system of record. It automates all financial calculations, provides real-time
+    executive visibility, and introduces the <strong>Auto-Stop Certificate</strong> — guaranteeing deductions halt
+    the moment a loan reaches zero balance.
+  </p>
+
+  <div class="ba-grid">
+    <div class="ba-col before">
+      <div class="ba-label">Current State</div>
+      <div class="ba-item">Scheme status takes 2–3 days to compile</div>
+      <div class="ba-item">30% calculation error rate (sampled)</div>
+      <div class="ba-item">MDA officers manage 17-column spreadsheets</div>
+      <div class="ba-item">No mechanism to stop over-deductions</div>
+      <div class="ba-item">No audit trail — figures untraceable</div>
+      <div class="ba-item">Retirement obligations discovered after the fact</div>
+    </div>
+    <div class="ba-col after">
+      <div class="ba-label">With VLPRS</div>
+      <div class="ba-item">Real-time dashboard — answers in seconds, on mobile</div>
+      <div class="ba-item">100% calculation accuracy — single verified engine</div>
+      <div class="ba-item">MDA officers submit 8 simple fields (60% less work)</div>
+      <div class="ba-item">Auto-Stop Certificate at zero balance — no more over-deductions</div>
+      <div class="ba-item">Every transaction permanent, timestamped, auditable</div>
+      <div class="ba-item">3/6/12-month retirement forecasting with recovery tracking</div>
+    </div>
+  </div>
+
+
+  <!-- ═══════════ PAGE 2 ═══════════ -->
+  <div class="page-break"></div>
+
+  <!-- ═══════════ KEY CAPABILITIES ═══════════ -->
+  <h2>What VLPRS Delivers</h2>
+
+  <ul>
+    <li><strong>Executive Dashboard</strong> — 4 headline numbers (Active Loans, Total Exposure, Fund Available, Monthly Recovery) accessible from any device in under 3 seconds</li>
+    <li><strong>Automated Computation</strong> — All loan calculations handled by a single, verified engine covering all 4 tiers — no manual math</li>
+    <li><strong>Auto-Stop Certificate</strong> — Automatically generated at loan completion, officially halting deductions and protecting workers</li>
+    <li><strong>Simplified MDA Submissions</strong> — 8 fields instead of 17 columns, with instant confirmation</li>
+    <li><strong>Immutable Audit Trail</strong> — Every financial transaction is permanent, traceable, and audit-ready</li>
+    <li><strong>PDF Reports in Seconds</strong> — Executive summaries, MDA compliance, and variance reports — all branded with the Oyo State crest</li>
+    <li><strong>Retirement Pipeline</strong> — Proactive forecasting of retiring staff with outstanding obligations and gratuity receivable tracking</li>
+    <li><strong>Automated Alerts</strong> — Email notifications for overdue submissions, inactive loans, and approaching retirements</li>
+  </ul>
+
+
+  <!-- ═══════════ INVESTMENT ═══════════ -->
+  <h2>Investment</h2>
+
+  <table>
+    <thead>
+      <tr>
+        <th style="width: 60%;">Item</th>
+        <th style="width: 40%;">Amount (&#8358;)</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Software Design, Development &amp; Deployment</td>
+        <td class="amount">6,900,000</td>
+      </tr>
+      <tr>
+        <td>Data Migration &amp; MDA Onboarding (63 MDAs)</td>
+        <td class="amount">1,500,000</td>
+      </tr>
+      <tr>
+        <td>Cloud Infrastructure &amp; Hosting (Year 1)</td>
+        <td class="amount">1,293,000</td>
+      </tr>
+      <tr>
+        <td>Staff Training (2-Day Workshop), Documentation &amp; Hardware</td>
+        <td class="amount">1,807,000</td>
+      </tr>
+      <tr>
+        <td>Post-Deployment Support (90 Days)</td>
+        <td class="amount">500,000</td>
+      </tr>
+      <tr class="total-row">
+        <td><strong>Total Year 1 Investment</strong></td>
+        <td class="amount" style="font-size: 11pt;"><strong>&#8358;12,000,000</strong></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <p>
+    <strong>Annual recurring cost (Year 2+):</strong> &#8358;2,800,000/year for infrastructure and maintenance.
+  </p>
+
+  <div class="highlight-box">
+    <p>
+      <strong>&#8358;12 million to govern a &#8358;2.6 billion+ portfolio — less than half of one percent of
+      the total obligations it safeguards.</strong>
+    </p>
+  </div>
+
+
+  <!-- ═══════════ TIMELINE ═══════════ -->
+  <h2>Implementation Timeline</h2>
+
+  <p>
+    28 weeks, 6 phases. Delivered incrementally — working software visible from Week 4. Key milestones:
+  </p>
+
+  <ul>
+    <li><strong>Week 4:</strong> Live system shell with authentication, access control, and public website</li>
+    <li><strong>Week 8:</strong> Financial computation engine verified for all 4 loan tiers</li>
+    <li><strong>Week 12:</strong> All 63 MDA datasets migrated and baselined</li>
+    <li><strong>Week 15:</strong> Executive dashboard live — real-time scheme status from any device</li>
+    <li><strong>Week 22:</strong> Auto-Stop Certificates operational — over-deductions prevented</li>
+    <li><strong>Week 28:</strong> Full deployment, staff trained, hardware installed, acceptance sign-off</li>
+  </ul>
+
+  <div class="highlight-box teal">
+    <p>
+      <strong>Proof of commitment:</strong> A functional proof-of-concept is already operational — system
+      architecture deployed, authentication working, public website live. This is not a concept. Development
+      is underway.
+    </p>
+  </div>
+
+
+  <!-- ═══════════ RECOMMENDATION ═══════════ -->
+  <div class="recommendation">
+    <h3>Recommended Action</h3>
+    <p>
+      Approve the engagement of Core Knowledge Limited for the full implementation of VLPRS at a total
+      investment of &#8358;12,000,000, payable across four verified milestones, to establish a digital system
+      of record for the Vehicle Loan Scheme — replacing manual administration, eliminating over-deductions,
+      and providing real-time executive visibility into a &#8358;2.6 billion+ portfolio.
+    </p>
+  </div>
+
+
+  <!-- ═══════════ CONTACT ═══════════ -->
+  <div style="margin-top: 0.8cm; font-size: 10pt; color: var(--text-secondary);">
+    <strong>Prepared by:</strong><br>
+    Lawal Awwal — Principal Consultant &amp; Solutions Architect<br>
+    Core Knowledge Limited<br>
+    awwallawal@gmail.com &nbsp;|&nbsp; +234 805 302 3862<br>
+    Bodija, Ibadan, Oyo State
+  </div>
+
+
+  <!-- ═══════════ FOOTER ═══════════ -->
+  <div class="doc-footer">
+    Core Knowledge Limited &nbsp;&bull;&nbsp; CKL/VLPRS/EB/2026/001 &nbsp;&bull;&nbsp; Confidential<br>
+    Vehicle Loan Processing &amp; Receivables System — Executive Brief &nbsp;&bull;&nbsp; February 2026
+  </div>
+
+</body>
+</html>

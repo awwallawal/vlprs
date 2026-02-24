@@ -112,7 +112,16 @@ export async function apiClient<T>(
     }
   }
 
-  const body = await res.json();
+  // Guard against non-JSON responses (e.g. 502 HTML from nginx during deploys)
+  let body: { success?: boolean; data?: unknown; error?: { code: string; message: string } };
+  try {
+    body = await res.json();
+  } catch {
+    throw Object.assign(new Error('Server temporarily unavailable — please try again'), {
+      code: 'SERVICE_UNAVAILABLE',
+      status: res.status,
+    });
+  }
 
   if (!res.ok || !body.success) {
     const error = body.error || {

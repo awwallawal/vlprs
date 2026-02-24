@@ -19,7 +19,15 @@ export const ACCESSIBILITY_SECTIONS: LegalSection[] = [
   },
   {
     title: 'Accessibility Features',
-    body: 'VLPRS includes the following accessibility features: full keyboard navigation support for all interactive elements; screen reader compatibility with semantic HTML and ARIA labels; colour contrast ratios meeting WCAG AA standards (minimum 4.5:1 for body text, 3:1 for large text); text resizing support up to 200% without loss of functionality; touch targets of minimum 44x44 pixels on mobile devices; visible focus indicators on all interactive elements; and consistent, predictable navigation throughout the platform.',
+    body: [
+      'Full keyboard navigation support for all interactive elements',
+      'Screen reader compatibility with semantic HTML and ARIA labels',
+      'Colour contrast ratios meeting WCAG AA standards (minimum 4.5:1 for body text, 3:1 for large text)',
+      'Text resizing support up to 200% without loss of functionality',
+      'Touch targets of minimum 44x44 pixels on mobile devices',
+      'Visible focus indicators on all interactive elements',
+      'Consistent, predictable navigation throughout the platform',
+    ],
   },
   {
     title: 'Known Limitations',
