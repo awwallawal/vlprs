@@ -37,4 +37,20 @@ describe('NewsDetailPage', () => {
       'VLPRS Digital Platform Launches for Oyo State | News | Vehicle Loan Scheme'
     );
   });
+
+  it('redirects to /resources/news for an invalid slug', () => {
+    render(
+      <MemoryRouter initialEntries={['/resources/news/nonexistent-slug']}>
+        <Routes>
+          <Route path="/resources/news/:slug" element={<NewsDetailPage />} />
+          <Route
+            path="/resources/news"
+            element={<p>News listing page</p>}
+          />
+        </Routes>
+      </MemoryRouter>
+    );
+    // The component should redirect, so we land on the news listing route
+    expect(screen.getByText('News listing page')).toBeInTheDocument();
+  });
 });

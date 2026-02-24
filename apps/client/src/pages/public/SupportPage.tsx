@@ -35,12 +35,21 @@ export function SupportPage() {
                 <div>
                   <span className="font-medium text-teal-900">{item.audience}:</span>{' '}
                   <span className="text-teal-800">{item.text} </span>
-                  <Link
-                    to={item.linkHref}
-                    className="text-teal font-medium hover:underline"
-                  >
-                    {item.linkLabel}
-                  </Link>
+                  {item.linkHref.startsWith('/') ? (
+                    <Link
+                      to={item.linkHref}
+                      className="text-teal font-medium hover:underline"
+                    >
+                      {item.linkLabel}
+                    </Link>
+                  ) : (
+                    <a
+                      href={item.linkHref}
+                      className="text-teal font-medium hover:underline"
+                    >
+                      {item.linkLabel}
+                    </a>
+                  )}
                 </div>
               </div>
             ))}

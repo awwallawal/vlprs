@@ -32,7 +32,7 @@ const PORTALS = [
     title: 'Beneficiary Portal',
     description: 'View your loan status and documents.',
     active: false,
-    badge: 'Coming Soon',
+    badge: 'Coming Soon (Phase 2)',
   },
   {
     id: 'eoi',
@@ -40,7 +40,7 @@ const PORTALS = [
     title: 'Expression of Interest',
     description: 'Register interest in the scheme.',
     active: false,
-    badge: 'Coming Soon',
+    badge: 'Coming Soon (Phase 2)',
   },
 ] as const;
 
@@ -108,7 +108,7 @@ export function LoginModal({ open, onOpenChange }: LoginModalProps) {
             return (
               <div
                 key={portal.id}
-                className="rounded-xl border border-slate-200 bg-slate-50/50 p-5 opacity-60"
+                className="rounded-xl border border-slate-200 bg-slate-50/50 p-5 opacity-60 cursor-not-allowed"
               >
                 <div className="flex items-start gap-4">
                   <div className="flex items-center justify-center h-10 w-10 rounded-lg bg-slate-100 text-slate-400 shrink-0">

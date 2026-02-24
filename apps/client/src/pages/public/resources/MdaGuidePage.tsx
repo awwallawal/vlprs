@@ -121,7 +121,7 @@ export function MdaGuidePage() {
                   <dd className="font-medium text-slate-900">{SIDEBAR_INFO.encoding}</dd>
                 </div>
               </dl>
-              <Button asChild variant="secondary" className="w-full mt-4">
+              <Button asChild variant="default" className="w-full mt-4">
                 <a href={SIDEBAR_INFO.templateUrl} download>
                   Download CSV Template
                 </a>

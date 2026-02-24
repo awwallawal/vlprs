@@ -1,0 +1,1032 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VLPRS Factsheet — Core Knowledge Limited</title>
+  <style>
+    :root {
+      --crimson: #9C1E23;
+      --crimson-dark: #7A181C;
+      --crimson-light: #F9ECED;
+      --teal: #0D7377;
+      --teal-light: #E6F4F4;
+      --gold: #B8860B;
+      --gold-light: #FDF6E3;
+      --green: #276749;
+      --green-light: #F0FFF4;
+      --text: #1A1A1A;
+      --text-secondary: #4A4A4A;
+      --text-muted: #6B6B6B;
+      --white: #FFFFFF;
+      --border: #D1D5DB;
+      --bg-light: #F8F9FA;
+    }
+
+    @page {
+      size: A4;
+      margin: 0;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+      font-size: 10pt;
+      line-height: 1.5;
+      color: var(--text);
+      background: #fff;
+    }
+
+    /* ═════════════════════════════════════════════ */
+    /* PAGE 1: THE CHALLENGE                         */
+    /* ═════════════════════════════════════════════ */
+    .page {
+      width: 210mm;
+      min-height: 297mm;
+      padding: 0;
+      position: relative;
+      overflow: hidden;
+      page-break-after: always;
+    }
+
+    .page:last-child {
+      page-break-after: avoid;
+    }
+
+    /* ── Page 1 Header ───────────────────────── */
+    .p1-header {
+      background: var(--crimson);
+      color: var(--white);
+      padding: 28px 36px 20px;
+    }
+
+    .p1-header-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 14px;
+    }
+
+    .p1-company {
+      font-size: 9pt;
+      font-weight: 600;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      opacity: 0.8;
+    }
+
+    .p1-badge {
+      font-size: 8pt;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      padding: 4px 14px;
+      border: 1.5px solid rgba(255,255,255,0.5);
+    }
+
+    .p1-title {
+      font-size: 22pt;
+      font-weight: 700;
+      line-height: 1.2;
+      margin-bottom: 6px;
+    }
+
+    .p1-subtitle {
+      font-size: 10.5pt;
+      opacity: 0.85;
+      font-weight: 400;
+    }
+
+    /* ── Big Stats Row ───────────────────────── */
+    .big-stats {
+      display: flex;
+      gap: 0;
+      background: var(--crimson-dark);
+    }
+
+    .big-stat {
+      flex: 1;
+      padding: 18px 16px;
+      text-align: center;
+      color: var(--white);
+      border-right: 1px solid rgba(255,255,255,0.15);
+    }
+
+    .big-stat:last-child { border-right: none; }
+
+    .big-stat .number {
+      font-size: 26pt;
+      font-weight: 700;
+      line-height: 1;
+      font-family: 'Consolas', 'Courier New', monospace;
+    }
+
+    .big-stat .label {
+      font-size: 7.5pt;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      opacity: 0.75;
+      margin-top: 4px;
+    }
+
+    /* ── Section Titles ──────────────────────── */
+    .section-title {
+      font-size: 11pt;
+      font-weight: 700;
+      color: var(--crimson);
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      padding: 16px 36px 8px;
+      border-bottom: 2px solid var(--crimson);
+      margin: 0 36px;
+    }
+
+    /* ── Challenge Cards ─────────────────────── */
+    .challenge-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      padding: 16px 36px;
+    }
+
+    .challenge-card {
+      border: 1px solid var(--border);
+      padding: 14px 16px;
+      background: var(--white);
+    }
+
+    .challenge-card .icon-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 6px;
+    }
+
+    .challenge-icon {
+      width: 28px;
+      height: 28px;
+      background: var(--crimson-light);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13pt;
+      flex-shrink: 0;
+    }
+
+    .challenge-card h3 {
+      font-size: 10pt;
+      font-weight: 700;
+      color: var(--crimson-dark);
+      line-height: 1.2;
+    }
+
+    .challenge-card p {
+      font-size: 9pt;
+      color: var(--text-secondary);
+      line-height: 1.45;
+    }
+
+    /* ── Impact Banner ───────────────────────── */
+    .impact-banner {
+      background: var(--gold-light);
+      border-left: 4px solid var(--gold);
+      margin: 8px 36px 0;
+      padding: 14px 18px;
+    }
+
+    .impact-banner p {
+      font-size: 10pt;
+      font-weight: 600;
+      color: var(--text);
+      margin: 0;
+    }
+
+    /* ── Who Is Affected ─────────────────────── */
+    .affected-strip {
+      display: flex;
+      gap: 0;
+      margin: 12px 36px 0;
+      border: 1px solid var(--border);
+    }
+
+    .affected-item {
+      flex: 1;
+      padding: 10px 12px;
+      text-align: center;
+      border-right: 1px solid var(--border);
+      background: var(--bg-light);
+    }
+
+    .affected-item:last-child { border-right: none; }
+
+    .affected-item .a-num {
+      font-size: 16pt;
+      font-weight: 700;
+      color: var(--crimson);
+      font-family: 'Consolas', 'Courier New', monospace;
+    }
+
+    .affected-item .a-label {
+      font-size: 7.5pt;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    /* ── Page Footer ─────────────────────────── */
+    .page-footer {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: var(--crimson);
+      color: var(--white);
+      padding: 10px 36px;
+      display: flex;
+      justify-content: space-between;
+      font-size: 7.5pt;
+      opacity: 0.9;
+    }
+
+
+    /* ═════════════════════════════════════════════ */
+    /* PAGE 2: THE SOLUTION                          */
+    /* ═════════════════════════════════════════════ */
+
+    .p2-header {
+      background: var(--teal);
+      color: var(--white);
+      padding: 28px 36px 20px;
+    }
+
+    .p2-header .p1-header-top { margin-bottom: 10px; }
+
+    .p2-title {
+      font-size: 22pt;
+      font-weight: 700;
+      line-height: 1.2;
+      margin-bottom: 6px;
+    }
+
+    .p2-subtitle {
+      font-size: 10.5pt;
+      opacity: 0.85;
+    }
+
+    /* ── Solution Capabilities ───────────────── */
+    .cap-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      padding: 14px 36px;
+    }
+
+    .cap-card {
+      display: flex;
+      gap: 10px;
+      padding: 10px 12px;
+      border: 1px solid var(--border);
+      background: var(--white);
+    }
+
+    .cap-num {
+      width: 26px;
+      height: 26px;
+      background: var(--teal);
+      color: var(--white);
+      font-size: 11pt;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    .cap-card h3 {
+      font-size: 9.5pt;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 2px;
+    }
+
+    .cap-card p {
+      font-size: 8.5pt;
+      color: var(--text-secondary);
+      line-height: 1.4;
+      margin: 0;
+    }
+
+    /* ── Before/After Strip ──────────────────── */
+    .ba-strip {
+      margin: 8px 36px 0;
+    }
+
+    .ba-title {
+      font-size: 9pt;
+      font-weight: 700;
+      color: var(--teal);
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      margin-bottom: 6px;
+    }
+
+    .ba-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 9pt;
+    }
+
+    .ba-table th {
+      padding: 6px 10px;
+      font-size: 8pt;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .ba-table th.before-h {
+      background: #FFF0F0;
+      color: #9B2C2C;
+      width: 35%;
+    }
+
+    .ba-table th.metric-h {
+      background: var(--bg-light);
+      color: var(--text-muted);
+      width: 30%;
+      text-align: center;
+    }
+
+    .ba-table th.after-h {
+      background: #F0FFF4;
+      color: var(--green);
+      width: 35%;
+      text-align: right;
+    }
+
+    .ba-table td {
+      padding: 5px 10px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .ba-table td.before-d { color: #9B2C2C; }
+    .ba-table td.metric-d { text-align: center; font-weight: 600; color: var(--text); }
+    .ba-table td.after-d { text-align: right; color: var(--green); font-weight: 600; }
+
+    /* ── Investment Box ──────────────────────── */
+    .invest-box {
+      margin: 12px 36px 0;
+      border: 2px solid var(--gold);
+      overflow: hidden;
+    }
+
+    .invest-header {
+      background: var(--gold);
+      color: var(--white);
+      padding: 8px 16px;
+      font-size: 9pt;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+    }
+
+    .invest-body {
+      display: flex;
+      gap: 0;
+    }
+
+    .invest-item {
+      flex: 1;
+      padding: 14px 16px;
+      text-align: center;
+      border-right: 1px solid var(--border);
+    }
+
+    .invest-item:last-child { border-right: none; }
+
+    .invest-item .i-num {
+      font-size: 18pt;
+      font-weight: 700;
+      color: var(--crimson);
+      font-family: 'Consolas', 'Courier New', monospace;
+    }
+
+    .invest-item .i-label {
+      font-size: 7.5pt;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    /* ── Value Line ──────────────────────────── */
+    .value-line {
+      background: var(--crimson);
+      color: var(--white);
+      margin: 12px 36px 0;
+      padding: 12px 18px;
+      text-align: center;
+      font-size: 10.5pt;
+      font-weight: 600;
+    }
+
+    /* ── Timeline Mini ───────────────────────── */
+    .timeline-mini {
+      margin: 10px 36px 0;
+      display: flex;
+      gap: 0;
+    }
+
+    .tl-step {
+      flex: 1;
+      text-align: center;
+      position: relative;
+    }
+
+    .tl-dot {
+      width: 10px;
+      height: 10px;
+      background: var(--teal);
+      border-radius: 50%;
+      margin: 0 auto 4px;
+    }
+
+    .tl-line {
+      position: absolute;
+      top: 5px;
+      left: 50%;
+      right: -50%;
+      height: 2px;
+      background: var(--teal);
+      z-index: 0;
+    }
+
+    .tl-step:last-child .tl-line { display: none; }
+
+    .tl-week {
+      font-size: 8pt;
+      font-weight: 700;
+      color: var(--teal);
+    }
+
+    .tl-label {
+      font-size: 7pt;
+      color: var(--text-muted);
+      line-height: 1.3;
+    }
+
+    /* ── CTA Bar ─────────────────────────────── */
+    .cta-bar {
+      margin: 12px 36px 0;
+      padding: 10px 16px;
+      background: var(--teal-light);
+      border-left: 4px solid var(--teal);
+    }
+
+    .cta-bar p {
+      font-size: 9.5pt;
+      color: var(--text);
+      margin: 0;
+    }
+
+    .p2-footer {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: var(--teal);
+      color: var(--white);
+      padding: 10px 36px;
+      display: flex;
+      justify-content: space-between;
+      font-size: 7.5pt;
+      opacity: 0.9;
+    }
+
+    /* ═════════════════════════════════════════════ */
+    /* COVER PAGE                                    */
+    /* ═════════════════════════════════════════════ */
+    .cover-page {
+      width: 210mm;
+      min-height: 297mm;
+      position: relative;
+      overflow: hidden;
+      page-break-after: always;
+      background: var(--white);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .cover-top-band {
+      height: 12px;
+      background: var(--crimson);
+    }
+
+    .cover-accent-bar {
+      height: 4px;
+      background: var(--gold);
+    }
+
+    .cover-hero {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      padding: 40px 50px;
+    }
+
+    .cover-badge {
+      font-size: 8pt;
+      font-weight: 700;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--crimson);
+      padding: 6px 20px;
+      border: 2px solid var(--crimson);
+      margin-bottom: 36px;
+    }
+
+    .cover-main-title {
+      font-size: 30pt;
+      font-weight: 700;
+      color: var(--crimson);
+      line-height: 1.15;
+      margin-bottom: 12px;
+    }
+
+    .cover-main-subtitle {
+      font-size: 12pt;
+      color: var(--text-secondary);
+      font-weight: 400;
+      max-width: 75%;
+      line-height: 1.6;
+      margin-bottom: 40px;
+    }
+
+    .cover-gold-divider {
+      width: 80px;
+      height: 3px;
+      background: var(--gold);
+      margin: 0 auto 40px;
+    }
+
+    .cover-stats-strip {
+      display: flex;
+      gap: 0;
+      width: 85%;
+      border: 1px solid var(--border);
+      margin-bottom: 40px;
+    }
+
+    .cover-stat-item {
+      flex: 1;
+      padding: 16px 12px;
+      text-align: center;
+      border-right: 1px solid var(--border);
+    }
+
+    .cover-stat-item:last-child { border-right: none; }
+
+    .cover-stat-item .cs-num {
+      font-size: 22pt;
+      font-weight: 700;
+      color: var(--crimson);
+      font-family: 'Consolas', 'Courier New', monospace;
+      line-height: 1;
+    }
+
+    .cover-stat-item .cs-label {
+      font-size: 7pt;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      margin-top: 6px;
+    }
+
+    .cover-meta-block {
+      text-align: center;
+      font-size: 10pt;
+      color: var(--text-secondary);
+      line-height: 1.9;
+    }
+
+    .cover-meta-block strong {
+      color: var(--text);
+    }
+
+    .cover-bottom-section {
+      background: var(--crimson);
+      color: var(--white);
+      padding: 24px 50px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .cover-bottom-left {
+      font-size: 9pt;
+      line-height: 1.7;
+    }
+
+    .cover-bottom-left .company-name {
+      font-size: 11pt;
+      font-weight: 700;
+      letter-spacing: 1px;
+    }
+
+    .cover-bottom-right {
+      text-align: right;
+    }
+
+    .cover-bottom-right .ref-num {
+      font-size: 8pt;
+      opacity: 0.7;
+      letter-spacing: 1px;
+    }
+
+    .cover-bottom-right .conf-badge {
+      font-size: 7pt;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      padding: 4px 12px;
+      border: 1px solid rgba(255,255,255,0.4);
+      margin-top: 6px;
+      display: inline-block;
+    }
+
+    @media print {
+      .page, .cover-page { height: 297mm; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ═══════════════════════════════════════════════ -->
+  <!-- COVER PAGE                                      -->
+  <!-- ═══════════════════════════════════════════════ -->
+  <div class="cover-page">
+    <div class="cover-top-band"></div>
+    <div class="cover-accent-bar"></div>
+
+    <div class="cover-hero">
+      <div class="cover-badge">Factsheet</div>
+
+      <div class="cover-main-title">Vehicle Loan Processing<br>&amp; Receivables System</div>
+      <div class="cover-main-subtitle">
+        A Digital System of Record for the Administration of the<br>
+        Oyo State Government Vehicle Loan Scheme
+      </div>
+
+      <div class="cover-gold-divider"></div>
+
+      <div class="cover-stats-strip">
+        <div class="cover-stat-item">
+          <div class="cs-num">63</div>
+          <div class="cs-label">MDAs</div>
+        </div>
+        <div class="cover-stat-item">
+          <div class="cs-num">3,100+</div>
+          <div class="cs-label">Beneficiaries</div>
+        </div>
+        <div class="cover-stat-item">
+          <div class="cs-num">&#8358;2.6B+</div>
+          <div class="cs-label">Portfolio</div>
+        </div>
+        <div class="cover-stat-item">
+          <div class="cs-num">&#8358;12M</div>
+          <div class="cs-label">Investment</div>
+        </div>
+      </div>
+
+      <div class="cover-meta-block">
+        <strong>Submitted to:</strong> The Office of the Accountant General, Oyo State Government<br>
+        <strong>Prepared by:</strong> Core Knowledge Limited &nbsp;&bull;&nbsp; February 2026
+      </div>
+    </div>
+
+    <div class="cover-bottom-section">
+      <div class="cover-bottom-left">
+        <div class="company-name">Core Knowledge Limited</div>
+        Lawal Awwal — Principal Consultant &amp; Solutions Architect<br>
+        awwallawal@gmail.com &nbsp;&bull;&nbsp; +234 805 302 3862 &nbsp;&bull;&nbsp; Bodija, Ibadan, Oyo State
+      </div>
+      <div class="cover-bottom-right">
+        <div class="ref-num">CKL/VLPRS/FS/2026/001</div>
+        <div class="conf-badge">Confidential</div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ═══════════════════════════════════════════════ -->
+  <!-- PAGE 1: THE CHALLENGE                           -->
+  <!-- ═══════════════════════════════════════════════ -->
+  <div class="page">
+
+    <div class="p1-header">
+      <div class="p1-header-top">
+        <div class="p1-company">Core Knowledge Limited</div>
+        <div class="p1-badge">Factsheet</div>
+      </div>
+      <div class="p1-title">The Vehicle Loan Challenge</div>
+      <div class="p1-subtitle">Why the Oyo State Vehicle Loan Scheme Needs a Digital System of Record</div>
+    </div>
+
+    <div class="big-stats">
+      <div class="big-stat">
+        <div class="number">63</div>
+        <div class="label">MDAs Managing Loans Independently</div>
+      </div>
+      <div class="big-stat">
+        <div class="number">3,100+</div>
+        <div class="label">Active Beneficiaries</div>
+      </div>
+      <div class="big-stat">
+        <div class="number">&#8358;2.6B+</div>
+        <div class="label">Total Portfolio Exposure</div>
+      </div>
+      <div class="big-stat">
+        <div class="number">~30%</div>
+        <div class="label">Error Rate in Sampled Data</div>
+      </div>
+    </div>
+
+    <div class="section-title">Six Critical Challenges</div>
+
+    <div class="challenge-grid">
+      <div class="challenge-card">
+        <div class="icon-row">
+          <div class="challenge-icon">&#9888;</div>
+          <h3>Over-Deductions</h3>
+        </div>
+        <p>Workers continue to be deducted months after loans are fully repaid. No automated mechanism to stop deductions at zero balance. The #1 source of grievances.</p>
+      </div>
+
+      <div class="challenge-card">
+        <div class="icon-row">
+          <div class="challenge-icon">&#9881;</div>
+          <h3>Calculation Errors</h3>
+        </div>
+        <p>63 MDAs applying the same formula independently produce divergent results. ~30% discrepancy rate in sampled records. Errors compound silently.</p>
+      </div>
+
+      <div class="challenge-card">
+        <div class="icon-row">
+          <div class="challenge-icon">&#128065;</div>
+          <h3>Zero Visibility</h3>
+        </div>
+        <p>No real-time view of total obligations, available fund, MDA compliance, or loan status. The fund's position is unknown at any given moment.</p>
+      </div>
+
+      <div class="challenge-card">
+        <div class="icon-row">
+          <div class="challenge-icon">&#9201;</div>
+          <h3>3-Day Reporting</h3>
+        </div>
+        <p>Consolidated scheme reports require manual aggregation from 63 sources — taking 2–3 working days per cycle. Urgent queries cannot be answered promptly.</p>
+      </div>
+
+      <div class="challenge-card">
+        <div class="icon-row">
+          <div class="challenge-icon">&#128270;</div>
+          <h3>No Audit Trail</h3>
+        </div>
+        <p>Spreadsheet records provide no systematic trail of changes. When discrepancies are found, their origin cannot be traced. Exposure under audit review.</p>
+      </div>
+
+      <div class="challenge-card">
+        <div class="icon-row">
+          <div class="challenge-icon">&#128197;</div>
+          <h3>Retirement Gaps</h3>
+        </div>
+        <p>No forecasting of staff retiring with outstanding balances. Gratuity receivables discovered reactively. Recovery opportunities are missed.</p>
+      </div>
+    </div>
+
+    <div class="impact-banner">
+      <p>These are not failures of effort — they are structural limitations of managing a &#8358;2.6B+ revolving fund with spreadsheets and paper files.</p>
+    </div>
+
+    <div class="affected-strip">
+      <div class="affected-item">
+        <div class="a-num">1</div>
+        <div class="a-label">Accountant General<br>Without Visibility</div>
+      </div>
+      <div class="affected-item">
+        <div class="a-num">1</div>
+        <div class="a-label">Department Managing<br>Everything Manually</div>
+      </div>
+      <div class="affected-item">
+        <div class="a-num">63</div>
+        <div class="a-label">MDA Officers<br>Doing Manual Math</div>
+      </div>
+      <div class="affected-item">
+        <div class="a-num">3,100+</div>
+        <div class="a-label">Workers at Risk<br>of Over-Deduction</div>
+      </div>
+    </div>
+
+    <div class="page-footer">
+      <span>Core Knowledge Limited &bull; CKL/VLPRS/FS/2026/001</span>
+      <span>Confidential &bull; Page 2 of 3</span>
+    </div>
+  </div>
+
+
+  <!-- ═══════════════════════════════════════════════ -->
+  <!-- PAGE 2: THE SOLUTION                            -->
+  <!-- ═══════════════════════════════════════════════ -->
+  <div class="page">
+
+    <div class="p2-header">
+      <div class="p1-header-top">
+        <div class="p1-company">Core Knowledge Limited</div>
+        <div class="p1-badge">Factsheet</div>
+      </div>
+      <div class="p2-title">VLPRS: The Solution</div>
+      <div class="p2-subtitle">A Digital System of Record for the Oyo State Vehicle Loan Scheme</div>
+    </div>
+
+    <div class="section-title" style="border-color: var(--teal); color: var(--teal);">8 Core Capabilities</div>
+
+    <div class="cap-grid">
+      <div class="cap-card">
+        <div class="cap-num">1</div>
+        <div>
+          <h3>Executive Dashboard</h3>
+          <p>4 headline numbers on any device in &lt;3 seconds. Real-time fund visibility.</p>
+        </div>
+      </div>
+      <div class="cap-card">
+        <div class="cap-num">2</div>
+        <div>
+          <h3>Automated Computation</h3>
+          <p>Single verified engine for all 4 loan tiers. Zero manual calculations.</p>
+        </div>
+      </div>
+      <div class="cap-card">
+        <div class="cap-num">3</div>
+        <div>
+          <h3>Auto-Stop Certificate</h3>
+          <p>Automatic at zero balance. Official document. Deductions halt forever.</p>
+        </div>
+      </div>
+      <div class="cap-card">
+        <div class="cap-num">4</div>
+        <div>
+          <h3>Simple MDA Submission</h3>
+          <p>8 fields instead of 17 columns. 60% less work. Instant confirmation.</p>
+        </div>
+      </div>
+      <div class="cap-card">
+        <div class="cap-num">5</div>
+        <div>
+          <h3>Immutable Audit Trail</h3>
+          <p>Every transaction permanent. Every naira traceable. Fully auditable.</p>
+        </div>
+      </div>
+      <div class="cap-card">
+        <div class="cap-num">6</div>
+        <div>
+          <h3>PDF Reports in Seconds</h3>
+          <p>Executive summaries, compliance reports — branded with Oyo State crest.</p>
+        </div>
+      </div>
+      <div class="cap-card">
+        <div class="cap-num">7</div>
+        <div>
+          <h3>Retirement Pipeline</h3>
+          <p>3/6/12-month forecasting. Gratuity receivable tracking. Proactive recovery.</p>
+        </div>
+      </div>
+      <div class="cap-card">
+        <div class="cap-num">8</div>
+        <div>
+          <h3>Automated Alerts</h3>
+          <p>Overdue submissions, inactive loans, approaching retirements — flagged instantly.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="ba-strip">
+      <div class="ba-title">The Transformation</div>
+      <table class="ba-table">
+        <thead>
+          <tr>
+            <th class="before-h">Before</th>
+            <th class="metric-h">Metric</th>
+            <th class="after-h">After</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="before-d">2–3 working days</td>
+            <td class="metric-d">Report Generation</td>
+            <td class="after-d">Under 10 seconds</td>
+          </tr>
+          <tr>
+            <td class="before-d">~30% errors (sampled)</td>
+            <td class="metric-d">Calculation Accuracy</td>
+            <td class="after-d">100% — single engine</td>
+          </tr>
+          <tr>
+            <td class="before-d">17 columns, manual math</td>
+            <td class="metric-d">MDA Submission</td>
+            <td class="after-d">8 fields, no math</td>
+          </tr>
+          <tr>
+            <td class="before-d">Months of over-deduction</td>
+            <td class="metric-d">Loan Completion</td>
+            <td class="after-d">Auto-Stop Certificate</td>
+          </tr>
+          <tr>
+            <td class="before-d">No visibility</td>
+            <td class="metric-d">Fund Position</td>
+            <td class="after-d">Real-time, any device</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="invest-box">
+      <div class="invest-header">Investment</div>
+      <div class="invest-body">
+        <div class="invest-item">
+          <div class="i-num">&#8358;12M</div>
+          <div class="i-label">Total Year 1</div>
+        </div>
+        <div class="invest-item">
+          <div class="i-num">&#8358;2.8M</div>
+          <div class="i-label">Annual (Year 2+)</div>
+        </div>
+        <div class="invest-item">
+          <div class="i-num">28</div>
+          <div class="i-label">Weeks to Deliver</div>
+        </div>
+        <div class="invest-item">
+          <div class="i-num">0.46%</div>
+          <div class="i-label">Of Portfolio Value</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="value-line">
+      &#8358;12 million to safeguard a &#8358;2.6 billion+ portfolio — less than half of one percent.
+    </div>
+
+    <div class="timeline-mini">
+      <div class="tl-step">
+        <div class="tl-line"></div>
+        <div class="tl-dot"></div>
+        <div class="tl-week">Week 4</div>
+        <div class="tl-label">System Live<br>&amp; Accessible</div>
+      </div>
+      <div class="tl-step">
+        <div class="tl-line"></div>
+        <div class="tl-dot"></div>
+        <div class="tl-week">Week 8</div>
+        <div class="tl-label">Financial Engine<br>Verified</div>
+      </div>
+      <div class="tl-step">
+        <div class="tl-line"></div>
+        <div class="tl-dot"></div>
+        <div class="tl-week">Week 12</div>
+        <div class="tl-label">63 MDAs<br>Migrated</div>
+      </div>
+      <div class="tl-step">
+        <div class="tl-line"></div>
+        <div class="tl-dot"></div>
+        <div class="tl-week">Week 15</div>
+        <div class="tl-label">Dashboard<br>Live</div>
+      </div>
+      <div class="tl-step">
+        <div class="tl-line"></div>
+        <div class="tl-dot"></div>
+        <div class="tl-week">Week 22</div>
+        <div class="tl-label">Auto-Stop<br>Certificates</div>
+      </div>
+      <div class="tl-step">
+        <div class="tl-dot"></div>
+        <div class="tl-week">Week 28</div>
+        <div class="tl-label">Full Deployment<br>&amp; Training</div>
+      </div>
+    </div>
+
+    <div class="cta-bar">
+      <p><strong>Development is already underway.</strong> A proof-of-concept is live and operational. This is not a concept — it's a system ready for full institutional deployment.</p>
+    </div>
+
+    <div class="p2-footer">
+      <span>Core Knowledge Limited &bull; Lawal Awwal — Principal Consultant &amp; Solutions Architect &bull; awwallawal@gmail.com &bull; +234 805 302 3862 &bull; Bodija, Ibadan, Oyo State</span>
+      <span>Confidential &bull; Page 3 of 3</span>
+    </div>
+  </div>
+
+</body>
+</html>

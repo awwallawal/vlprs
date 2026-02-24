@@ -1,6 +1,6 @@
 # Story 14.3: Resources, Support & Legal Pages
 
-Status: review
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -254,6 +254,18 @@ So that I can prepare for using the system without needing a phone call or offic
   - [x] 14.9 PrivacyPage/DisclaimerPage/AccessibilityPage.test.tsx: all H2 sections (4+4+4 tests)
   - [x] 14.10 All 11 routes resolve to correct lazy-loaded components (verified via router.tsx)
   - [x] 14.11 All 11 title tests pass — unique <title> per page including dynamic NewsDetailPage title
+
+### Review Follow-ups (AI) - 2026-02-24
+- [x] [AI-Review][CRITICAL] Fix SupportPage: use `<a>` instead of `<Link>` for mailto: and #contact hrefs [SupportPage.tsx]
+- [x] [AI-Review][CRITICAL] Add missing test for invalid slug redirect in NewsDetailPage [NewsDetailPage.test.tsx]
+- [x] [AI-Review][HIGH] Fix Accessibility features section: render as semantic `<ul>` list instead of paragraph [AccessibilityPage.tsx, accessibility-statement.ts]
+- [x] [AI-Review][HIGH] Fix Download button: change from variant="secondary" to variant="default" (brand CTA) [DownloadsPage.tsx, MdaGuidePage.tsx]
+- [x] [AI-Review][MEDIUM] Expand news article bodies to substantive multi-paragraph content [news.ts]
+- [x] [AI-Review][MEDIUM] Fix NewsDetailPage: move usePageMeta after article lookup to avoid title flicker on redirect [NewsDetailPage.tsx]
+- [ ] [AI-Review][MEDIUM] Add FAQ tab switching test to verify tabs show correct questions [FaqPage.test.tsx]
+- [ ] [AI-Review][MEDIUM] Add download button href assertion to verify correct URL [DownloadsPage.test.tsx]
+- [x] [AI-Review][ACCEPTED] News article titles adapted for VLPRS context, accepted by PM
+- [x] [AI-Review][ACCEPTED] Badge text uses parentheses "Coming Soon (Phase 2)" per no-em-dash style rule
 
 ## Dev Notes
 

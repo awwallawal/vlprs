@@ -1,0 +1,1492 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VLPRS Technical Proposal — Core Knowledge Limited</title>
+  <style>
+    :root {
+      --crimson: #9C1E23;
+      --crimson-dark: #7A181C;
+      --crimson-light: #F9ECED;
+      --teal: #0D7377;
+      --teal-light: #E6F4F4;
+      --gold: #B8860B;
+      --gold-light: #FDF6E3;
+      --text: #1A1A1A;
+      --text-secondary: #4A4A4A;
+      --text-muted: #6B6B6B;
+      --border: #D1D5DB;
+      --bg-light: #F8F9FA;
+    }
+
+    @page {
+      size: A4;
+      margin: 2cm 2.2cm;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+      font-size: 11pt;
+      line-height: 1.65;
+      color: var(--text);
+      background: #fff;
+    }
+
+    /* ── Cover Page ─────────────────────────── */
+    .cover-page {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      text-align: center;
+      page-break-after: always;
+      padding: 3cm 2cm;
+      position: relative;
+    }
+
+    .cover-top-bar {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 8px;
+      background: var(--crimson);
+    }
+
+    .cover-bottom-bar {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: var(--crimson);
+    }
+
+    .cover-label {
+      font-size: 10pt;
+      font-weight: 600;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--crimson);
+      margin-bottom: 1.5cm;
+      padding: 8px 24px;
+      border: 2px solid var(--crimson);
+      display: inline-block;
+    }
+
+    .cover-title {
+      font-size: 28pt;
+      font-weight: 700;
+      color: var(--crimson);
+      line-height: 1.2;
+      margin-bottom: 0.5cm;
+    }
+
+    .cover-subtitle {
+      font-size: 14pt;
+      color: var(--text-secondary);
+      font-weight: 400;
+      margin-bottom: 2cm;
+      max-width: 80%;
+    }
+
+    .cover-divider {
+      width: 80px;
+      height: 3px;
+      background: var(--gold);
+      margin: 0 auto 2cm;
+    }
+
+    .cover-meta {
+      font-size: 10.5pt;
+      color: var(--text-secondary);
+      line-height: 2;
+    }
+
+    .cover-meta strong {
+      color: var(--text);
+    }
+
+    .cover-ref {
+      font-size: 9pt;
+      color: var(--text-muted);
+      margin-top: 2cm;
+      letter-spacing: 1px;
+    }
+
+    .cover-confidential {
+      font-size: 8pt;
+      color: var(--crimson);
+      font-weight: 600;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin-top: 0.8cm;
+      padding: 6px 16px;
+      border: 1px solid var(--crimson);
+    }
+
+    /* ── Table of Contents ──────────────────── */
+    .toc-page {
+      page-break-after: always;
+      padding-top: 1cm;
+    }
+
+    .toc-title {
+      font-size: 18pt;
+      font-weight: 700;
+      color: var(--crimson);
+      margin-bottom: 1.5cm;
+      padding-bottom: 0.5cm;
+      border-bottom: 3px solid var(--crimson);
+    }
+
+    .toc-list {
+      list-style: none;
+    }
+
+    .toc-list li {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      padding: 10px 0;
+      border-bottom: 1px dotted var(--border);
+      font-size: 11pt;
+    }
+
+    .toc-list li.toc-main {
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .toc-list li.toc-sub {
+      padding-left: 1.5cm;
+      font-weight: 400;
+      color: var(--text-secondary);
+      font-size: 10.5pt;
+    }
+
+    .toc-num {
+      color: var(--crimson);
+      font-weight: 700;
+      margin-right: 12px;
+      min-width: 28px;
+    }
+
+    .toc-page-num {
+      color: var(--text-muted);
+      font-size: 10pt;
+    }
+
+    /* ── Section Styling ────────────────────── */
+    .section {
+      page-break-before: always;
+      padding-top: 0.5cm;
+    }
+
+    .section:first-of-type {
+      page-break-before: avoid;
+    }
+
+    .section-number {
+      font-size: 10pt;
+      font-weight: 700;
+      color: var(--crimson);
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+
+    h1 {
+      font-size: 20pt;
+      font-weight: 700;
+      color: var(--crimson);
+      margin-bottom: 0.8cm;
+      padding-bottom: 0.3cm;
+      border-bottom: 2px solid var(--crimson);
+      line-height: 1.3;
+    }
+
+    h2 {
+      font-size: 13pt;
+      font-weight: 700;
+      color: var(--crimson-dark);
+      margin-top: 0.8cm;
+      margin-bottom: 0.4cm;
+      line-height: 1.3;
+    }
+
+    h3 {
+      font-size: 11.5pt;
+      font-weight: 600;
+      color: var(--text);
+      margin-top: 0.6cm;
+      margin-bottom: 0.3cm;
+    }
+
+    p {
+      margin-bottom: 0.4cm;
+      text-align: justify;
+    }
+
+    /* ── Highlight Boxes ────────────────────── */
+    .highlight-box {
+      background: var(--crimson-light);
+      border-left: 4px solid var(--crimson);
+      padding: 16px 20px;
+      margin: 0.6cm 0;
+      font-size: 10.5pt;
+    }
+
+    .highlight-box.teal {
+      background: var(--teal-light);
+      border-left-color: var(--teal);
+    }
+
+    .highlight-box.gold {
+      background: var(--gold-light);
+      border-left-color: var(--gold);
+    }
+
+    .highlight-box p {
+      margin-bottom: 0;
+    }
+
+    .principle-quote {
+      font-size: 12pt;
+      font-weight: 600;
+      font-style: italic;
+      color: var(--crimson-dark);
+      text-align: center;
+      padding: 20px 30px;
+      margin: 0.8cm 0;
+      border-top: 2px solid var(--crimson);
+      border-bottom: 2px solid var(--crimson);
+    }
+
+    /* ── Tables ──────────────────────────────── */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 0.6cm 0;
+      font-size: 10.5pt;
+    }
+
+    thead th {
+      background: var(--crimson);
+      color: #fff;
+      font-weight: 600;
+      padding: 10px 14px;
+      text-align: left;
+      font-size: 10pt;
+    }
+
+    tbody td {
+      padding: 9px 14px;
+      border-bottom: 1px solid var(--border);
+      vertical-align: top;
+    }
+
+    tbody tr:nth-child(even) {
+      background: var(--bg-light);
+    }
+
+    tbody tr:hover {
+      background: var(--crimson-light);
+    }
+
+    .table-caption {
+      font-size: 9.5pt;
+      color: var(--text-muted);
+      font-style: italic;
+      margin-top: 4px;
+    }
+
+    /* ── Stat Cards ──────────────────────────── */
+    .stat-row {
+      display: flex;
+      gap: 16px;
+      margin: 0.6cm 0;
+    }
+
+    .stat-card {
+      flex: 1;
+      background: var(--bg-light);
+      border: 1px solid var(--border);
+      border-top: 4px solid var(--crimson);
+      padding: 16px;
+      text-align: center;
+    }
+
+    .stat-card .stat-number {
+      font-size: 22pt;
+      font-weight: 700;
+      color: var(--crimson);
+      line-height: 1.1;
+    }
+
+    .stat-card .stat-label {
+      font-size: 9pt;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-top: 6px;
+    }
+
+    /* ── Lists ───────────────────────────────── */
+    ul, ol {
+      margin: 0.3cm 0 0.5cm 1.2cm;
+    }
+
+    li {
+      margin-bottom: 4px;
+    }
+
+    .check-list {
+      list-style: none;
+      margin-left: 0;
+    }
+
+    .check-list li {
+      padding-left: 24px;
+      position: relative;
+      margin-bottom: 6px;
+    }
+
+    .check-list li::before {
+      content: "✓";
+      position: absolute;
+      left: 0;
+      color: var(--teal);
+      font-weight: 700;
+    }
+
+    /* ── Before/After Comparison ─────────────── */
+    .comparison {
+      display: flex;
+      gap: 0;
+      margin: 0.5cm 0;
+      border: 1px solid var(--border);
+      overflow: hidden;
+    }
+
+    .comparison-before, .comparison-after {
+      flex: 1;
+      padding: 14px 18px;
+    }
+
+    .comparison-before {
+      background: #FFF5F5;
+      border-right: 2px solid var(--border);
+    }
+
+    .comparison-after {
+      background: #F0FFF4;
+    }
+
+    .comparison-label {
+      font-size: 9pt;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      margin-bottom: 8px;
+    }
+
+    .comparison-before .comparison-label {
+      color: #C53030;
+    }
+
+    .comparison-after .comparison-label {
+      color: #276749;
+    }
+
+    .comparison-item {
+      font-size: 10pt;
+      margin-bottom: 4px;
+      color: var(--text-secondary);
+    }
+
+    /* ── Timeline ────────────────────────────── */
+    .timeline {
+      position: relative;
+      margin: 0.8cm 0 0.8cm 20px;
+      padding-left: 24px;
+      border-left: 3px solid var(--crimson);
+    }
+
+    .timeline-item {
+      position: relative;
+      margin-bottom: 18px;
+      padding-bottom: 4px;
+    }
+
+    .timeline-item::before {
+      content: "";
+      position: absolute;
+      left: -31px;
+      top: 4px;
+      width: 12px;
+      height: 12px;
+      background: var(--crimson);
+      border-radius: 50%;
+      border: 2px solid #fff;
+    }
+
+    .timeline-phase {
+      font-size: 10pt;
+      font-weight: 700;
+      color: var(--crimson);
+    }
+
+    .timeline-weeks {
+      font-size: 9pt;
+      color: var(--text-muted);
+    }
+
+    .timeline-desc {
+      font-size: 10pt;
+      color: var(--text-secondary);
+      margin-top: 2px;
+    }
+
+    /* ── Screenshot Placeholder ──────────────── */
+    .screenshot-placeholder {
+      background: var(--bg-light);
+      border: 2px dashed var(--border);
+      padding: 40px;
+      text-align: center;
+      margin: 0.6cm 0;
+      color: var(--text-muted);
+      font-size: 10pt;
+      font-style: italic;
+    }
+
+    /* ── Stakeholder Cards ───────────────────── */
+    .stakeholder-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin: 0.6cm 0;
+    }
+
+    .stakeholder-card {
+      border: 1px solid var(--border);
+      padding: 16px;
+      background: #fff;
+    }
+
+    .stakeholder-card h3 {
+      font-size: 11pt;
+      color: var(--crimson);
+      margin-top: 0;
+      margin-bottom: 8px;
+      padding-bottom: 6px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .stakeholder-card p, .stakeholder-card li {
+      font-size: 10pt;
+    }
+
+    .stakeholder-card ul {
+      margin: 4px 0 0 16px;
+    }
+
+    /* ── Footer ──────────────────────────────── */
+    .doc-footer {
+      font-size: 8pt;
+      color: var(--text-muted);
+      text-align: center;
+      border-top: 1px solid var(--border);
+      padding-top: 8px;
+      margin-top: 1.5cm;
+    }
+
+    /* ── Print Adjustments ───────────────────── */
+    @media print {
+      body {
+        font-size: 10.5pt;
+      }
+
+      .section {
+        page-break-before: always;
+      }
+
+      .cover-page {
+        min-height: auto;
+        height: 100vh;
+      }
+
+      .stat-row, .stakeholder-grid, .comparison {
+        page-break-inside: avoid;
+      }
+
+      table {
+        page-break-inside: avoid;
+      }
+
+      .highlight-box {
+        page-break-inside: avoid;
+      }
+
+      .timeline {
+        page-break-inside: avoid;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ════════════════════════════════════════════ -->
+  <!-- COVER PAGE                                   -->
+  <!-- ════════════════════════════════════════════ -->
+  <div class="cover-page">
+    <div class="cover-top-bar"></div>
+
+    <div class="cover-label">Technical Proposal</div>
+
+    <h1 class="cover-title">Vehicle Loan Processing<br>& Receivables System</h1>
+    <p class="cover-subtitle">A Digital System of Record for the Administration of the Oyo State Government Vehicle Loan Scheme</p>
+
+    <div class="cover-divider"></div>
+
+    <div class="cover-meta">
+      <strong>Submitted to:</strong><br>
+      The Office of the Accountant General<br>
+      Oyo State Government, Ibadan<br><br>
+
+      <strong>Prepared by:</strong><br>
+      Core Knowledge Limited<br>
+      Lawal Awwal — Principal Consultant &amp; Solutions Architect<br><br>
+
+      <strong>Date:</strong> February 2026
+    </div>
+
+    <div class="cover-ref">Ref: CKL/VLPRS/TP/2026/001 &nbsp;|&nbsp; Volume 1 of 2</div>
+    <div class="cover-confidential">Confidential — For Official Use Only</div>
+
+    <div class="cover-bottom-bar"></div>
+  </div>
+
+
+  <!-- ════════════════════════════════════════════ -->
+  <!-- TABLE OF CONTENTS                            -->
+  <!-- ════════════════════════════════════════════ -->
+  <div class="toc-page">
+    <div class="toc-title">Table of Contents</div>
+    <ul class="toc-list">
+      <li class="toc-main"><span><span class="toc-num">1</span>Executive Summary</span></li>
+      <li class="toc-main"><span><span class="toc-num">2</span>Background &amp; Current Challenges</span></li>
+      <li class="toc-sub"><span>2.1 The Vehicle Loan Scheme</span></li>
+      <li class="toc-sub"><span>2.2 Current Administration</span></li>
+      <li class="toc-sub"><span>2.3 Identified Challenges</span></li>
+      <li class="toc-main"><span><span class="toc-num">3</span>Proposed Solution: VLPRS</span></li>
+      <li class="toc-sub"><span>3.1 System Overview</span></li>
+      <li class="toc-sub"><span>3.2 What Changes for Each Stakeholder</span></li>
+      <li class="toc-sub"><span>3.3 Core Design Principles</span></li>
+      <li class="toc-main"><span><span class="toc-num">4</span>Key System Capabilities</span></li>
+      <li class="toc-main"><span><span class="toc-num">5</span>Implementation Approach</span></li>
+      <li class="toc-sub"><span>5.1 Phased Delivery</span></li>
+      <li class="toc-sub"><span>5.2 Pilot Strategy</span></li>
+      <li class="toc-sub"><span>5.3 Implementation Timeline</span></li>
+      <li class="toc-main"><span><span class="toc-num">6</span>Proof of Concept &amp; Current Progress</span></li>
+      <li class="toc-main"><span><span class="toc-num">7</span>Training &amp; Capacity Building</span></li>
+      <li class="toc-main"><span><span class="toc-num">8</span>Ongoing Support &amp; Sustainability</span></li>
+      <li class="toc-main"><span><span class="toc-num">9</span>Risk Mitigation</span></li>
+      <li class="toc-main"><span><span class="toc-num">10</span>About Core Knowledge Limited</span></li>
+    </ul>
+  </div>
+
+
+  <!-- ════════════════════════════════════════════ -->
+  <!-- SECTION 1: EXECUTIVE SUMMARY                 -->
+  <!-- ════════════════════════════════════════════ -->
+  <div class="section">
+    <div class="section-number">Section 1</div>
+    <h1>Executive Summary</h1>
+
+    <p>
+      The Oyo State Government Vehicle Loan Scheme serves over <strong>3,100 active beneficiaries</strong> across
+      <strong>63 Ministries, Departments, and Agencies (MDAs)</strong>, representing total financial obligations
+      exceeding <strong>&#8358;2.6 billion</strong>. The scheme is administered by the Office of the Accountant General
+      through the Car Loan Department and operates as a revolving fund — its health directly impacting the State's ability
+      to extend future loans to eligible civil servants.
+    </p>
+
+    <p>
+      Today, this portfolio is administered through manual processes. Each of the 63 MDAs independently maintains
+      loan records in spreadsheets, performs its own calculations, and submits monthly returns that are manually
+      compiled into consolidated reports. This process takes <strong>2 to 3 working days</strong> for a single reporting cycle and
+      produces results of uncertain accuracy — a verified sampling of MDA records revealed discrepancies in
+      approximately <strong>30% of records examined</strong>.
+    </p>
+
+    <p>
+      More critically, there is no mechanism to automatically halt deductions when a loan is fully repaid. Workers are
+      routinely over-deducted — sometimes for months — generating the single largest category of grievances within
+      the scheme. The Office of the Accountant General currently has no means to determine, in real time, the total
+      outstanding obligations, available fund balance, or compliance status of individual MDAs.
+    </p>
+
+    <div class="highlight-box">
+      <p>
+        <strong>VLPRS — the Vehicle Loan Processing &amp; Receivables System</strong> — is a purpose-built digital
+        system of record designed to replace this fragmented approach with a single, authoritative source of truth
+        for all vehicle loan operations. It automates financial calculations, enforces accuracy through an immutable
+        transaction ledger, provides real-time executive visibility, and protects both the institution and its workers
+        from the consequences of manual error.
+      </p>
+    </div>
+
+    <p>
+      The system is designed for the specific operational context of the Oyo State civil service: it is mobile-friendly
+      for executive access, simplifies MDA reporting workflows by over 60%, generates reports in seconds rather than days,
+      and introduces the <strong>Auto-Stop Certificate</strong> — a system-generated official document that guarantees
+      deductions halt the moment a loan reaches zero balance.
+    </p>
+
+    <p>
+      A functional proof-of-concept has been developed to validate the technical approach and demonstrate feasibility.
+      This proposal presents the full technical solution, implementation methodology, and deployment plan for VLPRS
+      across the complete scope of the Vehicle Loan Scheme.
+    </p>
+
+    <div class="stat-row">
+      <div class="stat-card">
+        <div class="stat-number">63</div>
+        <div class="stat-label">MDAs Covered</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number">3,100+</div>
+        <div class="stat-label">Active Beneficiaries</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number">&#8358;2.6B+</div>
+        <div class="stat-label">Portfolio Exposure</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number">30%</div>
+        <div class="stat-label">Error Rate (Sampled)</div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ════════════════════════════════════════════ -->
+  <!-- SECTION 2: BACKGROUND & CURRENT CHALLENGES   -->
+  <!-- ════════════════════════════════════════════ -->
+  <div class="section">
+    <div class="section-number">Section 2</div>
+    <h1>Background &amp; Current Challenges</h1>
+
+    <h2>2.1 The Vehicle Loan Scheme</h2>
+    <p>
+      The Oyo State Government Vehicle Loan Scheme is a revolving fund administered by the Office of the Accountant General.
+      The fund provides vehicle loans to eligible civil servants, with loan amounts determined by grade level:
+    </p>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Grade Level</th>
+          <th>Maximum Loan Amount</th>
+          <th>Interest Rate</th>
+          <th>Standard Tenure</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Levels 1 – 6</td>
+          <td>&#8358;250,000</td>
+          <td>13.33%</td>
+          <td>60 months</td>
+        </tr>
+        <tr>
+          <td>Levels 7 – 8</td>
+          <td>&#8358;450,000</td>
+          <td>13.33%</td>
+          <td>60 months</td>
+        </tr>
+        <tr>
+          <td>Levels 9 – 10</td>
+          <td>&#8358;600,000</td>
+          <td>13.33%</td>
+          <td>60 months</td>
+        </tr>
+        <tr>
+          <td>Level 12 and above</td>
+          <td>&#8358;750,000</td>
+          <td>13.33%</td>
+          <td>60 months</td>
+        </tr>
+      </tbody>
+    </table>
+    <p class="table-caption">Table 1: Vehicle Loan Tier Structure</p>
+
+    <p>
+      Repayment is effected through monthly salary deductions, with each payment comprising a principal component
+      and an interest component. The fund's ability to approve new loans depends directly on the rate of recovery
+      from existing obligations — making accurate tracking and timely recovery essential to the scheme's sustainability.
+    </p>
+
+    <h2>2.2 Current Administration</h2>
+    <p>
+      Under the present arrangement, each of the 63 MDAs independently maintains records of its vehicle loan beneficiaries.
+      MDA reporting officers — typically career civil servants — manage these records using spreadsheets containing up to
+      17 columns of data, including fields that require manual financial calculations.
+    </p>
+    <p>
+      Monthly, each MDA compiles its deduction data and submits returns to the Car Loan Department, which then aggregates
+      submissions from all 63 sources into consolidated reports for the Accountant General. This compilation process
+      requires <strong>2 to 3 working days</strong> per reporting cycle and is entirely dependent on the accuracy and
+      timeliness of each MDA's individual calculations.
+    </p>
+
+    <h2>2.3 Identified Challenges</h2>
+    <p>
+      A comprehensive assessment of the current administration has identified six structural challenges that cannot be
+      addressed through incremental improvement of the existing manual process:
+    </p>
+
+    <h3>Over-Deductions Beyond Loan Tenure</h3>
+    <p>
+      When a beneficiary's loan is fully repaid, there is no automated mechanism to halt salary deductions. The current
+      process relies on manual identification — often triggered only when the affected worker raises a complaint. By that
+      point, the worker may have been over-deducted for several months. This represents the single largest source of
+      grievances within the scheme and has, in documented cases, escalated to physical confrontations. Beyond the human
+      cost, each over-deduction creates an administrative liability requiring investigation, reconciliation, and refund processing.
+    </p>
+
+    <h3>Calculation Inconsistencies Across MDAs</h3>
+    <p>
+      When 63 MDAs independently apply the same formula, divergent results are inevitable. A verified sampling of MDA
+      records revealed discrepancies in approximately 30% of records examined. These are not the result of negligence — they
+      are the natural consequence of asking dozens of individuals to independently perform identical calculations using
+      spreadsheets. The errors compound silently over the life of each loan, and the current system has no mechanism to
+      detect or flag them.
+    </p>
+
+    <h3>No Real-Time Visibility</h3>
+    <p>
+      The Office of the Accountant General currently cannot determine, at any given moment:
+    </p>
+    <ul>
+      <li>The total outstanding obligations across the entire scheme</li>
+      <li>The available fund balance for new loan approvals</li>
+      <li>Which MDAs have or have not submitted their monthly returns</li>
+      <li>Which loans are approaching or have reached full repayment</li>
+      <li>Which beneficiaries are approaching retirement with outstanding balances</li>
+    </ul>
+    <p>
+      This information can only be assembled through manual compilation — a process that takes days and produces
+      results that are already outdated by the time they are delivered.
+    </p>
+
+    <h3>Delayed Reporting</h3>
+    <p>
+      Generating a consolidated scheme report requires aggregating data from 63 separate sources, verifying submissions,
+      reconciling discrepancies, and compiling summaries. This process takes 2 to 3 working days per cycle. During this
+      period, the Accountant General cannot respond to urgent queries from oversight bodies, the Commissioner of Finance,
+      or other senior stakeholders without requesting additional time.
+    </p>
+
+    <h3>No Audit Trail</h3>
+    <p>
+      Spreadsheet-based records provide no systematic trail of changes. When a figure is modified — whether through
+      correction or error — the original value is lost. When discrepancies are discovered, there is no mechanism to
+      trace their origin, identify when they were introduced, or determine responsibility. This creates significant
+      exposure under financial oversight and audit review.
+    </p>
+
+    <h3>Retirement &amp; Exit Gaps</h3>
+    <p>
+      Staff retiring with outstanding loan balances present a recovery challenge that the current system is not equipped
+      to manage proactively. There is no systematic way to forecast upcoming retirements, calculate the outstanding
+      balance at the projected retirement date, determine the gratuity receivable amount, or track early exit settlements.
+      These gaps directly impact the fund's recovery rate and, ultimately, its capacity to approve new loans.
+    </p>
+
+    <div class="highlight-box gold">
+      <p>
+        <strong>The fundamental issue:</strong> These challenges are not failures of individual effort. They are
+        structural consequences of a manual system being asked to manage a portfolio of this scale and complexity.
+        No amount of additional diligence by MDA officers or the Car Loan Department can overcome the inherent
+        limitations of spreadsheet-based administration for a &#8358;2.6 billion revolving fund serving 63 MDAs.
+      </p>
+    </div>
+  </div>
+
+
+  <!-- ════════════════════════════════════════════ -->
+  <!-- SECTION 3: PROPOSED SOLUTION                 -->
+  <!-- ════════════════════════════════════════════ -->
+  <div class="section">
+    <div class="section-number">Section 3</div>
+    <h1>Proposed Solution: VLPRS</h1>
+
+    <h2>3.1 System Overview</h2>
+    <p>
+      The Vehicle Loan Processing &amp; Receivables System (VLPRS) is a secure, web-based application purpose-built for
+      the Office of the Accountant General to centrally administer the Vehicle Loan Scheme. It replaces fragmented
+      manual processes with a single digital system of record that computes, tracks, and reports on all vehicle loan
+      operations across all 63 MDAs.
+    </p>
+
+    <div class="principle-quote">
+      "MDAs submit facts. VLPRS computes truth. The Accountant General sees reality."
+    </div>
+
+    <p>
+      The system is accessible through any modern web browser — on desktop computers, tablets, and mobile phones.
+      It requires no software installation on user devices. The executive dashboard is specifically optimised for
+      mobile access, enabling senior officers to review scheme status from any location, at any time.
+    </p>
+
+    <h2>3.2 What Changes for Each Stakeholder</h2>
+
+    <div class="stakeholder-grid">
+      <div class="stakeholder-card">
+        <h3>The Accountant General</h3>
+        <ul>
+          <li>A real-time dashboard displaying four headline numbers: Active Loans, Total Exposure, Fund Available, and Monthly Recovery Rate</li>
+          <li>Any question about the scheme answered in seconds, from any device — including mobile</li>
+          <li>Automated alerts for items requiring attention: overdue MDA submissions, approaching retirements, fully repaid loans still deducting</li>
+          <li>One-click PDF reports bearing the Oyo State crest, ready for immediate distribution</li>
+        </ul>
+      </div>
+
+      <div class="stakeholder-card">
+        <h3>The Deputy Accountant General</h3>
+        <ul>
+          <li>Operational drill-down from headline numbers to MDA-level detail to individual loan records</li>
+          <li>MDA compliance overview — which MDAs are submitting on time, which are not</li>
+          <li>Exception reports and pattern detection across the portfolio</li>
+          <li>Weekly automated summary reports</li>
+        </ul>
+      </div>
+
+      <div class="stakeholder-card">
+        <h3>Car Loan Department</h3>
+        <ul>
+          <li>Report generation reduced from 2–3 working days to seconds</li>
+          <li>Automatic detection of calculation discrepancies, inactive loans, and anomalies</li>
+          <li>Complete loan lifecycle management — from approval to completion</li>
+          <li>Exception management queue for items requiring human judgment</li>
+        </ul>
+      </div>
+
+      <div class="stakeholder-card">
+        <h3>MDA Reporting Officers (×63)</h3>
+        <ul>
+          <li>Monthly submission simplified from 17-column spreadsheets to <strong>8 fields</strong> — a 60% reduction in workload</li>
+          <li>No manual calculations required — the system computes all figures</li>
+          <li>Instant confirmation of successful submission with reference number</li>
+          <li>Non-threatening comparison when records differ from system calculations</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="stakeholder-grid">
+      <div class="stakeholder-card" style="grid-column: span 2;">
+        <h3>Government Workers with Active Loans (3,100+ Beneficiaries)</h3>
+        <ul>
+          <li><strong>Transparency:</strong> Exact deduction breakdown visible month-by-month — principal, interest, and remaining balance</li>
+          <li><strong>Protection:</strong> Auto-Stop Certificate automatically generated when a loan reaches zero balance, officially halting all further deductions</li>
+          <li><strong>Assurance:</strong> No worker will be over-deducted again</li>
+        </ul>
+      </div>
+    </div>
+
+    <h2>3.3 Core Design Principles</h2>
+
+    <h3>Accuracy Through Automation</h3>
+    <p>
+      All financial calculations are performed by the system using verified formulas. Loan balances are computed live
+      from the transaction record — never manually entered, never stored as editable figures. This eliminates the
+      calculation drift inherent in manual processes. When a balance is displayed, it is mathematically reconstructed
+      from every recorded transaction, ensuring it is always current and always correct.
+    </p>
+
+    <h3>Immutable Record-Keeping</h3>
+    <p>
+      Every financial transaction — every naira deducted — is recorded permanently and cannot be modified or deleted.
+      If a correction is needed, it is recorded as a new entry, preserving the complete history. This creates a
+      continuous, unbreakable chain of accountability. Every figure in the system can be traced back to its origin.
+      Every balance can be independently verified.
+    </p>
+
+    <h3>Supportive, Not Punitive</h3>
+    <p>
+      The system is specifically designed to support MDA officers and departmental staff, not to penalise them. When
+      discrepancies exist between an MDA's submitted figures and the system's calculations, they are presented as
+      neutral comparisons with clear mathematical explanations — never as accusations of error. The language, visual
+      design, and interaction patterns throughout the system have been deliberately crafted to encourage honest reporting
+      and willing adoption. This principle is not a feature — it is an architectural commitment that runs through every
+      aspect of the system.
+    </p>
+
+    <h3>Security &amp; Access Control</h3>
+    <p>
+      Access is role-based and strictly enforced. Each user can only access data relevant to their role and, where
+      applicable, their specific MDA. All actions within the system are logged with timestamps and attribution,
+      creating a comprehensive audit trail. The system employs industry-standard encryption for data in transit
+      and at rest, with secure session management and automatic timeout protections.
+    </p>
+  </div>
+
+
+  <!-- ════════════════════════════════════════════ -->
+  <!-- SECTION 4: KEY SYSTEM CAPABILITIES           -->
+  <!-- ════════════════════════════════════════════ -->
+  <div class="section">
+    <div class="section-number">Section 4</div>
+    <h1>Key System Capabilities</h1>
+
+    <p>
+      VLPRS delivers ten core capabilities, each addressing a specific operational need identified in the current
+      administration of the Vehicle Loan Scheme.
+    </p>
+
+    <!-- Capability 1 -->
+    <h2>4.1 Executive Dashboard</h2>
+    <div class="comparison">
+      <div class="comparison-before">
+        <div class="comparison-label">Today</div>
+        <div class="comparison-item">Scheme status requires 2–3 days of manual compilation</div>
+        <div class="comparison-item">No real-time fund position available</div>
+        <div class="comparison-item">Urgent queries require "I'll get back to you"</div>
+      </div>
+      <div class="comparison-after">
+        <div class="comparison-label">With VLPRS</div>
+        <div class="comparison-item">Four headline numbers load in under 3 seconds</div>
+        <div class="comparison-item">Real-time fund position on any device, including mobile</div>
+        <div class="comparison-item">Any scheme question answered on the spot</div>
+      </div>
+    </div>
+    <p>
+      The dashboard presents the Accountant General with four headline metrics — Active Loans, Total Exposure,
+      Fund Available, and Monthly Recovery — alongside an attention panel highlighting items that require action.
+      It is optimised for mobile access, enabling scheme oversight during meetings, travel, or from home.
+    </p>
+
+    <!-- Capability 2 -->
+    <h2>4.2 Automated Financial Computation</h2>
+    <div class="comparison">
+      <div class="comparison-before">
+        <div class="comparison-label">Today</div>
+        <div class="comparison-item">63 MDAs calculate independently → 30% discrepancy rate</div>
+        <div class="comparison-item">Errors compound silently over months</div>
+        <div class="comparison-item">No mechanism to verify calculations</div>
+      </div>
+      <div class="comparison-after">
+        <div class="comparison-label">With VLPRS</div>
+        <div class="comparison-item">Single computation engine for all loans</div>
+        <div class="comparison-item">Discrepancies detected and surfaced instantly</div>
+        <div class="comparison-item">Every balance independently verifiable from source data</div>
+      </div>
+    </div>
+    <p>
+      The system's computation engine handles all four loan tiers, moratorium periods, accelerated repayment,
+      early exit settlements, and last-payment adjustments. Each monthly deduction is automatically split into
+      principal and interest components. All monetary calculations use financial-grade precision — no rounding errors,
+      no approximations.
+    </p>
+
+    <!-- Capability 3 -->
+    <h2>4.3 Immutable Transaction Ledger</h2>
+    <p>
+      Every deduction, adjustment, and financial event is recorded as a permanent, unalterable entry. The system
+      never overwrites or deletes a financial record. Loan balances are computed live by aggregating all ledger
+      entries — they are derived figures, not stored values. This means balances are always mathematically current,
+      and the complete financial history of any loan can be reconstructed and audited at any time.
+    </p>
+
+    <!-- Capability 4 -->
+    <h2>4.4 Simplified MDA Monthly Submission</h2>
+    <div class="comparison">
+      <div class="comparison-before">
+        <div class="comparison-label">Today</div>
+        <div class="comparison-item">17-column spreadsheet with manual calculations</div>
+        <div class="comparison-item">Complex formulas prone to errors</div>
+        <div class="comparison-item">No confirmation of successful submission</div>
+      </div>
+      <div class="comparison-after">
+        <div class="comparison-label">With VLPRS</div>
+        <div class="comparison-item">8 factual fields — no calculations needed</div>
+        <div class="comparison-item">System validates and computes automatically</div>
+        <div class="comparison-item">Instant confirmation with reference number</div>
+      </div>
+    </div>
+    <p>
+      MDA officers submit 6 core data fields plus 2 conditional fields (triggered only by employment events such as
+      retirement or transfer). The system validates each submission atomically — all records are accepted together or
+      none are, preventing partial data states. Officers receive immediate confirmation including a reference number,
+      timestamp, and row count.
+    </p>
+
+    <!-- Capability 5 -->
+    <h2>4.5 Auto-Stop Certificate</h2>
+    <div class="highlight-box teal">
+      <p>
+        <strong>The moment a loan balance reaches zero, VLPRS automatically generates an official Auto-Stop Certificate</strong>
+        — a system-produced document bearing the Oyo State crest and a unique verification code. This certificate
+        serves as authoritative notice that all deductions for the loan must cease immediately. Dual notifications
+        are sent: to the beneficiary (confirming loan completion and deduction halt) and to the relevant MDA officer
+        (instructing cessation of deductions). No manual intervention is required. No worker will be over-deducted again.
+      </p>
+    </div>
+
+    <!-- Capability 6 -->
+    <h2>4.6 Data Migration &amp; Legacy Reconciliation</h2>
+    <p>
+      Transitioning 63 MDAs from spreadsheets to VLPRS requires careful handling of historical data. The system includes
+      a structured migration process: each MDA's existing data is mapped, imported, and compared against system
+      calculations. Discrepancies are categorised by severity and presented in neutral, explanatory terms. Each MDA's
+      migration concludes with a verified baseline — an agreed starting point from which the system builds truth forward.
+    </p>
+
+    <!-- Capability 7 -->
+    <h2>4.7 Reporting &amp; Document Generation</h2>
+    <p>
+      VLPRS generates four core report types — Executive Summary, MDA Compliance, Variance Analysis, and Loan Snapshot —
+      each available as a professionally formatted PDF bearing the Oyo State crest. Reports that previously required
+      2–3 days of manual compilation are generated in under 10 seconds. They can be downloaded, printed, or shared
+      directly from the system.
+    </p>
+
+    <!-- Capability 8 -->
+    <h2>4.8 Exception Management &amp; Automated Alerts</h2>
+    <p>
+      The system continuously monitors for conditions that require human attention: loans with no recorded deduction
+      for 60 or more days, MDA submissions that are overdue, loans approaching full repayment, and discrepancies
+      between submitted and computed figures. These are surfaced through an exception management queue prioritised
+      by severity, and through automated email alerts to relevant officers. The system detects what manual processes cannot.
+    </p>
+
+    <!-- Capability 9 -->
+    <h2>4.9 Retirement Pipeline &amp; Gratuity Tracking</h2>
+    <p>
+      For each beneficiary with an active loan, the system calculates the projected retirement date and forecasts the
+      outstanding balance at that date. This provides 3-month, 6-month, and 12-month visibility into upcoming retirements
+      with outstanding obligations — enabling proactive recovery planning rather than reactive discovery. Where a
+      beneficiary's outstanding balance at retirement exceeds zero, the system automatically computes the gratuity
+      receivable amount and tracks it through to resolution.
+    </p>
+
+    <!-- Capability 10 -->
+    <h2>4.10 Staff Record &amp; Identity Management</h2>
+    <p>
+      The system maintains a unified record for each loan beneficiary, including employment details, loan history,
+      and deduction records. Staff ID governance ensures consistent identification across MDAs, with duplicate detection
+      and resolution workflows. Employment events — retirement, transfer, suspension, and other changes — are tracked
+      with full audit history.
+    </p>
+  </div>
+
+
+  <!-- ════════════════════════════════════════════ -->
+  <!-- SECTION 5: IMPLEMENTATION APPROACH           -->
+  <!-- ════════════════════════════════════════════ -->
+  <div class="section">
+    <div class="section-number">Section 5</div>
+    <h1>Implementation Approach</h1>
+
+    <h2>5.1 Phased Delivery</h2>
+    <p>
+      VLPRS will be delivered through a phased approach across six stages, each producing a working, demonstrable
+      increment of the system. This approach ensures that value is delivered early and continuously — the Office
+      of the Accountant General will see working software from the very first phase, not just at the end of the project.
+    </p>
+
+    <div class="timeline">
+      <div class="timeline-item">
+        <div class="timeline-phase">Phase 1: Foundation &amp; Secure Access</div>
+        <div class="timeline-weeks">Weeks 1 – 4</div>
+        <div class="timeline-desc">
+          System architecture, user authentication, role-based access control, audit logging,
+          deployment infrastructure, and the public-facing scheme information website.
+        </div>
+      </div>
+
+      <div class="timeline-item">
+        <div class="timeline-phase">Phase 2: Financial Core</div>
+        <div class="timeline-weeks">Weeks 5 – 8</div>
+        <div class="timeline-desc">
+          Loan data model, immutable transaction ledger, 4-tier computation engine covering
+          all loan types, balance reconstruction, and loan search.
+        </div>
+      </div>
+
+      <div class="timeline-item">
+        <div class="timeline-phase">Phase 3: Data Migration</div>
+        <div class="timeline-weeks">Weeks 9 – 12</div>
+        <div class="timeline-desc">
+          Legacy data import tooling, column mapping for 63 MDA spreadsheet formats, variance categorisation,
+          non-punitive comparison interface, baseline establishment for each MDA.
+        </div>
+      </div>
+
+      <div class="timeline-item">
+        <div class="timeline-phase">Phase 4: Operations &amp; Reporting</div>
+        <div class="timeline-weeks">Weeks 13 – 18</div>
+        <div class="timeline-desc">
+          Executive dashboard, MDA monthly submission workflow, PDF report generation,
+          exception management, and automated notification system.
+        </div>
+      </div>
+
+      <div class="timeline-item">
+        <div class="timeline-phase">Phase 5: Advanced Features</div>
+        <div class="timeline-weeks">Weeks 19 – 24</div>
+        <div class="timeline-desc">
+          Auto-Stop Certificate generation, retirement pipeline forecasting, gratuity receivable tracking,
+          early exit processing, pre-submission checkpoints, and mid-cycle event management.
+        </div>
+      </div>
+
+      <div class="timeline-item">
+        <div class="timeline-phase">Phase 6: Rollout &amp; Acceptance</div>
+        <div class="timeline-weeks">Weeks 25 – 28</div>
+        <div class="timeline-desc">
+          Staff training workshop, full MDA deployment, hardware installation,
+          system acceptance testing, documentation handover, and post-deployment support activation.
+        </div>
+      </div>
+    </div>
+
+    <h2>5.2 Pilot Strategy</h2>
+    <p>
+      Rather than attempting to onboard all 63 MDAs simultaneously, VLPRS will launch with a pilot group of
+      <strong>3 to 5 MDAs</strong> selected to represent different sizes and complexity levels. This pilot phase
+      validates the data migration process, confirms workflow suitability, and builds internal champions who can
+      support broader adoption. Full deployment to all 63 MDAs follows upon successful pilot completion.
+    </p>
+
+    <h2>5.3 Implementation Timeline</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Milestone</th>
+          <th>Target</th>
+          <th>Deliverable</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Live System Shell</td>
+          <td>Week 4</td>
+          <td>Working system with authentication, role-based access, and public website — hosted and accessible</td>
+        </tr>
+        <tr>
+          <td>Financial Engine Verified</td>
+          <td>Week 8</td>
+          <td>Computation engine producing correct calculations for all four loan tiers, validated against manual calculations</td>
+        </tr>
+        <tr>
+          <td>All 63 MDAs Migrated</td>
+          <td>Week 12</td>
+          <td>Legacy data imported, reconciled, and baselined for every MDA — system becomes the authoritative record</td>
+        </tr>
+        <tr>
+          <td>Executive Dashboard Live</td>
+          <td>Week 15</td>
+          <td>AG can view real-time portfolio status from any device — the "Commissioner Call" scenario works</td>
+        </tr>
+        <tr>
+          <td>MDA Submissions Active</td>
+          <td>Week 18</td>
+          <td>MDA officers submitting monthly data through VLPRS — spreadsheets retired</td>
+        </tr>
+        <tr>
+          <td>Auto-Stop Certificates Live</td>
+          <td>Week 22</td>
+          <td>Fully repaid loans automatically generate certificates — no more over-deductions</td>
+        </tr>
+        <tr>
+          <td>Full Deployment &amp; Acceptance</td>
+          <td>Week 28</td>
+          <td>All features operational, all staff trained, hardware installed, 90-day support begins</td>
+        </tr>
+      </tbody>
+    </table>
+    <p class="table-caption">Table 2: Key Implementation Milestones</p>
+  </div>
+
+
+  <!-- ════════════════════════════════════════════ -->
+  <!-- SECTION 6: PROOF OF CONCEPT                  -->
+  <!-- ════════════════════════════════════════════ -->
+  <div class="section">
+    <div class="section-number">Section 6</div>
+    <h1>Proof of Concept &amp; Current Progress</h1>
+
+    <p>
+      To validate the technical approach, confirm feasibility, and demonstrate commitment to delivery, an initial
+      proof-of-concept has been developed. The following components are operational:
+    </p>
+
+    <ul class="check-list">
+      <li>System architecture implemented and deployed to cloud infrastructure</li>
+      <li>User authentication system with secure session management and role-based access control</li>
+      <li>Frontend application framework with role-specific interface scaffolding</li>
+      <li>Automated deployment pipeline — code changes are built, tested, and deployed automatically</li>
+      <li>Public-facing website providing scheme information, eligibility details, and repayment guidelines</li>
+      <li>Design system aligned with Oyo State Government visual identity</li>
+      <li>Audit logging system recording all actions with timestamps and attribution</li>
+    </ul>
+
+    <div class="highlight-box teal">
+      <p>
+        <strong>This is not a concept or a proposal on paper.</strong> The foundational system is live, deployed,
+        and accessible. This proposal covers the full implementation, institutional deployment, data migration across
+        all 63 MDAs, staff training, hardware procurement, and ongoing operational support required to bring the system
+        to full production readiness.
+      </p>
+    </div>
+
+    <div class="screenshot-placeholder">
+      [ System Screenshot: Executive Dashboard Interface ]<br>
+      <small>Actual screenshots of the working system to be inserted here</small>
+    </div>
+
+    <div class="screenshot-placeholder">
+      [ System Screenshot: Public Website — Scheme Information ]<br>
+      <small>Actual screenshots of the working system to be inserted here</small>
+    </div>
+  </div>
+
+
+  <!-- ════════════════════════════════════════════ -->
+  <!-- SECTION 7: TRAINING & CAPACITY BUILDING      -->
+  <!-- ════════════════════════════════════════════ -->
+  <div class="section">
+    <div class="section-number">Section 7</div>
+    <h1>Training &amp; Capacity Building</h1>
+
+    <p>
+      Successful adoption requires that every user — from the Accountant General to the most junior MDA reporting
+      officer — can use the system confidently from day one. VLPRS implementation includes a comprehensive
+      <strong>2-day training workshop</strong> tailored to each user role.
+    </p>
+
+    <h2>Workshop Structure</h2>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Day</th>
+          <th>Session</th>
+          <th>Participants</th>
+          <th>Focus</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td rowspan="2"><strong>Day 1</strong></td>
+          <td>Morning Session</td>
+          <td>All participants</td>
+          <td>System overview, objectives, navigation, and general orientation</td>
+        </tr>
+        <tr>
+          <td>Afternoon Session</td>
+          <td>Executive &amp; Department Admin</td>
+          <td>Dashboard interpretation, report generation, exception management, loan lifecycle operations</td>
+        </tr>
+        <tr>
+          <td rowspan="2"><strong>Day 2</strong></td>
+          <td>Morning Session</td>
+          <td>MDA Reporting Officers</td>
+          <td>Monthly submission workflow, data entry, file upload, confirmation process, comparison review</td>
+        </tr>
+        <tr>
+          <td>Afternoon Session</td>
+          <td>All participants</td>
+          <td>Hands-on practice with real scenarios, troubleshooting, Q&amp;A, and feedback collection</td>
+        </tr>
+      </tbody>
+    </table>
+    <p class="table-caption">Table 3: Training Workshop Schedule</p>
+
+    <h2>Training Materials Provided</h2>
+    <ul>
+      <li><strong>Printed User Guides</strong> — role-specific manuals for each user type (Executive, Department Admin, MDA Officer)</li>
+      <li><strong>Quick Reference Cards</strong> — laminated single-page guides for daily operations</li>
+      <li><strong>System Administrator Guide</strong> — comprehensive technical documentation for ongoing system management</li>
+      <li><strong>Post-Workshop Video Guides</strong> — short recorded walkthroughs for reference and new staff onboarding</li>
+    </ul>
+
+    <div class="highlight-box">
+      <p>
+        <strong>Adoption by design:</strong> The system itself has been designed to minimise the learning curve.
+        MDA officers interact with 8 fields instead of 17 columns. The interface uses familiar language,
+        clear confirmation steps, and reassuring feedback patterns. The training reinforces what the design
+        already makes intuitive.
+      </p>
+    </div>
+  </div>
+
+
+  <!-- ════════════════════════════════════════════ -->
+  <!-- SECTION 8: ONGOING SUPPORT & SUSTAINABILITY  -->
+  <!-- ════════════════════════════════════════════ -->
+  <div class="section">
+    <div class="section-number">Section 8</div>
+    <h1>Ongoing Support &amp; Sustainability</h1>
+
+    <h2>Post-Deployment Support</h2>
+    <p>
+      Upon system acceptance, a <strong>90-day post-deployment support period</strong> is included in the project scope.
+      During this period, the development team provides:
+    </p>
+    <ul>
+      <li>Priority resolution of any reported issues or defects</li>
+      <li>Assistance with MDA onboarding and data questions</li>
+      <li>System performance monitoring and optimisation</li>
+      <li>Minor adjustments based on user feedback during the stabilisation period</li>
+    </ul>
+
+    <h2>Annual Maintenance</h2>
+    <p>
+      Beyond the initial 90-day support period, an annual maintenance and support arrangement ensures the system
+      remains operational, secure, and current. This covers:
+    </p>
+    <ul>
+      <li><strong>Cloud Infrastructure:</strong> Server hosting, managed database, automated backups, email services, domain, and SSL certification</li>
+      <li><strong>System Maintenance:</strong> Security updates, performance monitoring, bug resolution, and compatibility maintenance</li>
+      <li><strong>Technical Support:</strong> Helpdesk access for system administrators and users</li>
+    </ul>
+
+    <h2>System Sustainability</h2>
+    <p>
+      VLPRS is designed for long-term institutional sustainability:
+    </p>
+    <ul>
+      <li><strong>Cloud-hosted infrastructure</strong> — no on-premise hardware to maintain beyond the departmental workstation</li>
+      <li><strong>Automated daily backups</strong> with additional weekly full backups to separate storage</li>
+      <li><strong>Comprehensive documentation</strong> — all system architecture, processes, and operational procedures are fully documented</li>
+      <li><strong>Standards-based development</strong> — the system is built on widely-supported, open technologies ensuring long-term viability and maintainability</li>
+    </ul>
+  </div>
+
+
+  <!-- ════════════════════════════════════════════ -->
+  <!-- SECTION 9: RISK MITIGATION                   -->
+  <!-- ════════════════════════════════════════════ -->
+  <div class="section">
+    <div class="section-number">Section 9</div>
+    <h1>Risk Mitigation</h1>
+
+    <p>
+      Every implementation carries risks. Responsible delivery means identifying them early and building mitigations
+      into the plan — not waiting for problems to emerge.
+    </p>
+
+    <table>
+      <thead>
+        <tr>
+          <th style="width: 22%;">Risk</th>
+          <th style="width: 38%;">Impact</th>
+          <th style="width: 40%;">Mitigation</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Data Migration Accuracy</strong></td>
+          <td>Incorrect historical data undermines trust in the system from day one</td>
+          <td>Structured migration process with MDA-by-MDA verification. Non-punitive comparison interface allows officers to review and confirm their data. Verified baseline established before any MDA goes live.</td>
+        </tr>
+        <tr>
+          <td><strong>User Adoption Resistance</strong></td>
+          <td>Officers revert to spreadsheets, creating parallel systems</td>
+          <td>Non-punitive system design reduces defensiveness. 60% workload reduction provides clear personal benefit. 2-day hands-on training builds confidence. Pilot MDAs create internal advocates.</td>
+        </tr>
+        <tr>
+          <td><strong>Internet Connectivity</strong></td>
+          <td>Unreliable network access in some MDA locations disrupts submissions</td>
+          <td>System designed as a progressive web application — functional on standard mobile networks. Dashboard and key screens optimised for low-bandwidth access. Monthly submissions can be prepared offline and uploaded when connected.</td>
+        </tr>
+        <tr>
+          <td><strong>Data Security</strong></td>
+          <td>Unauthorised access to sensitive financial and personal data</td>
+          <td>Role-based access control limits data visibility by role and MDA. All connections encrypted. Sessions expire automatically. Comprehensive audit trail logs every action. Cloud infrastructure protected by industry-standard security measures.</td>
+        </tr>
+        <tr>
+          <td><strong>Staff Turnover</strong></td>
+          <td>Trained officers transfer or retire, new staff untrained</td>
+          <td>Video training materials available for self-paced onboarding. Intuitive interface design minimises training requirements. Quick reference cards at each workstation. System administrator guide enables internal knowledge transfer.</td>
+        </tr>
+        <tr>
+          <td><strong>Business Continuity</strong></td>
+          <td>System unavailability disrupts operations</td>
+          <td>Cloud hosting with high availability. Automated daily backups with geographically separate weekly backups. System health monitoring with automated alerts. Documented recovery procedures.</td>
+        </tr>
+      </tbody>
+    </table>
+    <p class="table-caption">Table 4: Risk Assessment and Mitigation Matrix</p>
+  </div>
+
+
+  <!-- ════════════════════════════════════════════ -->
+  <!-- SECTION 10: ABOUT CORE KNOWLEDGE LIMITED     -->
+  <!-- ════════════════════════════════════════════ -->
+  <div class="section">
+    <div class="section-number">Section 10</div>
+    <h1>About Core Knowledge Limited</h1>
+
+    <p>
+      Core Knowledge Limited is a technology consultancy specialising in the design and development of purpose-built
+      digital systems for institutional and government operations. The firm focuses on solutions that replace fragmented
+      manual processes with reliable, auditable, and sustainable digital systems of record.
+    </p>
+
+    <h2>Project Lead</h2>
+    <p>
+      <strong>Lawal Awwal</strong> — Principal Consultant &amp; Solutions Architect — serves as the technical lead
+      for the VLPRS project. With expertise in full-stack software development, financial system design, and
+      institutional software deployment, Lawal brings a combination of technical depth and operational understanding
+      to the project.
+    </p>
+    <p>
+      The VLPRS solution was designed from the ground up based on direct engagement with the operational realities of
+      the Vehicle Loan Scheme — its user profiles, its workflows, its pain points, and its institutional context.
+      This is not a generic product adapted for purpose; it is a system built specifically for the Office of the
+      Accountant General of Oyo State.
+    </p>
+
+    <h2>Our Approach</h2>
+    <ul class="check-list">
+      <li><strong>Domain-first design</strong> — We understand the problem before we write a line of code</li>
+      <li><strong>Incremental delivery</strong> — Working software delivered in phases, not as a single final release</li>
+      <li><strong>Adoption-conscious</strong> — Systems succeed only when people use them willingly</li>
+      <li><strong>Institutional sustainability</strong> — We build systems that outlast the project team</li>
+    </ul>
+
+    <div class="highlight-box gold">
+      <p>
+        <strong>Contact:</strong><br>
+        Core Knowledge Limited<br>
+        Lawal Awwal — Principal Consultant &amp; Solutions Architect<br>
+        awwallawal@gmail.com &nbsp;|&nbsp; +234 805 302 3862<br>
+        Bodija, Ibadan, Oyo State
+      </p>
+    </div>
+  </div>
+
+
+  <!-- ════════════════════════════════════════════ -->
+  <!-- DOCUMENT FOOTER                              -->
+  <!-- ════════════════════════════════════════════ -->
+  <div class="doc-footer">
+    Core Knowledge Limited &nbsp;&bull;&nbsp; CKL/VLPRS/TP/2026/001 &nbsp;&bull;&nbsp; Volume 1 of 2 &nbsp;&bull;&nbsp; Confidential<br>
+    Vehicle Loan Processing &amp; Receivables System — Technical Proposal &nbsp;&bull;&nbsp; February 2026
+  </div>
+
+</body>
+</html>

@@ -51,7 +51,7 @@ export function DownloadsPage() {
                     <span className="text-xs text-slate-400">{resource.fileSize}</span>
                   )}
                   {isAvailable && resource.downloadUrl ? (
-                    <Button asChild variant="secondary" size="sm">
+                    <Button asChild variant="default" size="sm">
                       <a href={resource.downloadUrl} download>
                         Download
                       </a>

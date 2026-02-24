@@ -1,6 +1,6 @@
 # Story 14.2: About & Scheme Information Pages
 
-Status: review
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -204,6 +204,19 @@ So that I understand the scheme and who stands behind it without visiting the Ca
   - [x] 11.5 Test BreadcrumbNav shows correct path per page — existing BreadcrumbNav tests cover this
   - [x] 11.6 Test router resolves all 6 routes to correct components — validated via App.test.tsx smoke test
   - [x] 11.7 Test each page sets correct `<title>` tag via `usePageMeta`
+
+### Review Follow-ups (AI) - 2026-02-24
+- [x] [AI-Review][HIGH] Fix authority callout: use `border-[var(--color-primary)]` instead of `border-crimson` [AboutPage.tsx]
+- [x] [AI-Review][MEDIUM] Fix usePageMeta race condition: prevTitle ref overwritten before cleanup [usePageMeta.ts]
+- [x] [AI-Review][MEDIUM] Fix HowItWorksPage double disclaimer: remove generic ProgrammeDisclaimer, keep page-specific one [HowItWorksPage.tsx]
+- [x] [AI-Review][MEDIUM] Fix getOrCreateMeta: set content attribute on newly created meta elements [usePageMeta.ts]
+- [ ] [AI-Review][MEDIUM] Add BreadcrumbNav path assertions to page tests
+- [ ] [AI-Review][LOW] Consider making SectionHeading default margin smaller for content pages
+- [x] [AI-Review][ACCEPTED] About page layout per wireframes-epic-14.md, accepted by PM
+- [x] [AI-Review][ACCEPTED] 6 leaders matches real AG Office org chart, accepted by PM
+- [x] [AI-Review][ACCEPTED] Pipe separator in titles, consistent design choice
+- [x] [AI-Review][ACCEPTED] Interest rate "13.33% p.a." reflects actual known rate
+- [x] [AI-Review][ACCEPTED] Leadership heading hierarchy matches real org structure
 
 ## Dev Notes
 

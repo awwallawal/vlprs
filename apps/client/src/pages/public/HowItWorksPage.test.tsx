@@ -51,10 +51,10 @@ describe('HowItWorksPage', () => {
     ).toBeInTheDocument();
   });
 
-  it('renders programme disclaimer component', () => {
+  it('renders programme disclaimer text', () => {
     renderPage();
     expect(
-      screen.getByText(/Vehicle Loan Processing & Receivables System/)
+      screen.getByText(/Expression of Interest submission does not constitute loan approval/)
     ).toBeInTheDocument();
   });
 

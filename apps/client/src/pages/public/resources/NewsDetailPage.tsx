@@ -34,8 +34,12 @@ export function NewsDetailPage() {
           })}
         </p>
 
-        <div className="max-w-3xl">
-          <p className="text-slate-700 leading-relaxed">{article.body}</p>
+        <div className="max-w-3xl space-y-4">
+          {article.body.split('\n\n').map((paragraph, index) => (
+            <p key={index} className="text-slate-700 leading-relaxed">
+              {paragraph}
+            </p>
+          ))}
         </div>
 
         <div className="mt-12">

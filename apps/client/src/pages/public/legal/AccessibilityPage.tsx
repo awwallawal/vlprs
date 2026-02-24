@@ -17,7 +17,15 @@ export function AccessibilityPage() {
           {ACCESSIBILITY_SECTIONS.map((section) => (
             <section key={section.title}>
               <h2 className="text-xl font-brand font-bold text-slate-900 mb-3">{section.title}</h2>
-              <p className="text-slate-700 leading-relaxed">{section.body}</p>
+              {Array.isArray(section.body) ? (
+                <ul className="list-disc pl-5 space-y-1 text-slate-700 leading-relaxed">
+                  {section.body.map((item) => (
+                    <li key={item}>{item}</li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-slate-700 leading-relaxed">{section.body}</p>
+              )}
             </section>
           ))}
         </div>
