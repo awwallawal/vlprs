@@ -57,7 +57,7 @@ jobs:
         run: pnpm --filter shared build
 
       - name: Apply database schema
-        run: pnpm --filter server db:push
+        run: pnpm --filter server db:migrate
 
       - name: Lint
         run: pnpm lint
@@ -130,7 +130,6 @@ jobs:
             export IMAGE_TAG=${{ github.sha }}
             docker compose -f compose.prod.yaml pull
             docker compose -f compose.prod.yaml up -d --remove-orphans
-            cat scripts/init-schema.sql | docker exec -i vlprs-db-1 psql -U vlprs -d vlprs_prod
             docker image prune -f
 
       - name: Health check
