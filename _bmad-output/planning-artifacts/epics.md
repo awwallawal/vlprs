@@ -1564,6 +1564,45 @@ So that I can prepare for using the system without needing a phone call or offic
 
 System maintains an immutable financial record and computes accurate loan schedules, balances, and repayment breakdowns for all 4 grade-level tiers. Any balance is reconstructable from the ledger. 100% accuracy — zero tolerance for math errors.
 
+### Retrospective Carry-Forward (from Epic 1+14 Retro, 2026-02-24)
+
+The following action items from the Epic 1+14 retrospective have been incorporated into Epic 2 stories:
+
+- **Story 2.0:** Integration test layer (PostgreSQL in CI), automated retro report script, commit summary convention, UAT checkpoint template
+- **Story 2.1:** MDA data reconciliation with authoritative list (`docs/mdas_list.txt`), `abbreviation` column, `mda_aliases` table for fuzzy matching, standardised abbreviations for all 63 MDAs
+- **Story 2.3:** Sports Council CSV (`docs/NEW CAR LOAN TEMPLATE APRIL, 2025_Sheet1.csv`) as computation engine test fixture, `decimal.js` validation against real-world loan data
+- **All stories:** Team agreements — no framework assumptions without source verification; bugs are collective (no blame); UAT discoveries are features (not scope creep)
+
+### Story 2.0: Sprint Infrastructure & Quality Gates
+
+As a **development team**,
+I want CI infrastructure improvements and process tooling established before core financial stories begin,
+So that the detection gaps identified in Epic 1's production incidents are closed and retrospective commitments are tracked.
+
+**Context:** Epic 1+14 retrospective identified that both production incidents (schema drift, baseline schema mismatch) shared the same root cause — no integration tests against real PostgreSQL. This story closes that gap and establishes process improvements before the immutable ledger (Story 2.2) introduces database triggers that require real-DB testing.
+
+**Acceptance Criteria:**
+
+**Given** the GitHub Actions CI pipeline
+**When** server tests run in CI
+**Then** a PostgreSQL 17 service container is available for integration tests
+**And** at minimum, the migration baseline logic from Story 1.10 is tested against the real database (not mocks)
+**And** the integration test pattern is documented for reuse in Stories 2.2+
+
+**Given** a completed story
+**When** the developer marks it as done
+**Then** the story file includes a `## Commit Summary` section with: total commits, files touched, revert count, and a one-sentence development narrative
+
+**Given** the retrospective workflow
+**When** a retrospective is initiated
+**Then** a script exists (`scripts/retro-report.sh` or equivalent) that aggregates per-story commit stats (commit count, file churn, fix% vs feat%) and outputs a markdown summary table
+
+**Given** UAT checkpoints every 2-3 stories
+**When** a checkpoint is reached (after Stories 2.2, 2.4, 2.7)
+**Then** a "What to Test" checklist template exists and is populated with story-specific test scenarios for Awwal's UAT
+
+**Note:** This story can run in parallel with Story 2.1 but MUST complete before Story 2.2 begins (Story 2.2's trigger testing requires the PostgreSQL CI infrastructure).
+
 ### Story 2.1: MDA Registry & Loan Master Records
 
 As a **Department Admin**,
@@ -1572,9 +1611,15 @@ So that every loan in the system has a complete, queryable record of its origina
 
 **Acceptance Criteria:**
 
-**Given** an `mdas` table with UUIDv7 PK, `code` (unique, e.g. "BIR"), `name`, `is_active`, `created_at`, `updated_at`, `deleted_at`
-**When** the system is seeded with all 63 MDAs
-**Then** each MDA has a unique code and name retrievable via `GET /api/mdas`
+**Given** an `mdas` table with UUIDv7 PK, `code` (unique, e.g. "OYSHMB"), `name`, `abbreviation` (UI display name), `is_active`, `created_at`, `updated_at`, `deleted_at`
+**When** the system is seeded with all 63 MDAs from the authoritative list (`docs/mdas_list.txt`)
+**Then** each MDA has a unique code, full official name, and standardised UI abbreviation retrievable via `GET /api/mdas`
+**And** abbreviations follow consistent rules: official acronyms retained (OYSHMB, BCOS, TESCOM), descriptive names in Title Case (Sports Council, Local Govt), long names shortened for UI display
+
+**Given** an `mda_aliases` table with `mda_id` (FK), `alias` (unique, case-insensitive)
+**When** historical CSV data uses variant MDA names (e.g. "SPORTS COUNCIL", "Oyo State Sports Council", "Sports Council")
+**Then** the alias table maps all known variations to the canonical MDA record
+**And** alias matching uses 4 layers: exact → normalised (strip prefix, lowercase) → alias table → fuzzy suggestion (human confirms, saved as new alias)
 
 **Given** a `loans` table with UUIDv7 PK, columns: `staff_id`, `staff_name`, `grade_level`, `mda_id` (FK), `principal_amount` (NUMERIC 15,2), `interest_rate`, `tenure_months`, `moratorium_months`, `monthly_deduction_amount`, `approval_date`, `first_deduction_date`, `loan_reference` (unique, e.g. "VLC-2024-0847"), `status`, `created_at`, `updated_at`
 **When** a Department Admin creates a loan record via `POST /api/loans`
@@ -1626,6 +1671,11 @@ So that every loan has a mathematically correct schedule that any auditor can ve
 **Then** it completes in <1 second (NFR-PERF-7)
 **And** the output includes: month number, principal component, interest component, total deduction, running balance — for every month
 **And** the result is deterministic — same inputs always produce identical outputs (NFR-REL-6)
+
+**Given** the Sports Council car loan report (`fixtures/sports-council-april-2025.csv`) with 21 real loan records
+**When** the computation engine processes the same loan parameters (principals: 250K-750K, tenures: 30-60 months)
+**Then** computed monthly deductions, interest splits, and outstanding balances match the known correct values from the CSV to kobo (₦0.01) precision
+**And** the test suite includes at minimum 5 representative loans covering all principal/tenure combinations present in the CSV
 
 ### Story 2.4: Accelerated Repayment, Last-Payment Adjustment & Auto-Split
 
