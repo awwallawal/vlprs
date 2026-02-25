@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll, beforeEach, afterAll } from 'vitest';
 import { sql } from 'drizzle-orm';
 import { db } from '../db/index';
-import { mdas, loans } from '../db/schema';
+import { mdas } from '../db/schema';
 import { generateUuidv7 } from '../lib/uuidv7';
 import * as loanService from './loanService';
 

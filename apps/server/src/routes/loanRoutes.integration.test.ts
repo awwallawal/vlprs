@@ -3,7 +3,7 @@ import request from 'supertest';
 import { sql } from 'drizzle-orm';
 import app from '../app';
 import { db } from '../db/index';
-import { mdas, users, loans } from '../db/schema';
+import { mdas, users } from '../db/schema';
 import { hashPassword } from '../lib/password';
 import { generateUuidv7 } from '../lib/uuidv7';
 import * as authService from '../services/authService';
