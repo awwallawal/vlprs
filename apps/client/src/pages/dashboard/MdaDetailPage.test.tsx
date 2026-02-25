@@ -51,7 +51,7 @@ vi.mock('@/mocks/loanDetail', () => ({
       mdaName: 'Ministry of Health',
       loanRef: 'VL-2024-00451',
       outstandingBalance: '1875000.00',
-      status: 'active',
+      status: 'ACTIVE',
     },
   },
 }));

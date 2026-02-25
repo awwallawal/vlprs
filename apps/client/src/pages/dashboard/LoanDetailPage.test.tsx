@@ -16,7 +16,7 @@ const mockLoan = {
   installmentsPaid: 10,
   installmentsRemaining: 30,
   lastDeductionDate: '2026-02-01T00:00:00Z',
-  status: 'active' as const,
+  status: 'ACTIVE' as const,
   retirementDate: '2035-06-30T00:00:00Z',
 };
 
