@@ -8,13 +8,9 @@ import { auditLog } from '../middleware/auditLog';
 import { immutableRoute } from '../middleware/immutableRoute';
 import { ROLES, ALL_ROLES, createLedgerEntrySchema } from '@vlprs/shared';
 import * as ledgerService from '../services/ledgerService';
+import { param } from '../lib/params';
 
 const router = Router();
-
-// Helper to safely extract a single param string (Express 5 params can be string | string[])
-function param(val: string | string[]): string {
-  return Array.isArray(val) ? val[0] : val;
-}
 
 // Layer 3: Reject PUT/PATCH/DELETE on all /ledger routes
 router.use('/ledger', immutableRoute);

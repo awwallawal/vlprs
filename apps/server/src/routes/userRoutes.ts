@@ -14,6 +14,7 @@ import {
   type Role,
 } from '@vlprs/shared';
 import * as userAdminService from '../services/userAdminService';
+import { param } from '../lib/params';
 
 const router = Router();
 
@@ -23,11 +24,6 @@ const adminAuth = [
   requirePasswordChange,
   authorise(ROLES.SUPER_ADMIN, ROLES.DEPT_ADMIN),
 ];
-
-// Helper to safely extract a single param string (Express 5 params can be string | string[])
-function param(val: string | string[]): string {
-  return Array.isArray(val) ? val[0] : val;
-}
 
 // GET /api/users — List users (admin only)
 router.get(

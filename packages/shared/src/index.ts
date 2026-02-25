@@ -18,8 +18,10 @@ export type { LoanStatus, Loan, CreateLoanRequest, LoanSummary, LoanSearchResult
 export type { SubmissionRecord } from './types/submission.js';
 export type { ExceptionPriority, ExceptionCategory, ExceptionItem } from './types/exception.js';
 export type { LedgerEntryType, LedgerEntry } from './types/ledger.js';
+export type { ComputationParams, ScheduleRow, RepaymentSchedule } from './types/computation.js';
 
 // Constants
 export { ROLES, ALL_ROLES, ROLE_HIERARCHY, getManageableRoles, canManageRole, type Role } from './constants/roles.js';
 export { VOCABULARY, UI_COPY } from './constants/vocabulary.js';
 export { PERMISSION_MATRIX, hasPermission } from './constants/permissions.js';
+export { LOAN_TIERS, getTierForGradeLevel, type LoanTierConfig } from './constants/tiers.js';
