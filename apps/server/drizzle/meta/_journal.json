@@ -15,6 +15,13 @@
       "when": 1771969678757,
       "tag": "0001_funny_butterfly",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1772022669126,
+      "tag": "0002_bright_grim_reaper",
+      "breakpoints": true
     }
   ]
 }

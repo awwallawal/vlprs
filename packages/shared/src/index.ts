@@ -5,6 +5,7 @@ export { emailSchema } from './schemas/emailSchema.js';
 export { loginSchema, registerSchema, changePasswordSchema } from './validators/authSchemas.js';
 export { createUserSchema, updateUserSchema, deactivateUserSchema, deleteUserSchema, changePasswordFormSchema } from './validators/userSchemas.js';
 export { createLoanSchema } from './validators/loanSchemas.js';
+export { createLedgerEntrySchema, type CreateLedgerEntryInput } from './validators/ledgerSchemas.js';
 export { mdaQuerySchema } from './validators/mdaSchemas.js';
 
 // Types
@@ -16,6 +17,7 @@ export type { SubmissionStatus, MigrationStage, Mda, MdaListItem, MdaAlias, MdaC
 export type { LoanStatus, Loan, CreateLoanRequest, LoanSummary, LoanSearchResult } from './types/loan.js';
 export type { SubmissionRecord } from './types/submission.js';
 export type { ExceptionPriority, ExceptionCategory, ExceptionItem } from './types/exception.js';
+export type { LedgerEntryType, LedgerEntry } from './types/ledger.js';
 
 // Constants
 export { ROLES, ALL_ROLES, ROLE_HIERARCHY, getManageableRoles, canManageRole, type Role } from './constants/roles.js';

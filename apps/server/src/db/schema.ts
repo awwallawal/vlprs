@@ -57,6 +57,11 @@ export const mdaAliases = pgTable(
   ],
 );
 
+// ─── Entry Type Enum (Story 2.2) ────────────────────────────────────
+export const entryTypeEnum = pgEnum('entry_type', [
+  'PAYROLL', 'ADJUSTMENT', 'MIGRATION_BASELINE', 'WRITE_OFF',
+]);
+
 // ─── Loan Status Enum ───────────────────────────────────────────────
 export const loanStatusEnum = pgEnum('loan_status', [
   'APPLIED', 'APPROVED', 'ACTIVE', 'COMPLETED', 'TRANSFERRED', 'WRITTEN_OFF',
@@ -88,6 +93,36 @@ export const loans = pgTable(
     index('idx_loans_mda_id').on(table.mdaId),
     // loan_reference unique constraint already creates a btree index — no explicit index needed
     index('idx_loans_status').on(table.status),
+  ],
+);
+
+// ─── Ledger Entries (Story 2.2) ────────────────────────────────────
+// Append-only, immutable financial ledger. No updated_at, no deleted_at.
+// Immutability enforced by DB trigger (fn_prevent_modification).
+export const ledgerEntries = pgTable(
+  'ledger_entries',
+  {
+    id: uuid('id').primaryKey().$defaultFn(generateUuidv7),
+    loanId: uuid('loan_id').notNull().references(() => loans.id),
+    staffId: varchar('staff_id', { length: 50 }).notNull(),
+    mdaId: uuid('mda_id').notNull().references(() => mdas.id),
+    entryType: entryTypeEnum('entry_type').notNull(),
+    amount: numeric('amount', { precision: 15, scale: 2 }).notNull(),
+    principalComponent: numeric('principal_component', { precision: 15, scale: 2 }).notNull(),
+    interestComponent: numeric('interest_component', { precision: 15, scale: 2 }).notNull(),
+    periodMonth: integer('period_month').notNull(),
+    periodYear: integer('period_year').notNull(),
+    payrollBatchReference: varchar('payroll_batch_reference', { length: 100 }),
+    source: varchar('source', { length: 255 }),
+    postedBy: uuid('posted_by').notNull().references(() => users.id),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    index('idx_ledger_entries_loan_id').on(table.loanId),
+    index('idx_ledger_entries_mda_id').on(table.mdaId),
+    index('idx_ledger_entries_staff_id').on(table.staffId),
+    index('idx_ledger_entries_created_at').on(table.createdAt),
+    index('idx_ledger_entries_period').on(table.periodYear, table.periodMonth),
   ],
 );
 

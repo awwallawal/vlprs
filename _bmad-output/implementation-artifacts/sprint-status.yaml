@@ -86,7 +86,7 @@ development_status:
   epic-2: in-progress
   2-0-sprint-infrastructure-quality-gates: done
   2-1-mda-registry-loan-master-records: done
-  2-2-immutable-repayment-ledger: ready-for-dev
+  2-2-immutable-repayment-ledger: done
   2-3-loan-repayment-schedule-computation: ready-for-dev
   2-4-accelerated-repayment-last-payment-adjustment-auto-split: ready-for-dev
   2-5-outstanding-balance-computation-historical-reconstruction: ready-for-dev

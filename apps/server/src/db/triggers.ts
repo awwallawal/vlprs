@@ -23,4 +23,13 @@ export async function applyTriggers(db: NodePgDatabase<any>): Promise<void> {
       FOR EACH ROW
       EXECUTE FUNCTION fn_prevent_modification();
   `);
+
+  // Immutability trigger on ledger_entries (Story 2.2)
+  await db.execute(sql`
+    DROP TRIGGER IF EXISTS trg_ledger_entries_immutable ON ledger_entries;
+    CREATE TRIGGER trg_ledger_entries_immutable
+      BEFORE UPDATE OR DELETE ON ledger_entries
+      FOR EACH ROW
+      EXECUTE FUNCTION fn_prevent_modification();
+  `);
 }

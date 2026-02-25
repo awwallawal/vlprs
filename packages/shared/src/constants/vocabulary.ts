@@ -47,6 +47,10 @@ export const VOCABULARY = {
   MDA_NOT_FOUND: 'The requested MDA could not be found.',
   LOAN_REFERENCE_GENERATED: 'Loan reference number generated successfully.',
   DUPLICATE_LOAN_REFERENCE: 'A loan with this reference number already exists. Please retry.',
+  // Ledger (Story 2.2)
+  LEDGER_IMMUTABLE: 'Financial records cannot be modified or deleted.',
+  LEDGER_METHOD_NOT_ALLOWED: 'This operation is not permitted on financial records.',
+  LEDGER_ENTRY_CREATED: 'Ledger entry recorded successfully.',
 } as const;
 
 export const UI_COPY = {

@@ -1,6 +1,6 @@
 # Story 2.2: Immutable Repayment Ledger
 
-Status: ready-for-dev
+Status: done
 
 <!-- Generated: 2026-02-24 | Epic: 2 | Sprint: 3 -->
 <!-- Blocked By: 2-0 (CI infrastructure), 2-1 (loans table FK) | Blocks: 2-3, 2-4, 2-5, 2-6, 2-7 -->
@@ -46,38 +46,50 @@ The repayment ledger is the financial foundation of VLPRS. Every downstream comp
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Add `ledger_entries` schema + Drizzle migration (AC: 1, 2)
-  - [ ] 1.1 Add `entryTypeEnum` pgEnum to `apps/server/src/db/schema.ts`
-  - [ ] 1.2 Add `ledgerEntries` table definition to schema.ts with all columns from AC 1
-  - [ ] 1.3 Add `numeric` to the `drizzle-orm/pg-core` import if not already present (Story 2.1 should have added it)
-  - [ ] 1.4 Generate Drizzle migration: `pnpm --filter server drizzle-kit generate`
-  - [ ] 1.5 Extend `applyTriggers()` in `apps/server/src/db/triggers.ts` — add `trg_ledger_entries_immutable` trigger on `ledger_entries`
-- [ ] Task 2: Add shared types, Zod validators, and vocabulary (AC: 1)
-  - [ ] 2.1 Create `packages/shared/src/types/ledger.ts` — `LedgerEntryType`, `LedgerEntry` interface
-  - [ ] 2.2 Create `packages/shared/src/validators/ledgerSchemas.ts` — `createLedgerEntrySchema` Zod validator
-  - [ ] 2.3 Add ledger vocabulary entries to `packages/shared/src/constants/vocabulary.ts`
-  - [ ] 2.4 Add exports to `packages/shared/src/index.ts`
-- [ ] Task 3: Create ORM immutability guard (AC: 2, Layer 2)
-  - [ ] 3.1 Create `apps/server/src/db/immutable.ts` — guard function + constrained ledger DB accessor
-  - [ ] 3.2 Unit tests in `apps/server/src/db/immutable.test.ts`
-- [ ] Task 4: Create API immutability middleware (AC: 2, Layer 3)
-  - [ ] 4.1 Create `apps/server/src/middleware/immutableRoute.ts` — Express middleware rejecting PUT/PATCH/DELETE
-  - [ ] 4.2 Unit tests in `apps/server/src/middleware/immutableRoute.test.ts`
-- [ ] Task 5: Create ledger service (AC: 1, 3)
-  - [ ] 5.1 Create `apps/server/src/services/ledgerService.ts` — `createEntry()` + `getEntriesByLoan()`
-  - [ ] 5.2 Unit tests in `apps/server/src/services/ledgerService.test.ts`
-- [ ] Task 6: Create ledger routes + register in app (AC: 1, 3)
-  - [ ] 6.1 Create `apps/server/src/routes/ledgerRoutes.ts` — POST /api/ledger, GET /api/ledger/:loanId
-  - [ ] 6.2 Apply `immutableRoute` middleware to reject PUT/PATCH/DELETE on all /ledger routes
-  - [ ] 6.3 Register `ledgerRoutes` in `apps/server/src/app.ts`
-- [ ] Task 7: Integration tests (AC: 1, 2, 3)
-  - [ ] 7.1 Create `apps/server/src/routes/ledger.integration.test.ts`
-  - [ ] 7.2 Test: POST /api/ledger persists entry with correct fields + auto-populated staff_id/mda_id
-  - [ ] 7.3 Test: DB trigger rejects UPDATE on ledger_entries (same error pattern as auditLog)
-  - [ ] 7.4 Test: DB trigger rejects DELETE on ledger_entries
-  - [ ] 7.5 Test: GET /api/ledger/:loanId returns entries in chronological order
-  - [ ] 7.6 Test: PUT/PATCH/DELETE on /api/ledger/* return 405 Method Not Allowed
-  - [ ] 7.7 Test: MDA-scoped user cannot access ledger entries for loans in another MDA
+- [x] Task 1: Add `ledger_entries` schema + Drizzle migration (AC: 1, 2)
+  - [x] 1.1 Add `entryTypeEnum` pgEnum to `apps/server/src/db/schema.ts`
+  - [x] 1.2 Add `ledgerEntries` table definition to schema.ts with all columns from AC 1
+  - [x] 1.3 Add `numeric` to the `drizzle-orm/pg-core` import if not already present (Story 2.1 should have added it)
+  - [x] 1.4 Generate Drizzle migration: `pnpm --filter server drizzle-kit generate`
+  - [x] 1.5 Extend `applyTriggers()` in `apps/server/src/db/triggers.ts` — add `trg_ledger_entries_immutable` trigger on `ledger_entries`
+- [x] Task 2: Add shared types, Zod validators, and vocabulary (AC: 1)
+  - [x] 2.1 Create `packages/shared/src/types/ledger.ts` — `LedgerEntryType`, `LedgerEntry` interface
+  - [x] 2.2 Create `packages/shared/src/validators/ledgerSchemas.ts` — `createLedgerEntrySchema` Zod validator
+  - [x] 2.3 Add ledger vocabulary entries to `packages/shared/src/constants/vocabulary.ts`
+  - [x] 2.4 Add exports to `packages/shared/src/index.ts`
+- [x] Task 3: Create ORM immutability guard (AC: 2, Layer 2)
+  - [x] 3.1 Create `apps/server/src/db/immutable.ts` — guard function + constrained ledger DB accessor
+  - [x] 3.2 Unit tests in `apps/server/src/db/immutable.test.ts`
+- [x] Task 4: Create API immutability middleware (AC: 2, Layer 3)
+  - [x] 4.1 Create `apps/server/src/middleware/immutableRoute.ts` — Express middleware rejecting PUT/PATCH/DELETE
+  - [x] 4.2 Unit tests in `apps/server/src/middleware/immutableRoute.test.ts`
+- [x] Task 5: Create ledger service (AC: 1, 3)
+  - [x] 5.1 Create `apps/server/src/services/ledgerService.ts` — `createEntry()` + `getEntriesByLoan()`
+  - [x] 5.2 Unit tests in `apps/server/src/services/ledgerService.test.ts`
+- [x] Task 6: Create ledger routes + register in app (AC: 1, 3)
+  - [x] 6.1 Create `apps/server/src/routes/ledgerRoutes.ts` — POST /api/ledger, GET /api/ledger/:loanId
+  - [x] 6.2 Apply `immutableRoute` middleware to reject PUT/PATCH/DELETE on all /ledger routes
+  - [x] 6.3 Register `ledgerRoutes` in `apps/server/src/app.ts`
+- [x] Task 7: Integration tests (AC: 1, 2, 3)
+  - [x] 7.1 Create `apps/server/src/routes/ledger.integration.test.ts`
+  - [x] 7.2 Test: POST /api/ledger persists entry with correct fields + auto-populated staff_id/mda_id
+  - [x] 7.3 Test: DB trigger rejects UPDATE on ledger_entries (same error pattern as auditLog)
+  - [x] 7.4 Test: DB trigger rejects DELETE on ledger_entries
+  - [x] 7.5 Test: GET /api/ledger/:loanId returns entries in chronological order
+  - [x] 7.6 Test: PUT/PATCH/DELETE on /api/ledger/* return 405 Method Not Allowed
+  - [x] 7.7 Test: MDA-scoped user cannot access ledger entries for loans in another MDA
+
+### Review Follow-ups (AI)
+
+- [x] [AI-Review][HIGH] H1: Add `Allow: GET, POST, HEAD, OPTIONS` header to 405 responses in immutableRoute middleware [apps/server/src/middleware/immutableRoute.ts:13]
+- [x] [AI-Review][MEDIUM] M1: Use `req.mdaScope` from scopeToMda middleware instead of manually re-deriving MDA ID in GET handler [apps/server/src/routes/ledgerRoutes.ts:46]
+- [x] [AI-Review][MEDIUM] M2: Tighten Zod money regex to enforce NUMERIC(15,2) precision: `^\d{1,13}\.\d{2}$` [packages/shared/src/validators/ledgerSchemas.ts:6-8]
+- [x] [AI-Review][MEDIUM] M3: Document `DROP INDEX idx_loans_loan_reference` migration side-effect in Change Log
+- [x] [AI-Review][MEDIUM] M4: Add `0002_snapshot.json` to story File List [apps/server/drizzle/meta/0002_snapshot.json]
+- [x] [AI-Review][LOW] L1: Replace manual `CreateEntryData` interface with `z.infer` type from shared schema [apps/server/src/services/ledgerService.ts]
+- [x] [AI-Review][LOW] L2: Consolidate redundant double-invocation in rejection tests [apps/server/src/middleware/immutableRoute.test.ts]
+- [x] [AI-Review][LOW] L3: Add `dept_admin` role test for GET /api/ledger/:loanId [apps/server/src/routes/ledger.integration.test.ts]
+- [x] [AI-Review][LOW] L4: Add ADJUSTMENT entry type integration test [apps/server/src/routes/ledger.integration.test.ts]
 
 ## Dev Notes
 
@@ -576,15 +588,55 @@ All new files align with established project structure:
 
 ### Agent Model Used
 
-(To be filled by dev agent)
+Claude Opus 4.6 (claude-opus-4-6)
 
 ### Debug Log References
 
+No debug issues encountered. All implementations followed established patterns from Story 1.5 (audit log) and Story 2.1 (loans).
+
 ### Completion Notes List
+
+- **Task 1:** Added `entryTypeEnum` and `ledgerEntries` table to schema.ts matching exact spec from Dev Notes. `numeric` import already present from Story 2.1. Generated migration `0002_bright_grim_reaper.sql`. Extended `applyTriggers()` with `trg_ledger_entries_immutable` trigger reusing existing `fn_prevent_modification()` function.
+- **Task 2:** Created shared types (`LedgerEntryType`, `LedgerEntry`), Zod validator (`createLedgerEntrySchema`), and vocabulary entries. Skipped duplicate `LOAN_NOT_FOUND` per PM Finding #3. Added 3 new vocabulary entries: `LEDGER_IMMUTABLE`, `LEDGER_METHOD_NOT_ALLOWED`, `LEDGER_ENTRY_CREATED`. All exports added to barrel file.
+- **Task 3:** Created `ledgerDb` constrained accessor in `immutable.ts` — exposes only `insert`, `selectByLoan`, `selectByMdaAndLoan`. No `update` or `delete` methods. 5 unit tests pass.
+- **Task 4:** Created `immutableRoute` middleware rejecting PUT/PATCH/DELETE with 405 + `METHOD_NOT_ALLOWED` code. 5 unit tests pass.
+- **Task 5:** Created `ledgerService` with `createEntry()` (auto-populates staff_id/mda_id from loan lookup) and `getEntriesByLoan()` (MDA scoping support). 7 tests pass against real DB.
+- **Task 6:** Created `ledgerRoutes.ts` with POST and GET endpoints, applied `immutableRoute` middleware via `router.use('/ledger', immutableRoute)`. Registered in `app.ts`.
+- **Task 7:** Created comprehensive integration test file with 16 tests covering all 3 ACs: POST persistence + auto-population, DB trigger rejection (UPDATE + DELETE), chronological GET ordering, 405 Method Not Allowed for PUT/PATCH/DELETE, and MDA scoping isolation.
+- **Full regression:** 32 test files, 278 tests — all passing, zero regressions.
+- **TypeScript typecheck:** Clean, no errors.
+- **Money handling:** All NUMERIC(15,2) columns stored/returned as strings — never parsed to JavaScript number.
 
 ### Commit Summary
 
 <!-- Convention: Fill this section when story reaches 'done' status -->
 <!-- Format: Total commits | Files touched (new/modified) | Revert count | One-sentence narrative -->
 
+### Change Log
+
+- **2026-02-25:** Implemented immutable repayment ledger with 3-layer immutability defence (DB trigger, ORM guard, API middleware), ledger service, routes, shared types/validators, and comprehensive test suite (28 new tests across 4 test files).
+- **2026-02-25 (Code Review):** Fixed 9 review findings (1 HIGH, 4 MEDIUM, 4 LOW). H1: Added RFC 9110 `Allow` header to 405 responses. M1: DRY fix — use `req.mdaScope` instead of manual role check. M2: Tightened Zod money regex to NUMERIC(15,2) precision. M3: Note — migration 0002 also drops redundant `idx_loans_loan_reference` (safe; unique constraint provides equivalent index). M4: Added missing snapshot to File List. L1: Type-safe schema inference replaces manual interface. L2: Test consolidation. L3-L4: Expanded test coverage (dept_admin role, ADJUSTMENT entry type).
+
 ### File List
+
+**New files:**
+- `apps/server/drizzle/0002_bright_grim_reaper.sql` — Migration: ledger_entries table + entry_type enum
+- `apps/server/drizzle/meta/0002_snapshot.json` — Drizzle migration snapshot (auto-generated)
+- `apps/server/src/db/immutable.ts` — Layer 2: Constrained DB accessor (insert + select only)
+- `apps/server/src/db/immutable.test.ts` — Unit tests for ORM immutability guard (5 tests)
+- `apps/server/src/middleware/immutableRoute.ts` — Layer 3: Express middleware rejecting PUT/PATCH/DELETE
+- `apps/server/src/middleware/immutableRoute.test.ts` — Unit tests for API immutability middleware (5 tests)
+- `apps/server/src/services/ledgerService.ts` — Ledger service: createEntry + getEntriesByLoan
+- `apps/server/src/services/ledgerService.test.ts` — Service tests (7 tests, real DB)
+- `apps/server/src/routes/ledgerRoutes.ts` — Ledger routes: POST /api/ledger, GET /api/ledger/:loanId
+- `apps/server/src/routes/ledger.integration.test.ts` — Integration tests (16 tests)
+- `packages/shared/src/types/ledger.ts` — LedgerEntryType + LedgerEntry interface
+- `packages/shared/src/validators/ledgerSchemas.ts` — createLedgerEntrySchema Zod validator
+
+**Modified files:**
+- `apps/server/src/db/schema.ts` — Added entryTypeEnum + ledgerEntries table
+- `apps/server/src/db/triggers.ts` — Added trg_ledger_entries_immutable trigger
+- `apps/server/src/app.ts` — Registered ledgerRoutes
+- `packages/shared/src/constants/vocabulary.ts` — Added 3 ledger vocabulary entries
+- `packages/shared/src/index.ts` — Added ledger type + validator exports
+- `apps/server/drizzle/meta/_journal.json` — Drizzle migration journal (auto-updated)
