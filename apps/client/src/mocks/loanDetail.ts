@@ -15,7 +15,7 @@ export const MOCK_LOAN_DETAILS: Record<string, LoanSummary> = {
     installmentsPaid: 10,
     installmentsRemaining: 30,
     lastDeductionDate: '2026-02-01T00:00:00Z',
-    status: 'active',
+    status: 'ACTIVE',
     retirementDate: '2035-06-30T00:00:00Z',
   },
   'loan-002': {
@@ -30,7 +30,7 @@ export const MOCK_LOAN_DETAILS: Record<string, LoanSummary> = {
     installmentsPaid: 20,
     installmentsRemaining: 16,
     lastDeductionDate: '2026-02-01T00:00:00Z',
-    status: 'active',
+    status: 'ACTIVE',
     retirementDate: '2032-03-31T00:00:00Z',
   },
   'loan-003': {
@@ -45,7 +45,7 @@ export const MOCK_LOAN_DETAILS: Record<string, LoanSummary> = {
     installmentsPaid: 36,
     installmentsRemaining: 0,
     lastDeductionDate: '2026-01-01T00:00:00Z',
-    status: 'completed',
+    status: 'COMPLETED',
     retirementDate: '2040-09-30T00:00:00Z',
   },
   'loan-004': {
@@ -60,7 +60,7 @@ export const MOCK_LOAN_DETAILS: Record<string, LoanSummary> = {
     installmentsPaid: 5,
     installmentsRemaining: 31,
     lastDeductionDate: '2026-02-01T00:00:00Z',
-    status: 'active',
+    status: 'ACTIVE',
     retirementDate: '2038-12-31T00:00:00Z',
   },
   'loan-005': {
@@ -75,7 +75,7 @@ export const MOCK_LOAN_DETAILS: Record<string, LoanSummary> = {
     installmentsPaid: 8,
     installmentsRemaining: 28,
     lastDeductionDate: '2026-02-01T00:00:00Z',
-    status: 'active',
+    status: 'ACTIVE',
     retirementDate: '2036-08-31T00:00:00Z',
   },
 };

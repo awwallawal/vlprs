@@ -19,22 +19,112 @@ import {
   text,
   boolean,
   integer,
+  numeric,
   timestamp,
   index,
+  uniqueIndex,
 } from 'drizzle-orm/pg-core';
+import { sql } from 'drizzle-orm';
 import { generateUuidv7 } from '../lib/uuidv7';
 
 // ─── Enums ──────────────────────────────────────────────────────────
 export const roleEnum = pgEnum('role', ['super_admin', 'dept_admin', 'mda_officer']);
 
-// ─── MDAs (stub — expanded in Epic 2) ──────────────────────────────
+// ─── MDAs ───────────────────────────────────────────────────────────
 export const mdas = pgTable('mdas', {
   id: uuid('id').primaryKey().$defaultFn(generateUuidv7),
   name: varchar('name', { length: 255 }).notNull(),
   code: varchar('code', { length: 50 }).notNull().unique(),
+  abbreviation: varchar('abbreviation', { length: 100 }).notNull(),
+  isActive: boolean('is_active').notNull().default(true),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  deletedAt: timestamp('deleted_at', { withTimezone: true }),
 });
+
+// ─── MDA Aliases ────────────────────────────────────────────────────
+export const mdaAliases = pgTable(
+  'mda_aliases',
+  {
+    id: uuid('id').primaryKey().$defaultFn(generateUuidv7),
+    mdaId: uuid('mda_id').notNull().references(() => mdas.id),
+    alias: varchar('alias', { length: 255 }).notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    index('idx_mda_aliases_mda_id').on(table.mdaId),
+    uniqueIndex('idx_mda_aliases_alias_lower').on(sql`LOWER(${table.alias})`),
+  ],
+);
+
+// ─── Entry Type Enum (Story 2.2) ────────────────────────────────────
+export const entryTypeEnum = pgEnum('entry_type', [
+  'PAYROLL', 'ADJUSTMENT', 'MIGRATION_BASELINE', 'WRITE_OFF',
+]);
+
+// ─── Loan Status Enum ───────────────────────────────────────────────
+export const loanStatusEnum = pgEnum('loan_status', [
+  'APPLIED', 'APPROVED', 'ACTIVE', 'COMPLETED', 'TRANSFERRED', 'WRITTEN_OFF',
+]);
+
+// ─── Loans ──────────────────────────────────────────────────────────
+export const loans = pgTable(
+  'loans',
+  {
+    id: uuid('id').primaryKey().$defaultFn(generateUuidv7),
+    staffId: varchar('staff_id', { length: 50 }).notNull(),
+    staffName: varchar('staff_name', { length: 255 }).notNull(),
+    gradeLevel: varchar('grade_level', { length: 50 }).notNull(),
+    mdaId: uuid('mda_id').notNull().references(() => mdas.id),
+    principalAmount: numeric('principal_amount', { precision: 15, scale: 2 }).notNull(),
+    interestRate: numeric('interest_rate', { precision: 5, scale: 3 }).notNull(),
+    tenureMonths: integer('tenure_months').notNull(),
+    moratoriumMonths: integer('moratorium_months').notNull().default(0),
+    monthlyDeductionAmount: numeric('monthly_deduction_amount', { precision: 15, scale: 2 }).notNull(),
+    approvalDate: timestamp('approval_date', { withTimezone: true, mode: 'date' }).notNull(),
+    firstDeductionDate: timestamp('first_deduction_date', { withTimezone: true, mode: 'date' }).notNull(),
+    loanReference: varchar('loan_reference', { length: 50 }).notNull().unique(),
+    status: loanStatusEnum('status').notNull().default('APPLIED'),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    index('idx_loans_staff_id').on(table.staffId),
+    index('idx_loans_mda_id').on(table.mdaId),
+    // loan_reference unique constraint already creates a btree index — no explicit index needed
+    index('idx_loans_status').on(table.status),
+  ],
+);
+
+// ─── Ledger Entries (Story 2.2) ────────────────────────────────────
+// Append-only, immutable financial ledger. No updated_at, no deleted_at.
+// Immutability enforced by DB trigger (fn_prevent_modification).
+export const ledgerEntries = pgTable(
+  'ledger_entries',
+  {
+    id: uuid('id').primaryKey().$defaultFn(generateUuidv7),
+    loanId: uuid('loan_id').notNull().references(() => loans.id),
+    staffId: varchar('staff_id', { length: 50 }).notNull(),
+    mdaId: uuid('mda_id').notNull().references(() => mdas.id),
+    entryType: entryTypeEnum('entry_type').notNull(),
+    amount: numeric('amount', { precision: 15, scale: 2 }).notNull(),
+    principalComponent: numeric('principal_component', { precision: 15, scale: 2 }).notNull(),
+    interestComponent: numeric('interest_component', { precision: 15, scale: 2 }).notNull(),
+    periodMonth: integer('period_month').notNull(),
+    periodYear: integer('period_year').notNull(),
+    payrollBatchReference: varchar('payroll_batch_reference', { length: 100 }),
+    source: varchar('source', { length: 255 }),
+    postedBy: uuid('posted_by').notNull().references(() => users.id),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    index('idx_ledger_entries_loan_id').on(table.loanId),
+    index('idx_ledger_entries_mda_id').on(table.mdaId),
+    index('idx_ledger_entries_staff_id').on(table.staffId),
+    index('idx_ledger_entries_created_at').on(table.createdAt),
+    index('idx_ledger_entries_period').on(table.periodYear, table.periodMonth),
+  ],
+);
 
 // ─── Users ──────────────────────────────────────────────────────────
 export const users = pgTable(

@@ -14,7 +14,7 @@ beforeAll(async () => {
 
   // Create a test MDA
   testMdaId = generateUuidv7();
-  await db.insert(mdas).values({ id: testMdaId, name: 'Test MDA', code: 'TST' });
+  await db.insert(mdas).values({ id: testMdaId, name: 'Test MDA', code: 'TST', abbreviation: 'Test MDA' });
 });
 
 beforeEach(async () => {

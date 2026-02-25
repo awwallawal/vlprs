@@ -3,6 +3,32 @@ import type { SubmissionRecord } from './submission.js';
 export type SubmissionStatus = 'submitted' | 'pending' | 'overdue';
 export type MigrationStage = 'pending' | 'received' | 'imported' | 'validated' | 'reconciled' | 'certified';
 
+export interface Mda {
+  id: string;
+  code: string;
+  name: string;
+  abbreviation: string;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt: string | null;
+}
+
+export interface MdaListItem {
+  id: string;
+  code: string;
+  name: string;
+  abbreviation: string;
+  isActive: boolean;
+}
+
+export interface MdaAlias {
+  id: string;
+  mdaId: string;
+  alias: string;
+  createdAt: string;
+}
+
 export interface MdaComplianceRow {
   mdaId: string;
   mdaCode: string;

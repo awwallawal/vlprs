@@ -19,10 +19,12 @@ const SUBMISSION_STATUS_MAP = {
 } as const;
 
 const LOAN_STATUS_MAP: Record<LoanStatus, { variant: 'complete' | 'pending' | 'review' | 'info'; label: string }> = {
-  active: { variant: 'info', label: 'Active' },
-  completed: { variant: 'complete', label: 'Completed' },
-  applied: { variant: 'pending', label: 'Applied' },
-  defaulted: { variant: 'review', label: 'Attention' },
+  ACTIVE: { variant: 'info', label: 'Active' },
+  COMPLETED: { variant: 'complete', label: 'Completed' },
+  APPLIED: { variant: 'pending', label: 'Applied' },
+  APPROVED: { variant: 'pending', label: 'Approved' },
+  TRANSFERRED: { variant: 'review', label: 'Transferred' },
+  WRITTEN_OFF: { variant: 'review', label: 'Written Off' },
 };
 
 export function MdaDetailPage() {

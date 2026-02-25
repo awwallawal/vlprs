@@ -26,7 +26,7 @@ describe('useLoanDetail', () => {
     const data = result.current.data!;
     expect(data.borrowerName).toBe('Akinwale Babatunde');
     expect(data.loanId).toBe('loan-001');
-    expect(data.status).toBe('active');
+    expect(data.status).toBe('ACTIVE');
   });
 
   it('does not fetch when loanId is empty', () => {

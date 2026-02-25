@@ -19,7 +19,7 @@ beforeAll(async () => {
   await db.execute(sql`TRUNCATE audit_log, refresh_tokens, users, mdas CASCADE`);
 
   testMdaId = generateUuidv7();
-  await db.insert(mdas).values({ id: testMdaId, name: 'Test MDA', code: 'RBAC' });
+  await db.insert(mdas).values({ id: testMdaId, name: 'Test MDA', code: 'RBAC', abbreviation: 'Test MDA' });
 });
 
 beforeEach(async () => {
@@ -559,7 +559,7 @@ describe('PATCH /api/users/:id', () => {
 
     // Create a second MDA for reassignment
     const secondMdaId = generateUuidv7();
-    await db.insert(mdas).values({ id: secondMdaId, name: 'Second MDA', code: 'MDA2' });
+    await db.insert(mdas).values({ id: secondMdaId, name: 'Second MDA', code: 'MDA2', abbreviation: 'Second MDA' });
 
     const res = await request(app)
       .patch(`/api/users/${officer.id}`)
