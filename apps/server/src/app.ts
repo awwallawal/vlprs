@@ -5,6 +5,8 @@ import cookieParser from 'cookie-parser';
 import healthRoutes from './routes/healthRoutes';
 import authRoutes from './routes/authRoutes';
 import userRoutes from './routes/userRoutes';
+import mdaRoutes from './routes/mdaRoutes';
+import loanRoutes from './routes/loanRoutes';
 import { AppError } from './lib/appError';
 import { VOCABULARY } from '@vlprs/shared';
 import { requestLogger } from './middleware/requestLogger';
@@ -37,6 +39,8 @@ app.use(requestLogger);
 app.use('/api', healthRoutes);
 app.use('/api', authRoutes);
 app.use('/api', userRoutes);
+app.use('/api', mdaRoutes);
+app.use('/api', loanRoutes);
 
 // 404 handler
 app.use((_req: Request, res: Response) => {

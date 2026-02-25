@@ -15,7 +15,7 @@ beforeAll(async () => {
   await db.execute(sql`TRUNCATE audit_log, refresh_tokens, users, mdas CASCADE`);
 
   testMdaId = generateUuidv7();
-  await db.insert(mdas).values({ id: testMdaId, name: 'Test MDA', code: 'TSTI' });
+  await db.insert(mdas).values({ id: testMdaId, name: 'Test MDA', code: 'TSTI', abbreviation: 'Test MDA' });
 });
 
 beforeEach(async () => {

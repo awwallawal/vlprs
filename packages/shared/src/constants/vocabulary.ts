@@ -42,6 +42,11 @@ export const VOCABULARY = {
   LAST_SUPER_ADMIN: 'Cannot deactivate — this is the last active Super Admin. Create a replacement first.',
   INVITATION_SENT: 'Invitation sent successfully.',
   PASSWORD_RESET_SENT: 'Password reset email sent successfully.',
+  // Loan & MDA (Story 2.1)
+  LOAN_NOT_FOUND: 'The requested loan record could not be found.',
+  MDA_NOT_FOUND: 'The requested MDA could not be found.',
+  LOAN_REFERENCE_GENERATED: 'Loan reference number generated successfully.',
+  DUPLICATE_LOAN_REFERENCE: 'A loan with this reference number already exists. Please retry.',
 } as const;
 
 export const UI_COPY = {

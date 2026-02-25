@@ -19,22 +19,77 @@ import {
   text,
   boolean,
   integer,
+  numeric,
   timestamp,
   index,
+  uniqueIndex,
 } from 'drizzle-orm/pg-core';
+import { sql } from 'drizzle-orm';
 import { generateUuidv7 } from '../lib/uuidv7';
 
 // ─── Enums ──────────────────────────────────────────────────────────
 export const roleEnum = pgEnum('role', ['super_admin', 'dept_admin', 'mda_officer']);
 
-// ─── MDAs (stub — expanded in Epic 2) ──────────────────────────────
+// ─── MDAs ───────────────────────────────────────────────────────────
 export const mdas = pgTable('mdas', {
   id: uuid('id').primaryKey().$defaultFn(generateUuidv7),
   name: varchar('name', { length: 255 }).notNull(),
   code: varchar('code', { length: 50 }).notNull().unique(),
+  abbreviation: varchar('abbreviation', { length: 100 }).notNull(),
+  isActive: boolean('is_active').notNull().default(true),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  deletedAt: timestamp('deleted_at', { withTimezone: true }),
 });
+
+// ─── MDA Aliases ────────────────────────────────────────────────────
+export const mdaAliases = pgTable(
+  'mda_aliases',
+  {
+    id: uuid('id').primaryKey().$defaultFn(generateUuidv7),
+    mdaId: uuid('mda_id').notNull().references(() => mdas.id),
+    alias: varchar('alias', { length: 255 }).notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    index('idx_mda_aliases_mda_id').on(table.mdaId),
+    uniqueIndex('idx_mda_aliases_alias_lower').on(sql`LOWER(${table.alias})`),
+  ],
+);
+
+// ─── Loan Status Enum ───────────────────────────────────────────────
+export const loanStatusEnum = pgEnum('loan_status', [
+  'APPLIED', 'APPROVED', 'ACTIVE', 'COMPLETED', 'TRANSFERRED', 'WRITTEN_OFF',
+]);
+
+// ─── Loans ──────────────────────────────────────────────────────────
+export const loans = pgTable(
+  'loans',
+  {
+    id: uuid('id').primaryKey().$defaultFn(generateUuidv7),
+    staffId: varchar('staff_id', { length: 50 }).notNull(),
+    staffName: varchar('staff_name', { length: 255 }).notNull(),
+    gradeLevel: varchar('grade_level', { length: 50 }).notNull(),
+    mdaId: uuid('mda_id').notNull().references(() => mdas.id),
+    principalAmount: numeric('principal_amount', { precision: 15, scale: 2 }).notNull(),
+    interestRate: numeric('interest_rate', { precision: 5, scale: 3 }).notNull(),
+    tenureMonths: integer('tenure_months').notNull(),
+    moratoriumMonths: integer('moratorium_months').notNull().default(0),
+    monthlyDeductionAmount: numeric('monthly_deduction_amount', { precision: 15, scale: 2 }).notNull(),
+    approvalDate: timestamp('approval_date', { withTimezone: true, mode: 'date' }).notNull(),
+    firstDeductionDate: timestamp('first_deduction_date', { withTimezone: true, mode: 'date' }).notNull(),
+    loanReference: varchar('loan_reference', { length: 50 }).notNull().unique(),
+    status: loanStatusEnum('status').notNull().default('APPLIED'),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    index('idx_loans_staff_id').on(table.staffId),
+    index('idx_loans_mda_id').on(table.mdaId),
+    // loan_reference unique constraint already creates a btree index — no explicit index needed
+    index('idx_loans_status').on(table.status),
+  ],
+);
 
 // ─── Users ──────────────────────────────────────────────────────────
 export const users = pgTable(

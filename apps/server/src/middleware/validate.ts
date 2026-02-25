@@ -17,3 +17,17 @@ export function validate(schema: z.ZodType<unknown>) {
     next();
   };
 }
+
+export function validateQuery(schema: z.ZodType<unknown>) {
+  return (req: Request, _res: Response, next: NextFunction) => {
+    const result = schema.safeParse(req.query);
+    if (!result.success) {
+      const details = result.error.issues.map((issue) => ({
+        field: issue.path.join('.'),
+        message: issue.message,
+      }));
+      throw new AppError(400, 'VALIDATION_FAILED', VOCABULARY.VALIDATION_FAILED, details);
+    }
+    next();
+  };
+}

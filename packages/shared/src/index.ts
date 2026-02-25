@@ -4,14 +4,16 @@ export { emailSchema } from './schemas/emailSchema.js';
 // Validators
 export { loginSchema, registerSchema, changePasswordSchema } from './validators/authSchemas.js';
 export { createUserSchema, updateUserSchema, deactivateUserSchema, deleteUserSchema, changePasswordFormSchema } from './validators/userSchemas.js';
+export { createLoanSchema } from './validators/loanSchemas.js';
+export { mdaQuerySchema } from './validators/mdaSchemas.js';
 
 // Types
 export type { ApiResponse, ApiError, ApiResult } from './types/api.js';
 export type { User, JwtPayload, LoginRequest, LoginResponse, RegisterRequest, RefreshResponse, UserListItem, PaginatedResponse } from './types/auth.js';
 export type { AuthenticatedUser, AuthorisedContext } from './types/rbac.js';
 export type { DashboardMetrics, AttentionItem } from './types/dashboard.js';
-export type { SubmissionStatus, MigrationStage, MdaComplianceRow, MdaSummary, MigrationMdaStatus } from './types/mda.js';
-export type { LoanStatus, LoanSummary, LoanSearchResult } from './types/loan.js';
+export type { SubmissionStatus, MigrationStage, Mda, MdaListItem, MdaAlias, MdaComplianceRow, MdaSummary, MigrationMdaStatus } from './types/mda.js';
+export type { LoanStatus, Loan, CreateLoanRequest, LoanSummary, LoanSearchResult } from './types/loan.js';
 export type { SubmissionRecord } from './types/submission.js';
 export type { ExceptionPriority, ExceptionCategory, ExceptionItem } from './types/exception.js';
 
