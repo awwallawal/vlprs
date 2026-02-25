@@ -7,13 +7,9 @@ import { validate } from '../middleware/validate';
 import { auditLog } from '../middleware/auditLog';
 import { ROLES, ALL_ROLES, createLoanSchema } from '@vlprs/shared';
 import * as loanService from '../services/loanService';
+import { param } from '../lib/params';
 
 const router = Router();
-
-// Helper to safely extract a single param string (Express 5 params can be string | string[])
-function param(val: string | string[]): string {
-  return Array.isArray(val) ? val[0] : val;
-}
 
 // Middleware stacks
 const adminAuth = [

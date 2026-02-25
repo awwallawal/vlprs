@@ -8,6 +8,7 @@ import userRoutes from './routes/userRoutes';
 import mdaRoutes from './routes/mdaRoutes';
 import loanRoutes from './routes/loanRoutes';
 import ledgerRoutes from './routes/ledgerRoutes';
+import scheduleRoutes from './routes/scheduleRoutes';
 import { AppError } from './lib/appError';
 import { VOCABULARY } from '@vlprs/shared';
 import { requestLogger } from './middleware/requestLogger';
@@ -43,6 +44,7 @@ app.use('/api', userRoutes);
 app.use('/api', mdaRoutes);
 app.use('/api', loanRoutes);
 app.use('/api', ledgerRoutes);
+app.use('/api', scheduleRoutes);
 
 // 404 handler
 app.use((_req: Request, res: Response) => {
