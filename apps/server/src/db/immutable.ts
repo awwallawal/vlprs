@@ -1,6 +1,6 @@
 import { db } from './index';
 import { ledgerEntries } from './schema';
-import { eq, and, asc } from 'drizzle-orm';
+import { eq, and, asc, lte } from 'drizzle-orm';
 
 /**
  * Constrained DB accessor for ledger_entries.
@@ -27,6 +27,19 @@ export const ledgerDb = {
       .from(ledgerEntries)
       .where(
         and(eq(ledgerEntries.loanId, loanId), eq(ledgerEntries.mdaId, mdaId))
+      )
+      .orderBy(asc(ledgerEntries.createdAt));
+  },
+
+  async selectByLoanAsOf(loanId: string, asOf: Date) {
+    return db
+      .select()
+      .from(ledgerEntries)
+      .where(
+        and(
+          eq(ledgerEntries.loanId, loanId),
+          lte(ledgerEntries.createdAt, asOf),
+        )
       )
       .orderBy(asc(ledgerEntries.createdAt));
   },

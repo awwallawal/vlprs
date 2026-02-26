@@ -2,7 +2,7 @@ import { describe, it, expect, beforeAll } from 'vitest';
 import Decimal from 'decimal.js';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { computeRepaymentSchedule, autoSplitDeduction } from './computationEngine';
+import { computeRepaymentSchedule, autoSplitDeduction, computeBalanceFromEntries } from './computationEngine';
 import type { ComputationParams } from '@vlprs/shared';
 
 // ─── Task 4: Unit tests with hand-verified calculations ─────────────────────
@@ -898,6 +898,217 @@ describe('autoSplitDeduction (Story 2.4)', () => {
     expect(() =>
       autoSplitDeduction('5000.00', { ...standardParams, interestRate: '-5.000' }),
     ).toThrow('interestRate must be a non-negative number');
+  });
+});
+
+// ─── Story 2.5 Task 6: Balance computation tests ────────────────────────────
+
+describe('computeBalanceFromEntries (Story 2.5)', () => {
+  // Helper to create a PAYROLL entry
+  function payrollEntry(amount: string, principal: string, interest: string) {
+    return { amount, principalComponent: principal, interestComponent: interest, entryType: 'PAYROLL' };
+  }
+
+  // Task 6.2: zero entries → balance = totalLoan (no payments made)
+  it('zero entries → balance equals totalLoan', () => {
+    const result = computeBalanceFromEntries('250000.00', '13.330', 60, [], null);
+
+    // totalLoan = 250000 + (250000 × 13.33 / 100) = 250000 + 33325 = 283325.00
+    expect(result.computedBalance).toBe('283325.00');
+    expect(result.totalAmountPaid).toBe('0.00');
+    expect(result.totalPrincipalPaid).toBe('0.00');
+    expect(result.totalInterestPaid).toBe('0.00');
+    expect(result.principalRemaining).toBe('250000.00');
+    expect(result.interestRemaining).toBe('33325.00');
+    expect(result.installmentsCompleted).toBe(0);
+    expect(result.installmentsRemaining).toBe(60);
+    expect(result.entryCount).toBe(0);
+    expect(result.asOfDate).toBeNull();
+    expect(result.derivation.formula).toBe('totalLoan - sum(entries.amount)');
+    expect(result.derivation.totalLoan).toBe('283325.00');
+    expect(result.derivation.entriesSum).toBe('0.00');
+  });
+
+  // Task 6.3: partial entries (30 of 60) → correct remaining balance
+  it('partial entries (30 of 60) → correct remaining balance', () => {
+    // 250K principal, 13.33% rate, 60 months
+    // monthlyPrincipal = 4166.67, monthlyInterest = 555.42, monthlyDeduction = 4722.09
+    const entries = Array.from({ length: 30 }, () =>
+      payrollEntry('4722.09', '4166.67', '555.42'),
+    );
+
+    const result = computeBalanceFromEntries('250000.00', '13.330', 60, entries, null);
+
+    // totalAmountPaid = 30 × 4722.09 = 141662.70
+    expect(result.totalAmountPaid).toBe('141662.70');
+    // computedBalance = 283325.00 - 141662.70 = 141662.30
+    expect(result.computedBalance).toBe('141662.30');
+    expect(result.totalPrincipalPaid).toBe('125000.10'); // 30 × 4166.67
+    expect(result.totalInterestPaid).toBe('16662.60');   // 30 × 555.42
+    expect(result.installmentsCompleted).toBe(30);
+    expect(result.installmentsRemaining).toBe(30);
+    expect(result.entryCount).toBe(30);
+  });
+
+  // Task 6.4: all entries → balance = ₦0.00 (fully paid)
+  it('all entries with last-payment adjustment → balance = 0.00', () => {
+    // Use the schedule engine to get exact values including last-payment adjustment
+    const schedule = computeRepaymentSchedule({
+      principalAmount: '250000.00',
+      interestRate: '13.330',
+      tenureMonths: 60,
+      moratoriumMonths: 0,
+    });
+
+    const entries = schedule.schedule.map((row) =>
+      payrollEntry(row.totalDeduction, row.principalComponent, row.interestComponent),
+    );
+
+    const result = computeBalanceFromEntries('250000.00', '13.330', 60, entries, null);
+
+    expect(result.computedBalance).toBe('0.00');
+    expect(result.principalRemaining).toBe('0.00');
+    expect(result.interestRemaining).toBe('0.00');
+    expect(result.installmentsCompleted).toBe(60);
+    expect(result.installmentsRemaining).toBe(0);
+  });
+
+  // Task 6.5: subset of entries (historical) → correct balance at that point
+  it('subset of entries (historical) → correct balance at that point', () => {
+    // First 10 entries out of 60
+    const entries = Array.from({ length: 10 }, () =>
+      payrollEntry('4722.09', '4166.67', '555.42'),
+    );
+
+    const result = computeBalanceFromEntries('250000.00', '13.330', 60, entries, '2025-06-30');
+
+    expect(result.totalAmountPaid).toBe('47220.90');      // 10 × 4722.09
+    expect(result.computedBalance).toBe('236104.10');      // 283325.00 - 47220.90
+    expect(result.installmentsCompleted).toBe(10);
+    expect(result.installmentsRemaining).toBe(50);
+    expect(result.asOfDate).toBe('2025-06-30');
+  });
+
+  // Task 6.6: determinism — same inputs produce identical output
+  it('is deterministic — same inputs produce identical output', () => {
+    const entries = Array.from({ length: 5 }, () =>
+      payrollEntry('4722.09', '4166.67', '555.42'),
+    );
+
+    const result1 = computeBalanceFromEntries('250000.00', '13.330', 60, entries, null);
+    const result2 = computeBalanceFromEntries('250000.00', '13.330', 60, entries, null);
+
+    expect(result1).toEqual(result2);
+  });
+
+  // Task 6.7: all money values are strings with exactly 2 decimal places
+  it('all money values are strings with exactly 2 decimal places', () => {
+    const entries = Array.from({ length: 15 }, () =>
+      payrollEntry('4722.09', '4166.67', '555.42'),
+    );
+
+    const result = computeBalanceFromEntries('250000.00', '13.330', 60, entries, null);
+    const twoDecimalPattern = /^-?\d+\.\d{2}$/;
+
+    expect(result.computedBalance).toMatch(twoDecimalPattern);
+    expect(result.totalPrincipalPaid).toMatch(twoDecimalPattern);
+    expect(result.totalInterestPaid).toMatch(twoDecimalPattern);
+    expect(result.totalAmountPaid).toMatch(twoDecimalPattern);
+    expect(result.principalRemaining).toMatch(twoDecimalPattern);
+    expect(result.interestRemaining).toMatch(twoDecimalPattern);
+    expect(result.derivation.totalLoan).toMatch(twoDecimalPattern);
+    expect(result.derivation.entriesSum).toMatch(twoDecimalPattern);
+  });
+
+  // Non-PAYROLL entries affect balance but not installment count
+  it('ADJUSTMENT entries affect balance but not installment count', () => {
+    const entries = [
+      payrollEntry('4722.09', '4166.67', '555.42'),
+      { amount: '1000.00', principalComponent: '800.00', interestComponent: '200.00', entryType: 'ADJUSTMENT' },
+    ];
+
+    const result = computeBalanceFromEntries('250000.00', '13.330', 60, entries, null);
+
+    expect(result.totalAmountPaid).toBe('5722.09');
+    expect(result.installmentsCompleted).toBe(1); // Only PAYROLL counts
+    expect(result.installmentsRemaining).toBe(59);
+    expect(result.entryCount).toBe(2);
+  });
+
+  // installmentsRemaining never goes below 0
+  it('installmentsRemaining never goes below 0 for fully-paid loan', () => {
+    const schedule = computeRepaymentSchedule({
+      principalAmount: '250000.00',
+      interestRate: '13.330',
+      tenureMonths: 60,
+      moratoriumMonths: 0,
+    });
+
+    const entries = schedule.schedule.map((row) =>
+      payrollEntry(row.totalDeduction, row.principalComponent, row.interestComponent),
+    );
+
+    const result = computeBalanceFromEntries('250000.00', '13.330', 60, entries, null);
+
+    expect(result.installmentsRemaining).toBe(0);
+    expect(result.installmentsRemaining).toBeGreaterThanOrEqual(0);
+  });
+
+  // All 4 tiers with full schedule close at 0.00
+  const tierConfigs = [
+    { principal: '250000.00', rate: '13.330', tenure: 60, label: '250K/60m' },
+    { principal: '450000.00', rate: '13.330', tenure: 60, label: '450K/60m' },
+    { principal: '600000.00', rate: '13.330', tenure: 60, label: '600K/60m' },
+    { principal: '750000.00', rate: '13.330', tenure: 60, label: '750K/60m' },
+  ];
+
+  it.each(tierConfigs)(
+    '$label — fully paid balance = 0.00 using schedule entries',
+    ({ principal, rate, tenure }) => {
+      const schedule = computeRepaymentSchedule({
+        principalAmount: principal,
+        interestRate: rate,
+        tenureMonths: tenure,
+        moratoriumMonths: 0,
+      });
+
+      const entries = schedule.schedule.map((row) =>
+        payrollEntry(row.totalDeduction, row.principalComponent, row.interestComponent),
+      );
+
+      const result = computeBalanceFromEntries(principal, rate, tenure, entries, null);
+      expect(result.computedBalance).toBe('0.00');
+    },
+  );
+
+  // H2 fix: input validation tests (consistent with computeRepaymentSchedule/autoSplitDeduction)
+  it('throws for negative principalAmount', () => {
+    expect(() => computeBalanceFromEntries('-100000.00', '13.330', 60, [], null))
+      .toThrow('principalAmount must be a positive number');
+  });
+
+  it('throws for zero tenureMonths', () => {
+    expect(() => computeBalanceFromEntries('250000.00', '13.330', 0, [], null))
+      .toThrow('tenureMonths must be a positive integer');
+  });
+
+  it('throws for negative interestRate', () => {
+    expect(() => computeBalanceFromEntries('250000.00', '-5.000', 60, [], null))
+      .toThrow('interestRate must be a non-negative number');
+  });
+
+  // M3 fix: anomaly flag when entries exceed totalLoan
+  it('flags isAnomaly when entries exceed totalLoan', () => {
+    const entries = [payrollEntry('300000.00', '250000.00', '50000.00')];
+    const result = computeBalanceFromEntries('250000.00', '13.330', 60, entries, null);
+
+    expect(result.derivation.isAnomaly).toBe(true);
+    expect(result.computedBalance).toBe('-16675.00');
+  });
+
+  it('does not flag isAnomaly for normal balance', () => {
+    const result = computeBalanceFromEntries('250000.00', '13.330', 60, [], null);
+    expect(result.derivation.isAnomaly).toBe(false);
   });
 });
 

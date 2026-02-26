@@ -19,6 +19,7 @@ export type { SubmissionRecord } from './types/submission.js';
 export type { ExceptionPriority, ExceptionCategory, ExceptionItem } from './types/exception.js';
 export type { LedgerEntryType, LedgerEntry } from './types/ledger.js';
 export type { ComputationParams, ScheduleRow, RepaymentSchedule, AutoSplitResult } from './types/computation.js';
+export type { BalanceResult, LedgerEntryForBalance } from './types/balance.js';
 
 // Constants
 export { ROLES, ALL_ROLES, ROLE_HIERARCHY, getManageableRoles, canManageRole, type Role } from './constants/roles.js';

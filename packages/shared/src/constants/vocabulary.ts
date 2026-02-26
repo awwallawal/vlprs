@@ -53,6 +53,9 @@ export const VOCABULARY = {
   LEDGER_IMMUTABLE: 'Financial records cannot be modified or deleted.',
   LEDGER_METHOD_NOT_ALLOWED: 'This operation is not permitted on financial records.',
   LEDGER_ENTRY_CREATED: 'Ledger entry recorded successfully.',
+  // Balance (Story 2.5)
+  BALANCE_COMPUTED: 'Balance computed from ledger entries.',
+  INVALID_AS_OF_DATE: 'The provided date is not valid. Use YYYY-MM-DD format.',
 } as const;
 
 export const UI_COPY = {

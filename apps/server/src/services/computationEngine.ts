@@ -1,5 +1,5 @@
 import Decimal from 'decimal.js';
-import type { ComputationParams, ScheduleRow, RepaymentSchedule, AutoSplitResult } from '@vlprs/shared';
+import type { ComputationParams, ScheduleRow, RepaymentSchedule, AutoSplitResult, BalanceResult, LedgerEntryForBalance } from '@vlprs/shared';
 
 // Configure decimal.js for financial precision
 Decimal.set({ precision: 20, rounding: Decimal.ROUND_HALF_UP });
@@ -141,5 +141,69 @@ export function autoSplitDeduction(
   return {
     principalComponent: principalComponent.toFixed(2),
     interestComponent: interestComponent.toFixed(2),
+  };
+}
+
+/**
+ * Compute outstanding balance from loan parameters and ledger entries.
+ * Pure function — no DB access. All arithmetic via decimal.js.
+ */
+export function computeBalanceFromEntries(
+  principalAmount: string,
+  interestRate: string,
+  tenureMonths: number,
+  entries: LedgerEntryForBalance[],
+  asOfDate: string | null,
+): BalanceResult {
+  // Input validation — consistent with computeRepaymentSchedule() and autoSplitDeduction()
+  if (!Number.isInteger(tenureMonths) || tenureMonths <= 0) {
+    throw new Error('tenureMonths must be a positive integer');
+  }
+  const principal = new Decimal(principalAmount);
+  if (principal.isNaN() || !principal.isFinite() || principal.lte(0)) {
+    throw new Error('principalAmount must be a positive number');
+  }
+  const rate = new Decimal(interestRate);
+  if (rate.isNaN() || !rate.isFinite() || rate.lt(0)) {
+    throw new Error('interestRate must be a non-negative number');
+  }
+  const totalInterest = principal.mul(rate).div(100);
+  const totalLoan = principal.plus(totalInterest);
+
+  let totalAmountPaid = new Decimal('0');
+  let totalPrincipalPaid = new Decimal('0');
+  let totalInterestPaid = new Decimal('0');
+  let payrollCount = 0;
+
+  for (const entry of entries) {
+    totalAmountPaid = totalAmountPaid.plus(new Decimal(entry.amount));
+    totalPrincipalPaid = totalPrincipalPaid.plus(new Decimal(entry.principalComponent));
+    totalInterestPaid = totalInterestPaid.plus(new Decimal(entry.interestComponent));
+    if (entry.entryType === 'PAYROLL') {
+      payrollCount++;
+    }
+  }
+
+  const computedBalance = totalLoan.minus(totalAmountPaid);
+  const principalRemaining = principal.minus(totalPrincipalPaid);
+  const interestRemaining = totalInterest.minus(totalInterestPaid);
+
+  return {
+    computedBalance: computedBalance.toFixed(2),
+    totalPrincipalPaid: totalPrincipalPaid.toFixed(2),
+    totalInterestPaid: totalInterestPaid.toFixed(2),
+    totalAmountPaid: totalAmountPaid.toFixed(2),
+    principalRemaining: principalRemaining.toFixed(2),
+    interestRemaining: interestRemaining.toFixed(2),
+    installmentsCompleted: payrollCount,
+    installmentsRemaining: Math.max(0, tenureMonths - payrollCount),
+    entryCount: entries.length,
+    asOfDate,
+    derivation: {
+      formula: 'totalLoan - sum(entries.amount)',
+      totalLoan: totalLoan.toFixed(2),
+      entriesSum: totalAmountPaid.toFixed(2),
+      isAnomaly: computedBalance.isNegative(),
+    },
   };
 }
