@@ -16,6 +16,12 @@ export interface ScheduleRow {
   isMoratorium: boolean; // true for grace period months
 }
 
+/** Result of auto-splitting a deduction into principal and interest */
+export interface AutoSplitResult {
+  principalComponent: string; // NUMERIC(15,2) as string
+  interestComponent: string; // NUMERIC(15,2) as string
+}
+
 /** Complete repayment schedule output */
 export interface RepaymentSchedule {
   params: ComputationParams;

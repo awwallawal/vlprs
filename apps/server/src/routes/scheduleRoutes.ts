@@ -22,14 +22,31 @@ router.get(
   async (req: Request, res: Response) => {
     const loan = await loanService.getLoanById(param(req.params.loanId), req.mdaScope);
 
+    // Optional what-if tenure override (does not modify loan)
+    const tenureOverride = req.query.tenureMonths ? parseInt(req.query.tenureMonths as string, 10) : null;
+    if (tenureOverride !== null && (!Number.isInteger(tenureOverride) || tenureOverride <= 0)) {
+      res.status(400).json({ success: false, error: 'tenureMonths must be a positive integer' });
+      return;
+    }
+
+    const effectiveTenure = tenureOverride ?? loan.tenureMonths;
+
     const schedule = computeRepaymentSchedule({
       principalAmount: loan.principalAmount,
       interestRate: loan.interestRate,
-      tenureMonths: loan.tenureMonths,
+      tenureMonths: effectiveTenure,
       moratoriumMonths: loan.moratoriumMonths,
     });
 
-    res.json({ success: true, data: schedule });
+    res.json({
+      success: true,
+      data: {
+        ...schedule,
+        isWhatIf: tenureOverride !== null,
+        originalTenureMonths: loan.tenureMonths,
+        effectiveTenureMonths: effectiveTenure,
+      },
+    });
   },
 );
 
