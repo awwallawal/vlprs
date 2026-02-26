@@ -1,6 +1,11 @@
 # Story 2.4: Accelerated Repayment, Last-Payment Adjustment & Auto-Split
 
-Status: ready-for-dev
+Status: done
+
+## Change Log
+
+- **2026-02-26:** Code review fixes — added input validation to `autoSplitDeduction()` (H1), created `scheduleRoutes.integration.test.ts` with 7 integration tests for what-if API (M1), added tenure=1 boundary tests (M2), NUMERIC(5,3) precision awareness test (M4), extended sum-of-components to all 4 tiers (L1), added monthly value assertions to CSV record #21 (L2). All 7 findings fixed. 365 tests pass (34 files), zero regressions, ESLint clean.
+- **2026-02-25:** Story 2.4 implementation complete — last-payment adjustment ensures all loans close at exactly ₦0.00, autoSplitDeduction() provides exact principal/interest decomposition, accelerated tenure schedules validated against Sports Council CSV, what-if tenure API endpoint added. 346 tests pass, zero regressions.
 
 <!-- Generated: 2026-02-24 | Epic: 2 | Sprint: 3 -->
 <!-- Blocked By: 2-3 (base computation engine) | Blocks: 2-5, 2-7, 3-2, Epic 5, Epic 8, Epic 12 -->
@@ -50,37 +55,47 @@ Story 2.3 builds the base computation engine with uniform monthly payments and a
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Enhance `computeRepaymentSchedule()` with last-payment adjustment (AC: 2)
-  - [ ] 1.1 Modify the schedule loop in `apps/server/src/services/computationEngine.ts`
-  - [ ] 1.2 On the final active month, replace uniform deduction with exact remaining balance
-  - [ ] 1.3 Split final principal residual and interest residual independently
-  - [ ] 1.4 Assert `runningBalance` of final row is `'0.00'`
-- [ ] Task 2: Add `autoSplitDeduction()` function (AC: 3)
-  - [ ] 2.1 Add function to `computationEngine.ts`
-  - [ ] 2.2 Compute flat-rate ratio: `principalRatio = monthlyPrincipal / monthlyDeduction`
-  - [ ] 2.3 Apply ratio to any deduction amount, ensure principal + interest = deduction exactly
-- [ ] Task 3: Add shared types for auto-split (AC: 3)
-  - [ ] 3.1 Add `AutoSplitResult` interface to `packages/shared/src/types/computation.ts`
-  - [ ] 3.2 Export from `packages/shared/src/index.ts`
-- [ ] Task 4: Unit tests — last-payment adjustment (AC: 2, 4)
-  - [ ] 4.1 Test: all 4 tier standard schedules (250K/450K/600K/750K, 60 months) close at exactly ₦0.00
-  - [ ] 4.2 Test: final row's `principalComponent + interestComponent = totalDeduction`
-  - [ ] 4.3 Test: all non-final rows unchanged from Story 2.3 uniform values
-  - [ ] 4.4 Test: rounding residual verification — `|finalDeduction - uniformDeduction| < ₦1.00`
-- [ ] Task 5: Unit tests — accelerated repayment (AC: 1, 4)
-  - [ ] 5.1 Test: 60→45 month acceleration produces correct higher monthly payments
-  - [ ] 5.2 Test: total interest unchanged between 60-month and 45-month schedules (same principal × rate)
-  - [ ] 5.3 Test: accelerated schedule closes at exactly ₦0.00
-  - [ ] 5.4 Test: CSV fixture accelerated loans — records #8 (450K/50mo), #15 (750K/50mo), #17 (750K/48mo), #20 (600K/30mo), #21 (450K/40mo)
-- [ ] Task 6: Unit tests — auto-split (AC: 3, 4)
-  - [ ] 6.1 Test: standard deduction → split matches schedule's monthlyPrincipal + monthlyInterest
-  - [ ] 6.2 Test: non-standard deduction (₦0.01 more) → principal + interest = deduction exactly
-  - [ ] 6.3 Test: non-standard deduction (₦0.01 less) → principal + interest = deduction exactly
-  - [ ] 6.4 Test: all 4 tiers × standard + non-standard amounts
-- [ ] Task 7: Update schedule API to support what-if tenure (AC: 1)
-  - [ ] 7.1 Add optional `?tenureMonths=N` query parameter to `GET /api/loans/:loanId/schedule`
-  - [ ] 7.2 If provided, compute schedule with overridden tenure (what-if preview, does not modify loan)
-  - [ ] 7.3 Response includes both original and what-if params for comparison
+- [x] Task 1: Enhance `computeRepaymentSchedule()` with last-payment adjustment (AC: 2)
+  - [x] 1.1 Modify the schedule loop in `apps/server/src/services/computationEngine.ts`
+  - [x] 1.2 On the final active month, replace uniform deduction with exact remaining balance
+  - [x] 1.3 Split final principal residual and interest residual independently
+  - [x] 1.4 Assert `runningBalance` of final row is `'0.00'`
+- [x] Task 2: Add `autoSplitDeduction()` function (AC: 3)
+  - [x] 2.1 Add function to `computationEngine.ts`
+  - [x] 2.2 Compute flat-rate ratio: `principalRatio = monthlyPrincipal / monthlyDeduction`
+  - [x] 2.3 Apply ratio to any deduction amount, ensure principal + interest = deduction exactly
+- [x] Task 3: Add shared types for auto-split (AC: 3)
+  - [x] 3.1 Add `AutoSplitResult` interface to `packages/shared/src/types/computation.ts`
+  - [x] 3.2 Export from `packages/shared/src/index.ts`
+- [x] Task 4: Unit tests — last-payment adjustment (AC: 2, 4)
+  - [x] 4.1 Test: all 4 tier standard schedules (250K/450K/600K/750K, 60 months) close at exactly ₦0.00
+  - [x] 4.2 Test: final row's `principalComponent + interestComponent = totalDeduction`
+  - [x] 4.3 Test: all non-final rows unchanged from Story 2.3 uniform values
+  - [x] 4.4 Test: rounding residual verification — `|finalDeduction - uniformDeduction| < ₦1.00`
+- [x] Task 5: Unit tests — accelerated repayment (AC: 1, 4)
+  - [x] 5.1 Test: 60→45 month acceleration produces correct higher monthly payments
+  - [x] 5.2 Test: total interest unchanged between 60-month and 45-month schedules (same principal × rate)
+  - [x] 5.3 Test: accelerated schedule closes at exactly ₦0.00
+  - [x] 5.4 Test: CSV fixture accelerated loans — records #8 (450K/50mo), #15 (750K/50mo), #17 (750K/48mo), #20 (600K/30mo), #21 (450K/40mo)
+- [x] Task 6: Unit tests — auto-split (AC: 3, 4)
+  - [x] 6.1 Test: standard deduction → split matches schedule's monthlyPrincipal + monthlyInterest
+  - [x] 6.2 Test: non-standard deduction (₦0.01 more) → principal + interest = deduction exactly
+  - [x] 6.3 Test: non-standard deduction (₦0.01 less) → principal + interest = deduction exactly
+  - [x] 6.4 Test: all 4 tiers × standard + non-standard amounts
+- [x] Task 7: Update schedule API to support what-if tenure (AC: 1)
+  - [x] 7.1 Add optional `?tenureMonths=N` query parameter to `GET /api/loans/:loanId/schedule`
+  - [x] 7.2 If provided, compute schedule with overridden tenure (what-if preview, does not modify loan)
+  - [x] 7.3 Response includes both original and what-if params for comparison
+
+### Review Follow-ups (AI)
+
+- [x] [AI-Review][HIGH] H1: Add input validation to `autoSplitDeduction()` — validate `deductionAmount`, `principalAmount`, `interestRate` matching `computeRepaymentSchedule` pattern [`computationEngine.ts:106-129`]
+- [x] [AI-Review][MEDIUM] M1: Add integration tests for `?tenureMonths` what-if API — zero test coverage for schedule endpoint validation, `isWhatIf` flag, tenure override [`scheduleRoutes.ts:26-48`]
+- [x] [AI-Review][MEDIUM] M2: Add `tenure=1` boundary test — first active month = last active month, cumulative accumulators at zero [`computationEngine.test.ts`]
+- [x] [AI-Review][MEDIUM] M3: Validate `autoSplitDeduction` input is 2-decimal money string — exact-sum guarantee breaks for >2dp inputs [`computationEngine.ts:119-123`]
+- [x] [AI-Review][MEDIUM] M4: Add NUMERIC(5,3) precision awareness test for CSV record #8 — derived 6dp rate masks storage truncation issue [`computationEngine.test.ts:370`]
+- [x] [AI-Review][LOW] L1: Extend sum-of-components tests to all 4 tiers — currently only covers Tier 1 (250K) [`computationEngine.test.ts:581-608`]
+- [x] [AI-Review][LOW] L2: Add monthly value assertions to CSV record #21 test — only checks ₦0.00 closure, unlike #15/#17/#20 [`computationEngine.test.ts:710-719`]
 
 ## Dev Notes
 
@@ -363,6 +378,32 @@ Record #21: 39,990.00 / 450,000 × 100 = 8.887%
 - [Source: `_bmad-output/implementation-artifacts/2-2-immutable-repayment-ledger.md`] — `ADJUSTMENT` entry type for ledger entries (future use in submission workflow)
 - [Source: `_bmad-output/implementation-artifacts/2-0-sprint-infrastructure-quality-gates.md`] — UAT checkpoint after Story 2.4
 
+## Senior Developer Review (AI)
+
+**Reviewed:** 2026-02-26 | **Reviewer:** Claude Opus 4.6 | **Verdict:** Changes Requested → All Fixed | **Findings:** 1 High, 4 Medium, 2 Low
+
+### Summary
+
+All 4 Acceptance Criteria are fully implemented. All 7 tasks verified as actually done. Git changes match story File List exactly (0 discrepancies). The core computation logic is correct and well-tested. Issues found were primarily around validation gaps in `autoSplitDeduction`, missing integration tests for the API endpoint, and test coverage gaps for boundary conditions.
+
+### Findings (all fixed)
+
+| # | Severity | Description | Fix Applied |
+|---|----------|-------------|-------------|
+| H1 | HIGH | `autoSplitDeduction` had zero input validation | Added try-catch + validation for deductionAmount, principalAmount, interestRate |
+| M1 | MEDIUM | No integration tests for `?tenureMonths` what-if API | Created `scheduleRoutes.integration.test.ts` with 7 tests |
+| M2 | MEDIUM | No test for `tenure=1` boundary condition | Added 2 tests (with/without moratorium) |
+| M3 | MEDIUM | `autoSplitDeduction` sum guarantee undocumented for 2dp constraint | Covered by H1 validation — invalid inputs now rejected |
+| M4 | MEDIUM | CSV record #8 test masks NUMERIC(5,3) precision loss | Added explicit test documenting ₦1.50 gap for Story 3.2 awareness |
+| L1 | LOW | Sum-of-components tests only covered Tier 1 | Extended to all 4 tiers via `it.each` |
+| L2 | LOW | CSV record #21 missing monthly value assertions | Added `monthlyPrincipal`, `monthlyInterest`, `monthlyDeduction` checks |
+
+### Test Impact
+
+- **Before review:** 346 tests, 33 files
+- **After review:** 365 tests, 34 files (+19 tests, +1 file)
+- **Zero regressions, ESLint clean**
+
 ## PM Validation Findings
 
 **Validated:** 2026-02-24 | **Verdict:** Pass — no fixes needed | **Blocking issues:** None
@@ -379,11 +420,23 @@ Record #21: 39,990.00 / 450,000 × 100 = 8.887%
 
 ### Agent Model Used
 
-(To be filled by dev agent)
+Claude Opus 4.6
 
 ### Debug Log References
 
+No debug issues encountered — all implementations were correct on first pass.
+
 ### Completion Notes List
+
+- **Task 1 (Last-payment adjustment):** Modified `computeRepaymentSchedule()` schedule loop to track cumulative principal and interest through non-final months, then compute final month as `principal - cumulativePrincipal` and `totalInterest - cumulativeInterest`. This guarantees sum of all components equals exact totals and `runningBalance` is always `'0.00'` on the final row.
+- **Task 2 (Auto-split):** Added `autoSplitDeduction()` using interest-first rounding (`deduction × totalInterest / totalLoan`, rounded) with principal as remainder. Guarantees `principal + interest = deduction` exactly for any input amount.
+- **Task 3 (Shared types):** Added `AutoSplitResult` interface to `packages/shared/src/types/computation.ts` and exported from barrel index.
+- **Task 4 (Last-payment tests):** 19 tests covering all 4 tiers closing at ₦0.00, final row component sum verification, non-final row uniformity, rounding residual < ₦1.00, moratorium + adjustment combo, and exact sum-of-components verification.
+- **Task 5 (Accelerated tests):** 9 tests covering 60→45 month acceleration, flat-rate interest invariance across tenures, ₦0.00 closure for all accelerated schedules, CSV fixture records #8/#15/#17/#20/#21, and moratorium + acceleration combo.
+- **Task 6 (Auto-split tests):** 16 tests covering standard deduction match, ±₦0.01 non-standard amounts, all 4 tiers × standard/+₦100/-₦100 amounts, and 2-decimal string format verification.
+- **Task 7 (What-if API):** Added optional `?tenureMonths=N` query parameter to `GET /api/loans/:loanId/schedule` with input validation, returning `isWhatIf`, `originalTenureMonths`, and `effectiveTenureMonths` in response.
+- Updated existing Story 2.3 tests to expect `runningBalance: '0.00'` on final rows (was residual < ₦1.00).
+- **Full test suite: 346 tests pass, 33 test files, zero regressions. ESLint clean.**
 
 ### Commit Summary
 
@@ -391,3 +444,10 @@ Record #21: 39,990.00 / 450,000 × 100 = 8.887%
 <!-- Format: Total commits | Files touched (new/modified) | Revert count | One-sentence narrative -->
 
 ### File List
+
+- `apps/server/src/services/computationEngine.ts` — **Modified**: added last-payment adjustment to schedule loop, added `autoSplitDeduction()` function, added input validation to `autoSplitDeduction()` (code review H1)
+- `apps/server/src/services/computationEngine.test.ts` — **Modified**: added 44 new tests (last-payment adjustment, accelerated repayment, auto-split), updated 2 existing tests for ₦0.00 closure, added 12 code review tests (tenure=1 boundary, sum-of-components all tiers, NUMERIC(5,3) precision, autoSplit validation, record #21 monthly values)
+- `packages/shared/src/types/computation.ts` — **Modified**: added `AutoSplitResult` interface
+- `packages/shared/src/index.ts` — **Modified**: added `AutoSplitResult` to type exports
+- `apps/server/src/routes/scheduleRoutes.ts` — **Modified**: added optional `?tenureMonths=N` what-if query parameter with validation
+- `apps/server/src/routes/scheduleRoutes.integration.test.ts` — **New**: 7 integration tests for schedule API (standard, what-if override, invalid params, auth, 404) (code review M1)

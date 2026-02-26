@@ -2,7 +2,7 @@ import { describe, it, expect, beforeAll } from 'vitest';
 import Decimal from 'decimal.js';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { computeRepaymentSchedule } from './computationEngine';
+import { computeRepaymentSchedule, autoSplitDeduction } from './computationEngine';
 import type { ComputationParams } from '@vlprs/shared';
 
 // ─── Task 4: Unit tests with hand-verified calculations ─────────────────────
@@ -42,14 +42,11 @@ describe('computeRepaymentSchedule', () => {
       isMoratorium: false,
     });
 
-    // Last month
+    // Last month — with last-payment adjustment, balance is exactly 0.00
     const last = result.schedule[59];
     expect(last.monthNumber).toBe(60);
     expect(last.isMoratorium).toBe(false);
-
-    // Final running balance should be small residual (< ₦1.00)
-    const residual = Math.abs(parseFloat(last.runningBalance));
-    expect(residual).toBeLessThan(1.0);
+    expect(last.runningBalance).toBe('0.00');
   });
 
   // Task 4.3: Tier 4 (750K, 60 months) produces correct schedule
@@ -76,10 +73,9 @@ describe('computeRepaymentSchedule', () => {
     expect(result.totalMonths).toBe(60);
     expect(result.schedule).toHaveLength(60);
 
-    // Final running balance should be small residual (< ₦1.00)
+    // With last-payment adjustment, balance is exactly 0.00
     const last = result.schedule[59];
-    const residual = Math.abs(parseFloat(last.runningBalance));
-    expect(residual).toBeLessThan(1.0);
+    expect(last.runningBalance).toBe('0.00');
   });
 
   // Task 4.4: Moratorium months show zero deduction, no interest accrual
@@ -508,6 +504,400 @@ describe('Sports Council CSV validation', () => {
 
     expect(withinOneKobo(result.monthlyDeduction, record1.monthlyDeduction)).toBe(true);
     expect(withinOneKobo(result.monthlyDeduction, record10.monthlyDeduction)).toBe(true);
+  });
+});
+
+// ─── Story 2.4 Task 4: Last-payment adjustment tests ──────────────────────────
+
+describe('Last-payment adjustment (Story 2.4)', () => {
+  // Task 4.1: All 4 tier standard schedules close at exactly ₦0.00
+  const tierParams: ComputationParams[] = [
+    { principalAmount: '250000.00', interestRate: '13.330', tenureMonths: 60, moratoriumMonths: 0 },
+    { principalAmount: '450000.00', interestRate: '13.330', tenureMonths: 60, moratoriumMonths: 0 },
+    { principalAmount: '600000.00', interestRate: '13.330', tenureMonths: 60, moratoriumMonths: 0 },
+    { principalAmount: '750000.00', interestRate: '13.330', tenureMonths: 60, moratoriumMonths: 0 },
+  ];
+
+  it.each(tierParams)(
+    'Tier $principalAmount/60m closes at exactly ₦0.00',
+    (params) => {
+      const result = computeRepaymentSchedule(params);
+      const last = result.schedule[result.schedule.length - 1];
+      expect(last.runningBalance).toBe('0.00');
+    },
+  );
+
+  // Task 4.2: Final row's principalComponent + interestComponent = totalDeduction
+  it.each(tierParams)(
+    'Tier $principalAmount — final row principal + interest = totalDeduction',
+    (params) => {
+      const result = computeRepaymentSchedule(params);
+      const last = result.schedule[result.schedule.length - 1];
+      const sum = new Decimal(last.principalComponent).plus(new Decimal(last.interestComponent));
+      expect(sum.toFixed(2)).toBe(last.totalDeduction);
+    },
+  );
+
+  // Task 4.3: All non-final rows unchanged from Story 2.3 uniform values
+  it.each(tierParams)(
+    'Tier $principalAmount — non-final active rows use uniform deduction',
+    (params) => {
+      const result = computeRepaymentSchedule(params);
+      const activeRows = result.schedule.filter((r) => !r.isMoratorium);
+      // All rows except the last should have uniform values
+      for (let i = 0; i < activeRows.length - 1; i++) {
+        expect(activeRows[i].principalComponent).toBe(result.monthlyPrincipal);
+        expect(activeRows[i].interestComponent).toBe(result.monthlyInterest);
+        expect(activeRows[i].totalDeduction).toBe(result.monthlyDeduction);
+      }
+    },
+  );
+
+  // Task 4.4: Rounding residual verification — |finalDeduction - uniformDeduction| < ₦1.00
+  it.each(tierParams)(
+    'Tier $principalAmount — rounding residual < ₦1.00',
+    (params) => {
+      const result = computeRepaymentSchedule(params);
+      const last = result.schedule[result.schedule.length - 1];
+      const diff = new Decimal(last.totalDeduction).minus(new Decimal(result.monthlyDeduction)).abs();
+      expect(diff.lt(new Decimal('1.00'))).toBe(true);
+    },
+  );
+
+  // Moratorium + last-payment adjustment: schedule still closes at ₦0.00
+  it('schedule with moratorium still closes at exactly ₦0.00', () => {
+    const result = computeRepaymentSchedule({
+      principalAmount: '250000.00',
+      interestRate: '13.330',
+      tenureMonths: 60,
+      moratoriumMonths: 2,
+    });
+    const last = result.schedule[result.schedule.length - 1];
+    expect(last.runningBalance).toBe('0.00');
+    expect(last.monthNumber).toBe(62);
+  });
+
+  // L1 fix: Verify sum of all principal components = principal exactly (all 4 tiers)
+  it.each(tierParams)(
+    'Tier $principalAmount — sum of all principalComponents equals principal exactly',
+    (params) => {
+      const result = computeRepaymentSchedule(params);
+      const totalPrincipal = result.schedule.reduce(
+        (sum, row) => sum.plus(new Decimal(row.principalComponent)),
+        new Decimal('0'),
+      );
+      expect(totalPrincipal.toFixed(2)).toBe(params.principalAmount);
+    },
+  );
+
+  // L1 fix: Verify sum of all interest components = totalInterest exactly (all 4 tiers)
+  it.each(tierParams)(
+    'Tier $principalAmount — sum of all interestComponents equals totalInterest exactly',
+    (params) => {
+      const result = computeRepaymentSchedule(params);
+      const totalInterestSum = result.schedule.reduce(
+        (sum, row) => sum.plus(new Decimal(row.interestComponent)),
+        new Decimal('0'),
+      );
+      expect(totalInterestSum.toFixed(2)).toBe(result.totalInterest);
+    },
+  );
+
+  // M2 fix: tenure=1 boundary — first active month IS the last active month
+  it('tenure=1 produces single payment equal to totalLoan, closing at ₦0.00', () => {
+    const result = computeRepaymentSchedule({
+      principalAmount: '250000.00',
+      interestRate: '13.330',
+      tenureMonths: 1,
+      moratoriumMonths: 0,
+    });
+    expect(result.schedule).toHaveLength(1);
+    const only = result.schedule[0];
+    expect(only.runningBalance).toBe('0.00');
+    expect(only.totalDeduction).toBe(result.totalLoan);
+    expect(only.principalComponent).toBe('250000.00');
+    expect(only.interestComponent).toBe('33325.00');
+  });
+
+  // M2 fix: tenure=1 with moratorium
+  it('tenure=1 with moratorium closes at ₦0.00', () => {
+    const result = computeRepaymentSchedule({
+      principalAmount: '250000.00',
+      interestRate: '13.330',
+      tenureMonths: 1,
+      moratoriumMonths: 2,
+    });
+    expect(result.schedule).toHaveLength(3);
+    expect(result.schedule[0].isMoratorium).toBe(true);
+    expect(result.schedule[1].isMoratorium).toBe(true);
+    const last = result.schedule[2];
+    expect(last.runningBalance).toBe('0.00');
+    expect(last.totalDeduction).toBe(result.totalLoan);
+  });
+});
+
+// ─── Story 2.4 Task 5: Accelerated repayment tests ────────────────────────────
+
+describe('Accelerated repayment (Story 2.4)', () => {
+  // Task 5.1: 60→45 month acceleration produces correct higher monthly payments
+  it('60→45 month acceleration produces higher monthly payments', () => {
+    const standard = computeRepaymentSchedule({
+      principalAmount: '750000.00',
+      interestRate: '13.330',
+      tenureMonths: 60,
+      moratoriumMonths: 0,
+    });
+    const accelerated = computeRepaymentSchedule({
+      principalAmount: '750000.00',
+      interestRate: '13.330',
+      tenureMonths: 45,
+      moratoriumMonths: 0,
+    });
+
+    // Higher monthly deduction for shorter tenure
+    expect(new Decimal(accelerated.monthlyDeduction).gt(new Decimal(standard.monthlyDeduction))).toBe(true);
+    // Correct monthly principal: 750000 / 45 = 16666.67
+    expect(accelerated.monthlyPrincipal).toBe('16666.67');
+    // Correct monthly interest: 99975 / 45 = 2221.67
+    expect(accelerated.monthlyInterest).toBe('2221.67');
+    expect(accelerated.totalMonths).toBe(45);
+    expect(accelerated.schedule).toHaveLength(45);
+  });
+
+  // Task 5.2: Total interest unchanged between 60-month and 45-month schedules
+  it('total interest unchanged between 60-month and 45-month schedules (flat-rate)', () => {
+    const standard = computeRepaymentSchedule({
+      principalAmount: '750000.00',
+      interestRate: '13.330',
+      tenureMonths: 60,
+      moratoriumMonths: 0,
+    });
+    const accelerated = computeRepaymentSchedule({
+      principalAmount: '750000.00',
+      interestRate: '13.330',
+      tenureMonths: 45,
+      moratoriumMonths: 0,
+    });
+
+    // Flat-rate: interest = principal × rate / 100, independent of tenure
+    expect(standard.totalInterest).toBe(accelerated.totalInterest);
+    expect(standard.totalLoan).toBe(accelerated.totalLoan);
+  });
+
+  // Task 5.3: Accelerated schedule closes at exactly ₦0.00
+  it('accelerated schedule (45 months) closes at exactly ₦0.00', () => {
+    const result = computeRepaymentSchedule({
+      principalAmount: '750000.00',
+      interestRate: '13.330',
+      tenureMonths: 45,
+      moratoriumMonths: 0,
+    });
+    const last = result.schedule[result.schedule.length - 1];
+    expect(last.runningBalance).toBe('0.00');
+  });
+
+  // Task 5.4: CSV fixture accelerated loans
+  it('CSV record #15 (750K/50mo) — schedule closes at ₦0.00', () => {
+    const result = computeRepaymentSchedule({
+      principalAmount: '750000.00',
+      interestRate: '11.108',
+      tenureMonths: 50,
+      moratoriumMonths: 0,
+    });
+    const last = result.schedule[result.schedule.length - 1];
+    expect(last.runningBalance).toBe('0.00');
+    expect(withinOneKobo(result.monthlyPrincipal, '15000.00')).toBe(true);
+  });
+
+  it('CSV record #17 (750K/48mo) — schedule closes at ₦0.00', () => {
+    const result = computeRepaymentSchedule({
+      principalAmount: '750000.00',
+      interestRate: '6.664',
+      tenureMonths: 48,
+      moratoriumMonths: 0,
+    });
+    const last = result.schedule[result.schedule.length - 1];
+    expect(last.runningBalance).toBe('0.00');
+    expect(result.monthlyPrincipal).toBe('15625.00');
+    expect(result.monthlyInterest).toBe('1041.25');
+  });
+
+  it('CSV record #20 (600K/30mo) — schedule closes at ₦0.00', () => {
+    const result = computeRepaymentSchedule({
+      principalAmount: '600000.00',
+      interestRate: '6.665',
+      tenureMonths: 30,
+      moratoriumMonths: 0,
+    });
+    const last = result.schedule[result.schedule.length - 1];
+    expect(last.runningBalance).toBe('0.00');
+    expect(result.monthlyPrincipal).toBe('20000.00');
+    expect(result.monthlyInterest).toBe('1333.00');
+  });
+
+  it('CSV record #21 (450K/40mo) — schedule closes at ₦0.00 with correct monthly values', () => {
+    const result = computeRepaymentSchedule({
+      principalAmount: '450000.00',
+      interestRate: '8.887',
+      tenureMonths: 40,
+      moratoriumMonths: 0,
+    });
+    const last = result.schedule[result.schedule.length - 1];
+    expect(last.runningBalance).toBe('0.00');
+    // L2 fix: verify monthly values against CSV (450K/40 = 11250.00 principal, 39991.50/40 = 999.79 interest)
+    expect(result.monthlyPrincipal).toBe('11250.00');
+    expect(withinOneKobo(result.monthlyInterest, '999.79')).toBe(true);
+    expect(withinOneKobo(result.monthlyDeduction, '12249.79')).toBe(true);
+  });
+
+  // CSV record #8 (450K/50mo) — use derived rate from CSV data
+  it('CSV record #8 (450K/50mo) — schedule closes at ₦0.00', () => {
+    // Derived rate: 49987.50 / 450000 × 100 = 11.10833...
+    const derivedRate = new Decimal('49987.50').div(new Decimal('450000')).mul(100).toFixed(6);
+    const result = computeRepaymentSchedule({
+      principalAmount: '450000.00',
+      interestRate: derivedRate,
+      tenureMonths: 50,
+      moratoriumMonths: 0,
+    });
+    const last = result.schedule[result.schedule.length - 1];
+    expect(last.runningBalance).toBe('0.00');
+  });
+
+  // M4 fix: NUMERIC(5,3) precision awareness — record #8 with truncated rate
+  it('CSV record #8 (450K/50mo) — NUMERIC(5,3) truncated rate (11.108) still closes at ₦0.00', () => {
+    // When stored as NUMERIC(5,3), rate 11.10833... truncates to 11.108
+    // This produces totalInterest = 49986.00 vs CSV's 49987.50 (₦1.50 gap)
+    // The engine still closes correctly, but downstream migration validation (Story 3.2)
+    // must account for this storage precision loss
+    const result = computeRepaymentSchedule({
+      principalAmount: '450000.00',
+      interestRate: '11.108',
+      tenureMonths: 50,
+      moratoriumMonths: 0,
+    });
+    const last = result.schedule[result.schedule.length - 1];
+    expect(last.runningBalance).toBe('0.00');
+    // Document the precision gap for Story 3.2 awareness
+    expect(result.totalInterest).toBe('49986.00'); // not 49987.50 from CSV
+  });
+
+  // Accelerated with moratorium
+  it('accelerated schedule with moratorium closes at ₦0.00', () => {
+    const result = computeRepaymentSchedule({
+      principalAmount: '750000.00',
+      interestRate: '13.330',
+      tenureMonths: 45,
+      moratoriumMonths: 2,
+    });
+    expect(result.totalMonths).toBe(47);
+    const last = result.schedule[result.schedule.length - 1];
+    expect(last.runningBalance).toBe('0.00');
+  });
+});
+
+// ─── Story 2.4 Task 6: Auto-split tests ───────────────────────────────────────
+
+describe('autoSplitDeduction (Story 2.4)', () => {
+  const standardParams: ComputationParams = {
+    principalAmount: '250000.00',
+    interestRate: '13.330',
+    tenureMonths: 60,
+    moratoriumMonths: 0,
+  };
+
+  // Task 6.1: Standard deduction → split matches schedule's monthlyPrincipal + monthlyInterest
+  it('standard deduction splits match schedule monthly values (250K)', () => {
+    const schedule = computeRepaymentSchedule(standardParams);
+    const split = autoSplitDeduction(schedule.monthlyDeduction, standardParams);
+
+    expect(split.principalComponent).toBe(schedule.monthlyPrincipal);
+    expect(split.interestComponent).toBe(schedule.monthlyInterest);
+  });
+
+  // Task 6.2: Non-standard deduction (₦0.01 more) → principal + interest = deduction exactly
+  it('non-standard deduction (₦0.01 more) sums exactly', () => {
+    const schedule = computeRepaymentSchedule(standardParams);
+    const overAmount = new Decimal(schedule.monthlyDeduction).plus('0.01').toFixed(2);
+    const split = autoSplitDeduction(overAmount, standardParams);
+
+    const sum = new Decimal(split.principalComponent).plus(new Decimal(split.interestComponent));
+    expect(sum.toFixed(2)).toBe(overAmount);
+  });
+
+  // Task 6.3: Non-standard deduction (₦0.01 less) → principal + interest = deduction exactly
+  it('non-standard deduction (₦0.01 less) sums exactly', () => {
+    const schedule = computeRepaymentSchedule(standardParams);
+    const underAmount = new Decimal(schedule.monthlyDeduction).minus('0.01').toFixed(2);
+    const split = autoSplitDeduction(underAmount, standardParams);
+
+    const sum = new Decimal(split.principalComponent).plus(new Decimal(split.interestComponent));
+    expect(sum.toFixed(2)).toBe(underAmount);
+  });
+
+  // Task 6.4: All 4 tiers × standard + non-standard amounts
+  const allTierParams: { label: string; params: ComputationParams }[] = [
+    { label: '250K/13.33%', params: { principalAmount: '250000.00', interestRate: '13.330', tenureMonths: 60, moratoriumMonths: 0 } },
+    { label: '450K/13.33%', params: { principalAmount: '450000.00', interestRate: '13.330', tenureMonths: 60, moratoriumMonths: 0 } },
+    { label: '600K/13.33%', params: { principalAmount: '600000.00', interestRate: '13.330', tenureMonths: 60, moratoriumMonths: 0 } },
+    { label: '750K/13.33%', params: { principalAmount: '750000.00', interestRate: '13.330', tenureMonths: 60, moratoriumMonths: 0 } },
+  ];
+
+  it.each(allTierParams)(
+    '$label — standard deduction split matches schedule values',
+    ({ params }) => {
+      const schedule = computeRepaymentSchedule(params);
+      const split = autoSplitDeduction(schedule.monthlyDeduction, params);
+      expect(split.principalComponent).toBe(schedule.monthlyPrincipal);
+      expect(split.interestComponent).toBe(schedule.monthlyInterest);
+    },
+  );
+
+  it.each(allTierParams)(
+    '$label — non-standard deduction (+₦100) sums exactly',
+    ({ params }) => {
+      const schedule = computeRepaymentSchedule(params);
+      const overAmount = new Decimal(schedule.monthlyDeduction).plus('100').toFixed(2);
+      const split = autoSplitDeduction(overAmount, params);
+      const sum = new Decimal(split.principalComponent).plus(new Decimal(split.interestComponent));
+      expect(sum.toFixed(2)).toBe(overAmount);
+    },
+  );
+
+  it.each(allTierParams)(
+    '$label — non-standard deduction (-₦100) sums exactly',
+    ({ params }) => {
+      const schedule = computeRepaymentSchedule(params);
+      const underAmount = new Decimal(schedule.monthlyDeduction).minus('100').toFixed(2);
+      const split = autoSplitDeduction(underAmount, params);
+      const sum = new Decimal(split.principalComponent).plus(new Decimal(split.interestComponent));
+      expect(sum.toFixed(2)).toBe(underAmount);
+    },
+  );
+
+  // Verify all split components are proper 2-decimal strings
+  it('all split components are strings with exactly 2 decimal places', () => {
+    const twoDecimalPattern = /^-?\d+\.\d{2}$/;
+    const split = autoSplitDeduction('5000.00', standardParams);
+    expect(split.principalComponent).toMatch(twoDecimalPattern);
+    expect(split.interestComponent).toMatch(twoDecimalPattern);
+  });
+
+  // H1 fix: input validation tests
+  it('throws for invalid deductionAmount string', () => {
+    expect(() => autoSplitDeduction('abc', standardParams)).toThrow('deductionAmount must be a valid number');
+  });
+
+  it('throws for negative principalAmount in params', () => {
+    expect(() =>
+      autoSplitDeduction('5000.00', { ...standardParams, principalAmount: '-100000.00' }),
+    ).toThrow('principalAmount must be a positive number');
+  });
+
+  it('throws for negative interestRate in params', () => {
+    expect(() =>
+      autoSplitDeduction('5000.00', { ...standardParams, interestRate: '-5.000' }),
+    ).toThrow('interestRate must be a non-negative number');
   });
 });
 
