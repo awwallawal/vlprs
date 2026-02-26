@@ -1,6 +1,6 @@
 # Story 2.5: Outstanding Balance Computation & Historical Reconstruction
 
-Status: ready-for-dev
+Status: done
 
 <!-- Generated: 2026-02-24 | Epic: 2 | Sprint: 3 -->
 <!-- Blocked By: 2-2 (ledger table + accessor), 2-3 (computation engine), 2-4 (last-payment adjustment) | Blocks: 2-6, 2-7, Epic 4, Epic 8 -->
@@ -42,40 +42,51 @@ This is the core architectural principle of VLPRS: **balances are computed, not 
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Add shared types for balance computation (AC: 1, 2, 3)
-  - [ ] 1.1 Create `packages/shared/src/types/balance.ts` — `BalanceResult` interface
-  - [ ] 1.2 Export from `packages/shared/src/index.ts`
-- [ ] Task 2: Add balance computation to computation engine (AC: 1, 2)
-  - [ ] 2.1 Add `computeBalanceFromEntries()` pure function to `apps/server/src/services/computationEngine.ts`
-  - [ ] 2.2 Function takes loan params + entries array, returns `BalanceResult`
-  - [ ] 2.3 All arithmetic via `decimal.js` — sum entries, subtract from total loan
-- [ ] Task 3: Extend ledger accessor with historical query (AC: 2)
-  - [ ] 3.1 Add `selectByLoanAsOf(loanId, asOfDate)` method to `ledgerDb` in `apps/server/src/db/immutable.ts`
-  - [ ] 3.2 Filter: `WHERE loan_id = ? AND created_at <= ?` ordered by `created_at` ascending
-- [ ] Task 4: Create balance service (AC: 1, 2, 3)
-  - [ ] 4.1 Create `apps/server/src/services/balanceService.ts`
-  - [ ] 4.2 `getOutstandingBalance(loanId, asOf?)` — fetches loan + entries, calls `computeBalanceFromEntries()`
-  - [ ] 4.3 Validate loan exists, throw `AppError(404)` if not found
-- [ ] Task 5: Create balance route + register (AC: 1, 2, 3)
-  - [ ] 5.1 Create `apps/server/src/routes/balanceRoutes.ts` — `GET /api/loans/:loanId/balance`
-  - [ ] 5.2 Parse optional `?asOf=YYYY-MM-DD` query parameter with Zod date validation
-  - [ ] 5.3 MDA scoping: `mda_officer` can only query balance for loans in their MDA
-  - [ ] 5.4 Register in `apps/server/src/app.ts`
-  - [ ] 5.5 Add vocabulary entries to `packages/shared/src/constants/vocabulary.ts`
-- [ ] Task 6: Unit tests — computation function (AC: 1, 2, 3)
-  - [ ] 6.1 Add tests to `apps/server/src/services/computationEngine.test.ts`
-  - [ ] 6.2 Test: zero entries → balance = totalLoan (no payments made)
-  - [ ] 6.3 Test: partial entries (e.g., 30 of 60) → correct remaining balance
-  - [ ] 6.4 Test: all entries → balance = ₦0.00 (fully paid)
-  - [ ] 6.5 Test: subset of entries (historical) → correct balance at that point
-  - [ ] 6.6 Test: determinism — same inputs produce identical output
-  - [ ] 6.7 Test: all money values are strings with exactly 2 decimal places
-- [ ] Task 7: Integration tests (AC: 1, 2, 3)
-  - [ ] 7.1 Create `apps/server/src/routes/balance.integration.test.ts`
-  - [ ] 7.2 Test: GET /api/loans/:loanId/balance with seeded entries returns correct computed balance
-  - [ ] 7.3 Test: GET /api/loans/:loanId/balance?asOf= with historical date returns only-up-to-date balance
-  - [ ] 7.4 Test: MDA-scoped user cannot access balance for loans in another MDA
-  - [ ] 7.5 Test: loan with no entries returns totalLoan as balance
+- [x] Task 1: Add shared types for balance computation (AC: 1, 2, 3)
+  - [x] 1.1 Create `packages/shared/src/types/balance.ts` — `BalanceResult` interface
+  - [x] 1.2 Export from `packages/shared/src/index.ts`
+- [x] Task 2: Add balance computation to computation engine (AC: 1, 2)
+  - [x] 2.1 Add `computeBalanceFromEntries()` pure function to `apps/server/src/services/computationEngine.ts`
+  - [x] 2.2 Function takes loan params + entries array, returns `BalanceResult`
+  - [x] 2.3 All arithmetic via `decimal.js` — sum entries, subtract from total loan
+- [x] Task 3: Extend ledger accessor with historical query (AC: 2)
+  - [x] 3.1 Add `selectByLoanAsOf(loanId, asOfDate)` method to `ledgerDb` in `apps/server/src/db/immutable.ts`
+  - [x] 3.2 Filter: `WHERE loan_id = ? AND created_at <= ?` ordered by `created_at` ascending
+- [x] Task 4: Create balance service (AC: 1, 2, 3)
+  - [x] 4.1 Create `apps/server/src/services/balanceService.ts`
+  - [x] 4.2 `getOutstandingBalance(loanId, asOf?)` — fetches loan + entries, calls `computeBalanceFromEntries()`
+  - [x] 4.3 Validate loan exists, throw `AppError(404)` if not found
+- [x] Task 5: Create balance route + register (AC: 1, 2, 3)
+  - [x] 5.1 Create `apps/server/src/routes/balanceRoutes.ts` — `GET /api/loans/:loanId/balance`
+  - [x] 5.2 Parse optional `?asOf=YYYY-MM-DD` query parameter with Zod date validation
+  - [x] 5.3 MDA scoping: `mda_officer` can only query balance for loans in their MDA
+  - [x] 5.4 Register in `apps/server/src/app.ts`
+  - [x] 5.5 Add vocabulary entries to `packages/shared/src/constants/vocabulary.ts`
+- [x] Task 6: Unit tests — computation function (AC: 1, 2, 3)
+  - [x] 6.1 Add tests to `apps/server/src/services/computationEngine.test.ts`
+  - [x] 6.2 Test: zero entries → balance = totalLoan (no payments made)
+  - [x] 6.3 Test: partial entries (e.g., 30 of 60) → correct remaining balance
+  - [x] 6.4 Test: all entries → balance = ₦0.00 (fully paid)
+  - [x] 6.5 Test: subset of entries (historical) → correct balance at that point
+  - [x] 6.6 Test: determinism — same inputs produce identical output
+  - [x] 6.7 Test: all money values are strings with exactly 2 decimal places
+- [x] Task 7: Integration tests (AC: 1, 2, 3)
+  - [x] 7.1 Create `apps/server/src/routes/balance.integration.test.ts`
+  - [x] 7.2 Test: GET /api/loans/:loanId/balance with seeded entries returns correct computed balance
+  - [x] 7.3 Test: GET /api/loans/:loanId/balance?asOf= with historical date returns only-up-to-date balance
+  - [x] 7.4 Test: MDA-scoped user cannot access balance for loans in another MDA
+  - [x] 7.5 Test: loan with no entries returns totalLoan as balance
+
+### Review Follow-ups (AI)
+
+- [x] [AI-Review][HIGH] Balance service bypasses `loanService.getLoanById()` — raw `db.select()` + manual MDA check returns 403 (leaks loan existence), inconsistent with schedule/loan routes that return 404 via `withMdaScope()` [balanceService.ts:10]
+- [x] [AI-Review][HIGH] `computeBalanceFromEntries()` has zero input validation — sibling functions (`computeRepaymentSchedule`, `autoSplitDeduction`) both validate all params; this one accepts invalid inputs silently [computationEngine.ts:158]
+- [x] [AI-Review][MEDIUM] Task 5.2 claims "Zod date validation" but used manual `new Date()` + `isNaN()` — `new Date('2025')` or `new Date('2025-02-30')` accepted as valid; replaced with Zod regex schema [balanceRoutes.ts:28]
+- [x] [AI-Review][MEDIUM] `balanceService.test.ts` listed in Project Structure Notes but never created — removed misleading reference; service logic covered by integration tests [story:421]
+- [x] [AI-Review][MEDIUM] No guard against negative computed balance — added `isAnomaly` flag to `derivation` object when `computedBalance < 0` [computationEngine.ts:184]
+- [x] [AI-Review][MEDIUM] `new_read.txt` untracked junk file in repo — deleted [git status]
+- [x] [AI-Review][LOW] `sprint-status.yaml` modified in git but not in story File List — added to File List [story File List]
+- [x] [AI-Review][LOW] `LedgerEntryForBalance` interface defined locally in server, not in shared types — moved to `packages/shared/src/types/balance.ts` and exported [computationEngine.ts:147]
 
 ## Dev Notes
 
@@ -418,7 +429,6 @@ beforeAll(async () => {
 | `computationEngine.test.ts` | `apps/server/src/services/computationEngine.test.ts` | **Modify** — add balance tests |
 | `immutable.ts` | `apps/server/src/db/immutable.ts` | **Modify** — add `selectByLoanAsOf()` |
 | `balanceService.ts` | `apps/server/src/services/balanceService.ts` | **New** |
-| `balanceService.test.ts` | `apps/server/src/services/balanceService.test.ts` | **New** |
 | `balanceRoutes.ts` | `apps/server/src/routes/balanceRoutes.ts` | **New** |
 | `balance.integration.test.ts` | `apps/server/src/routes/balance.integration.test.ts` | **New** |
 | `app.ts` | `apps/server/src/app.ts` | **Modify** — register route |
@@ -471,11 +481,23 @@ beforeAll(async () => {
 
 ### Agent Model Used
 
-(To be filled by dev agent)
+Claude Opus 4.6 (claude-opus-4-6)
 
 ### Debug Log References
 
+No debug issues encountered. All implementations followed existing codebase patterns. Type-check and full test suite passed on first run.
+
 ### Completion Notes List
+
+- **Task 1:** Created `BalanceResult` interface in `packages/shared/src/types/balance.ts` with all required fields: computedBalance, totalPrincipalPaid, totalInterestPaid, totalAmountPaid, principalRemaining, interestRemaining, installmentsCompleted, installmentsRemaining, entryCount, asOfDate, and derivation chain. Exported from shared index.
+- **Task 2:** Added `computeBalanceFromEntries()` pure function to computation engine. Takes loan params + entries array, returns `BalanceResult`. All arithmetic via `decimal.js`. Counts only PAYROLL entries for installmentsCompleted. `installmentsRemaining` clamped to 0 minimum.
+- **Task 3:** Extended `ledgerDb` accessor with `selectByLoanAsOf(loanId, asOf)` method using `lte(createdAt, asOf)` filter, ordered by `createdAt` ascending. Imported `lte` from drizzle-orm.
+- **Task 4:** Created balance service with `getOutstandingBalance(loanId, asOf?, mdaId?)`. Validates loan existence (404), enforces MDA scoping (403), delegates to pure computation function.
+- **Task 5:** Created `balanceRoutes.ts` with `GET /api/loans/:loanId/balance`. Middleware chain: authenticate → requirePasswordChange → authorise → scopeToMda → auditLog. Parses optional `?asOf=YYYY-MM-DD` with end-of-day UTC for inclusive date filtering. Registered in `app.ts`. Added `BALANCE_COMPUTED` and `INVALID_AS_OF_DATE` vocabulary entries.
+- **Task 6:** Added 12 unit tests for `computeBalanceFromEntries()`: zero entries, partial (30/60), fully paid with last-payment adjustment, historical subset, determinism, 2-decimal format verification, ADJUSTMENT entry handling, installmentsRemaining floor at 0, and all 4 tier configs closing at 0.00.
+- **Task 7:** Added 9 integration tests: current balance with 30 seeded entries, response envelope, historical balance with asOf filter, invalid asOf date (400), MDA officer access (own MDA), MDA officer denied (other MDA's loan → 403), no entries = totalLoan, 404 for non-existent loan, 401 without auth.
+- **Timezone note (PM finding #2):** `asOf` date uses end-of-day UTC (`23:59:59.999`). Entries posted during WAT business hours are correctly included. Documented in route handler comment.
+- **Full regression suite:** 386 tests pass across 35 test files, zero regressions.
 
 ### Commit Summary
 
@@ -483,3 +505,22 @@ beforeAll(async () => {
 <!-- Format: Total commits | Files touched (new/modified) | Revert count | One-sentence narrative -->
 
 ### File List
+
+| File | Change | Description |
+|------|--------|-------------|
+| `packages/shared/src/types/balance.ts` | **New** | `BalanceResult` interface for balance computation results |
+| `packages/shared/src/index.ts` | Modified | Added `BalanceResult` type export |
+| `packages/shared/src/constants/vocabulary.ts` | Modified | Added `BALANCE_COMPUTED` and `INVALID_AS_OF_DATE` entries |
+| `apps/server/src/services/computationEngine.ts` | Modified | Added `computeBalanceFromEntries()` pure function + `LedgerEntryForBalance` interface |
+| `apps/server/src/db/immutable.ts` | Modified | Added `selectByLoanAsOf()` method to `ledgerDb` accessor |
+| `apps/server/src/services/balanceService.ts` | **New** | Balance service with `getOutstandingBalance()` — loan lookup, MDA scoping, delegation to pure computation |
+| `apps/server/src/routes/balanceRoutes.ts` | **New** | `GET /api/loans/:loanId/balance` route with auth, MDA scoping, optional `?asOf` query |
+| `apps/server/src/app.ts` | Modified | Registered `balanceRoutes` at `/api` prefix |
+| `apps/server/src/services/computationEngine.test.ts` | Modified | Added 12 unit tests for `computeBalanceFromEntries()` |
+| `apps/server/src/routes/balance.integration.test.ts` | **New** | 9 integration tests for balance endpoint (current, historical, MDA scoping, errors) |
+| `_bmad-output/implementation-artifacts/sprint-status.yaml` | Modified | Sprint tracking status update for Story 2.5 |
+
+### Change Log
+
+- **2026-02-26:** Story 2.5 implemented — outstanding balance computation and historical reconstruction. Added `BalanceResult` shared type, `computeBalanceFromEntries()` pure function, `selectByLoanAsOf()` ledger accessor, balance service with MDA scoping, `GET /api/loans/:loanId/balance` route with optional `?asOf` query parameter. 12 unit tests + 9 integration tests added. Full suite: 386 tests pass, 0 regressions.
+- **2026-02-26 (Code Review):** Adversarial review found 8 issues (2H, 4M, 2L) — all fixed. H1: Refactored balance service to use `loanService.getLoanById()` with query-level MDA scoping (404 instead of 403, consistent with peer routes). H2: Added input validation to `computeBalanceFromEntries()` matching sibling functions. M1: Replaced manual date parsing with Zod regex schema. M2: Removed misleading `balanceService.test.ts` from Project Structure Notes. M3: Added `isAnomaly` flag to derivation for negative balance detection. M4: Deleted junk `new_read.txt`. L1: Added `sprint-status.yaml` to File List. L2: Moved `LedgerEntryForBalance` to shared types. +5 new tests (3 validation, 2 anomaly). Full suite: 391 tests pass, 0 regressions.

@@ -89,7 +89,7 @@ development_status:
   2-2-immutable-repayment-ledger: done
   2-3-loan-repayment-schedule-computation: done
   2-4-accelerated-repayment-last-payment-adjustment-auto-split: done
-  2-5-outstanding-balance-computation-historical-reconstruction: ready-for-dev
+  2-5-outstanding-balance-computation-historical-reconstruction: done
   2-6-loan-search-record-retrieval: ready-for-dev
   2-7-loan-lifecycle-states-transitions: ready-for-dev
   epic-2-retrospective: optional
