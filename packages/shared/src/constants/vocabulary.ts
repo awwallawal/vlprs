@@ -58,6 +58,11 @@ export const VOCABULARY = {
   INVALID_AS_OF_DATE: 'The provided date is not valid. Use YYYY-MM-DD format.',
   // Search (Story 2.6)
   SEARCH_TOO_SHORT: 'Search term must be at least 2 characters.',
+  // Loan Transitions (Story 2.7)
+  INVALID_TRANSITION: 'This status change is not permitted. Allowed transitions from the current status: {allowed}.',
+  TRANSITION_RECORDED: 'Loan status updated successfully.',
+  LOAN_ALREADY_IN_STATUS: 'The loan is already in the requested status.',
+  TERMINAL_STATUS: 'No further status changes are permitted for this loan.',
 } as const;
 
 export const UI_COPY = {

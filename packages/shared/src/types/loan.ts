@@ -36,6 +36,22 @@ export interface CreateLoanRequest {
   firstDeductionDate: string;
 }
 
+export interface LoanStateTransition {
+  id: string;
+  loanId: string;
+  fromStatus: LoanStatus;
+  toStatus: LoanStatus;
+  transitionedBy: string;
+  transitionedByName: string;
+  reason: string;
+  createdAt: string;
+}
+
+export interface TransitionLoanRequest {
+  toStatus: LoanStatus;
+  reason: string;
+}
+
 export interface LoanSummary {
   loanId: string;
   borrowerName: string;

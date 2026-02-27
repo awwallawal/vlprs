@@ -32,4 +32,13 @@ export async function applyTriggers(db: NodePgDatabase<any>): Promise<void> {
       FOR EACH ROW
       EXECUTE FUNCTION fn_prevent_modification();
   `);
+
+  // Immutability trigger on loan_state_transitions (Story 2.7)
+  await db.execute(sql`
+    DROP TRIGGER IF EXISTS trg_loan_state_transitions_immutable ON loan_state_transitions;
+    CREATE TRIGGER trg_loan_state_transitions_immutable
+      BEFORE UPDATE OR DELETE ON loan_state_transitions
+      FOR EACH ROW
+      EXECUTE FUNCTION fn_prevent_modification();
+  `);
 }
