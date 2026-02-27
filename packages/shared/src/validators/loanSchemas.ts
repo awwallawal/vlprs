@@ -1,5 +1,17 @@
 import { z } from 'zod/v4';
 
+const LOAN_STATUS_VALUES = ['APPLIED', 'APPROVED', 'ACTIVE', 'COMPLETED', 'TRANSFERRED', 'WRITTEN_OFF'] as const;
+
+export const searchLoansQuerySchema = z.object({
+  search: z.string().min(2, 'Search term must be at least 2 characters').optional(),
+  page: z.coerce.number().int().min(1).optional(),
+  pageSize: z.coerce.number().int().min(1).max(100).optional(),
+  status: z.enum(LOAN_STATUS_VALUES).optional(),
+  mdaId: z.uuid().optional(),
+  sortBy: z.enum(['createdAt', 'staffName', 'loanReference', 'status']).optional(),
+  sortOrder: z.enum(['asc', 'desc']).optional(),
+});
+
 export const createLoanSchema = z.object({
   staffId: z.string().min(1, 'Staff ID is required').max(50),
   staffName: z.string().min(1, 'Staff name is required').max(255),

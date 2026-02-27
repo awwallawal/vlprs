@@ -56,6 +56,8 @@ export const VOCABULARY = {
   // Balance (Story 2.5)
   BALANCE_COMPUTED: 'Balance computed from ledger entries.',
   INVALID_AS_OF_DATE: 'The provided date is not valid. Use YYYY-MM-DD format.',
+  // Search (Story 2.6)
+  SEARCH_TOO_SHORT: 'Search term must be at least 2 characters.',
 } as const;
 
 export const UI_COPY = {

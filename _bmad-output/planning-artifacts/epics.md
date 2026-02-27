@@ -3,8 +3,10 @@ stepsCompleted: [1, 2, 3, 4]
 lastStep: 4
 status: 'complete'
 completedAt: '2026-02-14'
-lastEdited: '2026-02-20'
+lastEdited: '2026-02-27'
 editHistory:
+  - date: '2026-02-27'
+    changes: 'Party Mode sessions — 4 new FRs cascaded: Added FR83 (MDA Data Export) to Epic 5 FR coverage + added to Epic 5 description. Added FR84 (MDA Self-Service Reconciliation View) to Epic 11 FR coverage + added to Epic 11 description. Added FR85 (Approved Beneficiary Cross-Reference) to Epic 3 FR coverage + added to Epic 3 description. Added FR86 (Submission Heatmap & Compliance Activity Grid) to Epic 4 FR coverage (AG/Deputy view) and Epic 5 FR coverage (MDA officer self-view) + added to both epic descriptions. Updated FR Coverage Map with FR83-FR86. Added SubmissionHeatmap to UX component references. Updated FR count in Requirements Inventory (82→86). Updated total stories: 62→62 (new FRs attach to existing stories or create minimal new stories during sprint planning). Side Quest SQ-1 documented separately in implementation-artifacts/SQ-1-legacy-cd-analysis-pipeline.md.'
   - date: '2026-02-20'
     changes: 'About page, FR82, CMS & integration readiness: Added About the Programme page (/about) to Story 14.2 with Mission, Vision, Core Values, Programme Leadership (AG, Deputy AG, Director), Programme Governance (Vehicle Loan Committee, AG oversight — absorbs former /scheme/ag-office content), Institutional Story. Added "About" as top-level nav item in Story 14.1. Removed "Role of the AG''s Office" from The Scheme dropdown (content merged into /about). Renamed Story 14.2 to "About & Scheme Information Pages". Updated footer column 1 to include About link. Net page count unchanged (AgOfficePage removed, AboutPage added). Added FR82 (About the Programme page) to FR requirements inventory and FR coverage map. Updated Epic 14 FRs covered: FR76-FR81 → FR76-FR82. Updated Epic 14 description: added About page, content directory pattern (src/content/*.ts), Sanity CMS migration readiness, "About" nav item.'
   - date: '2026-02-20'
@@ -317,6 +319,10 @@ This document provides the complete epic and story breakdown for VLPRS, decompos
 | FR80 | Epic 14 | Legal and compliance pages (privacy/NDPR, disclaimer, accessibility) |
 | FR81 | Epic 14 | Semantic HTML, meta tags, and accessibility on all public pages |
 | FR82 | Epic 14 | About the Programme page (mission, vision, leadership, governance) |
+| FR83 | Epic 5 | MDA Data Export (CSV/PDF download, scoped to assigned MDA) |
+| FR84 | Epic 11 | MDA Self-Service Reconciliation View (uploaded vs migration baseline) |
+| FR85 | Epic 3 | Approved Beneficiary Cross-Reference (deductions vs approved lists) |
+| FR86 | Epic 4 + Epic 5 | Submission Heatmap & Compliance Activity Grid (AG scheme-wide + MDA self-view) |
 
 ## Sprint Sequence (Solo Developer — 2-Week Sprints)
 
@@ -339,7 +345,7 @@ Implementation order derived from PRD Build Sequence (14 steps). Each sprint map
 | 13 | Epic 9: Notifications & Alerts | 3 | Step 14 | Epic 8 (completion notifications) | Operational loop complete |
 | 14 | Epic 13: Staff ID Governance | 2 | Step 15 | Epic 1 (user management foundation) | Staff ID data quality self-sufficiency achieved |
 
-**Total:** 14 sprints, 61 stories, ~28 weeks (7 months)
+**Total:** 14 sprints, 62 stories, ~28 weeks (7 months). FR83-FR86 attach to existing epics — story count impact determined during sprint planning (may add 1-2 small stories or expand existing stories).
 
 ### Critical Path
 
@@ -379,16 +385,16 @@ System maintains an immutable financial record and computes accurate loan schedu
 **FRs covered:** FR1, FR2, FR3, FR4, FR5, FR6, FR10, FR11, FR12, FR13, FR14, FR15
 
 ### Epic 3: Data Migration & Legacy Import
-Department Admin can import legacy MDA spreadsheet data, validate and categorise records, acknowledge variances with non-punitive language, and establish baselines for all 63 MDAs. Column mapping, variance categorisation, side-by-side comparison with mathematical explanation, Migration Dashboard tracking all 63 MDAs. Gets real data into the system.
-**FRs covered:** FR25, FR26, FR27, FR28, FR29, FR30, FR31
+Department Admin can import legacy MDA spreadsheet data, validate and categorise records, acknowledge variances with non-punitive language, and establish baselines for all 63 MDAs. Column mapping, variance categorisation, side-by-side comparison with mathematical explanation, Migration Dashboard tracking all 63 MDAs. Approved beneficiary cross-reference report identifies staff on approved lists but absent from MDA deduction records, and vice versa — compliance audit capability. Gets real data into the system.
+**FRs covered:** FR25, FR26, FR27, FR28, FR29, FR30, FR31, FR85
 
 ### Epic 4: Executive Dashboard & Scheme Visibility
-AG opens VLPRS on her phone and instantly sees scheme-wide status — 4 headline numbers, attention items, compliance status — with drill-down to any MDA or individual loan. Mobile-first hero metrics (<3s on 4G), progressive drill-down, attention items with priority indicators, MDA compliance view. The flagship experience and the system's political shield.
-**FRs covered:** FR32, FR33, FR34, FR35, FR36
+AG opens VLPRS on her phone and instantly sees scheme-wide status — 4 headline numbers, attention items, compliance status — with drill-down to any MDA or individual loan. Mobile-first hero metrics (<3s on 4G), progressive drill-down, attention items with priority indicators, MDA compliance view. Submission Heatmap (GitHub-style activity grid) shows all 63 MDAs' month-by-month submission status with non-punitive colour coding (teal/amber/gray) — sortable by compliance rate for the Deputy AG's pattern detection. The flagship experience and the system's political shield.
+**FRs covered:** FR32, FR33, FR34, FR35, FR36, FR86
 
 ### Epic 5: MDA Monthly Submission
-MDA Reporting Officers can submit monthly deduction data via 8-field CSV upload (with conditional Event Date and Cessation Reason) or manual entry, receive instant confirmation with reference number, and see neutral comparison summaries with variance detail. Atomic upload, duplicate detection, period lock, conditional field validation, neutral language enforcement. The adoption engine.
-**FRs covered:** FR16, FR17, FR18, FR19, FR20, FR21, FR22, FR23, FR24
+MDA Reporting Officers can submit monthly deduction data via 8-field CSV upload (with conditional Event Date and Cessation Reason) or manual entry, receive instant confirmation with reference number, and see neutral comparison summaries with variance detail. Atomic upload, duplicate detection, period lock, conditional field validation, neutral language enforcement. MDA Data Export enables officers to download their MDA's loan portfolio as CSV or branded PDF. MDA officer dashboard includes a Submission Heatmap (self-view) — 12-column-per-year activity grid showing their own submission history (teal/amber/gray). The adoption engine.
+**FRs covered:** FR16, FR17, FR18, FR19, FR20, FR21, FR22, FR23, FR24, FR83, FR86
 
 ### Epic 6: Reporting & PDF Export
 Admins can generate Executive Summary, MDA Compliance, Variance, and Loan Snapshot reports. All reports exportable as branded PDFs with Oyo State Government crest and shareable via one-tap action. Server-side PDF generation, weekly AG reports. System provably correct through reports.
@@ -411,8 +417,8 @@ System computes and maintains staff retirement dates from DOB and appointment da
 **FRs covered:** FR63, FR64, FR65, FR66, FR71
 
 ### Epic 11: Pre-Submission Checkpoint & Mid-Cycle Events
-MDA Reporting Officers review a mandatory checkpoint screen before each submission — surfacing approaching retirements, zero-deduction staff, and unconfirmed mid-cycle events. Mid-cycle events (retirement, death, suspension, transfer, etc.) can be filed at any time via a 5-field form and are reconciled against subsequent CSV submissions. MDA officers can upload historical records for cross-validation against migration baseline.
-**FRs covered:** FR60, FR61, FR62, FR70
+MDA Reporting Officers review a mandatory checkpoint screen before each submission — surfacing approaching retirements, zero-deduction staff, and unconfirmed mid-cycle events. Mid-cycle events (retirement, death, suspension, transfer, etc.) can be filed at any time via a 5-field form and are reconciled against subsequent CSV submissions. MDA officers can upload historical records for cross-validation against migration baseline. Self-service reconciliation view enables MDA officers to compare their uploaded historical records against the migration baseline, seeing match/variance status per loanee and flagging discrepancies for Department Admin review.
+**FRs covered:** FR60, FR61, FR62, FR70, FR84
 
 ### Epic 12: Early Exit Processing
 Department Admin can compute a lump-sum payoff for active loans, record staff commitment and payment, and close loans through the early exit workflow. Computations expire at month-end if unpaid; expired commitments flagged as attention items. Upon confirmed payment, Auto-Stop Certificate is triggered. State machine: Computed → Committed → Paid → Closed (or → Expired).

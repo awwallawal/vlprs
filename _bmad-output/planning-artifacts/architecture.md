@@ -22,6 +22,8 @@ project_name: 'vlprs'
 user_name: 'Awwal'
 date: '2026-02-15'
 editHistory:
+  - date: '2026-02-27'
+    changes: 'Party Mode sessions — FR83-FR86 cascade: Updated FR inventory 82→86 across 17 categories (added Data Export & Self-Service category). Added export endpoint pattern: GET /api/loans/export?format=csv|pdf — reuses searchLoans() query with MDA scoping, outputs to file format. Added loans:export RBAC permission for all 3 MVP roles (scoped by role). Added SubmissionHeatmap data source: GET /api/submissions/heatmap?months=12 — returns per-MDA per-month submission status grid (submitted_at, status classification). Added beneficiary cross-reference service: crossReferenceService — joins approved beneficiary lists against deduction records by Name+MDA. No architectural decisions changed. Side Quest SQ-1 scripts in scripts/legacy-report/ — standalone Node.js, imports computation engine pure functions, no DB dependency, zero collision with main app.'
   - date: '2026-02-21'
     changes: 'Asset inventory & leadership roster: Added public/images/ directory structure (branding/ for Oyo crest in SVG/WebP/PNG, team/ for 6 leadership photos with web-friendly slugs). Source images in docs/team_pics/ mapped to target paths. Leadership order reflects organisational hierarchy (AG → Dir Finance & Accounts → Dir Inspectorate → Dir Treasury → Dir Admin & Supplies → Head PFMU). Updated content/about.ts description to reference 6-leader roster with photos.'
   - date: '2026-02-20'

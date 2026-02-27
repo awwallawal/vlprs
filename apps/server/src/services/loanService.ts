@@ -1,11 +1,14 @@
-import { eq, and, sql } from 'drizzle-orm';
+import { eq, and, or, sql, ilike, count, inArray, asc, desc } from 'drizzle-orm';
+import Decimal from 'decimal.js';
 import { db } from '../db/index';
-import { loans, mdas } from '../db/schema';
+import { loans, mdas, ledgerEntries } from '../db/schema';
 import { generateUuidv7 } from '../lib/uuidv7';
 import { AppError } from '../lib/appError';
 import { withMdaScope } from '../lib/mdaScope';
+import { ledgerDb } from '../db/immutable';
+import { computeBalanceFromEntries, computeRepaymentSchedule } from './computationEngine';
 import { VOCABULARY } from '@vlprs/shared';
-import type { Loan } from '@vlprs/shared';
+import type { Loan, LoanSearchResult, LoanDetail, LoanStatus } from '@vlprs/shared';
 
 // ─── Types ───────────────────────────────────────────────────────────
 
@@ -147,4 +150,242 @@ export async function getLoanById(
   }
 
   return toLoanResponse(row);
+}
+
+// ─── Search & Detail (Story 2.6) ────────────────────────────────────
+
+interface SearchLoansFilters {
+  search?: string;
+  page?: number;
+  pageSize?: number;
+  status?: LoanStatus;
+  mdaId?: string;
+  sortBy?: 'createdAt' | 'staffName' | 'loanReference' | 'status';
+  sortOrder?: 'asc' | 'desc';
+}
+
+interface PaginatedLoans {
+  data: LoanSearchResult[];
+  pagination: {
+    page: number;
+    pageSize: number;
+    totalItems: number;
+    totalPages: number;
+  };
+}
+
+const SORT_COLUMNS = {
+  createdAt: loans.createdAt,
+  staffName: loans.staffName,
+  loanReference: loans.loanReference,
+  status: loans.status,
+} as const;
+
+export async function searchLoans(
+  mdaScope: string | null | undefined,
+  filters: SearchLoansFilters = {},
+): Promise<PaginatedLoans> {
+  const page = filters.page ?? 1;
+  const pageSize = filters.pageSize ?? 25;
+  const offset = (page - 1) * pageSize;
+
+  // Build WHERE conditions
+  const conditions: ReturnType<typeof eq>[] = [];
+
+  // MDA scoping
+  const mdaScopeCondition = withMdaScope(loans.mdaId, mdaScope);
+  if (mdaScopeCondition) conditions.push(mdaScopeCondition);
+
+  // Optional status filter
+  if (filters.status) {
+    conditions.push(eq(loans.status, filters.status));
+  }
+
+  // Optional MDA filter (from query param, separate from scope)
+  if (filters.mdaId) {
+    conditions.push(eq(loans.mdaId, filters.mdaId));
+  }
+
+  // Multi-field search
+  if (filters.search) {
+    const escaped = filters.search.replace(/[%_\\]/g, '\\$&');
+    const term = `%${escaped}%`;
+    conditions.push(
+      or(
+        ilike(loans.staffId, term),
+        ilike(loans.staffName, term),
+        ilike(loans.loanReference, term),
+        ilike(mdas.code, term),
+        ilike(mdas.name, term),
+      )!,
+    );
+  }
+
+  const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
+
+  // Sort direction
+  const sortCol = SORT_COLUMNS[filters.sortBy ?? 'createdAt'];
+  const sortDirection = filters.sortOrder ?? 'desc';
+  const orderExpr = sortDirection === 'asc' ? asc(sortCol) : desc(sortCol);
+
+  // Count query
+  const [{ value: totalItems }] = await db
+    .select({ value: count() })
+    .from(loans)
+    .innerJoin(mdas, eq(loans.mdaId, mdas.id))
+    .where(whereClause);
+
+  // Data query
+  const rows = await db
+    .select({
+      id: loans.id,
+      staffId: loans.staffId,
+      staffName: loans.staffName,
+      mdaName: mdas.name,
+      mdaCode: mdas.code,
+      loanReference: loans.loanReference,
+      status: loans.status,
+      principalAmount: loans.principalAmount,
+      interestRate: loans.interestRate,
+      tenureMonths: loans.tenureMonths,
+    })
+    .from(loans)
+    .innerJoin(mdas, eq(loans.mdaId, mdas.id))
+    .where(whereClause)
+    .orderBy(orderExpr)
+    .limit(pageSize)
+    .offset(offset);
+
+  // Batch balance computation: single aggregation for all loans in page
+  const loanIds = rows.map((r) => r.id);
+  let balanceMap = new Map<string, { totalPaid: string; installments: number }>();
+
+  if (loanIds.length > 0) {
+    const sums = await db
+      .select({
+        loanId: ledgerEntries.loanId,
+        totalPaid: sql<string>`COALESCE(SUM(${ledgerEntries.amount}), '0.00')`,
+        installments: sql<number>`COUNT(*) FILTER (WHERE ${ledgerEntries.entryType} = 'PAYROLL')`,
+      })
+      .from(ledgerEntries)
+      .where(inArray(ledgerEntries.loanId, loanIds))
+      .groupBy(ledgerEntries.loanId);
+
+    balanceMap = new Map(sums.map((s) => [s.loanId, { totalPaid: s.totalPaid, installments: Number(s.installments) }]));
+  }
+
+  // Map to LoanSearchResult with computed balances
+  const data: LoanSearchResult[] = rows.map((row) => {
+    const ledgerAgg = balanceMap.get(row.id);
+    const totalPaid = new Decimal(ledgerAgg?.totalPaid ?? '0.00');
+    const principal = new Decimal(row.principalAmount);
+    const totalInterest = principal.mul(new Decimal(row.interestRate)).div(100);
+    const totalLoan = principal.plus(totalInterest);
+    const outstandingBalance = Decimal.max(new Decimal('0'), totalLoan.minus(totalPaid));
+    const installmentsPaid = ledgerAgg?.installments ?? 0;
+
+    return {
+      loanId: row.id,
+      staffName: row.staffName,
+      staffId: row.staffId,
+      mdaName: row.mdaName,
+      loanReference: row.loanReference,
+      outstandingBalance: outstandingBalance.toFixed(2),
+      status: row.status,
+      installmentsPaid,
+      installmentsRemaining: Math.max(0, row.tenureMonths - installmentsPaid),
+      principalAmount: row.principalAmount,
+      tenureMonths: row.tenureMonths,
+    };
+  });
+
+  return {
+    data,
+    pagination: {
+      page,
+      pageSize,
+      totalItems: Number(totalItems),
+      totalPages: Math.ceil(Number(totalItems) / pageSize),
+    },
+  };
+}
+
+export async function getLoanDetail(
+  loanId: string,
+  mdaScope: string | null | undefined,
+): Promise<LoanDetail> {
+  // Fetch loan + MDA JOIN
+  const [row] = await db
+    .select({
+      loan: loans,
+      mdaName: mdas.name,
+      mdaCode: mdas.code,
+    })
+    .from(loans)
+    .innerJoin(mdas, eq(loans.mdaId, mdas.id))
+    .where(eq(loans.id, loanId));
+
+  if (!row) {
+    throw new AppError(404, 'LOAN_NOT_FOUND', VOCABULARY.LOAN_NOT_FOUND);
+  }
+
+  // MDA scope check — 403 if officer tries to access loan outside their MDA
+  if (mdaScope && row.loan.mdaId !== mdaScope) {
+    throw new AppError(403, 'MDA_ACCESS_DENIED', VOCABULARY.MDA_ACCESS_DENIED);
+  }
+
+  // Fetch all ledger entries for this loan
+  const entries = await ledgerDb.selectByLoan(loanId);
+
+  // Compute full balance from entries (Story 2.5 pure function)
+  const balance = computeBalanceFromEntries(
+    row.loan.principalAmount,
+    row.loan.interestRate,
+    row.loan.tenureMonths,
+    entries.map((e) => ({
+      amount: e.amount,
+      principalComponent: e.principalComponent,
+      interestComponent: e.interestComponent,
+      entryType: e.entryType,
+    })),
+    null,
+  );
+
+  // Compute repayment schedule (Story 2.3 pure function)
+  const schedule = computeRepaymentSchedule({
+    principalAmount: row.loan.principalAmount,
+    interestRate: row.loan.interestRate,
+    tenureMonths: row.loan.tenureMonths,
+    moratoriumMonths: row.loan.moratoriumMonths,
+  });
+
+  // Ledger entry count
+  const [{ value: ledgerEntryCount }] = await db
+    .select({ value: count() })
+    .from(ledgerEntries)
+    .where(eq(ledgerEntries.loanId, loanId));
+
+  return {
+    id: row.loan.id,
+    staffId: row.loan.staffId,
+    staffName: row.loan.staffName,
+    gradeLevel: row.loan.gradeLevel,
+    mdaId: row.loan.mdaId,
+    mdaName: row.mdaName,
+    mdaCode: row.mdaCode,
+    principalAmount: row.loan.principalAmount,
+    interestRate: row.loan.interestRate,
+    tenureMonths: row.loan.tenureMonths,
+    moratoriumMonths: row.loan.moratoriumMonths,
+    monthlyDeductionAmount: row.loan.monthlyDeductionAmount,
+    approvalDate: toDateString(row.loan.approvalDate),
+    firstDeductionDate: toDateString(row.loan.firstDeductionDate),
+    loanReference: row.loan.loanReference,
+    status: row.loan.status,
+    createdAt: row.loan.createdAt.toISOString(),
+    updatedAt: row.loan.updatedAt.toISOString(),
+    balance,
+    schedule,
+    ledgerEntryCount: Number(ledgerEntryCount),
+  };
 }

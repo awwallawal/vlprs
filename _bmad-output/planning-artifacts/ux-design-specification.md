@@ -18,6 +18,8 @@ date: '2026-02-15'
 author: Awwal
 project_name: vlprs
 editHistory:
+  - date: '2026-02-27'
+    changes: 'Party Mode sessions — SubmissionHeatmap component: Added 18th custom component SubmissionHeatmap (FR86) — GitHub-style activity grid for month-by-month MDA submission compliance. Two variants: MDA Officer Self-View (rows=years, cols=12 months, own MDA history) and AG/Deputy AG Scheme-Wide View (rows=63 MDAs, cols=last 12 months, sortable by compliance rate). Non-punitive colour palette: teal (on-time, by 20th), amber (grace period, 21st-25th), light gray (missing/overdue), half-fill (pending current month). No red, no league tables, no rankings. Static HTML version for SQ-1 AG report (historical data coverage 2018-2025). Added to Phase 2 component roadmap. Updated custom component count 17→18. Full accessibility spec: role=grid, aria-labels, keyboard navigation.'
   - date: '2026-02-19'
     changes: 'Elevated ux-design-directions.html to canonical visual reference — client-approved during live demo. All UI implementation MUST match the visual patterns, component styles, colour usage, and layout structures defined in this HTML mockup. Added User Management screen pattern requirements (invite dialog, user table, action menus, profile page). Added CANONICAL VISUAL REFERENCE section with binding implementation directive.'
   - date: '2026-02-15'
@@ -1080,6 +1082,24 @@ Based on **shadcn/ui + Tailwind CSS + Radix UI**, the following foundation compo
 **Variants:** MDA Officer (own MDA records only), Dept Admin/Super Admin (system-wide search + update)
 **Accessibility:** Duplicate alert uses `role="alert"` with clear description. Justification text area uses `aria-required="true"` when proceeding with override. Search results use `role="listbox"` for keyboard navigation.
 
+#### 18. SubmissionHeatmap
+
+**Purpose:** GitHub-style activity grid showing month-by-month MDA submission status. Provides instant visual compliance tracking — the AG sees which MDAs are consistent and which have chronic gaps without reading a single number.
+**Content:** Grid layout where rows = MDAs (or years for self-view), columns = months. Each cell is a coloured square indicating submission timeliness. Summary bar shows aggregate counts (on-time, grace period, missing). Optional sort controls for the scheme-wide view.
+**Actions:** Hover cell → tooltip with: MDA name, month, submission date, status. Click cell → navigate to submission detail (if exists) or flag as attention item (if missing). Sort by: compliance rate, MDA name, MDA code.
+**States:**
+- On Time (teal `--submission-ontime`, ■) — submitted by 20th of the month
+- Grace Period (amber `--submission-grace`, ░) — submitted 21st-25th
+- Missing/Overdue (light gray `--submission-missing`, □) — not submitted or submitted after 25th
+- Pending (half-fill pattern `--submission-pending`, ◧) — current month, period still open
+- No Data (white/empty) — period before MDA's first expected submission
+**Variants:**
+- **MDA Officer Self-View:** Rows = years, columns = 12 months (Jan-Dec). Shows the officer's own MDA submission history. Displayed on MDA officer dashboard. Compact — fits in a card.
+- **AG/Deputy AG Scheme-Wide View:** Rows = 63 MDAs, columns = last 12 months (scrollable). Sortable by compliance rate (worst performers sink to bottom, but no "rankings" or "league tables" — just sort order). Summary bar at top: "36 On Time | 12 Grace Period | 15 Overdue" for current month. Displayed on executive dashboard or as a dedicated compliance view.
+- **Historical View (SQ-1 Report):** Static HTML version generated from legacy CD file analysis — rows = MDAs with files, columns = months 2018-2025. Shows data coverage from archived CDs. Used in AG report deliverable.
+**Accessibility:** Grid uses `role="grid"` with `role="gridcell"` for each cell. Colour-coded status accompanied by `aria-label` text (e.g., "Ministry of Agriculture, March 2025: Submitted on time"). Hover tooltips use `role="tooltip"`. Keyboard navigation: arrow keys between cells, Enter to open detail.
+**Non-Punitive Design:** No red. No "failed" or "delinquent" labels. Missing submissions are the absence of colour (light gray) not the presence of warning. No MDA league tables, rankings, or comparative performance labels. Sort by compliance rate is available but framed as "filter" not "rank."
+
 ### Component Implementation Strategy
 
 **Foundation Components (from shadcn/ui — use as-is or with minor theme customization):**
@@ -1098,7 +1118,7 @@ Based on **shadcn/ui + Tailwind CSS + Radix UI**, the following foundation compo
 - Sidebar — crimson sidebar navigation
 
 **Custom Components (built using shadcn primitives + Tailwind):**
-- All 17 custom components use shadcn Card, Badge, Accordion as base where applicable
+- All 18 custom components use shadcn Card, Badge, Accordion as base where applicable
 - Styled exclusively through Tailwind utilities and CSS custom properties
 - Non-punitive design tokens (`--variance-bg`, `--attention-bg`, etc.) applied consistently
 - Responsive behaviour defined per-component matching breakpoint strategy
@@ -1127,6 +1147,7 @@ Based on **shadcn/ui + Tailwind CSS + Radix UI**, the following foundation compo
 - `MigrationProgressCard` — needed for migration marathon (63 MDAs)
 - `PreSubmissionChecklist` — needed for pre-submission checkpoint (FR60)
 - `RetirementProfileCard` — needed for loan detail temporal profile (FR63-66)
+- `SubmissionHeatmap` — needed for AG dashboard compliance view (FR86) and MDA officer self-view. Two variants: scheme-wide (63 MDAs x 12 months) and self-view (years x 12 months). Static HTML version also used in SQ-1 AG report
 - shadcn foundation: Accordion, Command, Tabs, Dialog, Sheet, Progress
 
 **Phase 3 — Workflow Components (Early Exit, Events, Admin):**

@@ -50,7 +50,7 @@ describe('useLoanSearch', () => {
 
     const data = result.current.data!;
     expect(data.length).toBeGreaterThan(0);
-    expect(data.every((r) => r.borrowerName.toLowerCase().includes('akinwale'))).toBe(true);
+    expect(data.every((r) => r.staffName.toLowerCase().includes('akinwale'))).toBe(true);
   });
 
   it('does not fetch when query is empty', () => {

@@ -1,3 +1,6 @@
+import type { BalanceResult } from './balance';
+import type { RepaymentSchedule } from './computation';
+
 export type LoanStatus = 'APPLIED' | 'APPROVED' | 'ACTIVE' | 'COMPLETED' | 'TRANSFERRED' | 'WRITTEN_OFF';
 
 export interface Loan {
@@ -51,9 +54,42 @@ export interface LoanSummary {
 
 export interface LoanSearchResult {
   loanId: string;
-  borrowerName: string;
+  staffName: string;
   staffId: string | null;
   mdaName: string;
-  loanRef: string;
+  loanReference: string;
   outstandingBalance: string;
+  status: LoanStatus;
+  installmentsPaid: number;
+  installmentsRemaining: number;
+  principalAmount: string;
+  tenureMonths: number;
+}
+
+export interface LoanDetail {
+  /** Full loan master data */
+  id: string;
+  staffId: string;
+  staffName: string;
+  gradeLevel: string;
+  mdaId: string;
+  mdaName: string;
+  mdaCode: string;
+  principalAmount: string;
+  interestRate: string;
+  tenureMonths: number;
+  moratoriumMonths: number;
+  monthlyDeductionAmount: string;
+  approvalDate: string;
+  firstDeductionDate: string;
+  loanReference: string;
+  status: LoanStatus;
+  createdAt: string;
+  updatedAt: string;
+  /** Computed balance from Story 2.5 */
+  balance: BalanceResult;
+  /** Repayment schedule from Story 2.3 */
+  schedule: RepaymentSchedule;
+  /** Total ledger entries for this loan */
+  ledgerEntryCount: number;
 }
