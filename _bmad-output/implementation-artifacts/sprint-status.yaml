@@ -91,7 +91,7 @@ development_status:
   2-4-accelerated-repayment-last-payment-adjustment-auto-split: done
   2-5-outstanding-balance-computation-historical-reconstruction: done
   2-6-loan-search-record-retrieval: done
-  2-7-loan-lifecycle-states-transitions: ready-for-dev
+  2-7-loan-lifecycle-states-transitions: done
   epic-2-retrospective: optional
 
   # Epic 3: Data Migration & Legacy Import

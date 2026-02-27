@@ -5,9 +5,10 @@ import { authorise } from '../middleware/authorise';
 import { scopeToMda } from '../middleware/scopeToMda';
 import { validate } from '../middleware/validate';
 import { auditLog } from '../middleware/auditLog';
-import { ROLES, ALL_ROLES, VOCABULARY, createLoanSchema, searchLoansQuerySchema } from '@vlprs/shared';
+import { ROLES, ALL_ROLES, VOCABULARY, createLoanSchema, searchLoansQuerySchema, transitionLoanSchema } from '@vlprs/shared';
 import { AppError } from '../lib/appError';
 import * as loanService from '../services/loanService';
+import * as loanTransitionService from '../services/loanTransitionService';
 import { param } from '../lib/params';
 
 const router = Router();
@@ -65,6 +66,38 @@ router.get(
   async (req: Request, res: Response) => {
     const detail = await loanService.getLoanDetail(param(req.params.id), req.mdaScope);
     res.json({ success: true, data: detail });
+  },
+);
+
+// POST /api/loans/:loanId/transition — Transition loan status (dept_admin + super_admin only)
+router.post(
+  '/loans/:loanId/transition',
+  ...adminAuth,
+  validate(transitionLoanSchema),
+  auditLog,
+  async (req: Request, res: Response) => {
+    const transition = await loanTransitionService.transitionLoan(
+      req.user!.userId,
+      param(req.params.loanId),
+      req.body.toStatus,
+      req.body.reason,
+      req.mdaScope,
+    );
+    res.status(201).json({ success: true, data: transition });
+  },
+);
+
+// GET /api/loans/:loanId/transitions — Get transition history (all roles, MDA-scoped)
+router.get(
+  '/loans/:loanId/transitions',
+  ...allAuth,
+  auditLog,
+  async (req: Request, res: Response) => {
+    const transitions = await loanTransitionService.getTransitionHistory(
+      param(req.params.loanId),
+      req.mdaScope,
+    );
+    res.json({ success: true, data: transitions });
   },
 );
 

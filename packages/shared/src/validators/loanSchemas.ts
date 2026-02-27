@@ -12,6 +12,11 @@ export const searchLoansQuerySchema = z.object({
   sortOrder: z.enum(['asc', 'desc']).optional(),
 });
 
+export const transitionLoanSchema = z.object({
+  toStatus: z.enum(LOAN_STATUS_VALUES),
+  reason: z.string().min(1, 'Reason is required').max(500),
+});
+
 export const createLoanSchema = z.object({
   staffId: z.string().min(1, 'Staff ID is required').max(50),
   staffName: z.string().min(1, 'Staff name is required').max(255),

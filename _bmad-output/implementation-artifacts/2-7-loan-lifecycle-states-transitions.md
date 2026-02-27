@@ -5,7 +5,7 @@
 
 # Story 2.7: Loan Lifecycle States & Transitions
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -47,25 +47,25 @@ so that the complete history of every loan decision is preserved.
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Schema — `loan_state_transitions` table (AC: 1, 2)
-  - [ ] 1.1 Add to `apps/server/src/db/schema.ts`: `loanStateTransitions` table with columns: `id` (UUIDv7 PK), `loanId` (UUID FK → loans.id, NOT NULL), `fromStatus` (loanStatusEnum, NOT NULL), `toStatus` (loanStatusEnum, NOT NULL), `transitionedBy` (UUID FK → users.id, NOT NULL), `reason` (text, NOT NULL), `createdAt` (timestamptz, NOT NULL, defaultNow). No `updatedAt` — append-only.
-  - [ ] 1.2 Add indexes: `idx_loan_state_transitions_loan_id` on `loanId`, `idx_loan_state_transitions_created_at` on `createdAt`
-  - [ ] 1.3 Add immutability trigger in `apps/server/src/db/triggers.ts`: `trg_loan_state_transitions_immutable` using existing `fn_prevent_modification()` function — same pattern as `trg_audit_log_immutable` and `trg_ledger_entries_immutable`
-  - [ ] 1.4 Generate Drizzle migration: `npx drizzle-kit generate`
+- [x] Task 1: Schema — `loan_state_transitions` table (AC: 1, 2)
+  - [x] 1.1 Add to `apps/server/src/db/schema.ts`: `loanStateTransitions` table with columns: `id` (UUIDv7 PK), `loanId` (UUID FK → loans.id, NOT NULL), `fromStatus` (loanStatusEnum, NOT NULL), `toStatus` (loanStatusEnum, NOT NULL), `transitionedBy` (UUID FK → users.id, NOT NULL), `reason` (text, NOT NULL), `createdAt` (timestamptz, NOT NULL, defaultNow). No `updatedAt` — append-only.
+  - [x] 1.2 Add indexes: `idx_loan_state_transitions_loan_id` on `loanId`, `idx_loan_state_transitions_created_at` on `createdAt`
+  - [x] 1.3 Add immutability trigger in `apps/server/src/db/triggers.ts`: `trg_loan_state_transitions_immutable` using existing `fn_prevent_modification()` function — same pattern as `trg_audit_log_immutable` and `trg_ledger_entries_immutable`
+  - [x] 1.4 Generate Drizzle migration: `npx drizzle-kit generate`
 
-- [ ] Task 2: Valid transitions map & Zod validator (AC: 2)
-  - [ ] 2.1 Add to `packages/shared/src/constants/loanTransitions.ts`: `VALID_TRANSITIONS` constant — `Record<LoanStatus, LoanStatus[]>` mapping each status to its allowed target statuses; `TERMINAL_STATUSES` set; `isValidTransition(from, to)` pure function
-  - [ ] 2.2 Add to `packages/shared/src/validators/loanSchemas.ts`: `transitionLoanSchema` — `z.object({ toStatus: z.enum([...loanStatusValues]), reason: z.string().min(1, 'Reason is required').max(500) })`
-  - [ ] 2.3 Export from `packages/shared/src/index.ts` barrel
+- [x] Task 2: Valid transitions map & Zod validator (AC: 2)
+  - [x] 2.1 Add to `packages/shared/src/constants/loanTransitions.ts`: `VALID_TRANSITIONS` constant — `Record<LoanStatus, LoanStatus[]>` mapping each status to its allowed target statuses; `TERMINAL_STATUSES` set; `isValidTransition(from, to)` pure function
+  - [x] 2.2 Add to `packages/shared/src/validators/loanSchemas.ts`: `transitionLoanSchema` — `z.object({ toStatus: z.enum([...loanStatusValues]), reason: z.string().min(1, 'Reason is required').max(500) })`
+  - [x] 2.3 Export from `packages/shared/src/index.ts` barrel
 
-- [ ] Task 3: Shared types & vocabulary (AC: 1, 3)
-  - [ ] 3.1 Add to `packages/shared/src/types/loan.ts`: `LoanStateTransition` interface (`id`, `loanId`, `fromStatus`, `toStatus`, `transitionedBy`, `transitionedByName`, `reason`, `createdAt` — all strings); `TransitionLoanRequest` interface (`toStatus: LoanStatus`, `reason: string`)
-  - [ ] 3.2 Add to `packages/shared/src/constants/vocabulary.ts`: `INVALID_TRANSITION: 'This status change is not permitted. Allowed transitions from the current status: {allowed}.'`, `TRANSITION_RECORDED: 'Loan status updated successfully.'`, `LOAN_ALREADY_IN_STATUS: 'The loan is already in the requested status.'`, `TERMINAL_STATUS: 'No further status changes are permitted for this loan.'`
-  - [ ] 3.3 Export new types from barrel
+- [x] Task 3: Shared types & vocabulary (AC: 1, 3)
+  - [x] 3.1 Add to `packages/shared/src/types/loan.ts`: `LoanStateTransition` interface (`id`, `loanId`, `fromStatus`, `toStatus`, `transitionedBy`, `transitionedByName`, `reason`, `createdAt` — all strings); `TransitionLoanRequest` interface (`toStatus: LoanStatus`, `reason: string`)
+  - [x] 3.2 Add to `packages/shared/src/constants/vocabulary.ts`: `INVALID_TRANSITION: 'This status change is not permitted. Allowed transitions from the current status: {allowed}.'`, `TRANSITION_RECORDED: 'Loan status updated successfully.'`, `LOAN_ALREADY_IN_STATUS: 'The loan is already in the requested status.'`, `TERMINAL_STATUS: 'No further status changes are permitted for this loan.'`
+  - [x] 3.3 Export new types from barrel
 
-- [ ] Task 4: Transition service (AC: 1, 2, 3)
-  - [ ] 4.1 Create `apps/server/src/services/loanTransitionService.ts`
-  - [ ] 4.2 Implement `transitionLoan(userId, loanId, toStatus, reason, mdaScope)`:
+- [x] Task 4: Transition service (AC: 1, 2, 3)
+  - [x] 4.1 Create `apps/server/src/services/loanTransitionService.ts`
+  - [x] 4.2 Implement `transitionLoan(userId, loanId, toStatus, reason, mdaScope)`:
     - Wrap in `db.transaction(async (tx) => { ... })`
     - SELECT loan WHERE id = loanId (with MDA scope check)
     - Throw `AppError(404)` if not found, `AppError(403)` if MDA scope violation
@@ -73,34 +73,45 @@ so that the complete history of every loan decision is preserved.
     - UPDATE loans SET status = toStatus, updatedAt = now()
     - INSERT INTO loan_state_transitions (loanId, fromStatus, toStatus, transitionedBy, reason)
     - Return the created transition record
-  - [ ] 4.3 Implement `getTransitionHistory(loanId, mdaScope)`:
+  - [x] 4.3 Implement `getTransitionHistory(loanId, mdaScope)`:
     - SELECT loan to verify exists + MDA scope check
     - SELECT transitions JOIN users (for transitionedByName = firstName + ' ' + lastName) WHERE loanId, ORDER BY createdAt ASC
     - Return array of `LoanStateTransition`
 
-- [ ] Task 5: Routes & app registration (AC: 1, 2, 3)
-  - [ ] 5.1 Add to existing `apps/server/src/routes/loanRoutes.ts` (do NOT create separate file — transitions are sub-resources of loans):
+- [x] Task 5: Routes & app registration (AC: 1, 2, 3)
+  - [x] 5.1 Add to existing `apps/server/src/routes/loanRoutes.ts` (do NOT create separate file — transitions are sub-resources of loans):
     - `POST /loans/:loanId/transition` — middleware: `[authenticate, requirePasswordChange, authorise(SUPER_ADMIN, DEPT_ADMIN), scopeToMda, validate(transitionLoanSchema), auditLog]` → call `transitionLoan()` → respond `{ success: true, data: transition }` with status 201
     - `GET /loans/:loanId/transitions` — middleware: `[authenticate, requirePasswordChange, authorise(SUPER_ADMIN, DEPT_ADMIN, MDA_OFFICER), scopeToMda, auditLog]` → call `getTransitionHistory()` → respond `{ success: true, data: transitions }`
-  - [ ] 5.2 Note: `loanRoutes` is already registered in `app.ts` (from Story 2.6) — no app.ts change needed
+  - [x] 5.2 Note: `loanRoutes` is already registered in `app.ts` (from Story 2.6) — no app.ts change needed
 
-- [ ] Task 6: Integration tests (AC: 1, 2, 3)
-  - [ ] 6.1 Create `apps/server/src/services/loanTransitionService.integration.test.ts`
-  - [ ] 6.2 Seed: 1 MDA, 1 super_admin user, 1 dept_admin user, 1 mda_officer user, 1 loan in APPLIED status
-  - [ ] 6.3 Test valid transition chain: APPLIED → APPROVED → ACTIVE → COMPLETED — verify each transition creates a record, loan status updated
-  - [ ] 6.4 Test invalid transitions: APPLIED → ACTIVE (skip), COMPLETED → APPLIED (terminal), ACTIVE → ACTIVE (same-status) — verify 400 response with descriptive message
-  - [ ] 6.5 Test MDA scoping: mda_officer calls GET transitions for loan in their MDA → 200; for loan outside MDA → 403
-  - [ ] 6.6 Test mda_officer cannot POST transition (only SUPER_ADMIN / DEPT_ADMIN) → 403
-  - [ ] 6.7 Test transition history returns chronological order with user name
-  - [ ] 6.8 Test atomicity: if transition INSERT fails somehow, loan status should NOT be updated (transaction rollback)
-  - [ ] 6.9 Test immutability: attempt UPDATE/DELETE on loan_state_transitions → rejected by DB trigger
-  - [ ] 6.10 Test 404: transition for non-existent loanId → 404
+- [x] Task 6: Integration tests (AC: 1, 2, 3)
+  - [x] 6.1 Create `apps/server/src/services/loanTransitionService.integration.test.ts`
+  - [x] 6.2 Seed: 1 MDA, 1 super_admin user, 1 dept_admin user, 1 mda_officer user, 1 loan in APPLIED status
+  - [x] 6.3 Test valid transition chain: APPLIED → APPROVED → ACTIVE → COMPLETED — verify each transition creates a record, loan status updated
+  - [x] 6.4 Test invalid transitions: APPLIED → ACTIVE (skip), COMPLETED → APPLIED (terminal), ACTIVE → ACTIVE (same-status) — verify 400 response with descriptive message
+  - [x] 6.5 Test MDA scoping: mda_officer calls GET transitions for loan in their MDA → 200; for loan outside MDA → 403
+  - [x] 6.6 Test mda_officer cannot POST transition (only SUPER_ADMIN / DEPT_ADMIN) → 403
+  - [x] 6.7 Test transition history returns chronological order with user name
+  - [x] 6.8 Test atomicity: if transition INSERT fails somehow, loan status should NOT be updated (transaction rollback)
+  - [x] 6.9 Test immutability: attempt UPDATE/DELETE on loan_state_transitions → rejected by DB trigger
+  - [x] 6.10 Test 404: transition for non-existent loanId → 404
 
-- [ ] Task 7: Unit tests for state machine (AC: 2)
-  - [ ] 7.1 Create `packages/shared/src/constants/loanTransitions.test.ts`
-  - [ ] 7.2 Test `isValidTransition()` for every (from, to) combination: 6×6 = 36 pairs — verify true for valid, false for invalid
-  - [ ] 7.3 Test terminal statuses: COMPLETED, TRANSFERRED, WRITTEN_OFF have zero valid outgoing transitions
-  - [ ] 7.4 Test self-transitions: every status → same status returns false
+- [x] Task 7: Unit tests for state machine (AC: 2)
+  - [x] 7.1 Create `packages/shared/src/constants/loanTransitions.test.ts`
+  - [x] 7.2 Test `isValidTransition()` for every (from, to) combination: 6×6 = 36 pairs — verify true for valid, false for invalid
+  - [x] 7.3 Test terminal statuses: COMPLETED, TRANSFERRED, WRITTEN_OFF have zero valid outgoing transitions
+  - [x] 7.4 Test self-transitions: every status → same status returns false
+
+### Review Follow-ups (AI) — 2026-02-27
+
+- [x] [AI-Review][HIGH] Add `SELECT FOR UPDATE` row lock in `transitionLoan()` to prevent concurrent race conditions [loanTransitionService.ts:24]
+- [x] [AI-Review][MEDIUM] Strengthen `LoanStateTransition.fromStatus/toStatus` typing from `string` to `LoanStatus` [loan.ts:41-42]
+- [x] [AI-Review][MEDIUM] Add integration test for `reason` max length boundary (501 chars → 400) [loanTransitionService.integration.test.ts]
+- [x] [AI-Review][MEDIUM] Add drizzle meta files (`_journal.json`, `0003_snapshot.json`) to story File List [story file]
+- [x] [AI-Review][LOW] Assert `loanId` in happy-path transition response test [loanTransitionService.integration.test.ts:128]
+- [x] [AI-Review][LOW] Optimize user name fetch — concurrent with loan SELECT instead of sequential post-insert [loanTransitionService.ts:65-68]
+- [ ] [AI-Review][LOW] Unit test redundancy: terminal-status describe block (18 tests) overlaps 36-pair matrix — consider consolidating
+- [ ] [AI-Review][LOW] `LOAN_STATUS_VALUES` in `loanSchemas.ts` is a hardcoded duplicate of LoanStatus enum — consider deriving from single source (pre-existing from prior stories)
 
 ## Dev Notes
 
@@ -315,6 +326,8 @@ packages/shared/src/index.ts              (add exports)
 
 ### Agent Model Used
 
+Claude Opus 4.6
+
 ### Commit Summary
 
 ```
@@ -334,6 +347,39 @@ Implements: FR14, FR15
 
 ### Debug Log References
 
+- Shared package `@vlprs/shared` needed `tsc` rebuild after adding new exports — `dist/` is the resolved entry point, not source TS files.
+
 ### Completion Notes List
 
+- Task 1: Added `loanStateTransitions` table to schema.ts with UUIDv7 PK, FK references to loans and users, indexes on loanId and createdAt. Immutability trigger `trg_loan_state_transitions_immutable` reuses existing `fn_prevent_modification()`. Migration 0003 generated and applied.
+- Task 2: Created `loanTransitions.ts` with `VALID_TRANSITIONS` map, `TERMINAL_STATUSES` set, and `isValidTransition()` pure function. Added `transitionLoanSchema` Zod validator.
+- Task 3: Added `LoanStateTransition` and `TransitionLoanRequest` interfaces. Added 4 vocabulary constants for transition error messages. All exported from barrel.
+- Task 4: Created `loanTransitionService.ts` with `transitionLoan()` (atomic transaction: loan status update + transition record) and `getTransitionHistory()` (JOIN users for name, MDA scoped, chronological order). Distinguishes 404 vs 403 for MDA-scoped queries.
+- Task 5: Added POST `/loans/:loanId/transition` (adminAuth + validate + auditLog) and GET `/loans/:loanId/transitions` (allAuth + auditLog) to existing loanRoutes.ts. No app.ts changes needed.
+- Task 6: 23 integration tests covering: full lifecycle chain (APPLIED→APPROVED→ACTIVE→COMPLETED), invalid transitions (skip, terminal, same-status), MDA scoping (officer 200/403), role enforcement (officer 403, unauth 401), chronological history with user names, atomicity verification, immutability trigger rejection (UPDATE/DELETE), 404 for non-existent loan, input validation (missing/empty reason, invalid status).
+- Task 7: 71 unit tests covering: exhaustive 36-pair isValidTransition matrix, VALID_TRANSITIONS structure, TERMINAL_STATUSES membership, self-transitions for all statuses.
+
+### Change Log
+
+- 2026-02-27: Story 2.7 implemented — loan lifecycle state machine and transition audit trail (FR14, FR15)
+- 2026-02-27: Code review — 8 findings (1H, 3M, 4L). Fixed: FOR UPDATE lock, LoanStateTransition type safety, reason max-length test, File List completeness, loanId assertion, user name query optimization. Deferred: unit test redundancy consolidation, LOAN_STATUS_VALUES deduplication.
+
 ### File List
+
+**New files:**
+- packages/shared/src/constants/loanTransitions.ts
+- packages/shared/src/constants/loanTransitions.test.ts
+- apps/server/src/services/loanTransitionService.ts
+- apps/server/src/services/loanTransitionService.integration.test.ts
+- apps/server/drizzle/0003_luxuriant_carlie_cooper.sql
+- apps/server/drizzle/meta/0003_snapshot.json
+
+**Modified files:**
+- apps/server/src/db/schema.ts (added loanStateTransitions table)
+- apps/server/src/db/triggers.ts (added trg_loan_state_transitions_immutable)
+- apps/server/src/routes/loanRoutes.ts (added POST transition + GET transitions endpoints)
+- packages/shared/src/types/loan.ts (added LoanStateTransition, TransitionLoanRequest interfaces)
+- packages/shared/src/validators/loanSchemas.ts (added transitionLoanSchema)
+- packages/shared/src/constants/vocabulary.ts (added 4 transition vocabulary constants)
+- packages/shared/src/index.ts (added new exports)
+- apps/server/drizzle/meta/_journal.json (updated by drizzle-kit generate)

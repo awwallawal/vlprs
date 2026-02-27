@@ -126,6 +126,26 @@ export const ledgerEntries = pgTable(
   ],
 );
 
+// ─── Loan State Transitions (Story 2.7) ────────────────────────────
+// Append-only, immutable transition audit trail. No updatedAt, no deletedAt.
+// Immutability enforced by DB trigger (fn_prevent_modification).
+export const loanStateTransitions = pgTable(
+  'loan_state_transitions',
+  {
+    id: uuid('id').primaryKey().$defaultFn(generateUuidv7),
+    loanId: uuid('loan_id').notNull().references(() => loans.id),
+    fromStatus: loanStatusEnum('from_status').notNull(),
+    toStatus: loanStatusEnum('to_status').notNull(),
+    transitionedBy: uuid('transitioned_by').notNull().references(() => users.id),
+    reason: text('reason').notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    index('idx_loan_state_transitions_loan_id').on(table.loanId),
+    index('idx_loan_state_transitions_created_at').on(table.createdAt),
+  ],
+);
+
 // ─── Users ──────────────────────────────────────────────────────────
 export const users = pgTable(
   'users',
