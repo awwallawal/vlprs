@@ -146,7 +146,7 @@ export function OperationsHubPage() {
               >
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-medium text-text-primary truncate">
-                    {result.borrowerName}
+                    {result.staffName}
                   </p>
                   <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1">
                     {result.staffId && (
@@ -156,7 +156,7 @@ export function OperationsHubPage() {
                     )}
                     <span className="text-xs text-text-secondary">{result.mdaName}</span>
                     <span className="text-xs text-text-muted font-mono">
-                      {result.loanRef}
+                      {result.loanReference}
                     </span>
                   </div>
                 </div>

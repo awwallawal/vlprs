@@ -34,9 +34,9 @@ export function useLoanSearch(query: string) {
       const q = query.toLowerCase();
       return MOCK_LOAN_SEARCH_RESULTS.filter(
         (r) =>
-          r.borrowerName.toLowerCase().includes(q) ||
+          r.staffName.toLowerCase().includes(q) ||
           r.staffId?.toLowerCase().includes(q) ||
-          r.loanRef.toLowerCase().includes(q),
+          r.loanReference.toLowerCase().includes(q),
       );
     },
     enabled: query.length > 0,
