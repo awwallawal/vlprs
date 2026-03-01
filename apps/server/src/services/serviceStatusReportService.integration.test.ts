@@ -20,7 +20,6 @@ let officerUserId: string;
 const testPassword = 'SecurePass1';
 
 // Stable dates for predictable test results
-const today = new Date('2026-03-01');
 const sixMonthsAgo = new Date('2025-09-01');
 const twelveMonthsAgo = new Date('2025-03-01');
 const twoMonthsAgo = new Date('2026-01-01');
