@@ -39,6 +39,12 @@ export const createLoanSchema = z.object({
   dateOfFirstAppointment: z.iso.date().optional(),
 });
 
+export const createServiceExtensionSchema = z.object({
+  newRetirementDate: z.iso.date('Extension date must be a valid ISO date (YYYY-MM-DD)'),
+  approvingAuthorityReference: z.string().min(1, 'Approving authority reference is required').max(100),
+  notes: z.string().min(1, 'Notes are required').max(1000),
+});
+
 export const updateTemporalProfileSchema = z.object({
   dateOfBirth: z.iso.date().optional(),
   dateOfFirstAppointment: z.iso.date().optional(),

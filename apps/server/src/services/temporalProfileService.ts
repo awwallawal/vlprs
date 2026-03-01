@@ -1,6 +1,6 @@
-import { eq, and, sql } from 'drizzle-orm';
+import { eq, and, sql, desc } from 'drizzle-orm';
 import { db } from '../db/index';
-import { loans, temporalCorrections, users } from '../db/schema';
+import { loans, temporalCorrections, serviceExtensions, users } from '../db/schema';
 import { withMdaScope } from '../lib/mdaScope';
 import { AppError } from '../lib/appError';
 import { computeRetirementDate, computeRemainingServiceMonths } from './computationEngine';
@@ -8,14 +8,61 @@ import { VOCABULARY } from '@vlprs/shared';
 import type { TemporalProfile, TemporalCorrection, LoanDetail } from '@vlprs/shared';
 import { toDateString } from '../lib/dateUtils';
 
+// ─── Extension data for temporal profile enrichment ─────────────────
+
+export interface ExtensionData {
+  hasServiceExtension: boolean;
+  originalComputedRetirementDate: string | null;
+  latestExtensionReference: string | null;
+}
+
+export async function getExtensionDataForLoan(loanId: string): Promise<ExtensionData> {
+  // Fetch only the first (oldest) and latest extension — avoids loading entire chain
+  const [firstRows, latestRows] = await Promise.all([
+    db.select({ originalComputedDate: serviceExtensions.originalComputedDate })
+      .from(serviceExtensions)
+      .where(eq(serviceExtensions.loanId, loanId))
+      .orderBy(serviceExtensions.createdAt)
+      .limit(1),
+    db.select({ approvingAuthorityReference: serviceExtensions.approvingAuthorityReference })
+      .from(serviceExtensions)
+      .where(eq(serviceExtensions.loanId, loanId))
+      .orderBy(desc(serviceExtensions.createdAt))
+      .limit(1),
+  ]);
+
+  if (firstRows.length > 0) {
+    return {
+      hasServiceExtension: true,
+      originalComputedRetirementDate: toDateString(firstRows[0].originalComputedDate),
+      latestExtensionReference: latestRows[0].approvingAuthorityReference,
+    };
+  }
+
+  return {
+    hasServiceExtension: false,
+    originalComputedRetirementDate: null,
+    latestExtensionReference: null,
+  };
+}
+
 // ─── buildTemporalProfile ───────────────────────────────────────────
 
-export function buildTemporalProfile(loan: {
-  dateOfBirth: Date | null;
-  dateOfFirstAppointment: Date | null;
-  computedRetirementDate: Date | null;
-}): TemporalProfile {
+export function buildTemporalProfile(
+  loan: {
+    dateOfBirth: Date | null;
+    dateOfFirstAppointment: Date | null;
+    computedRetirementDate: Date | null;
+  },
+  extensionData?: ExtensionData,
+): TemporalProfile {
   const { dateOfBirth, dateOfFirstAppointment, computedRetirementDate } = loan;
+
+  const ext = extensionData ?? {
+    hasServiceExtension: false,
+    originalComputedRetirementDate: null,
+    latestExtensionReference: null,
+  };
 
   if (dateOfBirth && dateOfFirstAppointment && computedRetirementDate) {
     const { computationMethod } = computeRetirementDate(dateOfBirth, dateOfFirstAppointment);
@@ -29,6 +76,9 @@ export function buildTemporalProfile(loan: {
       profileStatus: 'complete',
       remainingServiceMonths,
       profileIncompleteReason: null,
+      hasServiceExtension: ext.hasServiceExtension,
+      originalComputedRetirementDate: ext.originalComputedRetirementDate,
+      latestExtensionReference: ext.latestExtensionReference,
     };
   }
 
@@ -40,6 +90,9 @@ export function buildTemporalProfile(loan: {
     profileStatus: 'incomplete',
     remainingServiceMonths: null,
     profileIncompleteReason: VOCABULARY.TEMPORAL_PROFILE_INCOMPLETE,
+    hasServiceExtension: ext.hasServiceExtension,
+    originalComputedRetirementDate: ext.originalComputedRetirementDate,
+    latestExtensionReference: ext.latestExtensionReference,
   };
 }
 
@@ -138,20 +191,34 @@ export async function updateTemporalProfile(
     if (updates.dateOfFirstAppointment) updateFields.dateOfFirstAppointment = new Date(updates.dateOfFirstAppointment);
 
     // 5. Recompute retirement date
+    let formulaRetirementDate: Date | null = null;
     if (effectiveDob && effectiveAppt) {
       const { retirementDate } = computeRetirementDate(effectiveDob, effectiveAppt);
+      formulaRetirementDate = retirementDate;
       updateFields.computedRetirementDate = retirementDate;
     } else {
       updateFields.computedRetirementDate = null;
     }
 
+    // 5b. Check for active service extension — extension overrides formula date
+    const [latestExtension] = await tx.select()
+      .from(serviceExtensions)
+      .where(eq(serviceExtensions.loanId, loanId))
+      .orderBy(desc(serviceExtensions.createdAt))
+      .limit(1);
+
+    if (latestExtension) {
+      // Extension overrides formula — keep extension date as the effective retirement date
+      updateFields.computedRetirementDate = latestExtension.newRetirementDate;
+    }
+
     await tx.update(loans).set(updateFields).where(eq(loans.id, loanId));
 
-    // 6. Insert correction records (with newRetirementDate now known)
+    // 6. Insert correction records (newRetirementDate captures formula date for audit accuracy)
     for (const c of corrections) {
       await tx.insert(temporalCorrections).values({
         ...c,
-        newRetirementDate: updateFields.computedRetirementDate ?? null,
+        newRetirementDate: formulaRetirementDate,
       });
     }
   });

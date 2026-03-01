@@ -7,7 +7,7 @@ import { AppError } from '../lib/appError';
 import { withMdaScope } from '../lib/mdaScope';
 import { ledgerDb } from '../db/immutable';
 import { computeBalanceFromEntries, computeRepaymentSchedule, computeRetirementDate } from './computationEngine';
-import { buildTemporalProfile } from './temporalProfileService';
+import { buildTemporalProfile, getExtensionDataForLoan } from './temporalProfileService';
 import { VOCABULARY } from '@vlprs/shared';
 import type { Loan, LoanSearchResult, LoanDetail, LoanStatus } from '@vlprs/shared';
 import { toDateString } from '../lib/dateUtils';
@@ -381,11 +381,12 @@ export async function getLoanDetail(
     moratoriumMonths: row.loan.moratoriumMonths,
   });
 
-  // Ledger entry count
-  const [{ value: ledgerEntryCount }] = await db
-    .select({ value: count() })
-    .from(ledgerEntries)
-    .where(eq(ledgerEntries.loanId, loanId));
+  // Ledger entry count + extension data (concurrent)
+  const [ledgerCountResult, extensionData] = await Promise.all([
+    db.select({ value: count() }).from(ledgerEntries).where(eq(ledgerEntries.loanId, loanId)),
+    getExtensionDataForLoan(loanId),
+  ]);
+  const [{ value: ledgerEntryCount }] = ledgerCountResult;
 
   return {
     id: row.loan.id,
@@ -409,6 +410,6 @@ export async function getLoanDetail(
     balance,
     schedule,
     ledgerEntryCount: Number(ledgerEntryCount),
-    temporalProfile: buildTemporalProfile(row.loan),
+    temporalProfile: buildTemporalProfile(row.loan, extensionData),
   };
 }

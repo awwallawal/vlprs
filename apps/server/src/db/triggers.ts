@@ -50,4 +50,13 @@ export async function applyTriggers(db: NodePgDatabase<any>): Promise<void> {
       FOR EACH ROW
       EXECUTE FUNCTION fn_prevent_modification();
   `);
+
+  // Immutability trigger on service_extensions (Story 10.2)
+  await db.execute(sql`
+    DROP TRIGGER IF EXISTS trg_service_extensions_immutable ON service_extensions;
+    CREATE TRIGGER trg_service_extensions_immutable
+      BEFORE UPDATE OR DELETE ON service_extensions
+      FOR EACH ROW
+      EXECUTE FUNCTION fn_prevent_modification();
+  `);
 }

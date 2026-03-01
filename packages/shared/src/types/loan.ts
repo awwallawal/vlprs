@@ -93,6 +93,9 @@ export interface TemporalProfile {
   profileStatus: 'complete' | 'incomplete';
   remainingServiceMonths: number | null;
   profileIncompleteReason: string | null;
+  hasServiceExtension: boolean;
+  originalComputedRetirementDate: string | null;
+  latestExtensionReference: string | null;
 }
 
 export interface TemporalCorrection {
@@ -107,6 +110,24 @@ export interface TemporalCorrection {
   correctedByName: string;
   reason: string;
   createdAt: string;
+}
+
+export interface ServiceExtension {
+  id: string;
+  loanId: string;
+  originalComputedDate: string;
+  newRetirementDate: string;
+  approvingAuthorityReference: string;
+  notes: string;
+  createdBy: string;
+  createdByName: string;
+  createdAt: string;
+}
+
+export interface CreateServiceExtensionRequest {
+  newRetirementDate: string;
+  approvingAuthorityReference: string;
+  notes: string;
 }
 
 export interface UpdateTemporalProfileRequest {

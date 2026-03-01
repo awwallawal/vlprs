@@ -128,6 +128,9 @@ describe('GET /api/loans/:id — temporal profile (incomplete)', () => {
       profileStatus: 'incomplete',
       remainingServiceMonths: null,
       profileIncompleteReason: 'Profile Incomplete — DOB/appointment date required',
+      hasServiceExtension: false,
+      originalComputedRetirementDate: null,
+      latestExtensionReference: null,
     });
   });
 });
