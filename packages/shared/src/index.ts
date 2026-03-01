@@ -7,6 +7,7 @@ export { createUserSchema, updateUserSchema, deactivateUserSchema, deleteUserSch
 export { createLoanSchema, searchLoansQuerySchema, transitionLoanSchema, updateTemporalProfileSchema, createServiceExtensionSchema } from './validators/loanSchemas.js';
 export { createLedgerEntrySchema, type CreateLedgerEntryInput } from './validators/ledgerSchemas.js';
 export { mdaQuerySchema } from './validators/mdaSchemas.js';
+export { serviceStatusVerificationQuerySchema } from './validators/reportSchemas.js';
 
 // Types
 export type { ApiResponse, ApiError, ApiResult } from './types/api.js';
@@ -20,6 +21,7 @@ export type { ExceptionPriority, ExceptionCategory, ExceptionItem } from './type
 export type { LedgerEntryType, LedgerEntry } from './types/ledger.js';
 export type { ComputationParams, ScheduleRow, RepaymentSchedule, AutoSplitResult } from './types/computation.js';
 export type { BalanceResult, LedgerEntryForBalance } from './types/balance.js';
+export type { ServiceStatusVerificationRow, ServiceStatusVerificationSummary, ServiceStatusVerificationReport } from './types/report.js';
 
 // Constants
 export { ROLES, ALL_ROLES, ROLE_HIERARCHY, getManageableRoles, canManageRole, type Role } from './constants/roles.js';

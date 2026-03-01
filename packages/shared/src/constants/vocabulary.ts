@@ -74,6 +74,8 @@ export const VOCABULARY = {
   SERVICE_EXTENSION_INCOMPLETE_PROFILE: 'Service extension cannot be recorded — temporal profile is incomplete. Please provide date of birth and appointment date first.',
   SERVICE_EXTENSION_DATE_NOT_AFTER: 'Extension date must be after the current retirement date ({currentDate}).',
   SERVICE_EXTENSION_MAX_EXCEEDED: 'Extension exceeds maximum allowed period. Please verify the extension date.',
+  // Reports (Story 10.4)
+  NO_POST_RETIREMENT_ACTIVITY: 'No post-retirement activity detected',
 } as const;
 
 export const UI_COPY = {

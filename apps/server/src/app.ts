@@ -10,6 +10,7 @@ import loanRoutes from './routes/loanRoutes';
 import ledgerRoutes from './routes/ledgerRoutes';
 import scheduleRoutes from './routes/scheduleRoutes';
 import balanceRoutes from './routes/balanceRoutes';
+import reportRoutes from './routes/reportRoutes';
 import { AppError } from './lib/appError';
 import { VOCABULARY } from '@vlprs/shared';
 import { requestLogger } from './middleware/requestLogger';
@@ -47,6 +48,7 @@ app.use('/api', loanRoutes);
 app.use('/api', ledgerRoutes);
 app.use('/api', scheduleRoutes);
 app.use('/api', balanceRoutes);
+app.use('/api', reportRoutes);
 
 // 404 handler
 app.use((_req: Request, res: Response) => {
