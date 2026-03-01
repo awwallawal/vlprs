@@ -63,6 +63,12 @@ export const VOCABULARY = {
   TRANSITION_RECORDED: 'Loan status updated successfully.',
   LOAN_ALREADY_IN_STATUS: 'The loan is already in the requested status.',
   TERMINAL_STATUS: 'No further status changes are permitted for this loan.',
+  // Temporal Profile (Story 10.1)
+  TEMPORAL_PROFILE_INCOMPLETE: 'Profile Incomplete — DOB/appointment date required',
+  TEMPORAL_PROFILE_UPDATED: 'Temporal profile updated and retirement date recomputed.',
+  TEMPORAL_DOB_FUTURE: 'Date of birth cannot be in the future.',
+  TEMPORAL_APPT_BEFORE_DOB: 'Date of first appointment cannot precede date of birth.',
+  TEMPORAL_CORRECTION_RECORDED: 'Date correction recorded with full audit trail.',
 } as const;
 
 export const UI_COPY = {

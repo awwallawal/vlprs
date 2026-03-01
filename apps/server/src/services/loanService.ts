@@ -6,9 +6,11 @@ import { generateUuidv7 } from '../lib/uuidv7';
 import { AppError } from '../lib/appError';
 import { withMdaScope } from '../lib/mdaScope';
 import { ledgerDb } from '../db/immutable';
-import { computeBalanceFromEntries, computeRepaymentSchedule } from './computationEngine';
+import { computeBalanceFromEntries, computeRepaymentSchedule, computeRetirementDate } from './computationEngine';
+import { buildTemporalProfile } from './temporalProfileService';
 import { VOCABULARY } from '@vlprs/shared';
 import type { Loan, LoanSearchResult, LoanDetail, LoanStatus } from '@vlprs/shared';
+import { toDateString } from '../lib/dateUtils';
 
 // ─── Types ───────────────────────────────────────────────────────────
 
@@ -30,14 +32,11 @@ interface CreateLoanData {
   monthlyDeductionAmount: string;
   approvalDate: string;
   firstDeductionDate: string;
+  dateOfBirth?: string;
+  dateOfFirstAppointment?: string;
 }
 
 // ─── Helpers ────────────────────────────────────────────────────────
-
-/** Format a Date as YYYY-MM-DD (date-only, no time component). */
-function toDateString(d: Date): string {
-  return d.toISOString().split('T')[0];
-}
 
 function toLoanResponse(row: typeof loans.$inferSelect): Loan {
   return {
@@ -57,6 +56,7 @@ function toLoanResponse(row: typeof loans.$inferSelect): Loan {
     status: row.status,
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
+    temporalProfile: buildTemporalProfile(row),
   };
 }
 
@@ -94,11 +94,30 @@ export async function createLoan(_actingUser: ActingUser, data: CreateLoanData):
     throw new AppError(404, 'MDA_NOT_FOUND', VOCABULARY.MDA_NOT_FOUND);
   }
 
+  // Validate temporal dates (if provided)
+  if (data.dateOfBirth && new Date(data.dateOfBirth) > new Date()) {
+    throw new AppError(422, 'TEMPORAL_DOB_FUTURE', VOCABULARY.TEMPORAL_DOB_FUTURE);
+  }
+  if (data.dateOfBirth && data.dateOfFirstAppointment &&
+      new Date(data.dateOfFirstAppointment) < new Date(data.dateOfBirth)) {
+    throw new AppError(422, 'TEMPORAL_APPT_BEFORE_DOB', VOCABULARY.TEMPORAL_APPT_BEFORE_DOB);
+  }
+
   const MAX_INSERT_RETRIES = 3;
   for (let attempt = 0; attempt < MAX_INSERT_RETRIES; attempt++) {
     const loanReference = await generateLoanReference();
 
     try {
+      // Compute retirement date if both temporal dates provided
+      let computedRetirementDate: Date | null = null;
+      if (data.dateOfBirth && data.dateOfFirstAppointment) {
+        const { retirementDate } = computeRetirementDate(
+          new Date(data.dateOfBirth),
+          new Date(data.dateOfFirstAppointment),
+        );
+        computedRetirementDate = retirementDate;
+      }
+
       const [row] = await db
         .insert(loans)
         .values({
@@ -116,6 +135,9 @@ export async function createLoan(_actingUser: ActingUser, data: CreateLoanData):
           firstDeductionDate: new Date(data.firstDeductionDate),
           loanReference,
           status: 'APPLIED',
+          dateOfBirth: data.dateOfBirth ? new Date(data.dateOfBirth) : null,
+          dateOfFirstAppointment: data.dateOfFirstAppointment ? new Date(data.dateOfFirstAppointment) : null,
+          computedRetirementDate,
         })
         .returning();
 
@@ -387,5 +409,6 @@ export async function getLoanDetail(
     balance,
     schedule,
     ledgerEntryCount: Number(ledgerEntryCount),
+    temporalProfile: buildTemporalProfile(row.loan),
   };
 }

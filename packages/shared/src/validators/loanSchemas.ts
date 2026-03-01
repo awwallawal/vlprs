@@ -35,4 +35,14 @@ export const createLoanSchema = z.object({
     .regex(/^\d+\.\d{2}$/, 'Monthly deduction must be a valid number with 2 decimal places'),
   approvalDate: z.iso.date('Approval date must be a valid ISO date (YYYY-MM-DD)'),
   firstDeductionDate: z.iso.date('First deduction date must be a valid ISO date (YYYY-MM-DD)'),
+  dateOfBirth: z.iso.date().optional(),
+  dateOfFirstAppointment: z.iso.date().optional(),
+});
+
+export const updateTemporalProfileSchema = z.object({
+  dateOfBirth: z.iso.date().optional(),
+  dateOfFirstAppointment: z.iso.date().optional(),
+  reason: z.string().min(1, 'Reason is required').max(500),
+}).refine(data => data.dateOfBirth || data.dateOfFirstAppointment, {
+  message: 'At least one date field must be provided',
 });

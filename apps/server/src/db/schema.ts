@@ -21,6 +21,7 @@ import {
   integer,
   numeric,
   timestamp,
+  date,
   index,
   uniqueIndex,
 } from 'drizzle-orm/pg-core';
@@ -85,6 +86,9 @@ export const loans = pgTable(
     firstDeductionDate: timestamp('first_deduction_date', { withTimezone: true, mode: 'date' }).notNull(),
     loanReference: varchar('loan_reference', { length: 50 }).notNull().unique(),
     status: loanStatusEnum('status').notNull().default('APPLIED'),
+    dateOfBirth: date('date_of_birth', { mode: 'date' }),
+    dateOfFirstAppointment: date('date_of_first_appointment', { mode: 'date' }),
+    computedRetirementDate: date('computed_retirement_date', { mode: 'date' }),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
   },
@@ -93,6 +97,7 @@ export const loans = pgTable(
     index('idx_loans_mda_id').on(table.mdaId),
     // loan_reference unique constraint already creates a btree index — no explicit index needed
     index('idx_loans_status').on(table.status),
+    index('idx_loans_computed_retirement_date').on(table.computedRetirementDate),
   ],
 );
 
@@ -143,6 +148,29 @@ export const loanStateTransitions = pgTable(
   (table) => [
     index('idx_loan_state_transitions_loan_id').on(table.loanId),
     index('idx_loan_state_transitions_created_at').on(table.createdAt),
+  ],
+);
+
+// ─── Temporal Corrections (Story 10.1) ──────────────────────────────
+// Append-only, immutable temporal correction audit trail. No updatedAt, no deletedAt.
+// Immutability enforced by DB trigger (fn_prevent_modification).
+export const temporalCorrections = pgTable(
+  'temporal_corrections',
+  {
+    id: uuid('id').primaryKey().$defaultFn(generateUuidv7),
+    loanId: uuid('loan_id').notNull().references(() => loans.id),
+    fieldName: text('field_name').notNull(),
+    oldValue: date('old_value', { mode: 'date' }),
+    newValue: date('new_value', { mode: 'date' }).notNull(),
+    oldRetirementDate: date('old_retirement_date', { mode: 'date' }),
+    newRetirementDate: date('new_retirement_date', { mode: 'date' }),
+    correctedBy: uuid('corrected_by').notNull().references(() => users.id),
+    reason: text('reason').notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    index('idx_temporal_corrections_loan_id').on(table.loanId),
+    index('idx_temporal_corrections_created_at').on(table.createdAt),
   ],
 );
 

@@ -59,7 +59,7 @@ tracking_system: file-system
 story_location: _bmad-output/implementation-artifacts
 
 development_status:
-  # Epic 1: Project Foundation & Secure Access
+  # Epic 1: Project Foundation & Secure Access (Sprint 1)
   epic-1: done
   1-1-monorepo-scaffold-development-environment: done
   1-2-user-registration-login: done
@@ -82,7 +82,7 @@ development_status:
   14-3-resources-support-legal-pages: done
   epic-14-retrospective: done
 
-  # Epic 2: Loan Data Management & Financial Computation
+  # Epic 2: Loan Data Management & Financial Computation (Sprint 3)
   epic-2: done
   2-0-sprint-infrastructure-quality-gates: done
   2-1-mda-registry-loan-master-records: done
@@ -94,7 +94,15 @@ development_status:
   2-7-loan-lifecycle-states-transitions: done
   epic-2-retrospective: done
 
-  # Epic 3: Data Migration & Legacy Import (reshaped from 5 to 8 stories per sprint change proposal 2026-02-28)
+  # Epic 10: Staff Temporal Profile & Retirement Validation (Sprint 4)
+  epic-10: in-progress
+  10-1-retirement-date-computation-storage: done
+  10-2-service-extension-recording: ready-for-dev
+  10-3-tenure-vs-remaining-service-gratuity-receivable: ready-for-dev
+  10-4-service-status-verification-report: ready-for-dev
+  epic-10-retrospective: optional
+
+  # Epic 3: Data Migration & Legacy Import (Sprint 5 — reshaped from 5 to 8 stories per sprint change proposal 2026-02-28)
   epic-3: backlog
   3-1-legacy-upload-intelligent-column-mapping: backlog
   3-2-migration-validation-rate-detection-mda-delineation: backlog
@@ -106,7 +114,7 @@ development_status:
   3-8-multi-mda-file-delineation-deduplication: backlog
   epic-3-retrospective: optional
 
-  # Epic 4: Executive Dashboard & Scheme Visibility (Sprint 6)
+  # Epic 4: Executive Dashboard & Scheme Visibility (Sprint 6 — first live analytics)
   epic-4: backlog
   4-1-dashboard-hero-metrics-api-display: backlog
   4-2-attention-items-status-indicators: backlog
@@ -166,14 +174,6 @@ development_status:
   9-2-overdue-alerts-non-compliance-list-t-1: backlog
   9-3-loan-completion-auto-stop-notifications: backlog
   epic-9-retrospective: optional
-
-  # Epic 10: Staff Temporal Profile & Retirement Validation (Sprint 4)
-  epic-10: backlog
-  10-1-retirement-date-computation-storage: backlog
-  10-2-service-extension-recording: backlog
-  10-3-tenure-vs-remaining-service-gratuity-receivable: backlog
-  10-4-service-status-verification-report: backlog
-  epic-10-retrospective: optional
 
   # Epic 13: Staff ID Governance (Sprint 14 — Stories 13.1/13.2 moved to Epic 1 as 1.9a/1.9b)
   epic-13: backlog

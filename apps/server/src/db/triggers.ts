@@ -41,4 +41,13 @@ export async function applyTriggers(db: NodePgDatabase<any>): Promise<void> {
       FOR EACH ROW
       EXECUTE FUNCTION fn_prevent_modification();
   `);
+
+  // Immutability trigger on temporal_corrections (Story 10.1)
+  await db.execute(sql`
+    DROP TRIGGER IF EXISTS trg_temporal_corrections_immutable ON temporal_corrections;
+    CREATE TRIGGER trg_temporal_corrections_immutable
+      BEFORE UPDATE OR DELETE ON temporal_corrections
+      FOR EACH ROW
+      EXECUTE FUNCTION fn_prevent_modification();
+  `);
 }
