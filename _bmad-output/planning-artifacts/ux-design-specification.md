@@ -18,6 +18,8 @@ date: '2026-02-15'
 author: Awwal
 project_name: vlprs
 editHistory:
+  - date: '2026-03-01'
+    changes: 'PM Alignment Cascade — 6 new components + vocabulary extensions: Added 6 new custom components (19-24): ObservationCard (non-punitive observation display with data completeness indicator, status badges gold/teal/green), LoanTimeline (horizontal cross-MDA loan history with gap visualisation), StaffProfilePanel (person-level aggregate view — header + timeline + observations + details), MasterBeneficiaryLedger (interactive staff table with metrics strip and observation badges), IndividualTraceReport (printable/exportable A4-optimised trace report, HTML/PDF), FileDelineationPreview (detected MDA boundaries within file, confirm/reject per section). Extended non-punitive vocabulary with 8 new entries: "Observation" not "Anomaly/Flag/Issue", "For review" not "Flagged/Suspect", "Requires clarification" not "Suspicious/Questionable", "Balance below zero" not "Over-deduction", "No matching approval record found" not "Unauthorized loan", "Pattern for review" not "Fraud indicator/Red flag", amber/gold badges for observations (never red), "Unreviewed/Reviewed/Resolved" not "Open/Flagged/Closed". Added "Three Clicks to Clarity" interaction pattern (Dashboard → Staff Profile → Action). Added 3 observation status indicators (Unreviewed gold, Reviewed teal, Resolved green). Updated custom component count 18→24.'
   - date: '2026-02-27'
     changes: 'Party Mode sessions — SubmissionHeatmap component: Added 18th custom component SubmissionHeatmap (FR86) — GitHub-style activity grid for month-by-month MDA submission compliance. Two variants: MDA Officer Self-View (rows=years, cols=12 months, own MDA history) and AG/Deputy AG Scheme-Wide View (rows=63 MDAs, cols=last 12 months, sortable by compliance rate). Non-punitive colour palette: teal (on-time, by 20th), amber (grace period, 21st-25th), light gray (missing/overdue), half-fill (pending current month). No red, no league tables, no rankings. Static HTML version for SQ-1 AG report (historical data coverage 2018-2025). Added to Phase 2 component roadmap. Updated custom component count 17→18. Full accessibility spec: role=grid, aria-labels, keyboard navigation.'
   - date: '2026-02-19'
@@ -1100,6 +1102,62 @@ Based on **shadcn/ui + Tailwind CSS + Radix UI**, the following foundation compo
 **Accessibility:** Grid uses `role="grid"` with `role="gridcell"` for each cell. Colour-coded status accompanied by `aria-label` text (e.g., "Ministry of Agriculture, March 2025: Submitted on time"). Hover tooltips use `role="tooltip"`. Keyboard navigation: arrow keys between cells, Enter to open detail.
 **Non-Punitive Design:** No red. No "failed" or "delinquent" labels. Missing submissions are the absence of colour (light gray) not the presence of warning. No MDA league tables, rankings, or comparative performance labels. Sort by compliance rate is available but framed as "filter" not "rank."
 
+#### 19. ObservationCard
+
+**Purpose:** Displays a single observation with non-punitive framing. The primary unit of the observation review workflow — surfaces patterns for human review without implying fault.
+**Content:** Observation type badge (teal), factual description, plain-English explanation, 2-3 possible explanations (ranked by likelihood), suggested next step, data completeness indicator (progress bar 0-100%), staff name/ID, MDA name, source reference (file/row), status badge.
+**Actions:** Mark as Reviewed (adds reviewer note), Resolve (adds resolution note, closes), Promote to Exception (creates exception record in Epic 7 queue), Expand for full context.
+**States:** Unreviewed (gold `--observation-unreviewed` badge), Reviewed (teal `--observation-reviewed` badge), Resolved (green `--observation-resolved` badge).
+**Variants:** Compact (list view in MasterBeneficiaryLedger — type + description only), Expanded (full detail in StaffProfilePanel), Standalone (observation queue page).
+**Accessibility:** Card uses `role="article"` with `aria-label` describing observation type and staff. Status badges use `aria-label` for screen readers. Possible explanations use `role="list"`. Data completeness bar uses `role="progressbar"` with `aria-valuenow`.
+**Colours:** Background: neutral grey `#F1F5F9`. Border-left: teal `#0D7377` (4px). Info circle icon in teal. No red, no warning triangles. Status badges: gold (unreviewed), teal (reviewed), green (resolved).
+
+#### 20. LoanTimeline
+
+**Purpose:** Horizontal timeline showing loan cycles across MDAs for a single staff member. Visualises sequential/overlapping loans, gap periods, and MDA transitions — the visual backbone of the trace report.
+**Content:** Horizontal bar chart where each bar represents a loan period, colour-coded by MDA. Gap periods shown as dotted segments. Observation markers (small circles) positioned at relevant points on the timeline. Year/month axis at bottom.
+**Actions:** Hover on loan bar → tooltip with: MDA name, loan amount, start/end dates, status. Click bar → navigate to loan detail. Click observation marker → expand observation detail.
+**States:** Default (full history), Focused (single loan highlighted, others dimmed), Print (simplified for A4 export — no hover interactions).
+**Variants:** Full width (StaffProfilePanel), Compact (MasterBeneficiaryLedger row expansion), Print-optimised (IndividualTraceReport).
+**Accessibility:** Timeline uses `role="img"` with comprehensive `aria-label` describing the loan history textually. Each loan bar has `aria-label` with MDA, dates, and amount. Keyboard: Tab between loan bars, Enter for detail.
+
+#### 21. StaffProfilePanel
+
+**Purpose:** Person-level aggregate view showing a staff member's complete loan history, observations, and cross-MDA activity. The "Three Clicks to Clarity" middle step between the MasterBeneficiaryLedger and specific actions.
+**Content:** Header (staff name, Staff ID, current MDA, total loans, total observations), LoanTimeline component, observation summary (count by type with ObservationCards), loan details list, employment event history.
+**Actions:** View full trace report (FR88), review individual observations, navigate to specific loan records, generate PDF report.
+**States:** Loading (skeleton), Populated (full profile), Incomplete (amber indicator for missing data — "Profile data {X}% complete").
+**Variants:** Full page (`/staff/:id`), Side panel (expanded from MasterBeneficiaryLedger row).
+**Accessibility:** Panel uses landmark `role="main"` or `role="complementary"` depending on context. Sections use `role="region"` with `aria-label`. Tab navigation between sections.
+
+#### 22. MasterBeneficiaryLedger
+
+**Purpose:** Interactive table of all staff members with loan records, showing person-level aggregates. The "one click" starting point for the Deputy AG's investigation workflow — replaces the prototype HTML master beneficiary ledger from SQ-1.
+**Content:** Table with columns: Staff Name, Staff ID, MDA(s), Active Loans (count), Total Exposure, Observations (count badge — neutral colour), Last Activity Date. Metrics strip above table: Total Staff, Total Loans, Total Observations (Unreviewed), Total Exposure.
+**Actions:** Sort by any column, filter by MDA/observation type/status, search by name/Staff ID, click row to open StaffProfilePanel, export filtered view as CSV.
+**States:** Default (all staff), Filtered (active filters shown as dismissible chips), Empty ("No staff records match the current filters").
+**Variants:** Full page (migration dashboard context), Embedded (within Epic 4 executive dashboard as drill-down).
+**Accessibility:** Table uses proper `<thead>`, `<tbody>`, `<th scope="col">` structure. Sortable headers have `aria-sort` attribute. Observation count badges use `aria-label` (e.g., "3 observations, 2 unreviewed"). Filter chips are keyboard-dismissible.
+**Colours:** Observation count badge uses gold background when unreviewed observations exist, grey when all reviewed/resolved. No red badges. Metrics strip uses neutral grey background.
+
+#### 23. IndividualTraceReport
+
+**Purpose:** Printable/exportable staff trace report combining all data from the StaffProfilePanel into an A4-optimised document. The PDF deliverable for the Deputy AG's investigation workflow and committee briefings.
+**Content:** Report header (VLPRS branding, generation date, reference number), staff identification section, LoanTimeline (print variant), loan-by-loan detail (per MDA), observations summary, rate analysis table, balance trajectory chart (simplified for print), data completeness summary.
+**Actions:** Print (browser print dialog, A4 optimised), Download PDF (server-generated via @react-pdf/renderer), Email (send as PDF attachment).
+**States:** Generating (progress indicator), Ready (preview displayed), Error (generation failure with retry).
+**Variants:** HTML (screen preview with interactive elements), PDF (A4 static layout, print-optimised typography).
+**Accessibility:** Report uses semantic heading hierarchy (h1-h4). Print stylesheet removes interactive elements. PDF has document structure tags for assistive technology.
+
+#### 24. FileDelineationPreview
+
+**Purpose:** Shows detected MDA boundaries within a single uploaded file, allowing Department Admin to confirm or reject the automated delineation before processing. Handles the common legacy pattern of consolidated parent-department files.
+**Content:** File summary (filename, total rows, detected MDAs), boundary table showing: row ranges, detected MDA name, record count per section, confidence score. Visual preview of first/last rows per section for verification.
+**Actions:** Confirm all boundaries (proceed with split processing), Reject boundary (merge sections), Manual split (add boundary at specific row), Skip delineation (process as single MDA).
+**States:** Detecting (analysis in progress), Preview (boundaries shown for review), Confirmed (ready to process), Error (no boundaries detected — single MDA assumed).
+**Variants:** Standard (multi-MDA file), Single MDA (no boundaries detected — simple confirmation).
+**Accessibility:** Boundary table uses standard table accessibility. Confirm/Reject actions use `aria-describedby` linking to the boundary description. Row range previews use `role="region"` with `aria-label`.
+
 ### Component Implementation Strategy
 
 **Foundation Components (from shadcn/ui — use as-is or with minor theme customization):**
@@ -1118,7 +1176,7 @@ Based on **shadcn/ui + Tailwind CSS + Radix UI**, the following foundation compo
 - Sidebar — crimson sidebar navigation
 
 **Custom Components (built using shadcn primitives + Tailwind):**
-- All 18 custom components use shadcn Card, Badge, Accordion as base where applicable
+- All 24 custom components use shadcn Card, Badge, Accordion as base where applicable
 - Styled exclusively through Tailwind utilities and CSS custom properties
 - Non-punitive design tokens (`--variance-bg`, `--attention-bg`, etc.) applied consistently
 - Responsive behaviour defined per-component matching breakpoint strategy
@@ -1266,6 +1324,16 @@ Based on **shadcn/ui + Tailwind CSS + Radix UI**, the following foundation compo
 - Success: green checkmark + filename + "Upload Complete"
 - Rejection: amber border + specific row-level issues + re-upload zone on same screen
 
+### Three Clicks to Clarity
+
+The primary investigation interaction pattern for the Deputy AG and Department Admin. Every data investigation follows a maximum three-step drill-down from aggregate to action:
+
+1. **Click 1 — Dashboard** (MasterBeneficiaryLedger): See all staff, observation counts, exposure totals. Filter/sort to find person of interest.
+2. **Click 2 — Staff Profile** (StaffProfilePanel): See person-level aggregate — LoanTimeline, observations, cross-MDA history.
+3. **Click 3 — Action**: Review observation (ObservationCard), generate trace report (IndividualTraceReport), promote to exception, or navigate to specific loan detail.
+
+No investigation should require more than 3 clicks from the dashboard to a concrete action. If it does, the navigation needs restructuring.
+
 ### Navigation Patterns
 
 **Sidebar (Desktop):**
@@ -1317,6 +1385,9 @@ Based on **shadcn/ui + Tailwind CSS + Radix UI**, the following foundation compo
 | Pending | Grey `#6B7280` | Clock | "Pending" |
 | Variance | Grey `#6B7280` bg + Teal icon | Info (ℹ) | "Variance" |
 | Overdue | Gold `#D4A017` | Clock | "Overdue" |
+| Observation — Unreviewed | Gold `#D4A017` | Info circle (ℹ) | "Unreviewed" |
+| Observation — Reviewed | Teal `#0D7377` | Info circle (ℹ) | "Reviewed" |
+| Observation — Resolved | Green `#16A34A` | Checkmark | "Resolved" |
 
 **Currency Display:**
 - Always use NairaDisplay component for consistency
@@ -1415,6 +1486,14 @@ The most critical consistency pattern in the entire system. These rules have abs
 | Variance background | Neutral grey `#6B7280` | Red or amber background |
 | MDA performance | Never compare MDAs against each other | No league tables, rankings, or scores |
 | Exception flagged | "This needs review" | "This is wrong" |
+| Auto-generated finding | "Observation" | "Anomaly" / "Flag" / "Issue" |
+| Observation needing action | "For review" | "Flagged" / "Suspect" |
+| Unclear data | "Requires clarification" | "Suspicious" / "Questionable" |
+| Over-deduction detected | "Balance below zero" | "Over-deduction" (in user-facing context) |
+| Deduction without approval | "No matching approval record found" | "Unauthorized loan" |
+| Repeated pattern | "Pattern for review" | "Fraud indicator" / "Red flag" |
+| Observation badges | Amber/Gold for unreviewed, Teal for reviewed, Green for resolved | Never red badges for observations |
+| Observation lifecycle | "Unreviewed" / "Reviewed" / "Resolved" | "Open" / "Flagged" / "Closed" |
 
 **The MDA Officer Test:** Before shipping any screen, ask: "Would an MDA officer feel defensive looking at this?" If yes, redesign the language, iconography, or colour until the answer is no.
 
