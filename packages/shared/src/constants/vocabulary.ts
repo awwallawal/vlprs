@@ -69,6 +69,11 @@ export const VOCABULARY = {
   TEMPORAL_DOB_FUTURE: 'Date of birth cannot be in the future.',
   TEMPORAL_APPT_BEFORE_DOB: 'Date of first appointment cannot precede date of birth.',
   TEMPORAL_CORRECTION_RECORDED: 'Date correction recorded with full audit trail.',
+  // Service Extensions (Story 10.2)
+  SERVICE_EXTENSION_RECORDED: 'Service extension recorded successfully.',
+  SERVICE_EXTENSION_INCOMPLETE_PROFILE: 'Service extension cannot be recorded — temporal profile is incomplete. Please provide date of birth and appointment date first.',
+  SERVICE_EXTENSION_DATE_NOT_AFTER: 'Extension date must be after the current retirement date ({currentDate}).',
+  SERVICE_EXTENSION_MAX_EXCEEDED: 'Extension exceeds maximum allowed period. Please verify the extension date.',
 } as const;
 
 export const UI_COPY = {

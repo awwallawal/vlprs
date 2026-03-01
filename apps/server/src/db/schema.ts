@@ -174,6 +174,27 @@ export const temporalCorrections = pgTable(
   ],
 );
 
+// ─── Service Extensions (Story 10.2) ─────────────────────────────────
+// Append-only, immutable service extension records. No updatedAt, no deletedAt.
+// Immutability enforced by DB trigger (fn_prevent_modification).
+export const serviceExtensions = pgTable(
+  'service_extensions',
+  {
+    id: uuid('id').primaryKey().$defaultFn(generateUuidv7),
+    loanId: uuid('loan_id').notNull().references(() => loans.id),
+    originalComputedDate: date('original_computed_date', { mode: 'date' }).notNull(),
+    newRetirementDate: date('new_retirement_date', { mode: 'date' }).notNull(),
+    approvingAuthorityReference: varchar('approving_authority_reference', { length: 100 }).notNull(),
+    notes: text('notes').notNull(),
+    createdBy: uuid('created_by').notNull().references(() => users.id),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    index('idx_service_extensions_loan_id').on(table.loanId),
+    index('idx_service_extensions_created_at').on(table.createdAt),
+  ],
+);
+
 // ─── Users ──────────────────────────────────────────────────────────
 export const users = pgTable(
   'users',
