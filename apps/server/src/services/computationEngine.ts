@@ -1,6 +1,6 @@
 import Decimal from 'decimal.js';
-import { addYears, min, differenceInMonths } from 'date-fns';
-import type { ComputationParams, ScheduleRow, RepaymentSchedule, AutoSplitResult, BalanceResult, LedgerEntryForBalance } from '@vlprs/shared';
+import { addYears, addMonths, min, differenceInMonths } from 'date-fns';
+import type { ComputationParams, ScheduleRow, RepaymentSchedule, AutoSplitResult, BalanceResult, LedgerEntryForBalance, GratuityProjectionResult } from '@vlprs/shared';
 
 // Configure decimal.js for financial precision
 Decimal.set({ precision: 20, rounding: Decimal.ROUND_HALF_UP });
@@ -246,5 +246,112 @@ export function computeBalanceFromEntries(
       entriesSum: totalAmountPaid.toFixed(2),
       isAnomaly: computedBalance.isNegative(),
     },
+  };
+}
+
+// ─── Gratuity Projection Computation (Story 10.3) ──────────────────
+
+/**
+ * Compute gratuity receivable projection for a loan.
+ * Pure function — no DB access. All arithmetic via Decimal.js.
+ *
+ * Determines whether a loan's tenure extends beyond the staff member's
+ * remaining service (retirement date), and if so, computes the projected
+ * balance that must be recovered from gratuity.
+ *
+ * Note: The projection uses monthlyDeductionAmount × remaining months as an
+ * approximation. The actual balance at retirement may differ slightly due to
+ * last-payment adjustment (Story 2.4). This approximation is acceptable for
+ * projection purposes — the actual balance will be computed from ledger entries
+ * when the time comes.
+ */
+export function computeGratuityProjection(params: {
+  computedRetirementDate: Date;
+  firstDeductionDate: Date;
+  tenureMonths: number;
+  monthlyDeductionAmount: string;
+  principalAmount: string;
+  interestRate: string;
+  installmentsCompleted: number;
+  asOfDate?: Date;
+}): GratuityProjectionResult {
+  // Input validation — consistent with computeRepaymentSchedule() and computeBalanceFromEntries()
+  if (!Number.isInteger(params.tenureMonths) || params.tenureMonths <= 0) {
+    throw new Error('tenureMonths must be a positive integer');
+  }
+  if (!Number.isInteger(params.installmentsCompleted) || params.installmentsCompleted < 0) {
+    throw new Error('installmentsCompleted must be a non-negative integer');
+  }
+  const principalCheck = new Decimal(params.principalAmount);
+  if (principalCheck.isNaN() || !principalCheck.isFinite() || principalCheck.lte(0)) {
+    throw new Error('principalAmount must be a positive number');
+  }
+  const rateCheck = new Decimal(params.interestRate);
+  if (rateCheck.isNaN() || !rateCheck.isFinite() || rateCheck.lt(0)) {
+    throw new Error('interestRate must be a non-negative number');
+  }
+  const deductionCheck = new Decimal(params.monthlyDeductionAmount);
+  if (deductionCheck.isNaN() || !deductionCheck.isFinite() || deductionCheck.lte(0)) {
+    throw new Error('monthlyDeductionAmount must be a positive number');
+  }
+
+  const now = params.asOfDate || new Date();
+  const remainingInstallments = Math.max(0, params.tenureMonths - params.installmentsCompleted);
+  const remainingServiceMonths = computeRemainingServiceMonths(params.computedRetirementDate, now);
+
+  const loanMaturityDate = addMonths(params.firstDeductionDate, params.tenureMonths);
+  const loanMaturityDateStr = loanMaturityDate.toISOString().split('T')[0];
+  const computedRetirementDateStr = params.computedRetirementDate.toISOString().split('T')[0];
+
+  // No exposure: loan fully paid or finishes before/at retirement
+  if (remainingInstallments <= 0 || remainingInstallments <= remainingServiceMonths) {
+    return {
+      hasGratuityExposure: false,
+      payrollDeductionMonths: remainingInstallments,
+      gratuityReceivableMonths: 0,
+      projectedGratuityReceivableAmount: '0.00',
+      projectedMonthlyGratuityAmount: '0.00',
+      remainingInstallments,
+      remainingServiceMonths,
+      loanMaturityDate: loanMaturityDateStr,
+      computedRetirementDate: computedRetirementDateStr,
+    };
+  }
+
+  // Has exposure: loan extends past retirement
+  const payrollDeductionMonths = remainingServiceMonths; // already clamped to ≥0 by computeRemainingServiceMonths
+  const gratuityReceivableMonths = remainingInstallments - payrollDeductionMonths;
+
+  // Project balance at retirement using flat-rate approximation
+  const monthlyDeduction = new Decimal(params.monthlyDeductionAmount);
+  const principal = new Decimal(params.principalAmount);
+  const rate = new Decimal(params.interestRate);
+  const totalInterest = principal.mul(rate).div(100);
+  const totalLoan = principal.plus(totalInterest);
+
+  // Current outstanding balance
+  const alreadyPaid = monthlyDeduction.mul(new Decimal(params.installmentsCompleted));
+  const currentOutstanding = totalLoan.minus(alreadyPaid);
+
+  // Balance at retirement = current outstanding - payments between now and retirement
+  const paymentsBeforeRetirement = monthlyDeduction.mul(new Decimal(payrollDeductionMonths));
+  const balanceAtRetirement = Decimal.max(currentOutstanding.minus(paymentsBeforeRetirement), new Decimal('0'));
+  const projectedAmount = balanceAtRetirement.toFixed(2);
+
+  // Monthly gratuity amount: projected balance divided evenly across gratuity months
+  const monthlyGratuity = gratuityReceivableMonths > 0
+    ? balanceAtRetirement.div(new Decimal(gratuityReceivableMonths)).toDecimalPlaces(2, Decimal.ROUND_HALF_UP).toFixed(2)
+    : '0.00';
+
+  return {
+    hasGratuityExposure: true,
+    payrollDeductionMonths,
+    gratuityReceivableMonths,
+    projectedGratuityReceivableAmount: projectedAmount,
+    projectedMonthlyGratuityAmount: monthlyGratuity,
+    remainingInstallments,
+    remainingServiceMonths,
+    loanMaturityDate: loanMaturityDateStr,
+    computedRetirementDate: computedRetirementDateStr,
   };
 }

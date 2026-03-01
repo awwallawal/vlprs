@@ -8,6 +8,7 @@ import { withMdaScope } from '../lib/mdaScope';
 import { ledgerDb } from '../db/immutable';
 import { computeBalanceFromEntries, computeRepaymentSchedule, computeRetirementDate } from './computationEngine';
 import { buildTemporalProfile, getExtensionDataForLoan } from './temporalProfileService';
+import * as gratuityProjectionService from './gratuityProjectionService';
 import { VOCABULARY } from '@vlprs/shared';
 import type { Loan, LoanSearchResult, LoanDetail, LoanStatus } from '@vlprs/shared';
 import { toDateString } from '../lib/dateUtils';
@@ -381,10 +382,11 @@ export async function getLoanDetail(
     moratoriumMonths: row.loan.moratoriumMonths,
   });
 
-  // Ledger entry count + extension data (concurrent)
-  const [ledgerCountResult, extensionData] = await Promise.all([
+  // Ledger entry count + extension data + gratuity projection (concurrent)
+  const [ledgerCountResult, extensionData, gratuityProjection] = await Promise.all([
     db.select({ value: count() }).from(ledgerEntries).where(eq(ledgerEntries.loanId, loanId)),
     getExtensionDataForLoan(loanId),
+    gratuityProjectionService.getGratuityProjection(loanId, mdaScope),
   ]);
   const [{ value: ledgerEntryCount }] = ledgerCountResult;
 
@@ -411,5 +413,6 @@ export async function getLoanDetail(
     schedule,
     ledgerEntryCount: Number(ledgerEntryCount),
     temporalProfile: buildTemporalProfile(row.loan, extensionData),
+    gratuityProjection,
   };
 }

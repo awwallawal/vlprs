@@ -136,6 +136,18 @@ export interface UpdateTemporalProfileRequest {
   reason: string;
 }
 
+export interface GratuityProjectionResult {
+  hasGratuityExposure: boolean;
+  payrollDeductionMonths: number;
+  gratuityReceivableMonths: number;
+  projectedGratuityReceivableAmount: string;  // 2 decimal places, Decimal.js
+  projectedMonthlyGratuityAmount: string;     // 2 decimal places, Decimal.js — total / gratuityReceivableMonths (0.00 when no exposure)
+  remainingInstallments: number;
+  remainingServiceMonths: number;
+  loanMaturityDate: string;                   // ISO date
+  computedRetirementDate: string;             // effective date (may include extension)
+}
+
 export interface LoanDetail {
   /** Full loan master data */
   id: string;
@@ -164,4 +176,6 @@ export interface LoanDetail {
   ledgerEntryCount: number;
   /** Temporal profile from Story 10.1 */
   temporalProfile: TemporalProfile;
+  /** Gratuity projection from Story 10.3 — null if temporal profile incomplete */
+  gratuityProjection: GratuityProjectionResult | null;
 }

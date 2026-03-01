@@ -98,7 +98,7 @@ development_status:
   epic-10: in-progress
   10-1-retirement-date-computation-storage: done
   10-2-service-extension-recording: done
-  10-3-tenure-vs-remaining-service-gratuity-receivable: ready-for-dev
+  10-3-tenure-vs-remaining-service-gratuity-receivable: done
   10-4-service-status-verification-report: ready-for-dev
   epic-10-retrospective: optional
 
