@@ -2,7 +2,7 @@ import { describe, it, expect, beforeAll } from 'vitest';
 import Decimal from 'decimal.js';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { computeRepaymentSchedule, autoSplitDeduction, computeBalanceFromEntries } from './computationEngine';
+import { computeRepaymentSchedule, autoSplitDeduction, computeBalanceFromEntries, computeRetirementDate, computeRemainingServiceMonths } from './computationEngine';
 import type { ComputationParams } from '@vlprs/shared';
 
 // ─── Task 4: Unit tests with hand-verified calculations ─────────────────────
@@ -1109,6 +1109,123 @@ describe('computeBalanceFromEntries (Story 2.5)', () => {
   it('does not flag isAnomaly for normal balance', () => {
     const result = computeBalanceFromEntries('250000.00', '13.330', 60, [], null);
     expect(result.derivation.isAnomaly).toBe(false);
+  });
+});
+
+// ─── Story 10.1: Retirement Date Computation ──────────────────────────────────
+
+describe('computeRetirementDate', () => {
+  // 8.2: DOB+60 wins (earlier than appt+35)
+  it('returns DOB+60 when it is earlier than appt+35', () => {
+    // DOB 1970-01-15 → DOB+60 = 2030-01-15
+    // Appointment 1995-06-01 → appt+35 = 2030-06-01
+    // DOB+60 is earlier → dob_60 wins
+    const result = computeRetirementDate(
+      new Date('1970-01-15'),
+      new Date('1995-06-01'),
+    );
+    expect(result.retirementDate).toEqual(new Date('2030-01-15'));
+    expect(result.computationMethod).toBe('dob_60');
+  });
+
+  // 8.3: appt+35 wins (earlier than DOB+60)
+  it('returns appt+35 when it is earlier than DOB+60', () => {
+    // DOB 1975-06-15 → DOB+60 = 2035-06-15
+    // Appointment 1990-01-01 → appt+35 = 2025-01-01
+    // appt+35 is earlier → appt_35 wins
+    const result = computeRetirementDate(
+      new Date('1975-06-15'),
+      new Date('1990-01-01'),
+    );
+    expect(result.retirementDate).toEqual(new Date('2025-01-01'));
+    expect(result.computationMethod).toBe('appt_35');
+  });
+
+  // 8.4: Equal dates — deterministic result
+  it('returns deterministic result when DOB+60 equals appt+35', () => {
+    // DOB 1970-01-01 → DOB+60 = 2030-01-01
+    // Appointment 1995-01-01 → appt+35 = 2030-01-01
+    // Both yield same date
+    const result = computeRetirementDate(
+      new Date('1970-01-01'),
+      new Date('1995-01-01'),
+    );
+    expect(result.retirementDate).toEqual(new Date('2030-01-01'));
+    // When equal, min() returns the first element (dobPlus60), so dob_60
+    expect(result.computationMethod).toBe('dob_60');
+  });
+
+  // 8.5: Leap year DOB
+  it('handles leap year DOB (Feb 29)', () => {
+    // DOB 1964-02-29 → DOB+60 = 2024-02-29 (2024 is a leap year)
+    const result = computeRetirementDate(
+      new Date('1964-02-29'),
+      new Date('1984-03-01'),
+    );
+    // DOB+60 = 2024-02-29, appt+35 = 2019-03-01
+    // appt+35 is earlier
+    expect(result.computationMethod).toBe('appt_35');
+    expect(result.retirementDate).toEqual(new Date('2019-03-01'));
+  });
+
+  it('handles leap year DOB where DOB+60 wins', () => {
+    // DOB 1964-02-29 → DOB+60 = 2024-02-29
+    // Appointment 1994-01-01 → appt+35 = 2029-01-01
+    // DOB+60 is earlier
+    const result = computeRetirementDate(
+      new Date('1964-02-29'),
+      new Date('1994-01-01'),
+    );
+    expect(result.retirementDate).toEqual(new Date('2024-02-29'));
+    expect(result.computationMethod).toBe('dob_60');
+  });
+
+  // 8.6: Validation — future DOB throws
+  it('throws when DOB is in the future', () => {
+    const futureDate = new Date();
+    futureDate.setFullYear(futureDate.getFullYear() + 1);
+
+    expect(() => computeRetirementDate(
+      futureDate,
+      new Date('2020-01-01'),
+    )).toThrow('Date of birth cannot be in the future');
+  });
+
+  // 8.6: Validation — appointment before DOB throws
+  it('throws when appointment date is before DOB', () => {
+    expect(() => computeRetirementDate(
+      new Date('1980-01-01'),
+      new Date('1975-06-15'),
+    )).toThrow('Date of first appointment cannot precede date of birth');
+  });
+});
+
+describe('computeRemainingServiceMonths', () => {
+  // 8.7: Retirement in 36 months
+  it('returns correct months for future retirement date', () => {
+    const asOf = new Date('2025-01-01');
+    const retirement = new Date('2028-01-01');
+    // 3 years = 36 months
+    expect(computeRemainingServiceMonths(retirement, asOf)).toBe(36);
+  });
+
+  // 8.7: Retirement in the past
+  it('returns 0 when retirement date is in the past', () => {
+    const asOf = new Date('2025-06-01');
+    const retirement = new Date('2020-01-01');
+    expect(computeRemainingServiceMonths(retirement, asOf)).toBe(0);
+  });
+
+  // 8.7: Retirement today
+  it('returns 0 when retirement date is today', () => {
+    const now = new Date('2025-03-01');
+    expect(computeRemainingServiceMonths(now, now)).toBe(0);
+  });
+
+  it('returns correct months for partial year', () => {
+    const asOf = new Date('2025-01-15');
+    const retirement = new Date('2025-07-15');
+    expect(computeRemainingServiceMonths(retirement, asOf)).toBe(6);
   });
 });
 

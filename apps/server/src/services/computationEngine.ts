@@ -1,4 +1,5 @@
 import Decimal from 'decimal.js';
+import { addYears, min, differenceInMonths } from 'date-fns';
 import type { ComputationParams, ScheduleRow, RepaymentSchedule, AutoSplitResult, BalanceResult, LedgerEntryForBalance } from '@vlprs/shared';
 
 // Configure decimal.js for financial precision
@@ -142,6 +143,46 @@ export function autoSplitDeduction(
     principalComponent: principalComponent.toFixed(2),
     interestComponent: interestComponent.toFixed(2),
   };
+}
+
+// ─── Retirement Date Computation (Story 10.1) ─────────────────────
+
+/**
+ * Compute retirement date from DOB and first appointment date.
+ * Pure function — no DB access.
+ * Rule: min(DOB + 60 years, appointment_date + 35 years)
+ */
+export function computeRetirementDate(
+  dateOfBirth: Date,
+  dateOfFirstAppointment: Date,
+): { retirementDate: Date; computationMethod: 'dob_60' | 'appt_35' } {
+  if (dateOfBirth > new Date()) {
+    throw new Error('Date of birth cannot be in the future');
+  }
+  if (dateOfFirstAppointment < dateOfBirth) {
+    throw new Error('Date of first appointment cannot precede date of birth');
+  }
+
+  const dobPlus60 = addYears(dateOfBirth, 60);
+  const apptPlus35 = addYears(dateOfFirstAppointment, 35);
+  const retirementDate = min([dobPlus60, apptPlus35]);
+
+  return {
+    retirementDate,
+    computationMethod: retirementDate.getTime() === dobPlus60.getTime() ? 'dob_60' : 'appt_35',
+  };
+}
+
+/**
+ * Compute remaining service months from retirement date to a reference date.
+ * Returns 0 if already past retirement. Pure function.
+ */
+export function computeRemainingServiceMonths(
+  retirementDate: Date,
+  asOfDate: Date = new Date(),
+): number {
+  const months = differenceInMonths(retirementDate, asOfDate);
+  return Math.max(0, months);
 }
 
 /**

@@ -3,8 +3,10 @@ stepsCompleted: [1, 2, 3, 4]
 lastStep: 4
 status: 'complete'
 completedAt: '2026-02-14'
-lastEdited: '2026-02-27'
+lastEdited: '2026-03-01'
 editHistory:
+  - date: '2026-03-01'
+    changes: 'PM Alignment Cascade — Epic 3 reshape + FR87-FR90 + FR61 extension: Added FR87-FR90 to requirements inventory (Observation Engine, Individual Staff Trace Report, Multi-MDA File Delineation, Intelligent Column Mapping). Added FR87-FR90 to FR Coverage Map → Epic 3. Updated FR61 coverage note with Epic 3/11/9 distribution for bidirectional transfer lifecycle. Reshaped Epic 3 from 5 stories to 8 stories: Story 3.1 EXTENDED (added FR90 intelligent column mapping), Story 3.2 EXTENDED (added rate detection + MDA delineation), Story 3.3 RESHAPED (was side-by-side comparison, now person-level StaffProfilePanel with cross-MDA timeline), Story 3.4 KEPT (baseline acknowledgment), Story 3.5 RESHAPED (added MasterBeneficiaryLedger + Data Pending status), Story 3.6 NEW (Observation Engine + review workflow — FR87, FR85), Story 3.7 NEW (Individual Trace Report — FR88), Story 3.8 NEW (Multi-MDA File Delineation & Deduplication — FR89). Updated Epic 3 summary with data intelligence scope and FR87-FR90. Updated Epic 11 summary and Story 11.2 with bidirectional transfer events (Transfer Out, Claim Transfer In, Transfer Search). Updated Epic 9 summary with transfer notifications + escalation. Updated sprint sequence: Epic 3 stories 5→8. Updated total stories 62→65. Updated custom component count 17→24 (added ObservationCard, LoanTimeline, StaffProfilePanel, MasterBeneficiaryLedger, IndividualTraceReport, FileDelineationPreview). Updated server-side service count 16→20. Updated API route groups. Updated demonstrability milestones. Updated FR count references 82→90.'
   - date: '2026-02-27'
     changes: 'Party Mode sessions — 4 new FRs cascaded: Added FR83 (MDA Data Export) to Epic 5 FR coverage + added to Epic 5 description. Added FR84 (MDA Self-Service Reconciliation View) to Epic 11 FR coverage + added to Epic 11 description. Added FR85 (Approved Beneficiary Cross-Reference) to Epic 3 FR coverage + added to Epic 3 description. Added FR86 (Submission Heatmap & Compliance Activity Grid) to Epic 4 FR coverage (AG/Deputy view) and Epic 5 FR coverage (MDA officer self-view) + added to both epic descriptions. Updated FR Coverage Map with FR83-FR86. Added SubmissionHeatmap to UX component references. Updated FR count in Requirements Inventory (82→86). Updated total stories: 62→62 (new FRs attach to existing stories or create minimal new stories during sprint planning). Side Quest SQ-1 documented separately in implementation-artifacts/SQ-1-legacy-cd-analysis-pipeline.md.'
   - date: '2026-02-20'
@@ -117,6 +119,14 @@ This document provides the complete epic and story breakdown for VLPRS, decompos
 - FR80: Legal and compliance pages: Privacy & Data Protection (NDPR), Programme Disclaimer, Accessibility Statement (WCAG 2.1 AA)
 - FR81: All public pages include semantic HTML, meta tags (title, description, Open Graph), proper heading hierarchy, mobile-responsive layout, and 44x44px minimum touch targets
 - FR82: About the Programme page (/about) — top-level navigation item. Mission, Vision, Core Values. Programme Leadership section with role-title-prominent card design (AG, Deputy AG, Director — role and institutional description permanent, name swappable for personnel change resilience). Programme Governance section (Vehicle Loan Committee, AG oversight — absorbs former /scheme/ag-office content). Institutional Story section. Content extracted to src/content/about.ts for future CMS migration. Template A (Content Page) layout
+- FR83: MDA Data Export — MDA officers can download their MDA loan portfolio as CSV or branded PDF, scoped to assigned MDA. Admin can download for any MDA or scheme-wide
+- FR84: MDA Self-Service Reconciliation View — MDA officers compare uploaded historical records against migration baseline for their MDA
+- FR85: Approved Beneficiary Cross-Reference — system cross-references monthly deduction records against approved beneficiary lists to identify approved-but-never-deducted and deducted-but-never-approved staff
+- FR86: Submission Heatmap & Compliance Activity Grid — GitHub-style month-by-month visual grid showing MDA submission status with non-punitive colour coding
+- FR87: Observation Engine — auto-generates 6 observation types during migration: Rate Variance, Stalled Balance (with transfer-first hypothesis), Negative Balance, Multi-MDA, No Approval Match, Consecutive Loan Without Clearance. Each with data completeness indicator, non-punitive templates from vocabulary.ts. Status: Unreviewed → Reviewed → Resolved
+- FR88: Individual Staff Trace Report — cross-MDA loan history, cycle detection, rate analysis, balance trajectory, observations, HTML/PDF export
+- FR89: Multi-MDA File Delineation & Deduplication — intra-file MDA boundary detection, cross-file duplicates, parent/agency relationships (CDU as independent MDA with parent_mda relationship to Agriculture)
+- FR90: Intelligent Column Mapping — 298+ header variants, 4 format eras, auto-detect + confirm/override, capture non-standard extra fields as structured metadata
 
 ### NonFunctional Requirements
 
@@ -198,8 +208,8 @@ This document provides the complete epic and story breakdown for VLPRS, decompos
 - `date-fns` for date handling, `recharts` for dashboard visualisations
 - `multer` for CSV upload handling, `papaparse` for CSV parsing
 - Vitest for testing across frontend and backend
-- 16 server-side services with defined ownership/boundary rules: authService, userAdminService, mdaService, loanService, ledgerService, computationEngine, submissionService, comparisonEngine, migrationService, reportService, certificateService, notificationService, preSubmissionService, employmentEventService, earlyExitService, staffIdService
-- New API route groups: `/api/pre-submission/*`, `/api/employment-events/*`, `/api/early-exits/*`, `/api/staff-ids/*`, `/api/users/*`
+- 20 server-side services with defined ownership/boundary rules: authService, userAdminService, mdaService, loanService, ledgerService, computationEngine, submissionService, comparisonEngine, migrationService, reportService, certificateService, notificationService, preSubmissionService, employmentEventService, earlyExitService, staffIdService, observationEngine, personMatchingService, traceReportService, fileDelineationService
+- New API route groups: `/api/pre-submission/*`, `/api/employment-events/*`, `/api/early-exits/*`, `/api/staff-ids/*`, `/api/users/*`, `/api/observations/*`, `/api/staff/:id/trace/*`, `/api/migrations/delineate`, `/api/migrations/deduplicate`
 - temporalValidationService for retirement date computation, remaining service calculation, and post-retirement detection
 - userAdminService for user account lifecycle management (create, deactivate, reassign, password reset)
 
@@ -210,7 +220,7 @@ This document provides the complete epic and story breakdown for VLPRS, decompos
 - Oyo Crimson `#9C1E23` palette for brand chrome (sidebar, header, primary buttons) — no crimson in data content
 - Non-punitive design tokens: `--variance-bg` (neutral grey), `--variance-icon` (teal info circle), `--attention-bg` (amber/gold)
 - Chrome vs Content colour separation enforced throughout
-- 17 custom components specified: HeroMetricCard, AttentionItemCard, NonPunitiveVarianceDisplay, ComparisonPanel, ComputationTransparencyAccordion, FileUploadZone, SubmissionConfirmation, AutoStopCertificate, ExceptionQueueRow, MigrationProgressCard, NairaDisplay, PreSubmissionChecklist, EmploymentEventForm, EarlyExitComputationCard, RetirementProfileCard, GratuityReceivableCard, StaffIdManager
+- 24 custom components specified: HeroMetricCard, AttentionItemCard, NonPunitiveVarianceDisplay, ComparisonPanel, ComputationTransparencyAccordion, FileUploadZone, SubmissionConfirmation, AutoStopCertificate, ExceptionQueueRow, MigrationProgressCard, NairaDisplay, PreSubmissionChecklist, EmploymentEventForm, EarlyExitComputationCard, RetirementProfileCard, GratuityReceivableCard, StaffIdManager, SubmissionHeatmap, ObservationCard, LoanTimeline, StaffProfilePanel, MasterBeneficiaryLedger, IndividualTraceReport, FileDelineationPreview
 - shadcn/ui Badge variants extended: `review` (gold), `info` (teal), `complete` (green), `pending` (grey), `variance` (grey bg + teal icon)
 - Typography: Inter (variable) for body, JetBrains Mono for financial figures in tables
 - Hero metrics: 36px bold with count-up animation (200ms), `font-variant-numeric: tabular-nums`
@@ -297,7 +307,7 @@ This document provides the complete epic and story breakdown for VLPRS, decompos
 | FR58 | Epic 7 | Annotations on loan records |
 | FR59 | Epic 7 | Event flag correction workflow |
 | FR60 | Epic 11 | Pre-submission checkpoint screen with retirement/event review |
-| FR61 | Epic 11 | Mid-cycle employment event filing (5-field form) |
+| FR61 | Epic 11 (+ Epic 3, Epic 9) | Mid-cycle employment event filing (5-field form). Extended with bidirectional transfer lifecycle: Epic 3 delivers Dept Admin direct reassignment (migration), Epic 11 delivers Transfer Out + Claim Transfer In + Transfer Search, Epic 9 delivers transfer notifications + escalation |
 | FR62 | Epic 11 | Event reconciliation against monthly CSV |
 | FR63 | Epic 10 | Tenure vs remaining service comparison (gratuity receivable preview) |
 | FR64 | Epic 10 | Gratuity receivable tracking, executive dashboard exposure |
@@ -323,6 +333,10 @@ This document provides the complete epic and story breakdown for VLPRS, decompos
 | FR84 | Epic 11 | MDA Self-Service Reconciliation View (uploaded vs migration baseline) |
 | FR85 | Epic 3 | Approved Beneficiary Cross-Reference (deductions vs approved lists) |
 | FR86 | Epic 4 + Epic 5 | Submission Heatmap & Compliance Activity Grid (AG scheme-wide + MDA self-view) |
+| FR87 | Epic 3 | Observation Engine — 6 observation types with data completeness indicators |
+| FR88 | Epic 3 | Individual Staff Trace Report (cross-MDA loan history, HTML/PDF) |
+| FR89 | Epic 3 | Multi-MDA File Delineation & Deduplication (parent/agency relationships) |
+| FR90 | Epic 3 | Intelligent Column Mapping (298+ header variants, 4 format eras) |
 
 ## Sprint Sequence (Solo Developer — 2-Week Sprints)
 
@@ -334,32 +348,33 @@ Implementation order derived from PRD Build Sequence (14 steps). Each sprint map
 | 2 | Epic 14: Public Website & Scheme Information | 3 | Step 4 | Epic 1 (design system, CI/CD, PublicLayout) | Institutional public face live — AG forwards URL to Commissioner and IT Assessors see government-grade portal |
 | 3 | Epic 2: Loan Data & Financial Computation | 7 | Steps 1-2 | Epic 1 (auth + audit) | Immutable ledger, computation engine verified |
 | 4 | Epic 10: Staff Temporal Profile & Retirement | 4 | Step 5 | Epic 2 (loan master records) | Retirement dates computed, gratuity receivable tracked |
-| 5 | Epic 3: Data Migration & Legacy Import | 5 | Step 6 | Epic 10 (temporal validation for post-retirement scan) | All 63 MDAs imported with temporal profiles |
+| 5 | Epic 3: Data Migration & Legacy Import | 8 | Step 6 | Epic 10 (temporal validation for post-retirement scan) | All 63 MDAs imported with temporal profiles, observations generated, trace reports available |
 | 6 | Epic 4: Executive Dashboard | 4 | Step 7 | Epic 3 (real data in system) | AG can see headline numbers — political shield active |
-| 7 | Epic 6: Reporting & PDF Export | 4 | Step 8 | Epic 4 (dashboard data sources) | System provably correct through reports |
-| 8 | Epic 5: MDA Monthly Submission | 5 | Steps 9, 11 | Epic 2 (ledger for deduction posting) | 8-field CSV + validation operational |
-| 9 | Epic 11: Pre-Submission & Mid-Cycle Events | 4 | Step 10 | Epic 5 (submission interface), Epic 10 (retirement data) | Checkpoint, event filing, reconciliation live |
-| 10 | Epic 7: Exception Management & Annotations | 3 | — | Epic 5 (submission data), Epic 4 (drill-down views) | Exception queue, auto-flagging, annotations |
+| 7 | Epic 5: MDA Monthly Submission | 5 | Steps 9, 11 | Epic 2 (ledger for deduction posting) | 8-field CSV + validation operational — adoption engine live, monthly data cycle begins |
+| 8 | Epic 11: Pre-Submission & Mid-Cycle Events | 4 | Step 10 | Epic 5 (submission interface), Epic 10 (retirement data) | Checkpoint, event filing, reconciliation, bidirectional transfers live — submission experience complete |
+| 9 | Epic 7: Exception Management & Annotations | 3 | — | Epic 5 (submission data), Epic 4 (drill-down views) | Exception queue handles promoted observations from Epic 3 + submission variances |
+| 10 | Epic 6: Reporting & PDF Export | 4 | Step 8 | Epic 4 (dashboard data sources) | Reports now contain migration + live submissions + events + exceptions — AG hands Commissioner a living-system report |
 | 11 | Epic 8: Auto-Stop Certificate | 3 | Step 12 | Epic 2 (zero-balance detection) | Automatic deduction cessation at loan completion — guaranteed |
 | 12 | Epic 12: Early Exit Processing | 3 | Step 13 | Epic 8 (Auto-Stop Certificate generation) | Full loan completion paths operational |
 | 13 | Epic 9: Notifications & Alerts | 3 | Step 14 | Epic 8 (completion notifications) | Operational loop complete |
 | 14 | Epic 13: Staff ID Governance | 2 | Step 15 | Epic 1 (user management foundation) | Staff ID data quality self-sufficiency achieved |
 
-**Total:** 14 sprints, 62 stories, ~28 weeks (7 months). FR83-FR86 attach to existing epics — story count impact determined during sprint planning (may add 1-2 small stories or expand existing stories).
+**Total:** 14 sprints, 65 stories, ~28 weeks (7 months). Epic 3 reshaped from 5 to 8 stories per sprint change proposal (FR87-FR90 additions). FR83-FR86 attach to existing epics — story count impact determined during sprint planning (may add 1-2 small stories or expand existing stories).
+
+**Sequencing rationale (Sprints 7-10):** Submissions (E5) before Reports (E6). MDA officers start submitting in Sprint 7 — every month delayed is one less month of live data by launch. E11 immediately after E5 completes the submission experience (officers never use submissions without the pre-submission checkpoint). E7 after E5+E11 means the exception queue has both promoted observations from Epic 3 and submission variances to work with. E6 last in this block means reports contain migration data + 2-3 months of live submissions + event reconciliation + resolved exceptions — the AG hands the Commissioner a report that shows a living system, not a migration snapshot.
 
 ### Critical Path
 
 ```
 Epic 1 → Epic 14 (public site — parallel-safe, no backend dependency)
 Epic 1 → Epic 2 → Epic 10 → Epic 3 → Epic 4 → Epic 5 → Epic 11
-                                              ↘ Epic 6
+                                                       ↘ Epic 7 → Epic 6
                                     Epic 2 → Epic 8 → Epic 12
                                                      ↘ Epic 9
                                     Epic 1 → Epic 13
-                         Epic 4 + Epic 5 → Epic 7
 ```
 
-**Longest path:** Epic 1 → 2 → 10 → 3 → 4 → 5 → 11 (8 sprints / 16 weeks to full submission workflow — unchanged, Epic 14 runs on a parallel track after Epic 1)
+**Longest path:** Epic 1 → 2 → 10 → 3 → 4 → 5 → 11 (7 sprints / 14 weeks to full submission workflow). Epic 7 and Epic 6 follow on the same branch after E5. Epic 14 runs on a parallel track after Epic 1.
 
 ### Demonstrability Milestones
 
@@ -368,11 +383,14 @@ Epic 1 → Epic 2 → Epic 10 → Epic 3 → Epic 4 → Epic 5 → Epic 11
 | Sprint 1 | **Live product shell** — branded login, role-specific screens with mock data, 5 seeded demo accounts, hosted on client domain. User invitation system operational — AG can create dept admin and MDA officer accounts via UI with welcome emails. AG can open dashboard on her phone. |
 | Sprint 2 | **Institutional public face live** — AG forwards URL to Commissioner or IT Assessors and they see a government-grade portal: scheme information, eligibility, repayment rules, FAQ, legal pages, trust signals. Professional first impression before login. |
 | Sprint 3 | Mathematical core verified — computation engine + immutable ledger |
-| Sprint 5 | Real data in system — all 63 MDAs migrated with temporal profiles |
+| Sprint 5 | **Real data in system** — all 63 MDAs migrated with temporal profiles, observations generated, trace reports available, Master Beneficiary Ledger operational. OLANIYAN trace report demonstrable. |
 | Sprint 6 | **AG Demo** — dashboard with real numbers, drill-down, 30-second truth |
-| Sprint 8 | MDA officers can submit monthly data — adoption engine live |
+| Sprint 7 | **Adoption engine live** — 63 MDA officers have URLs, can submit monthly data. Monthly data cycle begins. |
+| Sprint 8 | Full submission experience — pre-submission checkpoint, mid-cycle events, bidirectional transfers. Officers never submit without safety net. |
+| Sprint 9 | Exception queue operational — promoted observations from migration + submission variances flowing. Deputy AG investigation workflow complete. |
+| Sprint 10 | **Commissioner report** — branded PDFs containing migration data + live submissions + events + exceptions. Living-system proof, not a static snapshot. |
 | Sprint 11 | Auto-Stop Certificates — automatic deduction cessation at loan completion |
-| Sprint 14 | Full MVP — all 82 FRs, all 13 features, administrative self-sufficiency |
+| Sprint 14 | Full MVP — all 90 FRs, all 14 features, administrative self-sufficiency |
 
 ## Epic List
 
@@ -385,8 +403,8 @@ System maintains an immutable financial record and computes accurate loan schedu
 **FRs covered:** FR1, FR2, FR3, FR4, FR5, FR6, FR10, FR11, FR12, FR13, FR14, FR15
 
 ### Epic 3: Data Migration & Legacy Import
-Department Admin can import legacy MDA spreadsheet data, validate and categorise records, acknowledge variances with non-punitive language, and establish baselines for all 63 MDAs. Column mapping, variance categorisation, side-by-side comparison with mathematical explanation, Migration Dashboard tracking all 63 MDAs. Approved beneficiary cross-reference report identifies staff on approved lists but absent from MDA deduction records, and vice versa — compliance audit capability. Gets real data into the system.
-**FRs covered:** FR25, FR26, FR27, FR28, FR29, FR30, FR31, FR85
+Department Admin can import legacy MDA spreadsheet data with intelligent column mapping (298+ header variants across 4 format eras), validate and categorise records with automated rate detection, detect and resolve multi-MDA file boundaries, acknowledge variances with non-punitive language, and establish baselines for all 63 MDAs. Observation Engine auto-generates 6 observation types during migration (rate variance, stalled balance, negative balance, multi-MDA, no approval match, consecutive loan without clearance) with data completeness indicators. Person-level Staff Loan Profiles with cross-MDA timeline replace side-by-side comparison. Master Beneficiary Ledger provides interactive staff table with metrics strip and observation badges. Individual Trace Reports (HTML/PDF) enable the Deputy AG's investigation workflow. "Three Clicks to Clarity": Dashboard → Staff Profile → Action. Department Admin direct reassignment for migration-era transfers. Approved beneficiary cross-reference report. Gets real data into the system and makes it intelligible.
+**FRs covered:** FR25, FR26, FR27, FR28, FR29, FR30, FR31, FR85, FR87, FR88, FR89, FR90
 
 ### Epic 4: Executive Dashboard & Scheme Visibility
 AG opens VLPRS on her phone and instantly sees scheme-wide status — 4 headline numbers, attention items, compliance status — with drill-down to any MDA or individual loan. Mobile-first hero metrics (<3s on 4G), progressive drill-down, attention items with priority indicators, MDA compliance view. Submission Heatmap (GitHub-style activity grid) shows all 63 MDAs' month-by-month submission status with non-punitive colour coding (teal/amber/gray) — sortable by compliance rate for the Deputy AG's pattern detection. The flagship experience and the system's political shield.
@@ -409,7 +427,7 @@ When a loan balance reaches zero, the system automatically generates an official
 **FRs covered:** FR7, FR8, FR9
 
 ### Epic 9: Notifications & Automated Alerts
-System automatically sends email submission reminders (T-3), overdue alerts (T+1), and loan completion notifications — keeping all stakeholders informed without manual intervention. Resend transactional emails, node-cron for scheduled reminders. The operational loop is complete.
+System automatically sends email submission reminders (T-3), overdue alerts (T+1), loan completion notifications, and transfer notifications — keeping all stakeholders informed without manual intervention. Transfer notifications alert counterpart MDAs when a transfer is initiated; escalation triggers after configurable days unconfirmed (FR61 extension). Resend transactional emails, node-cron for scheduled reminders. The operational loop is complete.
 **FRs covered:** FR49, FR50, FR51, FR52
 
 ### Epic 10: Staff Temporal Profile & Retirement Validation
@@ -417,7 +435,7 @@ System computes and maintains staff retirement dates from DOB and appointment da
 **FRs covered:** FR63, FR64, FR65, FR66, FR71
 
 ### Epic 11: Pre-Submission Checkpoint & Mid-Cycle Events
-MDA Reporting Officers review a mandatory checkpoint screen before each submission — surfacing approaching retirements, zero-deduction staff, and unconfirmed mid-cycle events. Mid-cycle events (retirement, death, suspension, transfer, etc.) can be filed at any time via a 5-field form and are reconciled against subsequent CSV submissions. MDA officers can upload historical records for cross-validation against migration baseline. Self-service reconciliation view enables MDA officers to compare their uploaded historical records against the migration baseline, seeing match/variance status per loanee and flagging discrepancies for Department Admin review.
+MDA Reporting Officers review a mandatory checkpoint screen before each submission — surfacing approaching retirements, zero-deduction staff, and unconfirmed mid-cycle events. Mid-cycle events (retirement, death, suspension, transfer, etc.) can be filed at any time via a 5-field form and are reconciled against subsequent CSV submissions. Bidirectional transfer lifecycle: Transfer Out (outgoing MDA initiates, incoming confirms) and Claim Transfer In (incoming MDA initiates, outgoing confirms) with scoped cross-MDA visibility (name and Staff ID only, no financial details until confirmed). Transfer Search enables cross-MDA staff lookup for transfer resolution. MDA officers can upload historical records for cross-validation against migration baseline. Self-service reconciliation view enables MDA officers to compare their uploaded historical records against the migration baseline, seeing match/variance status per loanee and flagging discrepancies for Department Admin review.
 **FRs covered:** FR60, FR61, FR62, FR70, FR84
 
 ### Epic 12: Early Exit Processing
@@ -1774,31 +1792,36 @@ So that the complete history of every loan decision is preserved.
 
 ## Epic 3: Data Migration & Legacy Import
 
-Department Admin can import legacy MDA spreadsheet data, validate and categorise records, acknowledge variances with non-punitive language, and establish baselines for all 63 MDAs.
+Department Admin can import legacy MDA spreadsheet data with intelligent column mapping, validate and categorise records with automated observation generation, view person-level staff profiles with cross-MDA timelines, acknowledge variances, and establish baselines for all 63 MDAs. Observation Engine surfaces data patterns for human review. Individual Trace Reports enable investigation. Department Admin direct reassignment for migration-era transfers.
 
-### Story 3.1: Legacy Spreadsheet Upload & Column Mapping
+### Story 3.1: Legacy Upload & Intelligent Column Mapping
 
 As a **Department Admin**,
-I want to upload legacy MDA spreadsheets and map their columns to VLPRS fields,
-So that data from varied spreadsheet formats can be imported without requiring a standardised template.
+I want to upload legacy MDA spreadsheets and have the system intelligently suggest column mappings based on 298+ known header variants,
+So that data from varied spreadsheet formats across 4 format eras can be imported without manual mapping for every file.
 
 **Acceptance Criteria:**
 
 **Given** the migration tool at `/api/migration/upload`
 **When** Department Admin uploads an `.xlsx` or `.csv` file (up to 10MB / 500 rows)
-**Then** the system parses the file and presents a column-mapping interface showing detected source columns
-**And** the admin maps each source column to the required VLPRS fields (staff ID, staff name, grade level, principal, interest rate, tenure, monthly deduction, outstanding balance, etc.) (FR25)
+**Then** the system parses the file, detects the format era (pre-2018 minimal, 2018-2020 expanded, 2020-2023 standardised, 2023+ modern), and presents a column-mapping interface with auto-suggested mappings based on header text similarity and column position patterns (FR25, FR90)
+
+**Given** the auto-suggested column mapping
+**When** the admin reviews the suggestions
+**Then** each mapping shows: source header, suggested VLPRS field, confidence indicator (High/Medium/Low)
+**And** the admin can confirm, override, or manually map any column
+**And** non-standard extra columns (e.g., "Remark", "Phone Number", "Bank Name") are captured as structured metadata in `migration_extra_fields` rather than discarded (FR90)
 
 **Given** the column mapping step
 **When** the admin confirms the mapping
 **Then** the system processes the file using the mapping in <15 seconds for ~50 records (NFR-PERF-8)
 **And** the upload is atomic — all rows processed or none (NFR-REL-5)
 
-### Story 3.2: Migration Validation & Variance Categorisation
+### Story 3.2: Migration Validation, Rate Detection & MDA Delineation
 
 As a **Department Admin**,
-I want imported records automatically validated and categorised by variance severity,
-So that I can focus attention on significant discrepancies while knowing clean records are safe.
+I want imported records automatically validated, categorised by variance severity, and checked for rate anomalies and multi-MDA content,
+So that I can focus attention on significant discrepancies while knowing clean records are safe and observations are generated automatically.
 
 **Acceptance Criteria:**
 
@@ -1806,26 +1829,39 @@ So that I can focus attention on significant discrepancies while knowing clean r
 **When** the system validates each record against the computation engine
 **Then** each record is categorised as one of: Clean, Minor Variance (<₦500), Significant Variance (₦500-₦50,000), Structural Error (wrong rate/formula), Anomalous (unexplainable) (FR26)
 
+**Given** the validation step
+**When** a loan's effective interest rate differs from the 13.33% standard
+**Then** a Rate Variance observation is auto-generated with: factual description, rate comparison, possible explanations, and data completeness score (partial FR87)
+
+**Given** a single uploaded file
+**When** the system detects records for multiple MDAs within the file
+**Then** a FileDelineationPreview shows detected MDA boundaries with row ranges, detected MDA names, record counts per section, and confidence scores
+**And** Department Admin can confirm, reject, or manually adjust boundaries before processing (partial FR89)
+
 **Given** the categorisation result
 **When** Department Admin views the migration report
 **Then** a summary shows: count and percentage per category (e.g., "Clean: 14 records (61%), Minor Variance: 5 (22%)...")
 **And** all language is non-punitive — "Comparison Complete" header, not "Errors Found"
 
-### Story 3.3: Side-by-Side Comparison with Mathematical Explanation
+### Story 3.3: Staff Loan Profile & Cross-MDA Timeline
 
 As a **Department Admin**,
-I want to see MDA-declared values alongside system-computed values with mathematical explanations for any variance,
-So that I understand exactly why numbers differ and can make informed baseline decisions.
+I want to see a person-level view of each staff member's complete loan history across all MDAs with a visual timeline,
+So that I can understand cross-MDA patterns and make informed baseline decisions.
 
 **Acceptance Criteria:**
 
-**Given** a migrated record with a variance
-**When** Department Admin clicks on the record
-**Then** a ComparisonPanel displays: left panel (MDA Declared — white background), right panel (System Computed — teal-tinted), bottom bar (Difference + explanation) (FR27)
+**Given** migrated records for a staff member
+**When** Department Admin clicks on the staff member from any list view
+**Then** a StaffProfilePanel displays: header (staff name, Staff ID, current MDA, total loans, total observations), LoanTimeline (horizontal timeline showing loan cycles across MDAs, colour-coded by MDA, with gap visualisation), observation summary, and loan details list (FR27)
 
-**Given** the comparison detail
-**When** the admin expands "How was this calculated?"
-**Then** a ComputationTransparencyAccordion shows the complete derivation chain: original terms → expected schedule → monthly breakdown → computed balance
+**Given** a staff member appearing in records from 2+ MDAs
+**When** the personMatchingService processes migration data
+**Then** records are matched by Staff ID (exact) or name (fuzzy with confidence score), and the StaffProfilePanel shows the cross-MDA loan history unified under one person view
+
+**Given** the StaffProfilePanel
+**When** Department Admin reviews the person-level view
+**Then** each loan shows: MDA name, declared values, system-computed values, variance category, and a ComputationTransparencyAccordion for mathematical explanation
 **And** variance explanations use approved vocabulary ("Administrative variance" not "Calculation error")
 
 ### Story 3.4: Baseline Acknowledgment & Ledger Entry Creation
@@ -1846,18 +1882,24 @@ So that legacy data enters the system without implying blame and the system has 
 **When** the loan record is viewed
 **Then** it shows the baseline entry as the starting point with annotation "Migrated from legacy system — baseline as declared"
 
-### Story 3.5: Migration Dashboard & MDA Status Tracking
+### Story 3.5: Migration Dashboard & Master Beneficiary Ledger
 
 As a **Department Admin**,
-I want a Migration Dashboard showing all 63 MDAs and their migration progress through a defined pipeline,
-So that I can track batch completion and know which MDAs still need attention.
+I want a Migration Dashboard with a Master Beneficiary Ledger showing all staff and their migration status, observations, and exposure,
+So that I can track batch completion, investigate patterns, and know which MDAs still need attention.
 
 **Acceptance Criteria:**
 
 **Given** the migration dashboard at the `/migration` route
 **When** Department Admin opens it
-**Then** all 63 MDAs are listed with their current migration status: Pending, Received, Imported, Validated, Reconciled, Certified (FR30)
-**And** a MigrationProgressCard for each MDA shows: MDA name + code, current pipeline stage (1-6), record counts per variance category, last activity timestamp (FR31)
+**Then** all 63 MDAs are listed with their current migration status: Data Pending, Received, Imported, Validated, Reconciled, Certified (FR30)
+**And** a MigrationProgressCard for each MDA shows: MDA name + code, current pipeline stage (1-6), record counts per variance category, observation count, last activity timestamp (FR31)
+**And** MDAs with status "Data Pending" use neutral language — no punitive framing for missing data
+
+**Given** the migration dashboard
+**When** Department Admin clicks "View All Staff"
+**Then** a MasterBeneficiaryLedger displays: interactive table of all staff with columns (Staff Name, Staff ID, MDA(s), Active Loans, Total Exposure, Observations count badge, Last Activity Date), metrics strip (Total Staff, Total Loans, Total Observations Unreviewed, Total Exposure), sortable/filterable by any column
+**And** clicking a staff row opens the StaffProfilePanel ("Three Clicks to Clarity" — Click 1 → Click 2)
 
 **Given** an MDA's migration is complete
 **When** its status reaches "Certified"
@@ -1866,6 +1908,86 @@ So that I can track batch completion and know which MDAs still need attention.
 **Given** the dashboard
 **When** Department Admin views progress
 **Then** an overall progress indicator shows "X of 63 MDAs complete" with a visual progress bar
+
+### Story 3.6: Observation Engine & Review Workflow
+
+As a **Department Admin**,
+I want the system to auto-generate observations during migration and provide a review workflow,
+So that data patterns are surfaced for human review without implying fault and can be systematically investigated.
+
+**Acceptance Criteria:**
+
+**Given** a migration batch is processed
+**When** the observationEngine auto-scan runs
+**Then** observations are generated for all 6 types (FR87):
+1. Rate Variance — effective rate differs from 13.33% standard
+2. Stalled Balance — unchanged for 3+ consecutive months (template includes transfer-first hypothesis)
+3. Negative Balance — computed balance below zero
+4. Multi-MDA — staff in records across 2+ MDAs
+5. No Approval Match — deductions without approved beneficiary list entry (cross-references FR85)
+6. Consecutive Loan Without Clearance — new loan while prior balance outstanding (non-punitive framing)
+**And** each observation includes: factual description, plain-English explanation, 2-3 possible explanations, suggested next step, and data completeness indicator (0-100%)
+**And** all observation templates use non-punitive vocabulary from `vocabulary.ts`
+**And** observations are created with status "Unreviewed"
+
+**Given** the observations list at `GET /api/observations`
+**When** Department Admin or Deputy AG views it
+**Then** ObservationCards display with filters: type, MDA, status, staff
+**And** observation count badges use gold (unreviewed), teal (reviewed), green (resolved) — never red
+
+**Given** an observation
+**When** the reviewer marks it as Reviewed
+**Then** they add a reviewer note, the status changes to "Reviewed", and reviewer_id and note are recorded
+
+**Given** a reviewed observation
+**When** it is Resolved
+**Then** a resolution note is added, resolved_at timestamp is set, and the status changes to "Resolved"
+
+**Given** an observation that warrants formal exception tracking
+**When** the reviewer clicks "Promote to Exception"
+**Then** a new exception record is created in the exception queue (Epic 7 handoff) with the observation context preserved
+
+### Story 3.7: Individual Trace Report Generation
+
+As a **Deputy AG**,
+I want to generate a comprehensive trace report for any staff member showing their complete cross-MDA loan history,
+So that I can investigate patterns and brief the committee with a professional, printable document.
+
+**Acceptance Criteria:**
+
+**Given** a staff member in the StaffProfilePanel
+**When** the user clicks "Generate Trace Report"
+**Then** the traceReportService assembles: cross-MDA loan history, loan cycle detection (sequential, overlapping, gaps), effective interest rate analysis per loan, outstanding balance trajectory, all associated observations, and a LoanTimeline visualisation (FR88)
+
+**Given** the generated trace report
+**When** displayed on screen
+**Then** the IndividualTraceReport component renders an A4-optimised preview with: VLPRS branding, generation date, reference number, staff identification, loan-by-loan detail, observations summary, and data completeness summary
+
+**Given** the trace report
+**When** the user clicks "Download PDF"
+**Then** a server-generated PDF is produced via @react-pdf/renderer with A4 layout and print-optimised typography
+**And** the user can alternatively print the HTML version or email the PDF as an attachment
+
+### Story 3.8: Multi-MDA File Delineation & Deduplication
+
+As a **Department Admin**,
+I want the system to detect when uploaded files contain records for multiple MDAs and to identify cross-file duplicates,
+So that legacy consolidated files are correctly split and duplicate records across MDAs are resolved.
+
+**Acceptance Criteria:**
+
+**Given** files uploaded for different MDAs
+**When** the fileDelineationService processes them
+**Then** cross-file duplicates are detected (same staff appearing in files for different MDAs) and surfaced for review (FR89)
+**And** each duplicate shows: staff name, Staff ID (if available), both MDA names, record count per MDA, suggested resolution
+
+**Given** a parent MDA (e.g., Ministry of Agriculture) with subsidiary departments (e.g., CDU)
+**When** records are processed
+**Then** the system recognises the parent/agency relationship via `mda_relationships` table and handles appropriately — CDU records are attributed to CDU as an independent MDA, not merged into Agriculture (FR89)
+
+**Given** duplicate records identified across MDAs
+**When** Department Admin reviews them
+**Then** they can: confirm as legitimate multi-MDA staff (person works across MDAs), merge records (reassign to correct MDA), or flag for further investigation
 
 ---
 
@@ -2477,6 +2599,18 @@ So that critical staff changes are recorded immediately rather than waiting for 
 **Given** an MDA officer files an event
 **When** the event references a Staff ID not in their assigned MDA
 **Then** the request is rejected with 403 (RBAC scoping applies)
+
+**Given** an MDA officer files a Transfer Out event
+**When** the event is saved
+**Then** the outgoing MDA's loan record is marked as "Transfer Pending — Awaiting Incoming MDA Confirmation" and the incoming MDA can see a Transfer Search result (name and Staff ID only, no financial details) to confirm receipt (FR61 extension)
+
+**Given** an MDA officer files a Claim Transfer In event
+**When** the event is saved
+**Then** the incoming MDA's claim is recorded and the outgoing MDA is notified to confirm release (FR61 extension)
+
+**Given** a Transfer Search
+**When** an MDA officer searches for a staff member for transfer purposes
+**Then** the search returns: staff name and Staff ID only — no financial details are visible until the transfer is confirmed by both parties (FR61 extension — scoped cross-MDA visibility)
 
 ### Story 11.3: Event Reconciliation Engine
 

@@ -20,6 +20,7 @@ export interface Loan {
   status: LoanStatus;
   createdAt: string;
   updatedAt: string;
+  temporalProfile: TemporalProfile;
 }
 
 export interface CreateLoanRequest {
@@ -34,6 +35,8 @@ export interface CreateLoanRequest {
   monthlyDeductionAmount: string;
   approvalDate: string;
   firstDeductionDate: string;
+  dateOfBirth?: string;
+  dateOfFirstAppointment?: string;
 }
 
 export interface LoanStateTransition {
@@ -82,6 +85,36 @@ export interface LoanSearchResult {
   tenureMonths: number;
 }
 
+export interface TemporalProfile {
+  dateOfBirth: string | null;
+  dateOfFirstAppointment: string | null;
+  computedRetirementDate: string | null;
+  computationMethod: 'dob_60' | 'appt_35' | null;
+  profileStatus: 'complete' | 'incomplete';
+  remainingServiceMonths: number | null;
+  profileIncompleteReason: string | null;
+}
+
+export interface TemporalCorrection {
+  id: string;
+  loanId: string;
+  fieldName: string;
+  oldValue: string | null;
+  newValue: string;
+  oldRetirementDate: string | null;
+  newRetirementDate: string | null;
+  correctedBy: string;
+  correctedByName: string;
+  reason: string;
+  createdAt: string;
+}
+
+export interface UpdateTemporalProfileRequest {
+  dateOfBirth?: string;
+  dateOfFirstAppointment?: string;
+  reason: string;
+}
+
 export interface LoanDetail {
   /** Full loan master data */
   id: string;
@@ -108,4 +141,6 @@ export interface LoanDetail {
   schedule: RepaymentSchedule;
   /** Total ledger entries for this loan */
   ledgerEntryCount: number;
+  /** Temporal profile from Story 10.1 */
+  temporalProfile: TemporalProfile;
 }

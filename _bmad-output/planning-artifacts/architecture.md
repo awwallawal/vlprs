@@ -22,6 +22,8 @@ project_name: 'vlprs'
 user_name: 'Awwal'
 date: '2026-02-15'
 editHistory:
+  - date: '2026-03-01'
+    changes: 'PM Alignment Cascade — FR87-FR90 + FR61 extension: Updated FR inventory 86→90 across 18 categories (added Observation & Trace Engine category). Added 4 new services: observationEngine.ts (FR87 — 6 observation types, data completeness indicators), personMatchingService.ts (FR88 — cross-MDA fuzzy matching), traceReportService.ts (FR88 — trace report generation, HTML/PDF), fileDelineationService.ts (FR89 — MDA boundary detection, deduplication). Added 4 new DB tables: observations (type, context JSONB, source_reference JSONB, data_completeness, status workflow), person_matches (fuzzy matching with confidence), migration_extra_fields (non-standard column capture per FR90), mda_relationships (parent/child MDA hierarchy per CDU pattern). Added 3 new route files: observationRoutes.ts, traceRoutes.ts, delineationRoutes.ts with 7 new endpoints. Added observation pipeline data flow diagram (Migration → Parse → Validate → observationEngine auto-scan → observations table → Review → Resolve/Promote). Updated service boundaries with 4 new service ownership entries. Extended employmentEventService with bidirectional transfer event types (Transfer Out, Claim Transfer In) per FR61 extension. Added observationQueries.ts and traceQueries.ts to query builders. Updated requirements-to-structure mapping for FR83-FR90.'
   - date: '2026-02-27'
     changes: 'Party Mode sessions — FR83-FR86 cascade: Updated FR inventory 82→86 across 17 categories (added Data Export & Self-Service category). Added export endpoint pattern: GET /api/loans/export?format=csv|pdf — reuses searchLoans() query with MDA scoping, outputs to file format. Added loans:export RBAC permission for all 3 MVP roles (scoped by role). Added SubmissionHeatmap data source: GET /api/submissions/heatmap?months=12 — returns per-MDA per-month submission status grid (submitted_at, status classification). Added beneficiary cross-reference service: crossReferenceService — joins approved beneficiary lists against deduction records by Name+MDA. No architectural decisions changed. Side Quest SQ-1 scripts in scripts/legacy-report/ — standalone Node.js, imports computation engine pure functions, no DB dependency, zero collision with main app.'
   - date: '2026-02-21'
@@ -50,26 +52,28 @@ _This document builds collaboratively through step-by-step discovery. Sections a
 
 ### Requirements Overview
 
-**Functional Requirements (82 FRs across 16 categories):**
+**Functional Requirements (90 FRs across 17 categories):**
 
 | Category | FRs | Architectural Weight |
 |----------|-----|---------------------|
-| Loan Computation & Financial Engine | FR1-FR9 | **Critical** — deterministic, 100% accuracy, banking-grade, 4 tiers parameterised |
+| Loan Computation & Financial Engine | FR1-FR9 | **Critical** — deterministic, 100% accuracy, banking-grade, 4 tiers parameterised. Standard rate: 13.33% per annum, flat-rate, universal |
 | Data Management & Immutable Ledger | FR10-FR15 | **Critical** — append-only ledger, computed views, no UPDATE/DELETE, temporal profile (DOB, appointment date, computed retirement date) |
 | MDA Monthly Submission | FR16-FR24 | High — 8-field CSV with conditional fields (event date, cessation reason), atomic upload, validation, comparison engine, neutral language |
-| Data Migration | FR25-FR31 | High — column mapping, variance categorisation, baseline creation, temporal data required |
+| Data Migration | FR25-FR31 | High — column mapping, variance categorisation, baseline creation, temporal data required, "Data Pending" neutral status for missing MDAs |
 | Executive Dashboard & Reporting | FR32-FR41 | High — real-time aggregation, PDF generation, drill-down, early exit and gratuity receivable metrics |
 | Access Control & Authentication | FR42-FR48 | High — 3 MVP roles, API-level RBAC, audit logging |
 | Notifications & Alerts | FR49-FR52 | Medium — email (MVP), SMS (fast-follow), scheduled reminders |
 | Report Output & Sharing | FR53-FR54 | Medium — branded PDF with Oyo State crest, one-tap share + email attachment |
 | Exception Management + Annotations | FR55-FR59 | Medium — priority queue, auto-flagging, correction workflow |
-| Pre-Submission & Mid-Cycle Events | FR60-FR62 | High — pre-submission checkpoint, mid-cycle event filing, cross-validation engine reconciling events against CSV |
+| Pre-Submission & Mid-Cycle Events | FR60-FR62 | High — pre-submission checkpoint, mid-cycle event filing, cross-validation engine reconciling events against CSV. FR61 extended with bidirectional transfer lifecycle (Transfer Out, Claim Transfer In, Dept Admin Override) |
 | Retirement & Tenure Validation | FR63-FR66 | High — retirement date computation (min of DOB+60y, appointment+35y), tenure vs service comparison, gratuity receivable tracking, service extension overrides |
 | Early Exit Processing | FR67-FR69 | High — early exit computation workflow with state machine (Computed → Committed → Paid → Closed / Expired), lump sum payoff, Auto-Stop trigger |
 | Historical Data & Migration Reconciliation | FR70-FR71 | Medium — historical CSV upload, cross-reference against migration baseline, service status verification report |
 | User & Account Administration | FR72-FR73 | Medium — user CRUD by Dept Admin/Super Admin, password reset, account lifecycle audit logging |
 | Staff ID Governance | FR74-FR75 | Medium — Staff ID add/update with system-wide duplicate detection, justification logging |
 | Public Website & Scheme Information | FR76-FR82 | Medium — static public zone pages (homepage, about, scheme info, resources, legal), responsive navigation, login modal, 4-column footer, semantic HTML, WCAG 2.1 AA. No backend API dependencies |
+| Data Export & Self-Service | FR83-FR86 | Medium — MDA data export (CSV/PDF), self-service reconciliation, beneficiary cross-reference, submission heatmap |
+| Observation & Trace Engine | FR87-FR90 | **High** — auto-generated observations (6 types with data completeness indicators), individual staff trace reports (cross-MDA history, HTML/PDF), multi-MDA file delineation & deduplication (parent/agency relationships), intelligent column mapping (298+ header variants, 4 format eras) |
 
 **Non-Functional Requirements Driving Architecture:**
 
@@ -800,6 +804,8 @@ docker compose -f docker-compose.dev.yml exec server pnpm db:seed
 | User & Account Administration | FR72-FR73 | `services/userAdminService.ts`, `routes/userRoutes.ts` (extended) | `pages/dashboard/AdminPage.tsx` (extended) |
 | Staff ID Governance | FR74-FR75 | `services/staffIdService.ts` | `pages/dashboard/components/StaffIdManager.tsx` |
 | Public Website & Scheme Information | FR76-FR82 | N/A (static content, no backend) | `pages/public/HomePage.tsx`, `pages/public/AboutPage.tsx`, `pages/public/scheme/*`, `pages/public/resources/*`, `pages/public/legal/*` |
+| Data Export & Self-Service | FR83-FR86 | `services/submissionService.ts` (export), `services/migrationService.ts` (reconciliation) | `pages/dashboard/SubmissionsPage.tsx`, `pages/dashboard/MigrationPage.tsx` |
+| Observation & Trace Engine | FR87-FR90 | `services/observationEngine.ts`, `services/traceReportService.ts`, `services/personMatchingService.ts`, `services/fileDelineationService.ts` | `pages/dashboard/ObservationsPage.tsx`, `pages/dashboard/StaffTracePage.tsx`, `pages/dashboard/MigrationPage.tsx` |
 
 ### Public Zone Page Templates
 
@@ -1004,6 +1010,9 @@ vlprs/
 │           │   ├── earlyExitRoutes.ts    # POST /early-exits/compute, POST /early-exits/:id/commit, POST /early-exits/:id/pay
 │           │   ├── preSubmissionRoutes.ts # GET /pre-submission/checkpoint (retirement approaching, zero deductions, pending events)
 │           │   ├── staffIdRoutes.ts      # PATCH /staff-id/:loanId, GET /staff-id/search, POST /staff-id/check-duplicate
+│           │   ├── observationRoutes.ts  # GET /observations (list with filters: type, MDA, status, staff), PATCH /observations/:id (update status), POST /observations/:id/promote (promote to exception — Epic 7 handoff)
+│           │   ├── traceRoutes.ts       # GET /staff/:id/trace (cross-MDA loan trace), GET /staff/:id/trace/report (generate HTML/PDF trace report)
+│           │   ├── delineationRoutes.ts # POST /migrations/delineate (preview MDA boundaries in file), POST /migrations/deduplicate (check cross-file duplicates)
 │           │   └── healthRoutes.ts       # GET /health (Docker health check, uptime monitoring)
 │           │
 │           ├── middleware/
@@ -1049,7 +1058,15 @@ vlprs/
 │           │   ├── userAdminService.ts  # FR72-73: user account CRUD, password reset by admin, account lifecycle audit
 │           │   ├── userAdminService.test.ts
 │           │   ├── staffIdService.ts    # FR74-75: Staff ID update, system-wide duplicate detection, justification logging
-│           │   └── staffIdService.test.ts
+│           │   ├── staffIdService.test.ts
+│           │   ├── observationEngine.ts # FR87: Auto-generate 6 observation types during migration (rate variance, stalled balance, negative balance, multi-MDA, no approval match, consecutive loan without clearance), data completeness indicators, non-punitive templates from vocabulary.ts
+│           │   ├── observationEngine.test.ts
+│           │   ├── personMatchingService.ts # FR88: Cross-MDA person matching for trace reports (name/Staff ID fuzzy matching, confidence scoring)
+│           │   ├── personMatchingService.test.ts
+│           │   ├── traceReportService.ts # FR88: Individual Staff Trace Report generation (cross-MDA loan history, cycle detection, rate analysis, balance trajectory, observations, HTML/PDF export)
+│           │   ├── traceReportService.test.ts
+│           │   ├── fileDelineationService.ts # FR89: Intra-file MDA boundary detection, cross-file deduplication, parent/agency relationship resolution
+│           │   └── fileDelineationService.test.ts
 │           │
 │           ├── db/
 │           │   ├── index.ts              # Drizzle client initialisation, connection pool
@@ -1065,7 +1082,9 @@ vlprs/
 │           │   │   ├── employmentEventQueries.ts
 │           │   │   ├── earlyExitQueries.ts
 │           │   │   ├── temporalQueries.ts
-│           │   │   └── staffIdQueries.ts
+│           │   │   ├── staffIdQueries.ts
+│           │   │   ├── observationQueries.ts
+│           │   │   └── traceQueries.ts
 │           │   ├── seed.ts               # Development seed data
 │           │   ├── seed-demo.ts          # Demo seed: 5 named accounts, 63 MDAs, mock loans (pnpm seed:demo)
 │           │   └── seed-production.ts    # Production seed: initial super admin from SUPER_ADMIN_EMAIL + SUPER_ADMIN_PASSWORD env vars (pnpm seed:production)
@@ -1097,7 +1116,9 @@ vlprs/
 │           │   ├── report.ts            # ReportType, ReportRequest
 │           │   ├── employmentEvent.ts   # EmploymentEvent, EventType (9 types), EventReconciliationStatus
 │           │   ├── earlyExit.ts         # EarlyExitComputation, EarlyExitStatus (Computed/Committed/Paid/Expired/Closed)
-│           │   └── staffId.ts           # StaffIdUpdate, DuplicateCheckResult
+│           │   ├── staffId.ts           # StaffIdUpdate, DuplicateCheckResult
+│           │   ├── observation.ts      # Observation, ObservationType (6 types), ObservationStatus (Unreviewed/Reviewed/Resolved), DataCompletenessScore
+│           │   └── trace.ts            # StaffTrace, LoanCycle, PersonMatch, TraceReportRequest
 │           ├── constants/
 │           │   ├── vocabulary.ts        # NON-PUNITIVE VOCABULARY (absolute authority)
 │           │   ├── loanTiers.ts         # 4 loan tier configurations
@@ -1165,6 +1186,10 @@ PostgreSQL (constraints, triggers, immutability enforcement)
 | `ledger_entries` table | INSERT only. No UPDATE/DELETE at DB, ORM, or API level |
 | `audit_log` table | INSERT only. Same immutability pattern as ledger |
 | `refresh_tokens` table | INSERT + soft-revoke (`revoked_at`). Never DELETE |
+| `observations` table | Full CRUD with soft deletes. Columns: `id` (UUIDv7), `type` (enum: rate_variance, stalled_balance, negative_balance, multi_mda, no_approval_match, consecutive_loan), `staff_name`, `staff_id`, `loan_id` (FK), `mda_id` (FK), `description` (text), `context` (JSONB — structured data specific to observation type), `source_reference` (JSONB — file/row/column traceability), `status` (enum: unreviewed, reviewed, resolved), `data_completeness` (NUMERIC — 0-100 score), `reviewer_id` (FK nullable), `reviewer_note` (text nullable), `resolved_at` (timestamp nullable), `created_at`, `updated_at`, `deleted_at` |
+| `person_matches` table | Full CRUD with soft deletes. Columns: `id` (UUIDv7), `person_a_name`, `person_a_staff_id`, `person_a_mda_id` (FK), `person_b_name`, `person_b_staff_id`, `person_b_mda_id` (FK), `match_type` (enum: exact_staff_id, fuzzy_name, manual), `confidence` (NUMERIC — 0-100), `confirmed_by` (FK nullable), `confirmed_at` (timestamp nullable), `created_at`, `updated_at`, `deleted_at` |
+| `migration_extra_fields` table | Full CRUD with soft deletes. Columns: `id` (UUIDv7), `loan_id` (FK), `field_name` (text — original header name), `field_value` (text), `source_header` (text — exact header string from file), `source_file` (text — filename reference), `created_at`, `deleted_at` |
+| `mda_relationships` table | Full CRUD with soft deletes. Columns: `id` (UUIDv7), `parent_mda_id` (FK), `child_mda_id` (FK), `relationship_type` (enum: parent_department, agency, subsidiary), `created_at`, `updated_at`, `deleted_at`. Enables CDU-as-department-under-Agriculture modelling |
 | All other tables | Full CRUD with soft deletes (`deleted_at`). Never hard DELETE |
 | Money values | `NUMERIC(15,2)` in DB → string in API → `NairaDisplay` in UI |
 | PII fields | Encrypted at rest via `pgcrypto`. Decrypted in service layer only |
@@ -1184,12 +1209,16 @@ PostgreSQL (constraints, triggers, immutability enforcement)
 | `emailService` | Resend API, templates | Resend SDK only | DB, other services |
 | `notificationService` | Scheduled reminders (node-cron) | `emailService`, `db/queries/*` | Ledger writes |
 | `preSubmissionService` | Checkpoint data assembly (approaching retirement, zero-deduction staff, pending events) | `db/queries/temporalQueries`, `db/queries/submissionQueries`, `db/queries/employmentEventQueries` | Ledger writes |
-| `employmentEventService` | Mid-cycle event filing, CSV reconciliation (matched/discrepancy/unconfirmed) | `db/queries/employmentEventQueries`, `emailService` | `computationEngine` directly |
+| `employmentEventService` | Mid-cycle event filing, CSV reconciliation (matched/discrepancy/unconfirmed), bidirectional transfer events (Transfer Out, Claim Transfer In, Dept Admin Override per FR61 extension) | `db/queries/employmentEventQueries`, `emailService` | `computationEngine` directly |
 | `temporalValidationService` | Retirement date computation (min DOB+60y, appt+35y), tenure validation, service extension, gratuity receivable tracking | `computationEngine`, `db/queries/temporalQueries` | Ledger writes directly |
 | `earlyExitService` | Early exit computation, commitment tracking, payment recording, expiry management, Auto-Stop trigger | `computationEngine`, `ledgerService`, `emailService` | DB directly (uses ledgerService for writes) |
 | `userAdminService` | User account CRUD, password reset by admin, MDA reassignment | `authService`, `db/queries/*` | Business services |
 | `staffIdService` | Staff ID update, system-wide duplicate detection, justification logging | `db/queries/staffIdQueries` | `computationEngine` |
-| `migrationService` | Legacy import, column mapping, baseline creation, historical upload, service status verification report | `ledgerService`, `comparisonEngine`, `temporalValidationService` | Direct ledger UPDATE/DELETE |
+| `migrationService` | Legacy import, column mapping, baseline creation, historical upload, service status verification report | `ledgerService`, `comparisonEngine`, `temporalValidationService`, `observationEngine`, `fileDelineationService` | Direct ledger UPDATE/DELETE |
+| `observationEngine` | Auto-generate 6 observation types, data completeness scoring, non-punitive template rendering, observation status management | `computationEngine`, `db/queries/observationQueries`, `vocabulary.ts` | Ledger writes, direct exception creation (uses promote endpoint) |
+| `personMatchingService` | Cross-MDA person matching (name/Staff ID fuzzy matching, confidence scoring, match confirmation) | `migrationService`, `db/queries/traceQueries` | Ledger writes, financial computations |
+| `traceReportService` | Individual Staff Trace Report generation (cross-MDA history assembly, cycle detection, HTML/PDF rendering) | `ledgerService`, `observationEngine`, `personMatchingService`, `computationEngine` | DB writes |
+| `fileDelineationService` | Intra-file MDA boundary detection, cross-file deduplication, parent/agency relationship resolution | `migrationService`, MDA registry (`db/queries`) | Ledger writes |
 
 ### Data Flow: Monthly Submission Lifecycle
 
@@ -1302,6 +1331,37 @@ MDA Officer or Dept Admin files mid-cycle event
     │     • Date discrepancy → flagged for Dept Admin reconciliation
     │     • Mid-cycle event not in CSV → "Unconfirmed Event" flag
     │     • CSV event with no prior mid-cycle report → accepted normally
+```
+
+### Data Flow: Observation Pipeline (Migration → Review)
+
+```
+Dept Admin uploads legacy spreadsheet
+    │
+    ▼
+[1] migrationRoutes.ts → POST /migrations
+    │  → fileDelineationService.ts detects intra-file MDA boundaries (FR89)
+    │  → migrationService.ts parses, maps columns (FR90), validates (FR26)
+    ▼
+[2] observationEngine.ts auto-scan on validated migration batch
+    │  → Rate Variance: compare each loan's effective rate against 13.33% standard
+    │  → Stalled Balance: detect 3+ months unchanged balance (transfer-first hypothesis)
+    │  → Negative Balance: flag computed balance < 0
+    │  → Multi-MDA: cross-reference staff across all MDA records
+    │  → No Approval Match: cross-reference against approved beneficiary lists (FR85)
+    │  → Consecutive Loan: detect overlapping loan cycles for same staff
+    │  → Each observation: compute data_completeness score (0-100%)
+    │  → INSERT observation records (status: UNREVIEWED)
+    ▼
+[3] Dept Admin / Deputy AG reviews observations
+    │  → GET /observations (filtered by type, MDA, status, staff)
+    │  → ObservationCard displays factual description + explanations + suggested action
+    │  → PATCH /observations/:id → mark as REVIEWED (with reviewer_note)
+    ▼
+[4a] Resolve: PATCH /observations/:id → mark as RESOLVED (with resolution note)
+    ▼
+[4b] Promote: POST /observations/:id/promote → creates exception record (Epic 7 handoff)
+    │  → exceptionService receives promoted observation as new exception
 ```
 
 ### External Integration Points

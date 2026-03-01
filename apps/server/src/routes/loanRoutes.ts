@@ -5,10 +5,11 @@ import { authorise } from '../middleware/authorise';
 import { scopeToMda } from '../middleware/scopeToMda';
 import { validate } from '../middleware/validate';
 import { auditLog } from '../middleware/auditLog';
-import { ROLES, ALL_ROLES, VOCABULARY, createLoanSchema, searchLoansQuerySchema, transitionLoanSchema } from '@vlprs/shared';
+import { ROLES, ALL_ROLES, VOCABULARY, createLoanSchema, searchLoansQuerySchema, transitionLoanSchema, updateTemporalProfileSchema } from '@vlprs/shared';
 import { AppError } from '../lib/appError';
 import * as loanService from '../services/loanService';
 import * as loanTransitionService from '../services/loanTransitionService';
+import * as temporalProfileService from '../services/temporalProfileService';
 import { param } from '../lib/params';
 
 const router = Router();
@@ -98,6 +99,38 @@ router.get(
       req.mdaScope,
     );
     res.json({ success: true, data: transitions });
+  },
+);
+
+// PATCH /api/loans/:loanId/temporal-profile — Update temporal profile (dept_admin + super_admin only)
+router.patch(
+  '/loans/:loanId/temporal-profile',
+  ...adminAuth,
+  validate(updateTemporalProfileSchema),
+  auditLog,
+  async (req: Request, res: Response) => {
+    const updatedLoan = await temporalProfileService.updateTemporalProfile(
+      req.user!.userId,
+      param(req.params.loanId),
+      req.body,
+      req.body.reason,
+      req.mdaScope,
+    );
+    res.json({ success: true, data: updatedLoan });
+  },
+);
+
+// GET /api/loans/:loanId/temporal-corrections — Get temporal correction history (all roles, MDA-scoped)
+router.get(
+  '/loans/:loanId/temporal-corrections',
+  ...allAuth,
+  auditLog,
+  async (req: Request, res: Response) => {
+    const corrections = await temporalProfileService.getTemporalCorrections(
+      param(req.params.loanId),
+      req.mdaScope,
+    );
+    res.json({ success: true, data: corrections });
   },
 );
 
