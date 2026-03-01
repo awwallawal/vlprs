@@ -2,7 +2,7 @@ import { describe, it, expect, beforeAll } from 'vitest';
 import Decimal from 'decimal.js';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { computeRepaymentSchedule, autoSplitDeduction, computeBalanceFromEntries, computeRetirementDate, computeRemainingServiceMonths } from './computationEngine';
+import { computeRepaymentSchedule, autoSplitDeduction, computeBalanceFromEntries, computeRetirementDate, computeRemainingServiceMonths, computeGratuityProjection } from './computationEngine';
 import type { ComputationParams } from '@vlprs/shared';
 
 // ─── Task 4: Unit tests with hand-verified calculations ─────────────────────
@@ -1226,6 +1226,296 @@ describe('computeRemainingServiceMonths', () => {
     const asOf = new Date('2025-01-15');
     const retirement = new Date('2025-07-15');
     expect(computeRemainingServiceMonths(retirement, asOf)).toBe(6);
+  });
+});
+
+// ─── Story 10.3: Gratuity Projection Computation ──────────────────────────────
+
+describe('computeGratuityProjection', () => {
+  const twoDecimalPattern = /^\d+\.\d{2}$/;
+
+  // Standard Tier 1 loan params for reuse across tests
+  // Principal: 250K, Rate: 13.33%, Tenure: 60 months
+  // Total Interest = 250000 × 13.33 / 100 = 33325
+  // Total Loan = 283325
+  // Monthly Deduction (from schedule) = 4722.09
+  const tier1Params = {
+    principalAmount: '250000.00',
+    interestRate: '13.330',
+    tenureMonths: 60,
+    monthlyDeductionAmount: '4722.09',
+  };
+
+  // 6.2: Loan fully repaid before retirement → no exposure
+  it('returns no exposure when loan finishes before retirement', () => {
+    const result = computeGratuityProjection({
+      ...tier1Params,
+      computedRetirementDate: new Date('2035-01-01'), // 120 months away
+      firstDeductionDate: new Date('2025-01-01'),
+      installmentsCompleted: 0,
+      asOfDate: new Date('2025-01-01'),
+    });
+
+    expect(result.hasGratuityExposure).toBe(false);
+    expect(result.payrollDeductionMonths).toBe(60); // all installments via payroll
+    expect(result.gratuityReceivableMonths).toBe(0);
+    expect(result.projectedGratuityReceivableAmount).toBe('0.00');
+    expect(result.projectedMonthlyGratuityAmount).toBe('0.00');
+    expect(result.remainingInstallments).toBe(60);
+    expect(result.remainingServiceMonths).toBe(120);
+  });
+
+  // 6.3: Loan extends 12 months past retirement — hand-verified Tier 1
+  // Tier 1 250K/60m, 0 installments paid, 36 months remaining service → 24 months past retirement
+  // totalLoan = 283325, currentOutstanding = 283325
+  // paymentsBeforeRetirement = 4722.09 × 36 = 169995.24
+  // balanceAtRetirement = 283325 - 169995.24 = 113329.76
+  // monthlyGratuity = 113329.76 / 24 = 4722.0733... → 4722.07
+  it('computes correct gratuity projection when loan extends past retirement (hand-verified Tier 1)', () => {
+    const result = computeGratuityProjection({
+      ...tier1Params,
+      computedRetirementDate: new Date('2028-01-01'), // 36 months away
+      firstDeductionDate: new Date('2025-01-01'),
+      installmentsCompleted: 0,
+      asOfDate: new Date('2025-01-01'),
+    });
+
+    expect(result.hasGratuityExposure).toBe(true);
+    expect(result.payrollDeductionMonths).toBe(36);
+    expect(result.gratuityReceivableMonths).toBe(24);
+    expect(result.projectedGratuityReceivableAmount).toBe('113329.76');
+    expect(result.projectedMonthlyGratuityAmount).toBe('4722.07');
+    expect(result.remainingInstallments).toBe(60);
+    expect(result.remainingServiceMonths).toBe(36);
+    expect(result.loanMaturityDate).toBe('2030-01-01');
+    expect(result.computedRetirementDate).toBe('2028-01-01');
+  });
+
+  // 6.4: Retirement already passed → payrollDeductionMonths = 0, entire balance is gratuity
+  // currentOutstanding = 283325, paymentsBeforeRetirement = 0
+  // balanceAtRetirement = 283325
+  // monthlyGratuity = 283325 / 60 = 4722.0833... → 4722.08
+  it('returns entire remaining balance as gratuity when retirement already passed', () => {
+    const result = computeGratuityProjection({
+      ...tier1Params,
+      computedRetirementDate: new Date('2025-01-01'), // in the past
+      firstDeductionDate: new Date('2025-01-01'),
+      installmentsCompleted: 0,
+      asOfDate: new Date('2025-06-01'),
+    });
+
+    expect(result.hasGratuityExposure).toBe(true);
+    expect(result.payrollDeductionMonths).toBe(0);
+    expect(result.gratuityReceivableMonths).toBe(60);
+    expect(result.projectedGratuityReceivableAmount).toBe('283325.00');
+    expect(result.projectedMonthlyGratuityAmount).toBe('4722.08');
+    expect(result.remainingInstallments).toBe(60);
+    expect(result.remainingServiceMonths).toBe(0);
+  });
+
+  // 6.5: Loan fully paid (0 installments remaining) → no exposure regardless of retirement date
+  it('returns no exposure when loan is fully paid', () => {
+    const result = computeGratuityProjection({
+      ...tier1Params,
+      computedRetirementDate: new Date('2025-06-01'), // retirement very soon
+      firstDeductionDate: new Date('2020-01-01'),
+      installmentsCompleted: 60, // all paid
+      asOfDate: new Date('2025-01-01'),
+    });
+
+    expect(result.hasGratuityExposure).toBe(false);
+    expect(result.remainingInstallments).toBe(0);
+    expect(result.projectedGratuityReceivableAmount).toBe('0.00');
+    expect(result.projectedMonthlyGratuityAmount).toBe('0.00');
+  });
+
+  // 6.6: Boundary — remaining service exactly equals remaining installments → no exposure
+  it('returns no exposure at exact boundary (remaining service == remaining installments)', () => {
+    // 24 installments completed → 36 remaining
+    // Retirement in 36 months → exactly equal
+    const result = computeGratuityProjection({
+      ...tier1Params,
+      computedRetirementDate: new Date('2028-01-01'), // 36 months away
+      firstDeductionDate: new Date('2023-01-01'),
+      installmentsCompleted: 24,
+      asOfDate: new Date('2025-01-01'),
+    });
+
+    expect(result.hasGratuityExposure).toBe(false);
+    expect(result.payrollDeductionMonths).toBe(36);
+    expect(result.gratuityReceivableMonths).toBe(0);
+    expect(result.projectedGratuityReceivableAmount).toBe('0.00');
+    expect(result.remainingInstallments).toBe(36);
+    expect(result.remainingServiceMonths).toBe(36);
+  });
+
+  // 6.7: Boundary — remaining service is 1 month less than remaining installments → 1 month exposure
+  // installmentsCompleted = 24, remaining = 36, remainingService = 35
+  // payrollDeductionMonths = 35, gratuityReceivableMonths = 1
+  // alreadyPaid = 4722.09 × 24 = 113330.16
+  // currentOutstanding = 283325 - 113330.16 = 169994.84
+  // paymentsBeforeRetirement = 4722.09 × 35 = 165273.15
+  // balanceAtRetirement = 169994.84 - 165273.15 = 4721.69
+  it('detects exposure for 1 month overshoot (boundary - 1)', () => {
+    const result = computeGratuityProjection({
+      ...tier1Params,
+      computedRetirementDate: new Date('2027-12-01'), // 35 months away
+      firstDeductionDate: new Date('2023-01-01'),
+      installmentsCompleted: 24,
+      asOfDate: new Date('2025-01-01'),
+    });
+
+    expect(result.hasGratuityExposure).toBe(true);
+    expect(result.payrollDeductionMonths).toBe(35);
+    expect(result.gratuityReceivableMonths).toBe(1);
+    expect(result.projectedGratuityReceivableAmount).toBe('4721.69');
+    expect(result.projectedMonthlyGratuityAmount).toBe('4721.69'); // same — only 1 month
+    expect(result.remainingInstallments).toBe(36);
+    expect(result.remainingServiceMonths).toBe(35);
+  });
+
+  // 6.8: Decimal precision — all monetary outputs match two-decimal pattern
+  it('produces monetary outputs with exactly 2 decimal places', () => {
+    const result = computeGratuityProjection({
+      ...tier1Params,
+      computedRetirementDate: new Date('2028-01-01'),
+      firstDeductionDate: new Date('2025-01-01'),
+      installmentsCompleted: 0,
+      asOfDate: new Date('2025-01-01'),
+    });
+
+    expect(result.projectedGratuityReceivableAmount).toMatch(twoDecimalPattern);
+    expect(result.projectedMonthlyGratuityAmount).toMatch(twoDecimalPattern);
+  });
+
+  it('produces two-decimal precision even with no exposure', () => {
+    const result = computeGratuityProjection({
+      ...tier1Params,
+      computedRetirementDate: new Date('2035-01-01'),
+      firstDeductionDate: new Date('2025-01-01'),
+      installmentsCompleted: 0,
+      asOfDate: new Date('2025-01-01'),
+    });
+
+    expect(result.projectedGratuityReceivableAmount).toMatch(twoDecimalPattern);
+    expect(result.projectedMonthlyGratuityAmount).toMatch(twoDecimalPattern);
+  });
+
+  // 6.9: Determinism — same inputs always produce identical results
+  it('produces identical results for identical inputs (determinism)', () => {
+    const params = {
+      ...tier1Params,
+      computedRetirementDate: new Date('2028-01-01'),
+      firstDeductionDate: new Date('2025-01-01'),
+      installmentsCompleted: 10,
+      asOfDate: new Date('2025-06-01'),
+    };
+
+    const result1 = computeGratuityProjection(params);
+    const result2 = computeGratuityProjection(params);
+
+    expect(result1).toEqual(result2);
+  });
+
+  // 6.10: projectedMonthlyGratuityAmount tests
+
+  // Flat-rate loan: equals monthlyDeductionAmount when balance divides evenly
+  // 10000.00 / 5 months = 2000.00 exactly
+  it('computes projectedMonthlyGratuityAmount correctly for even division', () => {
+    const result = computeGratuityProjection({
+      principalAmount: '10000.00',
+      interestRate: '10.000',
+      tenureMonths: 10,
+      monthlyDeductionAmount: '1100.00', // 11000 / 10
+      computedRetirementDate: new Date('2025-06-01'), // 5 months away
+      firstDeductionDate: new Date('2025-01-01'),
+      installmentsCompleted: 0,
+      asOfDate: new Date('2025-01-01'),
+    });
+
+    // totalLoan = 10000 + 1000 = 11000
+    // remainingInstallments = 10, remainingService = 5
+    // payrollDeductionMonths = 5, gratuityReceivableMonths = 5
+    // currentOutstanding = 11000
+    // paymentsBeforeRetirement = 1100 × 5 = 5500
+    // balanceAtRetirement = 11000 - 5500 = 5500
+    // monthlyGratuity = 5500 / 5 = 1100.00
+    expect(result.hasGratuityExposure).toBe(true);
+    expect(result.projectedGratuityReceivableAmount).toBe('5500.00');
+    expect(result.projectedMonthlyGratuityAmount).toBe('1100.00');
+  });
+
+  // Even division: verifies clean division produces exact result
+  it('computes projectedMonthlyGratuityAmount for clean even division', () => {
+    const result = computeGratuityProjection({
+      principalAmount: '10000.00',
+      interestRate: '0.000',
+      tenureMonths: 10,
+      monthlyDeductionAmount: '1000.00',
+      computedRetirementDate: new Date('2025-08-01'), // 7 months away
+      firstDeductionDate: new Date('2025-01-01'),
+      installmentsCompleted: 0,
+      asOfDate: new Date('2025-01-01'),
+    });
+
+    // totalLoan = 10000, remainingInstallments = 10, remainingService = 7
+    // payrollDeductionMonths = 7, gratuityReceivableMonths = 3
+    // paymentsBeforeRetirement = 1000 × 7 = 7000
+    // balanceAtRetirement = 10000 - 7000 = 3000
+    // monthlyGratuity = 3000 / 3 = 1000.00
+    expect(result.projectedGratuityReceivableAmount).toBe('3000.00');
+    expect(result.projectedMonthlyGratuityAmount).toBe('1000.00');
+  });
+
+  // Truly uneven: e.g., 10000.01 / 3
+  it('handles truly uneven monthly gratuity amounts with rounding', () => {
+    const result = computeGratuityProjection({
+      principalAmount: '9000.01',
+      interestRate: '0.000',
+      tenureMonths: 10,
+      monthlyDeductionAmount: '900.00', // approximate
+      computedRetirementDate: new Date('2025-08-01'), // 7 months
+      firstDeductionDate: new Date('2025-01-01'),
+      installmentsCompleted: 0,
+      asOfDate: new Date('2025-01-01'),
+    });
+
+    // totalLoan = 9000.01, remainingService = 7, remaining = 10
+    // gratuityReceivableMonths = 3
+    // paymentsBeforeRetirement = 900 × 7 = 6300
+    // balanceAtRetirement = 9000.01 - 6300 = 2700.01
+    // monthlyGratuity = 2700.01 / 3 = 900.003333... → 900.00 (ROUND_HALF_UP)
+    expect(result.projectedGratuityReceivableAmount).toBe('2700.01');
+    expect(result.projectedMonthlyGratuityAmount).toBe('900.00');
+    expect(result.projectedMonthlyGratuityAmount).toMatch(twoDecimalPattern);
+  });
+
+  // No exposure: projectedMonthlyGratuityAmount returns "0.00"
+  it('returns "0.00" for projectedMonthlyGratuityAmount when no exposure', () => {
+    const result = computeGratuityProjection({
+      ...tier1Params,
+      computedRetirementDate: new Date('2035-01-01'),
+      firstDeductionDate: new Date('2025-01-01'),
+      installmentsCompleted: 0,
+      asOfDate: new Date('2025-01-01'),
+    });
+
+    expect(result.hasGratuityExposure).toBe(false);
+    expect(result.projectedMonthlyGratuityAmount).toBe('0.00');
+  });
+
+  // Date outputs — loanMaturityDate and computedRetirementDate are ISO date strings
+  it('returns correct date strings for loanMaturityDate and computedRetirementDate', () => {
+    const result = computeGratuityProjection({
+      ...tier1Params,
+      computedRetirementDate: new Date('2028-06-15'),
+      firstDeductionDate: new Date('2025-01-01'),
+      installmentsCompleted: 0,
+      asOfDate: new Date('2025-01-01'),
+    });
+
+    expect(result.loanMaturityDate).toBe('2030-01-01'); // 2025-01-01 + 60 months
+    expect(result.computedRetirementDate).toBe('2028-06-15');
   });
 });
 

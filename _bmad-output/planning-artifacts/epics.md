@@ -2001,6 +2001,8 @@ As the **Accountant General**,
 I want to see four headline numbers (Active Loans, Total Exposure, Fund Available, Monthly Recovery) instantly on my phone without clicking anything,
 So that I can answer any scheme-level question in real time.
 
+**Deferred from Story 10.3:** Wire `gratuityProjectionService.getAggregateGratuityExposure()` into `GET /api/dashboard/metrics` to populate the `DashboardMetrics.gratuityReceivableExposure` field. The service function + integration tests already exist — only endpoint wiring needed. See `10-3-tenure-vs-remaining-service-gratuity-receivable.md` Task 5.2 and AC 4.
+
 **Acceptance Criteria:**
 
 **Given** the dashboard API endpoint `GET /api/dashboard/metrics`
