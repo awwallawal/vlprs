@@ -11,6 +11,7 @@ import ledgerRoutes from './routes/ledgerRoutes';
 import scheduleRoutes from './routes/scheduleRoutes';
 import balanceRoutes from './routes/balanceRoutes';
 import reportRoutes from './routes/reportRoutes';
+import staffProfileRoutes from './routes/staffProfileRoutes';
 import migrationRoutes from './routes/migrationRoutes';
 import { AppError } from './lib/appError';
 import { VOCABULARY } from '@vlprs/shared';
@@ -50,6 +51,7 @@ app.use('/api', ledgerRoutes);
 app.use('/api', scheduleRoutes);
 app.use('/api', balanceRoutes);
 app.use('/api', reportRoutes);
+app.use('/api', staffProfileRoutes);
 app.use('/api', migrationRoutes);
 
 // 404 handler
