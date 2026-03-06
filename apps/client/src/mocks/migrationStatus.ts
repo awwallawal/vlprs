@@ -24,7 +24,7 @@ export const MOCK_MIGRATION_STATUS: MigrationMdaStatus[] = OYO_MDAS.map((mda, i)
     mdaName: mda.mdaName,
     mdaCode: mda.mdaCode,
     stage,
-    recordCounts: { clean, minor, significant, structural },
+    recordCounts: { clean, minor, significant, structural, anomalous: 0 },
     lastActivity: stage !== 'pending' ? '2026-02-10T12:00:00Z' : null,
   };
 });
