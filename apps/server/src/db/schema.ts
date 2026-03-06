@@ -246,9 +246,14 @@ export const refreshTokens = pgTable(
   ],
 );
 
-// ─── Migration Upload Status Enum (Story 3.1) ──────────────────────
+// ─── Migration Upload Status Enum (Story 3.1, extended Story 3.2) ───
 export const migrationUploadStatusEnum = pgEnum('migration_upload_status', [
-  'uploaded', 'mapped', 'processing', 'completed', 'failed',
+  'uploaded', 'mapped', 'processing', 'completed', 'validated', 'failed',
+]);
+
+// ─── Variance Category Enum (Story 3.2) ─────────────────────────────
+export const varianceCategoryEnum = pgEnum('variance_category', [
+  'clean', 'minor_variance', 'significant_variance', 'structural_error', 'anomalous',
 ]);
 
 // ─── Migration Uploads (Story 3.1) ──────────────────────────────────
@@ -265,6 +270,9 @@ export const migrationUploads = pgTable(
     status: migrationUploadStatusEnum('status').notNull().default('uploaded'),
     eraDetected: integer('era_detected'),
     metadata: jsonb('metadata'),
+    hasMultiMda: boolean('has_multi_mda').notNull().default(false),
+    multiMdaBoundaries: jsonb('multi_mda_boundaries'),
+    validationSummary: jsonb('validation_summary'),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
     deletedAt: timestamp('deleted_at', { withTimezone: true }),
@@ -314,6 +322,13 @@ export const migrationRecords = pgTable(
     remarks: text('remarks'),
     dateOfBirth: text('date_of_birth'),
     dateOfFirstAppointment: text('date_of_first_appointment'),
+    varianceCategory: varianceCategoryEnum('variance_category'),
+    varianceAmount: numeric('variance_amount', { precision: 15, scale: 2 }),
+    computedRate: numeric('computed_rate', { precision: 6, scale: 3 }),
+    hasRateVariance: boolean('has_rate_variance').notNull().default(false),
+    computedTotalLoan: numeric('computed_total_loan', { precision: 15, scale: 2 }),
+    computedMonthlyDeduction: numeric('computed_monthly_deduction', { precision: 15, scale: 2 }),
+    computedOutstandingBalance: numeric('computed_outstanding_balance', { precision: 15, scale: 2 }),
     sourceFile: text('source_file').notNull(),
     sourceSheet: text('source_sheet').notNull(),
     sourceRow: integer('source_row').notNull(),
@@ -325,6 +340,8 @@ export const migrationRecords = pgTable(
     index('idx_migration_records_mda_id').on(table.mdaId),
     index('idx_migration_records_staff_name').on(table.staffName),
     index('idx_migration_records_created_at').on(table.createdAt),
+    index('idx_migration_records_variance_category').on(table.varianceCategory),
+    index('idx_migration_records_has_rate_variance').on(table.hasRateVariance),
   ],
 );
 

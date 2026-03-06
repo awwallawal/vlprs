@@ -7,10 +7,12 @@ import { authorise } from '../middleware/authorise';
 import { scopeToMda } from '../middleware/scopeToMda';
 import { validate, validateQuery } from '../middleware/validate';
 import { auditLog } from '../middleware/auditLog';
-import { ROLES, migrationUploadQuerySchema, confirmMappingBodySchema } from '@vlprs/shared';
+import { ROLES, migrationUploadQuerySchema, confirmMappingBodySchema, validationResultQuerySchema } from '@vlprs/shared';
+import type { VarianceCategory } from '@vlprs/shared';
 import { AppError } from '../lib/appError';
 import { param } from '../lib/params';
 import * as migrationService from '../services/migrationService';
+import * as migrationValidationService from '../services/migrationValidationService';
 
 const router = Router();
 
@@ -114,6 +116,38 @@ router.get(
     const uploadId = param(req.params.id);
     const upload = await migrationService.getUpload(uploadId, req.mdaScope);
     res.json({ success: true, data: upload });
+  },
+);
+
+// POST /api/migrations/:id/validate — Trigger validation for an upload
+router.post(
+  '/migrations/:id/validate',
+  ...adminAuth,
+  auditLog,
+  async (req: Request, res: Response) => {
+    const uploadId = param(req.params.id);
+    const summary = await migrationValidationService.validateUpload(uploadId, req.mdaScope);
+    res.json({ success: true, data: summary });
+  },
+);
+
+// GET /api/migrations/:id/validation — Get validation results
+router.get(
+  '/migrations/:id/validation',
+  ...adminAuth,
+  validateQuery(validationResultQuerySchema),
+  async (req: Request, res: Response) => {
+    const uploadId = param(req.params.id);
+    const params = {
+      page: Number(req.query.page) || 1,
+      limit: Number(req.query.limit) || 50,
+      category: req.query.category as VarianceCategory | undefined,
+      sortBy: (req.query.sortBy as string) || 'variance_amount',
+      sortOrder: (req.query.sortOrder as string) || 'desc',
+    };
+
+    const result = await migrationValidationService.getValidationResults(uploadId, params, req.mdaScope);
+    res.json({ success: true, data: result });
   },
 );
 

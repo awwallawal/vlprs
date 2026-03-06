@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuthStore } from '@/stores/authStore';
-import type { MigrationUploadPreview, MigrationUploadSummary, MdaListItem } from '@vlprs/shared';
+import type { MigrationUploadPreview, MigrationUploadSummary, MdaListItem, ValidationSummary, ValidationResult, VarianceCategory } from '@vlprs/shared';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
 
@@ -127,6 +127,68 @@ export function useMdaList() {
       return body.data;
     },
     staleTime: 60_000,
+  });
+}
+
+export function useValidateUpload() {
+  const queryClient = useQueryClient();
+
+  return useMutation<ValidationSummary, Error, { uploadId: string }>({
+    mutationFn: async ({ uploadId }) => {
+      const res = await fetch(`${API_BASE}/migrations/${uploadId}/validate`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeaders(),
+        },
+        credentials: 'include',
+      });
+
+      const body = await res.json();
+      if (!res.ok || !body.success) {
+        throw new Error(body.error?.message || 'Validation failed');
+      }
+      return body.data;
+    },
+    onSuccess: (_data, { uploadId }) => {
+      queryClient.invalidateQueries({ queryKey: ['migrations'] });
+      queryClient.invalidateQueries({ queryKey: ['migrations', uploadId] });
+      queryClient.invalidateQueries({ queryKey: ['validation', uploadId] });
+    },
+  });
+}
+
+export function useValidationResults(
+  uploadId: string,
+  filters?: { page?: number; limit?: number; category?: VarianceCategory; sortBy?: string; sortOrder?: string },
+) {
+  return useQuery<ValidationResult & { pagination: { page: number; limit: number; total: number; totalPages: number } }>({
+    queryKey: ['validation', uploadId, filters],
+    queryFn: async () => {
+      const params = new URLSearchParams();
+      if (filters?.page) params.set('page', String(filters.page));
+      if (filters?.limit) params.set('limit', String(filters.limit));
+      if (filters?.category) params.set('category', filters.category);
+      if (filters?.sortBy) params.set('sortBy', filters.sortBy);
+      if (filters?.sortOrder) params.set('sortOrder', filters.sortOrder);
+
+      const { accessToken } = useAuthStore.getState();
+      const res = await fetch(`${API_BASE}/migrations/${uploadId}/validation?${params}`, {
+        headers: {
+          'Content-Type': 'application/json',
+          ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+        },
+        credentials: 'include',
+      });
+
+      const body = await res.json();
+      if (!res.ok || !body.success) {
+        throw new Error(body.error?.message || 'Failed to load validation results');
+      }
+      return body.data;
+    },
+    enabled: !!uploadId,
+    staleTime: 30_000,
   });
 }
 

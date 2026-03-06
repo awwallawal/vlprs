@@ -86,6 +86,18 @@ export const VOCABULARY = {
   MIGRATION_UPLOAD_ALREADY_PROCESSED: 'This upload has already been processed.',
   MIGRATION_FILE_MISMATCH: 'The re-uploaded file does not match the original. Please upload the same file.',
   MIGRATION_UPLOAD_COMPLETE: 'Upload processed successfully.',
+  // Migration Validation (Story 3.2)
+  MIGRATION_UPLOAD_NOT_VALIDATED: 'This upload must be in completed status before validation.',
+  MIGRATION_ALREADY_VALIDATED: 'This upload has already been validated.',
+  MIGRATION_VALIDATION_COMPLETE: 'Validation completed successfully.',
+  VARIANCE_CLEAN: 'Clean — values match computed schedule',
+  VARIANCE_MINOR: 'Minor Variance — small difference within tolerance',
+  VARIANCE_SIGNIFICANT: 'Significant Variance — requires review',
+  VARIANCE_STRUCTURAL: 'Rate Variance — rate differs from standard',
+  VARIANCE_ANOMALOUS: 'Requires clarification — no matching pattern found',
+  RATE_DIFFERS: 'Rate differs from the standard 13.33% — this is an observation for review, not an error',
+  MULTI_MDA_DETECTED: 'This file contains records for multiple MDAs — review recommended before proceeding',
+  INSUFFICIENT_DATA: 'Insufficient data for full validation — available fields compared',
 } as const;
 
 export const UI_COPY = {
@@ -112,4 +124,14 @@ export const UI_COPY = {
   NO_USERS_YET: "No users yet. Click 'Invite User' to get started.",
   PASSWORD_UPDATED_WELCOME: 'Password updated. Welcome to VLPRS.',
   PASSWORD_UPDATED: 'Password updated successfully',
+  // Variance Category Labels (Story 3.2)
+  VARIANCE_CATEGORY_LABELS: {
+    clean: 'Clean',
+    minor_variance: 'Minor Variance',
+    significant_variance: 'Significant Variance',
+    structural_error: 'Rate Variance',
+    anomalous: 'Requires Clarification',
+  } as Record<string, string>,
+  RATE_VARIANCE_DESCRIPTION: 'Rate differs from standard — for review',
+  MULTI_MDA_BANNER: 'This file contains records for multiple MDAs — review recommended',
 } as const;
