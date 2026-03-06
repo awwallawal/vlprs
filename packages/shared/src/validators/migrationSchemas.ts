@@ -15,7 +15,15 @@ const CANONICAL_FIELDS = [
 export const migrationUploadQuerySchema = z.object({
   page: z.coerce.number().int().min(1).optional().default(1),
   limit: z.coerce.number().int().min(1).max(100).optional().default(20),
-  status: z.enum(['uploaded', 'mapped', 'processing', 'completed', 'failed']).optional(),
+  status: z.enum(['uploaded', 'mapped', 'processing', 'completed', 'validated', 'failed']).optional(),
+});
+
+export const validationResultQuerySchema = z.object({
+  page: z.coerce.number().int().min(1).optional().default(1),
+  limit: z.coerce.number().int().min(1).max(100).optional().default(50),
+  category: z.enum(['clean', 'minor_variance', 'significant_variance', 'structural_error', 'anomalous']).optional(),
+  sortBy: z.enum(['variance_amount', 'staff_name', 'source_row']).optional().default('variance_amount'),
+  sortOrder: z.enum(['asc', 'desc']).optional().default('desc'),
 });
 
 const sheetMappingSchema = z.object({

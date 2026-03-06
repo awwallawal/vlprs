@@ -1,6 +1,25 @@
 export type { MigrationStage, MigrationMdaStatus } from './mda.js';
 
-export type MigrationUploadStatus = 'uploaded' | 'mapped' | 'processing' | 'completed' | 'failed';
+export type MigrationUploadStatus = 'uploaded' | 'mapped' | 'processing' | 'completed' | 'validated' | 'failed';
+
+export type VarianceCategory = 'clean' | 'minor_variance' | 'significant_variance' | 'structural_error' | 'anomalous';
+
+export interface ValidationSummary {
+  clean: number;
+  minorVariance: number;
+  significantVariance: number;
+  structuralError: number;
+  anomalous: number;
+  rateVarianceCount: number;
+}
+
+export interface MdaBoundary {
+  startRow: number;
+  endRow: number;
+  detectedMda: string;
+  recordCount: number;
+  confidence: 'high' | 'medium' | 'low';
+}
 
 export type CanonicalField =
   | 'serialNumber' | 'staffName' | 'mda'
@@ -125,4 +144,42 @@ export interface ConfirmedColumnMapping {
     sourceIndex: number;
     canonicalField: CanonicalField | null;
   }>;
+}
+
+export interface ValidatedMigrationRecord extends MigrationRecord {
+  varianceCategory: VarianceCategory | null;
+  varianceAmount: string | null;
+  computedRate: string | null;
+  hasRateVariance: boolean;
+  computedTotalLoan: string | null;
+  computedMonthlyDeduction: string | null;
+  computedOutstandingBalance: string | null;
+}
+
+export interface ValidationResultRecord {
+  recordId: string;
+  staffName: string;
+  varianceCategory: VarianceCategory;
+  varianceAmount: string | null;
+  computedRate: string | null;
+  declaredValues: {
+    principal: string | null;
+    totalLoan: string | null;
+    monthlyDeduction: string | null;
+    outstandingBalance: string | null;
+  };
+  computedValues: {
+    totalLoan: string | null;
+    monthlyDeduction: string | null;
+    outstandingBalance: string | null;
+  };
+}
+
+export interface ValidationResult {
+  summary: ValidationSummary;
+  records: ValidationResultRecord[];
+  multiMda: {
+    hasMultiMda: boolean;
+    boundaries: MdaBoundary[];
+  };
 }
