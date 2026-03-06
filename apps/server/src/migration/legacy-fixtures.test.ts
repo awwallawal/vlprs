@@ -139,11 +139,11 @@ describe('Legacy Migration Regression Fixtures', () => {
     const wb = XLSX.readFile(
       path.join(FIXTURE_DIR, 'agric_VEHINCLE LOAN DEDUCTION JANUARY- JULY, 2024.xlsx'),
     );
-    const allText = wb.SheetNames.flatMap((name) => {
+    const allText = wb.SheetNames.flatMap((name: string) => {
       const rows = XLSX.utils.sheet_to_json<string[]>(wb.Sheets[name], { header: 1 });
-      return rows.flat().filter((v) => typeof v === 'string');
+      return rows.flat().filter((v: unknown): v is string => typeof v === 'string');
     });
-    const hasCdu = allText.some((text) => /cocoa\s*development\s*unit/i.test(text));
+    const hasCdu = allText.some((text: string) => /cocoa\s*development\s*unit/i.test(text));
     expect(hasCdu, 'Agriculture fixture should contain "COCOA DEVELOPMENT UNIT" marker').toBe(true);
   });
 
