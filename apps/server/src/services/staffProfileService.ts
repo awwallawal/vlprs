@@ -138,7 +138,7 @@ export async function listPersons(
   }
 
   // Convert to array and sort
-  let persons: PersonListItem[] = [...personMap.entries()].map(([norm, p]) => {
+  const persons: PersonListItem[] = [...personMap.entries()].map(([norm, p]) => {
     const mdaList = [...p.mdas].sort();
     return {
       personKey: `${mdaList[0]}:${norm}`,

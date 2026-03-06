@@ -27,14 +27,6 @@ async function loadParentMdaMap(): Promise<Map<string, string>> {
 }
 
 /**
- * Resolve an MDA ID to its canonical ID (parent if exists, else self).
- * This ensures CDU staff in Agriculture files match CDU uploads.
- */
-function resolveCanonicalMda(mdaId: string, parentMap: Map<string, string>): string {
-  return parentMap.get(mdaId) ?? mdaId;
-}
-
-/**
  * Check if two MDAs are in a parent/child relationship.
  */
 function isParentChildPair(mdaIdA: string, mdaIdB: string, parentMap: Map<string, string>): boolean {
