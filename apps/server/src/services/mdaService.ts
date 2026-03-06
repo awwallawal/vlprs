@@ -1,4 +1,4 @@
-import { eq, and, isNull, ilike, sql } from 'drizzle-orm';
+import { eq, and, isNull, ilike, sql, aliasedTable } from 'drizzle-orm';
 import { db } from '../db/index';
 import { mdas, mdaAliases } from '../db/schema';
 import { AppError } from '../lib/appError';
@@ -6,11 +6,24 @@ import { withMdaScope } from '../lib/mdaScope';
 import { VOCABULARY } from '@vlprs/shared';
 import type { MdaListItem } from '@vlprs/shared';
 
+const parentMda = aliasedTable(mdas, 'parent_mda');
+
+const mdaSelectFields = {
+  id: mdas.id,
+  code: mdas.code,
+  name: mdas.name,
+  abbreviation: mdas.abbreviation,
+  isActive: mdas.isActive,
+  parentMdaId: mdas.parentMdaId,
+  parentMdaCode: parentMda.code,
+};
+
 // ─── Types ───────────────────────────────────────────────────────────
 
 interface ListMdasFilters {
   isActive?: boolean;
   search?: string;
+  parentMdaId?: string;
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────
@@ -44,15 +57,14 @@ export async function listMdas(
     );
   }
 
+  if (filters?.parentMdaId) {
+    conditions.push(eq(mdas.parentMdaId, filters.parentMdaId));
+  }
+
   const rows = await db
-    .select({
-      id: mdas.id,
-      code: mdas.code,
-      name: mdas.name,
-      abbreviation: mdas.abbreviation,
-      isActive: mdas.isActive,
-    })
+    .select(mdaSelectFields)
     .from(mdas)
+    .leftJoin(parentMda, eq(mdas.parentMdaId, parentMda.id))
     .where(and(...conditions))
     .orderBy(mdas.name);
 
@@ -61,14 +73,9 @@ export async function listMdas(
 
 export async function getMdaById(id: string): Promise<MdaListItem> {
   const [row] = await db
-    .select({
-      id: mdas.id,
-      code: mdas.code,
-      name: mdas.name,
-      abbreviation: mdas.abbreviation,
-      isActive: mdas.isActive,
-    })
+    .select(mdaSelectFields)
     .from(mdas)
+    .leftJoin(parentMda, eq(mdas.parentMdaId, parentMda.id))
     .where(and(eq(mdas.id, id), isNull(mdas.deletedAt)));
 
   if (!row) {
@@ -88,14 +95,9 @@ export async function getMdaById(id: string): Promise<MdaListItem> {
 export async function resolveMdaByName(input: string): Promise<MdaListItem | null> {
   // Layer 1: Exact code match
   const [byCode] = await db
-    .select({
-      id: mdas.id,
-      code: mdas.code,
-      name: mdas.name,
-      abbreviation: mdas.abbreviation,
-      isActive: mdas.isActive,
-    })
+    .select(mdaSelectFields)
     .from(mdas)
+    .leftJoin(parentMda, eq(mdas.parentMdaId, parentMda.id))
     .where(and(eq(mdas.code, input.toUpperCase()), isNull(mdas.deletedAt)));
 
   if (byCode) return byCode;
@@ -108,14 +110,9 @@ export async function resolveMdaByName(input: string): Promise<MdaListItem | nul
     .trim();
 
   const byName = await db
-    .select({
-      id: mdas.id,
-      code: mdas.code,
-      name: mdas.name,
-      abbreviation: mdas.abbreviation,
-      isActive: mdas.isActive,
-    })
+    .select(mdaSelectFields)
     .from(mdas)
+    .leftJoin(parentMda, eq(mdas.parentMdaId, parentMda.id))
     .where(and(
       ilike(mdas.name, `%${escapeLike(normalised)}%`),
       isNull(mdas.deletedAt),
@@ -125,14 +122,9 @@ export async function resolveMdaByName(input: string): Promise<MdaListItem | nul
 
   // Layer 3: Alias table lookup
   const [byAlias] = await db
-    .select({
-      id: mdas.id,
-      code: mdas.code,
-      name: mdas.name,
-      abbreviation: mdas.abbreviation,
-      isActive: mdas.isActive,
-    })
+    .select(mdaSelectFields)
     .from(mdas)
+    .leftJoin(parentMda, eq(mdas.parentMdaId, parentMda.id))
     .innerJoin(mdaAliases, eq(mdas.id, mdaAliases.mdaId))
     .where(eq(sql`LOWER(${mdaAliases.alias})`, input.toLowerCase()));
 

@@ -8,6 +8,7 @@ export interface Mda {
   code: string;
   name: string;
   abbreviation: string;
+  parentMdaId: string | null;
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
@@ -20,6 +21,8 @@ export interface MdaListItem {
   name: string;
   abbreviation: string;
   isActive: boolean;
+  parentMdaId: string | null;
+  parentMdaCode: string | null;
 }
 
 export interface MdaAlias {
@@ -56,6 +59,6 @@ export interface MigrationMdaStatus {
   mdaName: string;
   mdaCode: string;
   stage: MigrationStage;
-  recordCounts: { clean: number; minor: number; significant: number; structural: number };
+  recordCounts: { clean: number; minor: number; significant: number; structural: number; anomalous: number };
   lastActivity: string | null;
 }

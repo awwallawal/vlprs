@@ -1,3 +1,4 @@
+import { eq } from 'drizzle-orm';
 import { db } from './index';
 import { mdas, mdaAliases, users, loans } from './schema';
 import { hashPassword } from '../lib/password';
@@ -283,6 +284,27 @@ export async function runDemoSeed(): Promise<{ userCount: number; mdaCount: numb
         .insert(mdaAliases)
         .values({ id: generateUuidv7(), mdaId, alias: oldCode })
         .onConflictDoNothing();
+    }
+
+    // 3b. Seed CDU legacy naming variants (SQ-1 observed aliases)
+    const cduMdaId = mdaMap.get('CDU');
+    if (cduMdaId) {
+      const cduAliases = ['CDU', 'COCOA DEVELOPMENT UNIT', 'OYO STATE COCOA DEVELOPMENT UNIT', 'COCOA', 'TCDU'];
+      for (const alias of cduAliases) {
+        await tx
+          .insert(mdaAliases)
+          .values({ id: generateUuidv7(), mdaId: cduMdaId, alias })
+          .onConflictDoNothing();
+      }
+    }
+
+    // 3c. Set CDU parent relationship (CDU is a sub-agency of Agriculture)
+    const agricultureMdaId = mdaMap.get('AGRICULTURE');
+    if (cduMdaId && agricultureMdaId) {
+      await tx
+        .update(mdas)
+        .set({ parentMdaId: agricultureMdaId })
+        .where(eq(mdas.id, cduMdaId));
     }
 
     // 4. Seed demo user accounts using new authoritative MDA codes

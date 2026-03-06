@@ -8,6 +8,8 @@ import * as mdaService from './mdaService';
 let healthMdaId: string;
 let financeMdaId: string;
 let inactiveMdaId: string;
+let agricultureMdaId: string;
+let cduMdaId: string;
 
 beforeAll(async () => {
   await db.execute(sql`TRUNCATE audit_log, refresh_tokens, users, mdas CASCADE`);
@@ -15,11 +17,15 @@ beforeAll(async () => {
   healthMdaId = generateUuidv7();
   financeMdaId = generateUuidv7();
   inactiveMdaId = generateUuidv7();
+  agricultureMdaId = generateUuidv7();
+  cduMdaId = generateUuidv7();
 
   await db.insert(mdas).values([
     { id: healthMdaId, name: 'Ministry of Health', code: 'HEALTH', abbreviation: 'Health' },
     { id: financeMdaId, name: 'Ministry of Finance', code: 'FINANCE', abbreviation: 'Finance' },
     { id: inactiveMdaId, name: 'Defunct Agency', code: 'DEFUNCT', abbreviation: 'Defunct', isActive: false },
+    { id: agricultureMdaId, name: 'Ministry of Agriculture', code: 'AGRICULTURE', abbreviation: 'Agriculture' },
+    { id: cduMdaId, name: 'Cocoa Development Unit', code: 'CDU', abbreviation: 'CDU', parentMdaId: agricultureMdaId },
   ]);
 
   // Seed aliases for testing layer 3
@@ -27,6 +33,8 @@ beforeAll(async () => {
     { id: generateUuidv7(), mdaId: healthMdaId, alias: 'HLT' },
     { id: generateUuidv7(), mdaId: healthMdaId, alias: 'Ministry of Health Oyo' },
     { id: generateUuidv7(), mdaId: financeMdaId, alias: 'MOF' },
+    { id: generateUuidv7(), mdaId: cduMdaId, alias: 'COCOA DEVELOPMENT UNIT' },
+    { id: generateUuidv7(), mdaId: cduMdaId, alias: 'TCDU' },
   ]);
 });
 
@@ -37,7 +45,7 @@ afterAll(async () => {
 describe('mdaService.listMdas', () => {
   it('returns only active MDAs by default', async () => {
     const result = await mdaService.listMdas();
-    expect(result.length).toBe(2);
+    expect(result.length).toBe(4);
     expect(result.every((m) => m.isActive)).toBe(true);
   });
 
@@ -61,10 +69,10 @@ describe('mdaService.listMdas', () => {
 
   it('returns all MDAs when scope is null (admin)', async () => {
     const result = await mdaService.listMdas({}, null);
-    expect(result.length).toBe(2); // 2 active
+    expect(result.length).toBe(4); // 4 active
   });
 
-  it('returns MdaListItem shape', async () => {
+  it('returns MdaListItem shape with parent fields', async () => {
     const result = await mdaService.listMdas();
     const mda = result[0];
     expect(mda).toHaveProperty('id');
@@ -72,6 +80,8 @@ describe('mdaService.listMdas', () => {
     expect(mda).toHaveProperty('name');
     expect(mda).toHaveProperty('abbreviation');
     expect(mda).toHaveProperty('isActive');
+    expect(mda).toHaveProperty('parentMdaId');
+    expect(mda).toHaveProperty('parentMdaCode');
   });
 });
 
@@ -124,5 +134,57 @@ describe('mdaService.resolveMdaByName (4-layer matching)', () => {
   it('Layer 4: returns null for unresolvable name', async () => {
     const mda = await mdaService.resolveMdaByName('Completely Unknown Agency');
     expect(mda).toBeNull();
+  });
+});
+
+describe('mdaService parent/agency relationship (Story 3.0b)', () => {
+  it('CDU has parentMdaId pointing to Agriculture', async () => {
+    const cdu = await mdaService.getMdaById(cduMdaId);
+    expect(cdu.parentMdaId).toBe(agricultureMdaId);
+  });
+
+  it('Agriculture has parentMdaId = null', async () => {
+    const agriculture = await mdaService.getMdaById(agricultureMdaId);
+    expect(agriculture.parentMdaId).toBeNull();
+  });
+
+  it('CDU parentMdaCode is AGRICULTURE', async () => {
+    const cdu = await mdaService.getMdaById(cduMdaId);
+    expect(cdu.parentMdaCode).toBe('AGRICULTURE');
+  });
+
+  it('listMdas response includes parentMdaId and parentMdaCode', async () => {
+    const result = await mdaService.listMdas();
+    const cdu = result.find((m) => m.code === 'CDU');
+    const agriculture = result.find((m) => m.code === 'AGRICULTURE');
+
+    expect(cdu).toBeDefined();
+    expect(cdu!.parentMdaId).toBe(agricultureMdaId);
+    expect(cdu!.parentMdaCode).toBe('AGRICULTURE');
+
+    expect(agriculture).toBeDefined();
+    expect(agriculture!.parentMdaId).toBeNull();
+    expect(agriculture!.parentMdaCode).toBeNull();
+  });
+
+  it('resolveMdaByName returns parent fields for CDU alias', async () => {
+    const cdu = await mdaService.resolveMdaByName('COCOA DEVELOPMENT UNIT');
+    expect(cdu).not.toBeNull();
+    expect(cdu!.code).toBe('CDU');
+    expect(cdu!.parentMdaId).toBe(agricultureMdaId);
+    expect(cdu!.parentMdaCode).toBe('AGRICULTURE');
+  });
+
+  it('MDAs without parent have null parentMdaCode', async () => {
+    const health = await mdaService.getMdaById(healthMdaId);
+    expect(health.parentMdaId).toBeNull();
+    expect(health.parentMdaCode).toBeNull();
+  });
+
+  it('filters by parentMdaId to return sub-agencies', async () => {
+    const result = await mdaService.listMdas({ parentMdaId: agricultureMdaId });
+    expect(result.length).toBe(1);
+    expect(result[0].code).toBe('CDU');
+    expect(result[0].parentMdaCode).toBe('AGRICULTURE');
   });
 });

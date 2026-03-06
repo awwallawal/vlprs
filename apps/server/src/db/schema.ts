@@ -24,6 +24,7 @@ import {
   date,
   index,
   uniqueIndex,
+  type AnyPgColumn,
 } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
 import { generateUuidv7 } from '../lib/uuidv7';
@@ -32,16 +33,23 @@ import { generateUuidv7 } from '../lib/uuidv7';
 export const roleEnum = pgEnum('role', ['super_admin', 'dept_admin', 'mda_officer']);
 
 // ─── MDAs ───────────────────────────────────────────────────────────
-export const mdas = pgTable('mdas', {
-  id: uuid('id').primaryKey().$defaultFn(generateUuidv7),
-  name: varchar('name', { length: 255 }).notNull(),
-  code: varchar('code', { length: 50 }).notNull().unique(),
-  abbreviation: varchar('abbreviation', { length: 100 }).notNull(),
-  isActive: boolean('is_active').notNull().default(true),
-  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
-  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
-  deletedAt: timestamp('deleted_at', { withTimezone: true }),
-});
+export const mdas = pgTable(
+  'mdas',
+  {
+    id: uuid('id').primaryKey().$defaultFn(generateUuidv7),
+    name: varchar('name', { length: 255 }).notNull(),
+    code: varchar('code', { length: 50 }).notNull().unique(),
+    abbreviation: varchar('abbreviation', { length: 100 }).notNull(),
+    parentMdaId: uuid('parent_mda_id').references((): AnyPgColumn => mdas.id),
+    isActive: boolean('is_active').notNull().default(true),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+    deletedAt: timestamp('deleted_at', { withTimezone: true }),
+  },
+  (table) => [
+    index('idx_mdas_parent_mda_id').on(table.parentMdaId),
+  ],
+);
 
 // ─── MDA Aliases ────────────────────────────────────────────────────
 export const mdaAliases = pgTable(
