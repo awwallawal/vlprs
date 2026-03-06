@@ -1,3 +1,2 @@
-# Large binary fixtures — track via Git LFS
-tests/fixtures/legacy-migration/*.xlsx filter=lfs diff=lfs merge=lfs -text
-tests/fixtures/legacy-migration/*.expected.json filter=lfs diff=lfs merge=lfs -text
+# Legacy migration fixtures — stored as regular git objects (21MB total).
+# LFS removed: CI checkout doesn't pull LFS by default, causing test failures.

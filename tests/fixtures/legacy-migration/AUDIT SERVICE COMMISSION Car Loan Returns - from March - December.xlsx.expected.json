@@ -1,3 +1,1718 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:96454efa916c0003f3658b2756b95fce32d6a97c920ee8eb1206875a3334eecd
-size 61902
+{
+  "filename": "AUDIT SERVICE COMMISSION Car Loan Returns - from March - December.xlsx",
+  "mda": {
+    "code": "AUDIT SERVICE COMMISSION",
+    "name": "Audit Service Commission",
+    "confidence": "alias",
+    "source": "title",
+    "rawInput": "AUDIT SERVICE COMMISSION OYO STATE"
+  },
+  "sheets": [
+    {
+      "sheet": "MAR 24",
+      "period": null,
+      "era": 4,
+      "headerConfidence": "high",
+      "columnCount": 19,
+      "unrecognizedColumns": [
+        "Total Int. paid"
+      ],
+      "recordCount": 3,
+      "records": [
+        {
+          "sourceFile": "AUDIT SERVICE COMMISSION Car Loan Returns - from March - December.xlsx",
+          "sheet": "MAR 24",
+          "rowNumber": 5,
+          "period": null,
+          "mda": {
+            "raw": "AUDIT SERVICE COMMISSION OYO STATE",
+            "resolved": "Audit Service Commission",
+            "code": "AUDIT SERVICE COMMISSION",
+            "confidence": "alias",
+            "source": "title"
+          },
+          "fields": {
+            "staffName": "OLANREWAJU HALILU OLABODE",
+            "mda": "AUDIT SERVICE COMM",
+            "serialNumber": 1,
+            "principal": "600000",
+            "interestTotal": "63984",
+            "totalLoan": "663984",
+            "monthlyDeduction": "14166.25",
+            "monthlyInterest": "1361.3617021276596",
+            "monthlyPrincipal": "12765.95744680851",
+            "totalInterestPaid": null,
+            "totalOutstandingInterest": "20420.425531914894",
+            "totalLoanPaid": "453320",
+            "outstandingBalance": "212493.75",
+            "installmentCount": 47,
+            "installmentsPaid": 32,
+            "installmentsOutstanding": 15,
+            "remarks": "TRANSFERED FROM MIN. OF AGRIC",
+            "startDate": "Sat Jul 31 2021 23:59:25 GMT+0100 (West Africa Standard Time)",
+            "endDate": "31-06-2025",
+            "employeeNo": null,
+            "refId": null,
+            "commencementDate": null,
+            "station": null
+          }
+        },
+        {
+          "sourceFile": "AUDIT SERVICE COMMISSION Car Loan Returns - from March - December.xlsx",
+          "sheet": "MAR 24",
+          "rowNumber": 6,
+          "period": null,
+          "mda": {
+            "raw": "AUDIT SERVICE COMMISSION OYO STATE",
+            "resolved": "Audit Service Commission",
+            "code": "AUDIT SERVICE COMMISSION",
+            "confidence": "alias",
+            "source": "title"
+          },
+          "fields": {
+            "staffName": "LUCAS OMOLOLA OLUWABUNMI",
+            "mda": "AUDIT SERVICE COMM",
+            "serialNumber": 2,
+            "principal": "600000",
+            "interestTotal": "79980",
+            "totalLoan": "679980",
+            "monthlyDeduction": "11333",
+            "monthlyInterest": "1333",
+            "monthlyPrincipal": "10000",
+            "totalInterestPaid": null,
+            "totalOutstandingInterest": "14663",
+            "totalLoanPaid": "555317",
+            "outstandingBalance": "124663",
+            "installmentCount": 60,
+            "installmentsPaid": 49,
+            "installmentsOutstanding": 11,
+            "remarks": "TRANSFERED FROM MIN. OF WORK",
+            "startDate": "Sat Feb 29 2020 23:59:25 GMT+0100 (West Africa Standard Time)",
+            "endDate": "Thu Feb 27 2025 23:59:25 GMT+0100 (West Africa Standard Time)",
+            "employeeNo": null,
+            "refId": null,
+            "commencementDate": null,
+            "station": null
+          }
+        },
+        {
+          "sourceFile": "AUDIT SERVICE COMMISSION Car Loan Returns - from March - December.xlsx",
+          "sheet": "MAR 24",
+          "rowNumber": 7,
+          "period": null,
+          "mda": {
+            "raw": "AUDIT SERVICE COMMISSION OYO STATE",
+            "resolved": "Audit Service Commission",
+            "code": "AUDIT SERVICE COMMISSION",
+            "confidence": "alias",
+            "source": "title"
+          },
+          "fields": {
+            "staffName": "GBENLE KAZEEM ADEWALE",
+            "mda": "AUDIT SERVICE COMM",
+            "serialNumber": 3,
+            "principal": "750000",
+            "interestTotal": "83312.5",
+            "totalLoan": "833312.5",
+            "monthlyDeduction": "16666.25",
+            "monthlyInterest": "1666.25",
+            "monthlyPrincipal": "15000",
+            "totalInterestPaid": null,
+            "totalOutstandingInterest": "66650",
+            "totalLoanPaid": "166662.5",
+            "outstandingBalance": "666650",
+            "installmentCount": 50,
+            "installmentsPaid": 10,
+            "installmentsOutstanding": 40,
+            "remarks": "TRANSFERED FROM ACCOUNTANT GENERAL",
+            "startDate": "Wed May 31 2023 23:59:25 GMT+0100 (West Africa Standard Time)",
+            "endDate": "Fri Jul 30 2027 23:59:25 GMT+0100 (West Africa Standard Time)",
+            "employeeNo": null,
+            "refId": null,
+            "commencementDate": null,
+            "station": null
+          }
+        }
+      ]
+    },
+    {
+      "sheet": "APRIL 24",
+      "period": {
+        "year": 2024,
+        "month": 4
+      },
+      "era": 4,
+      "headerConfidence": "high",
+      "columnCount": 19,
+      "unrecognizedColumns": [
+        "Total Int. paid"
+      ],
+      "recordCount": 3,
+      "records": [
+        {
+          "sourceFile": "AUDIT SERVICE COMMISSION Car Loan Returns - from March - December.xlsx",
+          "sheet": "APRIL 24",
+          "rowNumber": 5,
+          "period": {
+            "year": 2024,
+            "month": 4
+          },
+          "mda": {
+            "raw": "AUDIT SERVICE COMMISSION OYO STATE",
+            "resolved": "Audit Service Commission",
+            "code": "AUDIT SERVICE COMMISSION",
+            "confidence": "alias",
+            "source": "title"
+          },
+          "fields": {
+            "staffName": "OLANREWAJU HALILU OLABODE",
+            "mda": "AUDIT SERVICE COMM",
+            "serialNumber": 1,
+            "principal": "600000",
+            "interestTotal": "63984",
+            "totalLoan": "663984",
+            "monthlyDeduction": "14166.25",
+            "monthlyInterest": "1361.3617021276596",
+            "monthlyPrincipal": "12765.95744680851",
+            "totalInterestPaid": null,
+            "totalOutstandingInterest": "19059.063829787236",
+            "totalLoanPaid": "467486.25",
+            "outstandingBalance": "198327.5",
+            "installmentCount": 47,
+            "installmentsPaid": 33,
+            "installmentsOutstanding": 14,
+            "remarks": "TRANSFERED FROM MIN. OF AGRIC",
+            "startDate": "Sat Jul 31 2021 23:59:25 GMT+0100 (West Africa Standard Time)",
+            "endDate": "31-06-2025",
+            "employeeNo": null,
+            "refId": null,
+            "commencementDate": null,
+            "station": null
+          }
+        },
+        {
+          "sourceFile": "AUDIT SERVICE COMMISSION Car Loan Returns - from March - December.xlsx",
+          "sheet": "APRIL 24",
+          "rowNumber": 6,
+          "period": {
+            "year": 2024,
+            "month": 4
+          },
+          "mda": {
+            "raw": "AUDIT SERVICE COMMISSION OYO STATE",
+            "resolved": "Audit Service Commission",
+            "code": "AUDIT SERVICE COMMISSION",
+            "confidence": "alias",
+            "source": "title"
+          },
+          "fields": {
+            "staffName": "LUCAS OMOLOLA OLUWABUNMI",
+            "mda": "AUDIT SERVICE COMM",
+            "serialNumber": 2,
+            "principal": "600000",
+            "interestTotal": "79980",
+            "totalLoan": "679980",
+            "monthlyDeduction": "11333",
+            "monthlyInterest": "1333",
+            "monthlyPrincipal": "10000",
+            "totalInterestPaid": null,
+            "totalOutstandingInterest": "13330",
+            "totalLoanPaid": "566650",
+            "outstandingBalance": "113330",
+            "installmentCount": 60,
+            "installmentsPaid": 50,
+            "installmentsOutstanding": 10,
+            "remarks": "TRANSFERED FROM MIN. OF WORK",
+            "startDate": "Sat Feb 29 2020 23:59:25 GMT+0100 (West Africa Standard Time)",
+            "endDate": "Thu Feb 27 2025 23:59:25 GMT+0100 (West Africa Standard Time)",
+            "employeeNo": null,
+            "refId": null,
+            "commencementDate": null,
+            "station": null
+          }
+        },
+        {
+          "sourceFile": "AUDIT SERVICE COMMISSION Car Loan Returns - from March - December.xlsx",
+          "sheet": "APRIL 24",
+          "rowNumber": 7,
+          "period": {
+            "year": 2024,
+            "month": 4
+          },
+          "mda": {
+            "raw": "AUDIT SERVICE COMMISSION OYO STATE",
+            "resolved": "Audit Service Commission",
+            "code": "AUDIT SERVICE COMMISSION",
+            "confidence": "alias",
+            "source": "title"
+          },
+          "fields": {
+            "staffName": "GBENLE KAZEEM ADEWALE",
+            "mda": "AUDIT SERVICE COMM",
+            "serialNumber": 3,
+            "principal": "750000",
+            "interestTotal": "83312.5",
+            "totalLoan": "833312.5",
+            "monthlyDeduction": "16666.25",
+            "monthlyInterest": "1666.25",
+            "monthlyPrincipal": "15000",
+            "totalInterestPaid": null,
+            "totalOutstandingInterest": "64983.75",
+            "totalLoanPaid": "183328.75",
+            "outstandingBalance": "649983.75",
+            "installmentCount": 50,
+            "installmentsPaid": 11,
+            "installmentsOutstanding": 39,
+            "remarks": "TRANSFERED FROM ACCOUNTANT GENERAL",
+            "startDate": "Wed May 31 2023 23:59:25 GMT+0100 (West Africa Standard Time)",
+            "endDate": "31-09-2027",
+            "employeeNo": null,
+            "refId": null,
+            "commencementDate": null,
+            "station": null
+          }
+        }
+      ]
+    },
+    {
+      "sheet": "MAY, 2024",
+      "period": {
+        "year": 2024,
+        "month": 5
+      },
+      "era": 4,
+      "headerConfidence": "high",
+      "columnCount": 19,
+      "unrecognizedColumns": [
+        "Total Int. paid"
+      ],
+      "recordCount": 3,
+      "records": [
+        {
+          "sourceFile": "AUDIT SERVICE COMMISSION Car Loan Returns - from March - December.xlsx",
+          "sheet": "MAY, 2024",
+          "rowNumber": 5,
+          "period": {
+            "year": 2024,
+            "month": 5
+          },
+          "mda": {
+            "raw": "AUDIT SERVICE COMMISSION OYO STATE",
+            "resolved": "Audit Service Commission",
+            "code": "AUDIT SERVICE COMMISSION",
+            "confidence": "alias",
+            "source": "title"
+          },
+          "fields": {
+            "staffName": "OLANREWAJU HALILU OLABODE",
+            "mda": "AUDIT SERVICE COMM",
+            "serialNumber": 1,
+            "principal": "600000",
+            "interestTotal": "63984",
+            "totalLoan": "663984",
+            "monthlyDeduction": "14166.25",
+            "monthlyInterest": "1361.3617021276596",
+            "monthlyPrincipal": "12765.95744680851",
+            "totalInterestPaid": null,
+            "totalOutstandingInterest": "17697.702127659573",
+            "totalLoanPaid": "481652.5",
+            "outstandingBalance": "184161.25",
+            "installmentCount": 47,
+            "installmentsPaid": 34,
+            "installmentsOutstanding": 13,
+            "remarks": "TRANSFERED FROM MIN. OF AGRIC",
+            "startDate": "Sat Jul 31 2021 23:59:25 GMT+0100 (West Africa Standard Time)",
+            "endDate": "31-06-25",
+            "employeeNo": null,
+            "refId": null,
+            "commencementDate": null,
+            "station": null
+          }
+        },
+        {
+          "sourceFile": "AUDIT SERVICE COMMISSION Car Loan Returns - from March - December.xlsx",
+          "sheet": "MAY, 2024",
+          "rowNumber": 6,
+          "period": {
+            "year": 2024,
+            "month": 5
+          },
+          "mda": {
+            "raw": "AUDIT SERVICE COMMISSION OYO STATE",
+            "resolved": "Audit Service Commission",
+            "code": "AUDIT SERVICE COMMISSION",
+            "confidence": "alias",
+            "source": "title"
+          },
+          "fields": {
+            "staffName": "LUCAS OMOLOLA OLUWABUNMI",
+            "mda": "AUDIT SERVICE COMM",
+            "serialNumber": 2,
+            "principal": "600000",
+            "interestTotal": "79980",
+            "totalLoan": "679980",
+            "monthlyDeduction": "11333",
+            "monthlyInterest": "1333",
+            "monthlyPrincipal": "10000",
+            "totalInterestPaid": null,
+            "totalOutstandingInterest": "11997",
+            "totalLoanPaid": "577983",
+            "outstandingBalance": "101997",
+            "installmentCount": 60,
+            "installmentsPaid": 51,
+            "installmentsOutstanding": 9,
+            "remarks": "TRANSFERED FROM MIN. OF WORK",
+            "startDate": "Sat Feb 29 2020 23:59:25 GMT+0100 (West Africa Standard Time)",
+            "endDate": "Thu Feb 27 2025 23:59:25 GMT+0100 (West Africa Standard Time)",
+            "employeeNo": null,
+            "refId": null,
+            "commencementDate": null,
+            "station": null
+          }
+        },
+        {
+          "sourceFile": "AUDIT SERVICE COMMISSION Car Loan Returns - from March - December.xlsx",
+          "sheet": "MAY, 2024",
+          "rowNumber": 7,
+          "period": {
+            "year": 2024,
+            "month": 5
+          },
+          "mda": {
+            "raw": "AUDIT SERVICE COMMISSION OYO STATE",
+            "resolved": "Audit Service Commission",
+            "code": "AUDIT SERVICE COMMISSION",
+            "confidence": "alias",
+            "source": "title"
+          },
+          "fields": {
+            "staffName": "GBENLE KAZEEM ADEWALE",
+            "mda": "AUDIT SERVICE COMM",
+            "serialNumber": 3,
+            "principal": "750000",
+            "interestTotal": "83312.5",
+            "totalLoan": "833312.5",
+            "monthlyDeduction": "16666.25",
+            "monthlyInterest": "1666.25",
+            "monthlyPrincipal": "15000",
+            "totalInterestPaid": null,
+            "totalOutstandingInterest": "63317.5",
+            "totalLoanPaid": "199995",
+            "outstandingBalance": "633317.5",
+            "installmentCount": 50,
+            "installmentsPaid": 12,
+            "installmentsOutstanding": 38,
+            "remarks": "TRANSFERED FROM ACCOUNTANT GENERAL",
+            "startDate": "Wed May 31 2023 23:59:25 GMT+0100 (West Africa Standard Time)",
+            "endDate": "31-09-27",
+            "employeeNo": null,
+            "refId": null,
+            "commencementDate": null,
+            "station": null
+          }
+        }
+      ]
+    },
+    {
+      "sheet": "JUNE, 2024",
+      "period": {
+        "year": 2024,
+        "month": 6
+      },
+      "era": 4,
+      "headerConfidence": "high",
+      "columnCount": 19,
+      "unrecognizedColumns": [
+        "Total Int. paid"
+      ],
+      "recordCount": 3,
+      "records": [
+        {
+          "sourceFile": "AUDIT SERVICE COMMISSION Car Loan Returns - from March - December.xlsx",
+          "sheet": "JUNE, 2024",
+          "rowNumber": 4,
+          "period": {
+            "year": 2024,
+            "month": 6
+          },
+          "mda": {
+            "raw": "AUDIT SERVICE COMMISSION OYO STATE",
+            "resolved": "Audit Service Commission",
+            "code": "AUDIT SERVICE COMMISSION",
+            "confidence": "alias",
+            "source": "title"
+          },
+          "fields": {
+            "staffName": "OLANREWAJU HALILU OLABODE",
+            "mda": "AUDIT SERVICE COMM",
+            "serialNumber": 1,
+            "principal": "600000",
+            "interestTotal": "63984",
+            "totalLoan": "663984",
+            "monthlyDeduction": "14166.25",
+            "monthlyInterest": "1361.3617021276596",
+            "monthlyPrincipal": "12765.95744680851",
+            "totalInterestPaid": null,
+            "totalOutstandingInterest": "16336.340425531915",
+            "totalLoanPaid": "495818.75",
+            "outstandingBalance": "169995",
+            "installmentCount": 47,
+            "installmentsPaid": 35,
+            "installmentsOutstanding": 12,
+            "remarks": "TRANSFERED FROM MIN. OF AGRIC",
+            "startDate": "Sat Jul 31 2021 23:59:25 GMT+0100 (West Africa Standard Time)",
+            "endDate": "31-06-25",
+            "employeeNo": null,
+            "refId": null,
+            "commencementDate": null,
+            "station": null
+          }
+        },
+        {
+          "sourceFile": "AUDIT SERVICE COMMISSION Car Loan Returns - from March - December.xlsx",
+          "sheet": "JUNE, 2024",
+          "rowNumber": 5,
+          "period": {
+            "year": 2024,
+            "month": 6
+          },
+          "mda": {
+            "raw": "AUDIT SERVICE COMMISSION OYO STATE",
+            "resolved": "Audit Service Commission",
+            "code": "AUDIT SERVICE COMMISSION",
+            "confidence": "alias",
+            "source": "title"
+          },
+          "fields": {
+            "staffName": "LUCAS OMOLOLA OLUWABUNMI",
+            "mda": "AUDIT SERVICE COMM",
+            "serialNumber": 2,
+            "principal": "600000",
+            "interestTotal": "79980",
+            "totalLoan": "679980",
+            "monthlyDeduction": "11333",
+            "monthlyInterest": "1333",
+            "monthlyPrincipal": "10000",
+            "totalInterestPaid": null,
+            "totalOutstandingInterest": "10664",
+            "totalLoanPaid": "589316",
+            "outstandingBalance": "90664",
+            "installmentCount": 60,
+            "installmentsPaid": 52,
+            "installmentsOutstanding": 8,
+            "remarks": "TRANSFERED FROM MIN. OF WORK",
+            "startDate": "Sat Feb 29 2020 23:59:25 GMT+0100 (West Africa Standard Time)",
+            "endDate": "Thu Feb 27 2025 23:59:25 GMT+0100 (West Africa Standard Time)",
+            "employeeNo": null,
+            "refId": null,
+            "commencementDate": null,
+            "station": null
+          }
+        },
+        {
+          "sourceFile": "AUDIT SERVICE COMMISSION Car Loan Returns - from March - December.xlsx",
+          "sheet": "JUNE, 2024",
+          "rowNumber": 6,
+          "period": {
+            "year": 2024,
+            "month": 6
+          },
+          "mda": {
+            "raw": "AUDIT SERVICE COMMISSION OYO STATE",
+            "resolved": "Audit Service Commission",
+            "code": "AUDIT SERVICE COMMISSION",
+            "confidence": "alias",
+            "source": "title"
+          },
+          "fields": {
+            "staffName": "GBENLE KAZEEM ADEWALE",
+            "mda": "AUDIT SERVICE COMM",
+            "serialNumber": 3,
+            "principal": "750000",
+            "interestTotal": "83312.5",
+            "totalLoan": "833312.5",
+            "monthlyDeduction": "16666.25",
+            "monthlyInterest": "1666.25",
+            "monthlyPrincipal": "15000",
+            "totalInterestPaid": null,
+            "totalOutstandingInterest": "61651.25",
+            "totalLoanPaid": "216661.25",
+            "outstandingBalance": "616651.25",
+            "installmentCount": 50,
+            "installmentsPaid": 13,
+            "installmentsOutstanding": 37,
+            "remarks": "TRANSFERED FROM ACCOUNTANT GENERAL",
+            "startDate": "Wed May 31 2023 23:59:25 GMT+0100 (West Africa Standard Time)",
+            "endDate": "31-09-27",
+            "employeeNo": null,
+            "refId": null,
+            "commencementDate": null,
+            "station": null
+          }
+        }
+      ]
+    },
+    {
+      "sheet": "AUGUST,2024",
+      "period": {
+        "year": 2024,
+        "month": 8
+      },
+      "era": 4,
+      "headerConfidence": "high",
+      "columnCount": 19,
+      "unrecognizedColumns": [
+        "Total Int. paid"
+      ],
+      "recordCount": 4,
+      "records": [
+        {
+          "sourceFile": "AUDIT SERVICE COMMISSION Car Loan Returns - from March - December.xlsx",
+          "sheet": "AUGUST,2024",
+          "rowNumber": 4,
+          "period": {
+            "year": 2024,
+            "month": 8
+          },
+          "mda": {
+            "raw": "AUDIT SERVICE COMMISSION OYO STATE",
+            "resolved": "Audit Service Commission",
+            "code": "AUDIT SERVICE COMMISSION",
+            "confidence": "alias",
+            "source": "title"
+          },
+          "fields": {
+            "staffName": "OLANREWAJU HALILU OLABODE",
+            "mda": "AUDIT SERVICE COMM",
+            "serialNumber": 1,
+            "principal": "600000",
+            "interestTotal": "63984",
+            "totalLoan": "663984",
+            "monthlyDeduction": "14166.25",
+            "monthlyInterest": "1361.3617021276596",
+            "monthlyPrincipal": "12765.95744680851",
+            "totalInterestPaid": null,
+            "totalOutstandingInterest": "13613.617021276596",
+            "totalLoanPaid": "524151.25",
+            "outstandingBalance": "141662.5",
+            "installmentCount": 47,
+            "installmentsPaid": 37,
+            "installmentsOutstanding": 10,
+            "remarks": "TRANSFERED FROM MIN. OF AGRIC",
+            "startDate": "Sat Jul 31 2021 23:59:25 GMT+0100 (West Africa Standard Time)",
+            "endDate": "31-06-2025",
+            "employeeNo": null,
+            "refId": null,
+            "commencementDate": null,
+            "station": null
+          }
+        },
+        {
+          "sourceFile": "AUDIT SERVICE COMMISSION Car Loan Returns - from March - December.xlsx",
+          "sheet": "AUGUST,2024",
+          "rowNumber": 5,
+          "period": {
+            "year": 2024,
+            "month": 8
+          },
+          "mda": {
+            "raw": "AUDIT SERVICE COMMISSION OYO STATE",
+            "resolved": "Audit Service Commission",
+            "code": "AUDIT SERVICE COMMISSION",
+            "confidence": "alias",
+            "source": "title"
+          },
+          "fields": {
+            "staffName": "LUCAS OMOLOLA OLUWABUNMI",
+            "mda": "AUDIT SERVICE COMM",
+            "serialNumber": 2,
+            "principal": "600000",
+            "interestTotal": "79980",
+            "totalLoan": "679980",
+            "monthlyDeduction": "11333",
+            "monthlyInterest": "1333",
+            "monthlyPrincipal": "10000",
+            "totalInterestPaid": null,
+            "totalOutstandingInterest": "7998",
+            "totalLoanPaid": "611982",
+            "outstandingBalance": "67998",
+            "installmentCount": 60,
+            "installmentsPaid": 54,
+            "installmentsOutstanding": 6,
+            "remarks": "TRANSFERED FROM MIN. OF WORK",
+            "startDate": "Sat Feb 29 2020 23:59:25 GMT+0100 (West Africa Standard Time)",
+            "endDate": "Thu Feb 27 2025 23:59:25 GMT+0100 (West Africa Standard Time)",
+            "employeeNo": null,
+            "refId": null,
+            "commencementDate": null,
+            "station": null
+          }
+        },
+        {
+          "sourceFile": "AUDIT SERVICE COMMISSION Car Loan Returns - from March - December.xlsx",
+          "sheet": "AUGUST,2024",
+          "rowNumber": 6,
+          "period": {
+            "year": 2024,
+            "month": 8
+          },
+          "mda": {
+            "raw": "AUDIT SERVICE COMMISSION OYO STATE",
+            "resolved": "Audit Service Commission",
+            "code": "AUDIT SERVICE COMMISSION",
+            "confidence": "alias",
+            "source": "title"
+          },
+          "fields": {
+            "staffName": "GBENLE KAZEEM ADEWALE",
+            "mda": "AUDIT SERVICE COMM",
+            "serialNumber": 3,
+            "principal": "750000",
+            "interestTotal": "83312.5",
+            "totalLoan": "833312.5",
+            "monthlyDeduction": "16666.25",
+            "monthlyInterest": "1666.25",
+            "monthlyPrincipal": "15000",
+            "totalInterestPaid": null,
+            "totalOutstandingInterest": "58318.75",
+            "totalLoanPaid": "249993.75",
+            "outstandingBalance": "583318.75",
+            "installmentCount": 50,
+            "installmentsPaid": 15,
+            "installmentsOutstanding": 35,
+            "remarks": "TRANSFERED FROM ACCOUNTANT GENERAL",
+            "startDate": "Wed May 31 2023 23:59:25 GMT+0100 (West Africa Standard Time)",
+            "endDate": "Fri Jul 30 2027 23:59:25 GMT+0100 (West Africa Standard Time)",
+            "employeeNo": null,
+            "refId": null,
+            "commencementDate": null,
+            "station": null
+          }
+        },
+        {
+          "sourceFile": "AUDIT SERVICE COMMISSION Car Loan Returns - from March - December.xlsx",
+          "sheet": "AUGUST,2024",
+          "rowNumber": 7,
+          "period": {
+            "year": 2024,
+            "month": 8
+          },
+          "mda": {
+            "raw": "AUDIT SERVICE COMMISSION OYO STATE",
+            "resolved": "Audit Service Commission",
+            "code": "AUDIT SERVICE COMMISSION",
+            "confidence": "alias",
+            "source": "title"
+          },
+          "fields": {
+            "staffName": "RAIFU MUTIAT ADEOLA",
+            "mda": "AUDIT SERVICE COMM",
+            "serialNumber": 4,
+            "principal": "250000",
+            "interestTotal": "33325",
+            "totalLoan": "283325",
+            "monthlyDeduction": "4722.09",
+            "monthlyInterest": "666.5",
+            "monthlyPrincipal": "5000",
+            "totalInterestPaid": null,
+            "totalOutstandingInterest": "39323.5",
+            "totalLoanPaid": "4722.09",
+            "outstandingBalance": "278603.31",
+            "installmentCount": 60,
+            "installmentsPaid": 1,
+            "installmentsOutstanding": 59,
+            "remarks": "AUDIT SERVICE COMM.",
+            "startDate": "Wed Jul 31 2024 23:59:25 GMT+0100 (West Africa Standard Time)",
+            "endDate": "Sun Jul 29 2029 23:59:25 GMT+0100 (West Africa Standard Time)",
+            "employeeNo": null,
+            "refId": null,
+            "commencementDate": null,
+            "station": null
+          }
+        }
+      ]
+    },
+    {
+      "sheet": "SEPT, 2024",
+      "period": {
+        "year": 2024,
+        "month": 9
+      },
+      "era": 4,
+      "headerConfidence": "high",
+      "columnCount": 19,
+      "unrecognizedColumns": [
+        "Total Int. paid"
+      ],
+      "recordCount": 4,
+      "records": [
+        {
+          "sourceFile": "AUDIT SERVICE COMMISSION Car Loan Returns - from March - December.xlsx",
+          "sheet": "SEPT, 2024",
+          "rowNumber": 4,
+          "period": {
+            "year": 2024,
+            "month": 9
+          },
+          "mda": {
+            "raw": "AUDIT SERVICE COMMISSION OYO STATE",
+            "resolved": "Audit Service Commission",
+            "code": "AUDIT SERVICE COMMISSION",
+            "confidence": "alias",
+            "source": "title"
+          },
+          "fields": {
+            "staffName": "OLANREWAJU HALILU OLABODE",
+            "mda": "AUDIT SERVICE COMM",
+            "serialNumber": 1,
+            "principal": "600000",
+            "interestTotal": "63984",
+            "totalLoan": "663984",
+            "monthlyDeduction": "14166.25",
+            "monthlyInterest": "1361.3617021276596",
+            "monthlyPrincipal": "12765.95744680851",
+            "totalInterestPaid": null,
+            "totalOutstandingInterest": "12252.255319148935",
+            "totalLoanPaid": "538317.5",
+            "outstandingBalance": "127496.25",
+            "installmentCount": 47,
+            "installmentsPaid": 38,
+            "installmentsOutstanding": 9,
+            "remarks": "TRANSFERED FROM MIN. OF AGRIC",
+            "startDate": "Sat Jul 31 2021 23:59:25 GMT+0100 (West Africa Standard Time)",
+            "endDate": "31-06-2025",
+            "employeeNo": null,
+            "refId": null,
+            "commencementDate": null,
+            "station": null
+          }
+        },
+        {
+          "sourceFile": "AUDIT SERVICE COMMISSION Car Loan Returns - from March - December.xlsx",
+          "sheet": "SEPT, 2024",
+          "rowNumber": 5,
+          "period": {
+            "year": 2024,
+            "month": 9
+          },
+          "mda": {
+            "raw": "AUDIT SERVICE COMMISSION OYO STATE",
+            "resolved": "Audit Service Commission",
+            "code": "AUDIT SERVICE COMMISSION",
+            "confidence": "alias",
+            "source": "title"
+          },
+          "fields": {
+            "staffName": "LUCAS OMOLOLA OLUWABUNMI",
+            "mda": "AUDIT SERVICE COMM",
+            "serialNumber": 2,
+            "principal": "600000",
+            "interestTotal": "79980",
+            "totalLoan": "679980",
+            "monthlyDeduction": "11333",
+            "monthlyInterest": "1333",
+            "monthlyPrincipal": "10000",
+            "totalInterestPaid": null,
+            "totalOutstandingInterest": "6665",
+            "totalLoanPaid": "623315",
+            "outstandingBalance": "56665",
+            "installmentCount": 60,
+            "installmentsPaid": 55,
+            "installmentsOutstanding": 5,
+            "remarks": "TRANSFERED FROM MIN. OF WORK",
+            "startDate": "Sat Feb 29 2020 23:59:25 GMT+0100 (West Africa Standard Time)",
+            "endDate": "Thu Feb 27 2025 23:59:25 GMT+0100 (West Africa Standard Time)",
+            "employeeNo": null,
+            "refId": null,
+            "commencementDate": null,
+            "station": null
+          }
+        },
+        {
+          "sourceFile": "AUDIT SERVICE COMMISSION Car Loan Returns - from March - December.xlsx",
+          "sheet": "SEPT, 2024",
+          "rowNumber": 6,
+          "period": {
+            "year": 2024,
+            "month": 9
+          },
+          "mda": {
+            "raw": "AUDIT SERVICE COMMISSION OYO STATE",
+            "resolved": "Audit Service Commission",
+            "code": "AUDIT SERVICE COMMISSION",
+            "confidence": "alias",
+            "source": "title"
+          },
+          "fields": {
+            "staffName": "GBENLE KAZEEM ADEWALE",
+            "mda": "AUDIT SERVICE COMM",
+            "serialNumber": 3,
+            "principal": "750000",
+            "interestTotal": "83312.5",
+            "totalLoan": "833312.5",
+            "monthlyDeduction": "16666.25",
+            "monthlyInterest": "1666.25",
+            "monthlyPrincipal": "15000",
+            "totalInterestPaid": null,
+            "totalOutstandingInterest": "56652.5",
+            "totalLoanPaid": "266660",
+            "outstandingBalance": "566652.5",
+            "installmentCount": 50,
+            "installmentsPaid": 16,
+            "installmentsOutstanding": 34,
+            "remarks": "TRANSFERED FROM ACCOUNTANT GENERAL",
+            "startDate": "Wed May 31 2023 23:59:25 GMT+0100 (West Africa Standard Time)",
+            "endDate": "Fri Jul 30 2027 23:59:25 GMT+0100 (West Africa Standard Time)",
+            "employeeNo": null,
+            "refId": null,
+            "commencementDate": null,
+            "station": null
+          }
+        },
+        {
+          "sourceFile": "AUDIT SERVICE COMMISSION Car Loan Returns - from March - December.xlsx",
+          "sheet": "SEPT, 2024",
+          "rowNumber": 7,
+          "period": {
+            "year": 2024,
+            "month": 9
+          },
+          "mda": {
+            "raw": "AUDIT SERVICE COMMISSION OYO STATE",
+            "resolved": "Audit Service Commission",
+            "code": "AUDIT SERVICE COMMISSION",
+            "confidence": "alias",
+            "source": "title"
+          },
+          "fields": {
+            "staffName": "RAIFU MUTIAT ADEOLA",
+            "mda": "AUDIT SERVICE COMM",
+            "serialNumber": 4,
+            "principal": "250000",
+            "interestTotal": "33325",
+            "totalLoan": "283325",
+            "monthlyDeduction": "4722.09",
+            "monthlyInterest": "666.5",
+            "monthlyPrincipal": "5000",
+            "totalInterestPaid": null,
+            "totalOutstandingInterest": "38657",
+            "totalLoanPaid": "9444.18",
+            "outstandingBalance": "273881.22000000003",
+            "installmentCount": 60,
+            "installmentsPaid": 2,
+            "installmentsOutstanding": 58,
+            "remarks": "AUDIT SERVICE COMM.",
+            "startDate": "Wed Jul 31 2024 23:59:25 GMT+0100 (West Africa Standard Time)",
+            "endDate": "Sun Jul 29 2029 23:59:25 GMT+0100 (West Africa Standard Time)",
+            "employeeNo": null,
+            "refId": null,
+            "commencementDate": null,
+            "station": null
+          }
+        }
+      ]
+    },
+    {
+      "sheet": "OCTOBER,2024",
+      "period": {
+        "year": 2024,
+        "month": 10
+      },
+      "era": 4,
+      "headerConfidence": "high",
+      "columnCount": 19,
+      "unrecognizedColumns": [
+        "Total Int. paid"
+      ],
+      "recordCount": 5,
+      "records": [
+        {
+          "sourceFile": "AUDIT SERVICE COMMISSION Car Loan Returns - from March - December.xlsx",
+          "sheet": "OCTOBER,2024",
+          "rowNumber": 4,
+          "period": {
+            "year": 2024,
+            "month": 10
+          },
+          "mda": {
+            "raw": "AUDIT SERVICE COMMISSION OYO STATE",
+            "resolved": "Audit Service Commission",
+            "code": "AUDIT SERVICE COMMISSION",
+            "confidence": "alias",
+            "source": "title"
+          },
+          "fields": {
+            "staffName": "OLANREWAJU HALILU OLABODE",
+            "mda": "AUDIT SERVICE COMM",
+            "serialNumber": 1,
+            "principal": "600000",
+            "interestTotal": "63984",
+            "totalLoan": "663984",
+            "monthlyDeduction": "14166.25",
+            "monthlyInterest": "1361.3617021276596",
+            "monthlyPrincipal": "12765.95744680851",
+            "totalInterestPaid": null,
+            "totalOutstandingInterest": "10890.893617021276",
+            "totalLoanPaid": "552483.75",
+            "outstandingBalance": "113330",
+            "installmentCount": 47,
+            "installmentsPaid": 39,
+            "installmentsOutstanding": 8,
+            "remarks": "TRANSFERED FROM MIN. OF AGRIC",
+            "startDate": "Sat Jul 31 2021 23:59:25 GMT+0100 (West Africa Standard Time)",
+            "endDate": "31-06-2025",
+            "employeeNo": null,
+            "refId": null,
+            "commencementDate": null,
+            "station": null
+          }
+        },
+        {
+          "sourceFile": "AUDIT SERVICE COMMISSION Car Loan Returns - from March - December.xlsx",
+          "sheet": "OCTOBER,2024",
+          "rowNumber": 5,
+          "period": {
+            "year": 2024,
+            "month": 10
+          },
+          "mda": {
+            "raw": "AUDIT SERVICE COMMISSION OYO STATE",
+            "resolved": "Audit Service Commission",
+            "code": "AUDIT SERVICE COMMISSION",
+            "confidence": "alias",
+            "source": "title"
+          },
+          "fields": {
+            "staffName": "AJADI MOJEED ADEKUNLE",
+            "mda": "AUDIT SERVICE COMM",
+            "serialNumber": 2,
+            "principal": "600000",
+            "interestTotal": "66650",
+            "totalLoan": "666650",
+            "monthlyDeduction": "13333",
+            "monthlyInterest": "1333",
+            "monthlyPrincipal": "12000",
+            "totalInterestPaid": null,
+            "totalOutstandingInterest": "7998",
+            "totalLoanPaid": "586652",
+            "outstandingBalance": "79998",
+            "installmentCount": 50,
+            "installmentsPaid": 44,
+            "installmentsOutstanding": 6,
+            "remarks": "MIN. WOMEN AFFAIRS",
+            "startDate": "Sun Feb 28 2021 23:59:25 GMT+0100 (West Africa Standard Time)",
+            "endDate": "Tue Apr 29 2025 23:59:25 GMT+0100 (West Africa Standard Time)",
+            "employeeNo": null,
+            "refId": null,
+            "commencementDate": null,
+            "station": null
+          }
+        },
+        {
+          "sourceFile": "AUDIT SERVICE COMMISSION Car Loan Returns - from March - December.xlsx",
+          "sheet": "OCTOBER,2024",
+          "rowNumber": 6,
+          "period": {
+            "year": 2024,
+            "month": 10
+          },
+          "mda": {
+            "raw": "AUDIT SERVICE COMMISSION OYO STATE",
+            "resolved": "Audit Service Commission",
+            "code": "AUDIT SERVICE COMMISSION",
+            "confidence": "alias",
+            "source": "title"
+          },
+          "fields": {
+            "staffName": "LUCAS OMOLOLA OLUWABUNMI",
+            "mda": "AUDIT SERVICE COMM",
+            "serialNumber": 3,
+            "principal": "600000",
+            "interestTotal": "79980",
+            "totalLoan": "679980",
+            "monthlyDeduction": "11333",
+            "monthlyInterest": "1333",
+            "monthlyPrincipal": "10000",
+            "totalInterestPaid": null,
+            "totalOutstandingInterest": "5332",
+            "totalLoanPaid": "634648",
+            "outstandingBalance": "45332",
+            "installmentCount": 60,
+            "installmentsPaid": 56,
+            "installmentsOutstanding": 4,
+            "remarks": "TRANSFERED FROM MIN. OF WORK",
+            "startDate": "Sat Feb 29 2020 23:59:25 GMT+0100 (West Africa Standard Time)",
+            "endDate": "Thu Feb 27 2025 23:59:25 GMT+0100 (West Africa Standard Time)",
+            "employeeNo": null,
+            "refId": null,
+            "commencementDate": null,
+            "station": null
+          }
+        },
+        {
+          "sourceFile": "AUDIT SERVICE COMMISSION Car Loan Returns - from March - December.xlsx",
+          "sheet": "OCTOBER,2024",
+          "rowNumber": 7,
+          "period": {
+            "year": 2024,
+            "month": 10
+          },
+          "mda": {
+            "raw": "AUDIT SERVICE COMMISSION OYO STATE",
+            "resolved": "Audit Service Commission",
+            "code": "AUDIT SERVICE COMMISSION",
+            "confidence": "alias",
+            "source": "title"
+          },
+          "fields": {
+            "staffName": "GBENLE KAZEEM ADEWALE",
+            "mda": "AUDIT SERVICE COMM",
+            "serialNumber": 4,
+            "principal": "750000",
+            "interestTotal": "83312.5",
+            "totalLoan": "833312.5",
+            "monthlyDeduction": "16666.25",
+            "monthlyInterest": "1666.25",
+            "monthlyPrincipal": "15000",
+            "totalInterestPaid": null,
+            "totalOutstandingInterest": "54986.25",
+            "totalLoanPaid": "283326.25",
+            "outstandingBalance": "549986.25",
+            "installmentCount": 50,
+            "installmentsPaid": 17,
+            "installmentsOutstanding": 33,
+            "remarks": "TRANSFERED FROM ACCOUNTANT GENERAL",
+            "startDate": "Wed May 31 2023 23:59:25 GMT+0100 (West Africa Standard Time)",
+            "endDate": "Fri Jul 30 2027 23:59:25 GMT+0100 (West Africa Standard Time)",
+            "employeeNo": null,
+            "refId": null,
+            "commencementDate": null,
+            "station": null
+          }
+        },
+        {
+          "sourceFile": "AUDIT SERVICE COMMISSION Car Loan Returns - from March - December.xlsx",
+          "sheet": "OCTOBER,2024",
+          "rowNumber": 8,
+          "period": {
+            "year": 2024,
+            "month": 10
+          },
+          "mda": {
+            "raw": "AUDIT SERVICE COMMISSION OYO STATE",
+            "resolved": "Audit Service Commission",
+            "code": "AUDIT SERVICE COMMISSION",
+            "confidence": "alias",
+            "source": "title"
+          },
+          "fields": {
+            "staffName": "RAIFU MUTIAT ADEOLA",
+            "mda": "AUDIT SERVICE COMM",
+            "serialNumber": 4,
+            "principal": "250000",
+            "interestTotal": "33325",
+            "totalLoan": "283325",
+            "monthlyDeduction": "4722.09",
+            "monthlyInterest": "666.5",
+            "monthlyPrincipal": "4166.666666666667",
+            "totalInterestPaid": null,
+            "totalOutstandingInterest": "37990.5",
+            "totalLoanPaid": "14166.27",
+            "outstandingBalance": "269159.13",
+            "installmentCount": 60,
+            "installmentsPaid": 3,
+            "installmentsOutstanding": 57,
+            "remarks": "AUDIT SERVICE COMM.",
+            "startDate": "Wed Jul 31 2024 23:59:25 GMT+0100 (West Africa Standard Time)",
+            "endDate": "Sun Jul 29 2029 23:59:25 GMT+0100 (West Africa Standard Time)",
+            "employeeNo": null,
+            "refId": null,
+            "commencementDate": null,
+            "station": null
+          }
+        }
+      ]
+    },
+    {
+      "sheet": "NOVEMBER,2024",
+      "period": {
+        "year": 2024,
+        "month": 11
+      },
+      "era": 4,
+      "headerConfidence": "high",
+      "columnCount": 19,
+      "unrecognizedColumns": [
+        "Total Int. paid"
+      ],
+      "recordCount": 5,
+      "records": [
+        {
+          "sourceFile": "AUDIT SERVICE COMMISSION Car Loan Returns - from March - December.xlsx",
+          "sheet": "NOVEMBER,2024",
+          "rowNumber": 4,
+          "period": {
+            "year": 2024,
+            "month": 11
+          },
+          "mda": {
+            "raw": "AUDIT SERVICE COMMISSION OYO STATE",
+            "resolved": "Audit Service Commission",
+            "code": "AUDIT SERVICE COMMISSION",
+            "confidence": "alias",
+            "source": "title"
+          },
+          "fields": {
+            "staffName": "OLANREWAJU HALILU OLABODE",
+            "mda": "AUDIT SERVICE COMM",
+            "serialNumber": 1,
+            "principal": "600000",
+            "interestTotal": "63984",
+            "totalLoan": "663984",
+            "monthlyDeduction": "14166.25",
+            "monthlyInterest": "1361.3617021276596",
+            "monthlyPrincipal": "12765.95744680851",
+            "totalInterestPaid": null,
+            "totalOutstandingInterest": "9529.531914893618",
+            "totalLoanPaid": "566650",
+            "outstandingBalance": "99163.75",
+            "installmentCount": 47,
+            "installmentsPaid": 40,
+            "installmentsOutstanding": 7,
+            "remarks": "TRANSFERED FROM MIN. OF AGRIC",
+            "startDate": "Sat Jul 31 2021 23:59:25 GMT+0100 (West Africa Standard Time)",
+            "endDate": "31-06-2025",
+            "employeeNo": null,
+            "refId": null,
+            "commencementDate": null,
+            "station": null
+          }
+        },
+        {
+          "sourceFile": "AUDIT SERVICE COMMISSION Car Loan Returns - from March - December.xlsx",
+          "sheet": "NOVEMBER,2024",
+          "rowNumber": 5,
+          "period": {
+            "year": 2024,
+            "month": 11
+          },
+          "mda": {
+            "raw": "AUDIT SERVICE COMMISSION OYO STATE",
+            "resolved": "Audit Service Commission",
+            "code": "AUDIT SERVICE COMMISSION",
+            "confidence": "alias",
+            "source": "title"
+          },
+          "fields": {
+            "staffName": "AJADI MOJEED ADEKUNLE",
+            "mda": "AUDIT SERVICE COMM",
+            "serialNumber": 2,
+            "principal": "600000",
+            "interestTotal": "66650",
+            "totalLoan": "666650",
+            "monthlyDeduction": "13333",
+            "monthlyInterest": "1333",
+            "monthlyPrincipal": "12000",
+            "totalInterestPaid": null,
+            "totalOutstandingInterest": "6665",
+            "totalLoanPaid": "599985",
+            "outstandingBalance": "66665",
+            "installmentCount": 50,
+            "installmentsPaid": 45,
+            "installmentsOutstanding": 5,
+            "remarks": "MIN. WOMEN AFFAIRS",
+            "startDate": "Sun Feb 28 2021 23:59:25 GMT+0100 (West Africa Standard Time)",
+            "endDate": "Tue Apr 29 2025 23:59:25 GMT+0100 (West Africa Standard Time)",
+            "employeeNo": null,
+            "refId": null,
+            "commencementDate": null,
+            "station": null
+          }
+        },
+        {
+          "sourceFile": "AUDIT SERVICE COMMISSION Car Loan Returns - from March - December.xlsx",
+          "sheet": "NOVEMBER,2024",
+          "rowNumber": 6,
+          "period": {
+            "year": 2024,
+            "month": 11
+          },
+          "mda": {
+            "raw": "AUDIT SERVICE COMMISSION OYO STATE",
+            "resolved": "Audit Service Commission",
+            "code": "AUDIT SERVICE COMMISSION",
+            "confidence": "alias",
+            "source": "title"
+          },
+          "fields": {
+            "staffName": "LUCAS OMOLOLA OLUWABUNMI",
+            "mda": "AUDIT SERVICE COMM",
+            "serialNumber": 3,
+            "principal": "600000",
+            "interestTotal": "79980",
+            "totalLoan": "679980",
+            "monthlyDeduction": "11333",
+            "monthlyInterest": "1333",
+            "monthlyPrincipal": "10000",
+            "totalInterestPaid": null,
+            "totalOutstandingInterest": "3999",
+            "totalLoanPaid": "645981",
+            "outstandingBalance": "33999",
+            "installmentCount": 60,
+            "installmentsPaid": 57,
+            "installmentsOutstanding": 3,
+            "remarks": "TRANSFERED FROM MIN. OF WORK",
+            "startDate": "Sat Feb 29 2020 23:59:25 GMT+0100 (West Africa Standard Time)",
+            "endDate": "Thu Feb 27 2025 23:59:25 GMT+0100 (West Africa Standard Time)",
+            "employeeNo": null,
+            "refId": null,
+            "commencementDate": null,
+            "station": null
+          }
+        },
+        {
+          "sourceFile": "AUDIT SERVICE COMMISSION Car Loan Returns - from March - December.xlsx",
+          "sheet": "NOVEMBER,2024",
+          "rowNumber": 7,
+          "period": {
+            "year": 2024,
+            "month": 11
+          },
+          "mda": {
+            "raw": "AUDIT SERVICE COMMISSION OYO STATE",
+            "resolved": "Audit Service Commission",
+            "code": "AUDIT SERVICE COMMISSION",
+            "confidence": "alias",
+            "source": "title"
+          },
+          "fields": {
+            "staffName": "GBENLE KAZEEM ADEWALE",
+            "mda": "AUDIT SERVICE COMM",
+            "serialNumber": 4,
+            "principal": "750000",
+            "interestTotal": "83312.5",
+            "totalLoan": "833312.5",
+            "monthlyDeduction": "16666.25",
+            "monthlyInterest": "1666.25",
+            "monthlyPrincipal": "15000",
+            "totalInterestPaid": null,
+            "totalOutstandingInterest": "53320",
+            "totalLoanPaid": "299992.5",
+            "outstandingBalance": "533320",
+            "installmentCount": 50,
+            "installmentsPaid": 18,
+            "installmentsOutstanding": 32,
+            "remarks": "TRANSFERED FROM ACCOUNTANT GENERAL",
+            "startDate": "Wed May 31 2023 23:59:25 GMT+0100 (West Africa Standard Time)",
+            "endDate": "Fri Jul 30 2027 23:59:25 GMT+0100 (West Africa Standard Time)",
+            "employeeNo": null,
+            "refId": null,
+            "commencementDate": null,
+            "station": null
+          }
+        },
+        {
+          "sourceFile": "AUDIT SERVICE COMMISSION Car Loan Returns - from March - December.xlsx",
+          "sheet": "NOVEMBER,2024",
+          "rowNumber": 8,
+          "period": {
+            "year": 2024,
+            "month": 11
+          },
+          "mda": {
+            "raw": "AUDIT SERVICE COMMISSION OYO STATE",
+            "resolved": "Audit Service Commission",
+            "code": "AUDIT SERVICE COMMISSION",
+            "confidence": "alias",
+            "source": "title"
+          },
+          "fields": {
+            "staffName": "RAIFU MUTIAT ADEOLA",
+            "mda": "AUDIT SERVICE COMM",
+            "serialNumber": 4,
+            "principal": "250000",
+            "interestTotal": "33325",
+            "totalLoan": "283325",
+            "monthlyDeduction": "4722.09",
+            "monthlyInterest": "666.5",
+            "monthlyPrincipal": "4166.666666666667",
+            "totalInterestPaid": null,
+            "totalOutstandingInterest": "37324",
+            "totalLoanPaid": "18888.36",
+            "outstandingBalance": "264437.04000000004",
+            "installmentCount": 60,
+            "installmentsPaid": 4,
+            "installmentsOutstanding": 56,
+            "remarks": "AUDIT SERVICE COMM.",
+            "startDate": "Wed Jul 31 2024 23:59:25 GMT+0100 (West Africa Standard Time)",
+            "endDate": "Sun Jul 29 2029 23:59:25 GMT+0100 (West Africa Standard Time)",
+            "employeeNo": null,
+            "refId": null,
+            "commencementDate": null,
+            "station": null
+          }
+        }
+      ]
+    },
+    {
+      "sheet": "JULY,2024",
+      "period": {
+        "year": 2024,
+        "month": 7
+      },
+      "era": 4,
+      "headerConfidence": "high",
+      "columnCount": 19,
+      "unrecognizedColumns": [
+        "Total Int. paid"
+      ],
+      "recordCount": 3,
+      "records": [
+        {
+          "sourceFile": "AUDIT SERVICE COMMISSION Car Loan Returns - from March - December.xlsx",
+          "sheet": "JULY,2024",
+          "rowNumber": 4,
+          "period": {
+            "year": 2024,
+            "month": 7
+          },
+          "mda": {
+            "raw": "AUDIT SERVICE COMMISSION OYO STATE",
+            "resolved": "Audit Service Commission",
+            "code": "AUDIT SERVICE COMMISSION",
+            "confidence": "alias",
+            "source": "title"
+          },
+          "fields": {
+            "staffName": "OLANREWAJU HALILU OLABODE",
+            "mda": "AUDIT SERVICE COMM",
+            "serialNumber": 1,
+            "principal": "600000",
+            "interestTotal": "63984",
+            "totalLoan": "663984",
+            "monthlyDeduction": "14166.25",
+            "monthlyInterest": "1361.3617021276596",
+            "monthlyPrincipal": "12765.95744680851",
+            "totalInterestPaid": null,
+            "totalOutstandingInterest": "14974.978723404256",
+            "totalLoanPaid": "509985",
+            "outstandingBalance": "155828.75",
+            "installmentCount": 47,
+            "installmentsPaid": 36,
+            "installmentsOutstanding": 11,
+            "remarks": "TRANSFERED FROM MIN. OF AGRIC",
+            "startDate": "Sat Jul 31 2021 23:59:25 GMT+0100 (West Africa Standard Time)",
+            "endDate": "31-06-2025",
+            "employeeNo": null,
+            "refId": null,
+            "commencementDate": null,
+            "station": null
+          }
+        },
+        {
+          "sourceFile": "AUDIT SERVICE COMMISSION Car Loan Returns - from March - December.xlsx",
+          "sheet": "JULY,2024",
+          "rowNumber": 5,
+          "period": {
+            "year": 2024,
+            "month": 7
+          },
+          "mda": {
+            "raw": "AUDIT SERVICE COMMISSION OYO STATE",
+            "resolved": "Audit Service Commission",
+            "code": "AUDIT SERVICE COMMISSION",
+            "confidence": "alias",
+            "source": "title"
+          },
+          "fields": {
+            "staffName": "LUCAS OMOLOLA OLUWABUNMI",
+            "mda": "AUDIT SERVICE COMM",
+            "serialNumber": 2,
+            "principal": "600000",
+            "interestTotal": "79980",
+            "totalLoan": "679980",
+            "monthlyDeduction": "11333",
+            "monthlyInterest": "1333",
+            "monthlyPrincipal": "10000",
+            "totalInterestPaid": null,
+            "totalOutstandingInterest": "9331",
+            "totalLoanPaid": "600649",
+            "outstandingBalance": "79331",
+            "installmentCount": 60,
+            "installmentsPaid": 53,
+            "installmentsOutstanding": 7,
+            "remarks": "TRANSFERED FROM MIN. OF WORK",
+            "startDate": "Sat Feb 29 2020 23:59:25 GMT+0100 (West Africa Standard Time)",
+            "endDate": "Thu Feb 27 2025 23:59:25 GMT+0100 (West Africa Standard Time)",
+            "employeeNo": null,
+            "refId": null,
+            "commencementDate": null,
+            "station": null
+          }
+        },
+        {
+          "sourceFile": "AUDIT SERVICE COMMISSION Car Loan Returns - from March - December.xlsx",
+          "sheet": "JULY,2024",
+          "rowNumber": 6,
+          "period": {
+            "year": 2024,
+            "month": 7
+          },
+          "mda": {
+            "raw": "AUDIT SERVICE COMMISSION OYO STATE",
+            "resolved": "Audit Service Commission",
+            "code": "AUDIT SERVICE COMMISSION",
+            "confidence": "alias",
+            "source": "title"
+          },
+          "fields": {
+            "staffName": "GBENLE KAZEEM ADEWALE",
+            "mda": "AUDIT SERVICE COMM",
+            "serialNumber": 3,
+            "principal": "750000",
+            "interestTotal": "83312.5",
+            "totalLoan": "833312.5",
+            "monthlyDeduction": "16666.25",
+            "monthlyInterest": "1666.25",
+            "monthlyPrincipal": "15000",
+            "totalInterestPaid": null,
+            "totalOutstandingInterest": "59985",
+            "totalLoanPaid": "233327.5",
+            "outstandingBalance": "599985",
+            "installmentCount": 50,
+            "installmentsPaid": 14,
+            "installmentsOutstanding": 36,
+            "remarks": "TRANSFERED FROM ACCOUNTANT GENERAL",
+            "startDate": "Wed May 31 2023 23:59:25 GMT+0100 (West Africa Standard Time)",
+            "endDate": "Fri Jul 30 2027 23:59:25 GMT+0100 (West Africa Standard Time)",
+            "employeeNo": null,
+            "refId": null,
+            "commencementDate": null,
+            "station": null
+          }
+        }
+      ]
+    },
+    {
+      "sheet": "DECEMBER,2024",
+      "period": {
+        "year": 2024,
+        "month": 12
+      },
+      "era": 4,
+      "headerConfidence": "high",
+      "columnCount": 19,
+      "unrecognizedColumns": [
+        "Total Int. paid"
+      ],
+      "recordCount": 5,
+      "records": [
+        {
+          "sourceFile": "AUDIT SERVICE COMMISSION Car Loan Returns - from March - December.xlsx",
+          "sheet": "DECEMBER,2024",
+          "rowNumber": 4,
+          "period": {
+            "year": 2024,
+            "month": 12
+          },
+          "mda": {
+            "raw": "AUDIT SERVICE COMMISSION OYO STATE",
+            "resolved": "Audit Service Commission",
+            "code": "AUDIT SERVICE COMMISSION",
+            "confidence": "alias",
+            "source": "title"
+          },
+          "fields": {
+            "staffName": "OLANREWAJU HALILU OLABODE",
+            "mda": "AUDIT SERVICE COMM",
+            "serialNumber": 1,
+            "principal": "600000",
+            "interestTotal": "63984",
+            "totalLoan": "663984",
+            "monthlyDeduction": "14166.25",
+            "monthlyInterest": "1361.3617021276596",
+            "monthlyPrincipal": "12765.95744680851",
+            "totalInterestPaid": null,
+            "totalOutstandingInterest": "8168.170212765957",
+            "totalLoanPaid": "580816.25",
+            "outstandingBalance": "84997.5",
+            "installmentCount": 47,
+            "installmentsPaid": 41,
+            "installmentsOutstanding": 6,
+            "remarks": "TRANSFERED FROM MIN. OF AGRIC",
+            "startDate": "Sat Jul 31 2021 23:59:25 GMT+0100 (West Africa Standard Time)",
+            "endDate": "31-06-2025",
+            "employeeNo": null,
+            "refId": null,
+            "commencementDate": null,
+            "station": null
+          }
+        },
+        {
+          "sourceFile": "AUDIT SERVICE COMMISSION Car Loan Returns - from March - December.xlsx",
+          "sheet": "DECEMBER,2024",
+          "rowNumber": 5,
+          "period": {
+            "year": 2024,
+            "month": 12
+          },
+          "mda": {
+            "raw": "AUDIT SERVICE COMMISSION OYO STATE",
+            "resolved": "Audit Service Commission",
+            "code": "AUDIT SERVICE COMMISSION",
+            "confidence": "alias",
+            "source": "title"
+          },
+          "fields": {
+            "staffName": "AJADI MOJEED ADEKUNLE",
+            "mda": "AUDIT SERVICE COMM",
+            "serialNumber": 2,
+            "principal": "600000",
+            "interestTotal": "66650",
+            "totalLoan": "666650",
+            "monthlyDeduction": "13333",
+            "monthlyInterest": "1333",
+            "monthlyPrincipal": "12000",
+            "totalInterestPaid": null,
+            "totalOutstandingInterest": "5332",
+            "totalLoanPaid": "613318",
+            "outstandingBalance": "53332",
+            "installmentCount": 50,
+            "installmentsPaid": 46,
+            "installmentsOutstanding": 4,
+            "remarks": "MIN. WOMEN AFFAIRS",
+            "startDate": "Sun Feb 28 2021 23:59:25 GMT+0100 (West Africa Standard Time)",
+            "endDate": "Tue Apr 29 2025 23:59:25 GMT+0100 (West Africa Standard Time)",
+            "employeeNo": null,
+            "refId": null,
+            "commencementDate": null,
+            "station": null
+          }
+        },
+        {
+          "sourceFile": "AUDIT SERVICE COMMISSION Car Loan Returns - from March - December.xlsx",
+          "sheet": "DECEMBER,2024",
+          "rowNumber": 6,
+          "period": {
+            "year": 2024,
+            "month": 12
+          },
+          "mda": {
+            "raw": "AUDIT SERVICE COMMISSION OYO STATE",
+            "resolved": "Audit Service Commission",
+            "code": "AUDIT SERVICE COMMISSION",
+            "confidence": "alias",
+            "source": "title"
+          },
+          "fields": {
+            "staffName": "LUCAS OMOLOLA OLUWABUNMI",
+            "mda": "AUDIT SERVICE COMM",
+            "serialNumber": 3,
+            "principal": "600000",
+            "interestTotal": "79980",
+            "totalLoan": "679980",
+            "monthlyDeduction": "11333",
+            "monthlyInterest": "1333",
+            "monthlyPrincipal": "10000",
+            "totalInterestPaid": null,
+            "totalOutstandingInterest": "2666",
+            "totalLoanPaid": "657314",
+            "outstandingBalance": "22666",
+            "installmentCount": 60,
+            "installmentsPaid": 58,
+            "installmentsOutstanding": 2,
+            "remarks": "TRANSFERED FROM MIN. OF WORK",
+            "startDate": "Sat Feb 29 2020 23:59:25 GMT+0100 (West Africa Standard Time)",
+            "endDate": "Thu Feb 27 2025 23:59:25 GMT+0100 (West Africa Standard Time)",
+            "employeeNo": null,
+            "refId": null,
+            "commencementDate": null,
+            "station": null
+          }
+        },
+        {
+          "sourceFile": "AUDIT SERVICE COMMISSION Car Loan Returns - from March - December.xlsx",
+          "sheet": "DECEMBER,2024",
+          "rowNumber": 7,
+          "period": {
+            "year": 2024,
+            "month": 12
+          },
+          "mda": {
+            "raw": "AUDIT SERVICE COMMISSION OYO STATE",
+            "resolved": "Audit Service Commission",
+            "code": "AUDIT SERVICE COMMISSION",
+            "confidence": "alias",
+            "source": "title"
+          },
+          "fields": {
+            "staffName": "GBENLE KAZEEM ADEWALE",
+            "mda": "AUDIT SERVICE COMM",
+            "serialNumber": 4,
+            "principal": "750000",
+            "interestTotal": "83312.5",
+            "totalLoan": "833312.5",
+            "monthlyDeduction": "16666.25",
+            "monthlyInterest": "1666.25",
+            "monthlyPrincipal": "15000",
+            "totalInterestPaid": null,
+            "totalOutstandingInterest": "51653.75",
+            "totalLoanPaid": "316658.75",
+            "outstandingBalance": "516653.75",
+            "installmentCount": 50,
+            "installmentsPaid": 19,
+            "installmentsOutstanding": 31,
+            "remarks": "TRANSFERED FROM ACCOUNTANT GENERAL",
+            "startDate": "Wed May 31 2023 23:59:25 GMT+0100 (West Africa Standard Time)",
+            "endDate": "Fri Jul 30 2027 23:59:25 GMT+0100 (West Africa Standard Time)",
+            "employeeNo": null,
+            "refId": null,
+            "commencementDate": null,
+            "station": null
+          }
+        },
+        {
+          "sourceFile": "AUDIT SERVICE COMMISSION Car Loan Returns - from March - December.xlsx",
+          "sheet": "DECEMBER,2024",
+          "rowNumber": 8,
+          "period": {
+            "year": 2024,
+            "month": 12
+          },
+          "mda": {
+            "raw": "AUDIT SERVICE COMMISSION OYO STATE",
+            "resolved": "Audit Service Commission",
+            "code": "AUDIT SERVICE COMMISSION",
+            "confidence": "alias",
+            "source": "title"
+          },
+          "fields": {
+            "staffName": "RAIFU MUTIAT ADEOLA",
+            "mda": "AUDIT SERVICE COMM",
+            "serialNumber": 4,
+            "principal": "250000",
+            "interestTotal": "33325",
+            "totalLoan": "283325",
+            "monthlyDeduction": "4722.09",
+            "monthlyInterest": "666.5",
+            "monthlyPrincipal": "4166.666666666667",
+            "totalInterestPaid": null,
+            "totalOutstandingInterest": "36657.5",
+            "totalLoanPaid": "23610.45",
+            "outstandingBalance": "259714.95",
+            "installmentCount": 60,
+            "installmentsPaid": 5,
+            "installmentsOutstanding": 55,
+            "remarks": "AUDIT SERVICE COMM.",
+            "startDate": "Wed Jul 31 2024 23:59:25 GMT+0100 (West Africa Standard Time)",
+            "endDate": "Sun Jul 29 2029 23:59:25 GMT+0100 (West Africa Standard Time)",
+            "employeeNo": null,
+            "refId": null,
+            "commencementDate": null,
+            "station": null
+          }
+        }
+      ]
+    }
+  ]
+}
