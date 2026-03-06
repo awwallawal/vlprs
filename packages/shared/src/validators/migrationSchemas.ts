@@ -49,6 +49,14 @@ const sheetsArraySchema = z.array(sheetMappingSchema).min(1).check((ctx) => {
   }
 });
 
+export const personListQuerySchema = z.object({
+  page: z.coerce.number().int().min(1).optional().default(1),
+  limit: z.coerce.number().int().min(1).max(100).optional().default(20),
+  mdaFilter: z.string().uuid().optional(),
+  sortBy: z.enum(['staff_name', 'record_count', 'variance_count']).optional().default('staff_name'),
+  sortOrder: z.enum(['asc', 'desc']).optional().default('asc'),
+});
+
 export const confirmMappingBodySchema = z.object({
   mdaId: z.string().uuid(),
   sheets: z.preprocess(

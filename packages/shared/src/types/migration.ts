@@ -183,3 +183,80 @@ export interface ValidationResult {
     boundaries: MdaBoundary[];
   };
 }
+
+// ─── Person Matching (Story 3.3) ────────────────────────────────────
+
+export type MatchType = 'exact_name' | 'staff_id' | 'surname_initial' | 'fuzzy_name' | 'manual';
+export type MatchStatus = 'auto_confirmed' | 'pending_review' | 'confirmed' | 'rejected';
+
+export interface PersonMatch {
+  id: string;
+  personAName: string;
+  personAStaffId: string | null;
+  personAMdaId: string;
+  personBName: string;
+  personBStaffId: string | null;
+  personBMdaId: string;
+  matchType: MatchType;
+  confidence: string;
+  status: MatchStatus;
+  confirmedBy: string | null;
+  confirmedAt: string | null;
+  createdAt: string;
+}
+
+export interface PersonListItem {
+  personKey: string;
+  staffName: string;
+  staffId: string | null;
+  mdas: string[];
+  recordCount: number;
+  varianceCount: number;
+  hasRateVariance: boolean;
+  profileComplete: boolean;
+}
+
+export interface PersonTimelineEntry {
+  year: number;
+  month: number;
+  outstandingBalance: string | null;
+  monthlyDeduction: string | null;
+  principal: string | null;
+  totalLoan: string | null;
+  sourceFile: string;
+}
+
+export interface PersonTimeline {
+  name: string;
+  mdaCode: string;
+  months: PersonTimelineEntry[];
+  firstSeen: { year: number; month: number };
+  lastSeen: { year: number; month: number };
+  totalMonthsPresent: number;
+  gapMonths: number;
+}
+
+export interface LoanCycle {
+  mdaCode: string;
+  startPeriod: { year: number; month: number };
+  endPeriod: { year: number; month: number };
+  principal: string | null;
+  rate: string | null;
+  monthsPresent: number;
+  gapMonths: number;
+  status: 'active' | 'completed' | 'beyond_tenure';
+}
+
+export interface PersonProfile {
+  staffName: string;
+  staffId: string | null;
+  mdas: string[];
+  recordCount: number;
+  varianceCount: number;
+  hasRateVariance: boolean;
+  profileComplete: boolean;
+  recordsByMda: Record<string, ValidatedMigrationRecord[]>;
+  timelines: PersonTimeline[];
+  cycles: LoanCycle[];
+  matches: (PersonMatch & { personAMdaCode: string; personBMdaCode: string })[];
+}

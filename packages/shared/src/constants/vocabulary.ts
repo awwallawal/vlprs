@@ -98,6 +98,14 @@ export const VOCABULARY = {
   RATE_DIFFERS: 'Rate differs from the standard 13.33% — this is an observation for review, not an error',
   MULTI_MDA_DETECTED: 'This file contains records for multiple MDAs — review recommended before proceeding',
   INSUFFICIENT_DATA: 'Insufficient data for full validation — available fields compared',
+  // Person Matching (Story 3.3)
+  CROSS_MDA_DETECTED: 'Records found in multiple MDAs — unified view available',
+  MATCH_AUTO_CONFIRMED: 'Exact match confirmed automatically',
+  MATCH_PENDING_REVIEW: 'Suggested match — requires confirmation',
+  PROFILE_COMPLETE: 'Temporal profile complete',
+  PERSON_NOT_FOUND: 'No records found for this person.',
+  MATCH_NOT_FOUND: 'The requested match could not be found.',
+  MATCH_NOT_PENDING: 'Only pending matches can be updated.',
 } as const;
 
 export const UI_COPY = {

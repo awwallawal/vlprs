@@ -72,6 +72,15 @@ export const entryTypeEnum = pgEnum('entry_type', [
   'PAYROLL', 'ADJUSTMENT', 'MIGRATION_BASELINE', 'WRITE_OFF',
 ]);
 
+// ─── Person Match Enums (Story 3.3) ─────────────────────────────────
+export const matchTypeEnum = pgEnum('match_type', [
+  'exact_name', 'staff_id', 'surname_initial', 'fuzzy_name', 'manual',
+]);
+
+export const matchStatusEnum = pgEnum('match_status', [
+  'auto_confirmed', 'pending_review', 'confirmed', 'rejected',
+]);
+
 // ─── Loan Status Enum ───────────────────────────────────────────────
 export const loanStatusEnum = pgEnum('loan_status', [
   'APPLIED', 'APPROVED', 'ACTIVE', 'COMPLETED', 'TRANSFERRED', 'WRITTEN_OFF',
@@ -359,6 +368,32 @@ export const migrationExtraFields = pgTable(
   },
   (table) => [
     index('idx_migration_extra_fields_record_id').on(table.recordId),
+  ],
+);
+
+// ─── Person Matches (Story 3.3) ──────────────────────────────────────
+// Cross-MDA person matching. Append-only — use status enum instead of soft delete.
+export const personMatches = pgTable(
+  'person_matches',
+  {
+    id: uuid('id').primaryKey().$defaultFn(generateUuidv7),
+    personAName: text('person_a_name').notNull(),
+    personAStaffId: text('person_a_staff_id'),
+    personAMdaId: uuid('person_a_mda_id').notNull().references(() => mdas.id),
+    personBName: text('person_b_name').notNull(),
+    personBStaffId: text('person_b_staff_id'),
+    personBMdaId: uuid('person_b_mda_id').notNull().references(() => mdas.id),
+    matchType: matchTypeEnum('match_type').notNull(),
+    confidence: numeric('confidence', { precision: 3, scale: 2 }).notNull(),
+    status: matchStatusEnum('status').notNull().default('pending_review'),
+    confirmedBy: uuid('confirmed_by').references(() => users.id),
+    confirmedAt: timestamp('confirmed_at', { withTimezone: true }),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    index('idx_person_matches_person_a_mda_id').on(table.personAMdaId),
+    index('idx_person_matches_person_b_mda_id').on(table.personBMdaId),
+    index('idx_person_matches_status').on(table.status),
   ],
 );
 

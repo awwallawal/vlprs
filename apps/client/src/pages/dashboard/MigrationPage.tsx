@@ -4,15 +4,22 @@ import { ColumnMappingReview } from './components/ColumnMappingReview';
 import { MigrationUploadResult } from './components/MigrationUploadResult';
 import { ValidationSummaryCard } from './components/ValidationSummaryCard';
 import { RecordComparisonRow } from './components/RecordComparisonRow';
+import { StaffProfilePanel } from './components/StaffProfilePanel';
 import { useUploadMigration, useConfirmMapping, useValidateUpload, useValidationResults, useMdaList } from '@/hooks/useMigration';
+import { usePersonList, useMatchPersons } from '@/hooks/useStaffProfile';
 import { usePageMeta } from '@/hooks/usePageMeta';
+import { Badge } from '@/components/ui/badge';
 import type { MigrationUploadPreview, VarianceCategory } from '@vlprs/shared';
 
 type Step = 'select-mda' | 'upload' | 'review' | 'processing' | 'complete' | 'validating' | 'validated';
+type Tab = 'upload' | 'profiles';
 
 export function MigrationPage() {
   usePageMeta({ title: 'Legacy Migration', description: 'Upload legacy MDA spreadsheets for data migration' });
 
+  const [activeTab, setActiveTab] = useState<Tab>('upload');
+  const [selectedPersonKey, setSelectedPersonKey] = useState<string | null>(null);
+  const [personPage, setPersonPage] = useState(1);
   const [step, setStep] = useState<Step>('select-mda');
   const [selectedMdaId, setSelectedMdaId] = useState('');
   const [selectedMdaName, setSelectedMdaName] = useState('');
@@ -37,6 +44,8 @@ export function MigrationPage() {
   );
 
   const { data: mdaList, isLoading: mdaLoading } = useMdaList();
+  const personList = usePersonList({ page: personPage, limit: 20 });
+  const matchPersonsMutation = useMatchPersons();
 
   const handleMdaSelect = useCallback((mdaId: string, mdaName: string) => {
     setSelectedMdaId(mdaId);
@@ -108,12 +117,12 @@ export function MigrationPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-bold text-text-primary">Legacy Migration Upload</h1>
+          <h1 className="text-xl font-bold text-text-primary">Legacy Migration</h1>
           <p className="text-sm text-text-secondary mt-1">
-            Upload legacy MDA spreadsheets for intelligent column mapping and record extraction
+            Upload legacy MDA spreadsheets and explore staff profiles
           </p>
         </div>
-        {step !== 'select-mda' && (
+        {activeTab === 'upload' && step !== 'select-mda' && (
           <button
             type="button"
             onClick={handleReset}
@@ -124,6 +133,157 @@ export function MigrationPage() {
         )}
       </div>
 
+      {/* Tab Navigation */}
+      <div className="flex gap-1 border-b border-border">
+        <button
+          type="button"
+          onClick={() => setActiveTab('upload')}
+          className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+            activeTab === 'upload'
+              ? 'border-teal text-teal'
+              : 'border-transparent text-text-muted hover:text-text-secondary'
+          }`}
+        >
+          Upload & Comparison
+        </button>
+        <button
+          type="button"
+          onClick={() => { setActiveTab('profiles'); setSelectedPersonKey(null); }}
+          className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+            activeTab === 'profiles'
+              ? 'border-teal text-teal'
+              : 'border-transparent text-text-muted hover:text-text-secondary'
+          }`}
+        >
+          Staff Profiles
+        </button>
+      </div>
+
+      {/* Staff Profiles Tab */}
+      {activeTab === 'profiles' && !selectedPersonKey && (
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <p className="text-sm text-text-secondary">
+              Person-level view of staff loan history across all MDAs
+            </p>
+            <button
+              type="button"
+              onClick={() => matchPersonsMutation.mutate()}
+              disabled={matchPersonsMutation.isPending}
+              className="px-4 py-2 text-xs bg-teal text-white rounded-lg hover:bg-teal-hover disabled:opacity-50"
+            >
+              {matchPersonsMutation.isPending ? 'Matching...' : 'Run Person Matching'}
+            </button>
+          </div>
+
+          {matchPersonsMutation.isSuccess && matchPersonsMutation.data && (
+            <div className="bg-teal/5 border border-teal/20 rounded-lg p-3 text-xs text-teal">
+              Matching complete: {matchPersonsMutation.data.totalPersons} persons found,{' '}
+              {matchPersonsMutation.data.multiMdaPersons} multi-MDA,{' '}
+              {matchPersonsMutation.data.autoMatched} auto-matched,{' '}
+              {matchPersonsMutation.data.pendingReview} pending review
+            </div>
+          )}
+
+          {personList.isLoading ? (
+            <div className="text-sm text-text-muted py-8 text-center">Loading staff profiles...</div>
+          ) : personList.data && personList.data.data.length > 0 ? (
+            <div className="bg-white rounded-lg border border-border overflow-hidden">
+              <table className="w-full text-left">
+                <thead className="bg-gray-50 border-b border-border">
+                  <tr>
+                    <th className="py-2 px-3 text-xs font-semibold text-text-muted uppercase">Staff Name</th>
+                    <th className="py-2 px-3 text-xs font-semibold text-text-muted uppercase">MDAs</th>
+                    <th className="py-2 px-3 text-xs font-semibold text-text-muted uppercase text-right">Records</th>
+                    <th className="py-2 px-3 text-xs font-semibold text-text-muted uppercase text-right">Variances</th>
+                    <th className="py-2 px-3 text-xs font-semibold text-text-muted uppercase">Profile</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {personList.data.data.map((person) => (
+                    <tr
+                      key={person.personKey}
+                      className="border-b border-border/50 hover:bg-gray-50 cursor-pointer"
+                      onClick={() => setSelectedPersonKey(person.personKey)}
+                    >
+                      <td className="py-2 px-3 text-sm text-text-primary">
+                        {person.staffName}
+                        {person.staffId && (
+                          <span className="ml-2 text-xs text-text-muted">({person.staffId})</span>
+                        )}
+                      </td>
+                      <td className="py-2 px-3">
+                        <div className="flex flex-wrap gap-1">
+                          {person.mdas.map((mda) => (
+                            <Badge key={mda} variant="outline" className="text-[10px]">{mda}</Badge>
+                          ))}
+                        </div>
+                      </td>
+                      <td className="py-2 px-3 text-sm text-right text-text-secondary">{person.recordCount}</td>
+                      <td className="py-2 px-3 text-sm text-right">
+                        {person.varianceCount > 0 ? (
+                          <span className="text-amber-600">{person.varianceCount}</span>
+                        ) : (
+                          <span className="text-text-muted">0</span>
+                        )}
+                      </td>
+                      <td className="py-2 px-3">
+                        {person.profileComplete ? (
+                          <Badge className="text-[10px] bg-teal/10 text-teal border-teal/20">Complete</Badge>
+                        ) : (
+                          <Badge className="text-[10px] bg-amber-50 text-amber-700 border-amber-200">Incomplete</Badge>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+
+              {personList.data.pagination.totalPages > 1 && (
+                <div className="flex items-center justify-between px-4 py-3 border-t border-border">
+                  <p className="text-xs text-text-muted">
+                    Page {personList.data.pagination.page} of {personList.data.pagination.totalPages}
+                    {' '}({personList.data.pagination.total} persons)
+                  </p>
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setPersonPage((p) => Math.max(1, p - 1))}
+                      disabled={personList.data.pagination.page <= 1}
+                      className="px-3 py-1 text-xs border border-border rounded hover:bg-gray-50 disabled:opacity-50"
+                    >
+                      Previous
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setPersonPage((p) => p + 1)}
+                      disabled={personList.data.pagination.page >= personList.data.pagination.totalPages}
+                      className="px-3 py-1 text-xs border border-border rounded hover:bg-gray-50 disabled:opacity-50"
+                    >
+                      Next
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="text-center py-8 text-sm text-text-muted">
+              No staff profiles yet. Upload and validate migration files first, then run person matching.
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Staff Profile Detail */}
+      {activeTab === 'profiles' && selectedPersonKey && (
+        <StaffProfilePanel
+          personKey={selectedPersonKey}
+          onBack={() => setSelectedPersonKey(null)}
+        />
+      )}
+
+      {/* Upload Tab Content */}
+      {activeTab === 'upload' && <>
       {/* Step Indicator */}
       <div className="flex items-center gap-2 text-xs text-text-muted">
         {([
@@ -337,6 +497,7 @@ export function MigrationPage() {
           </div>
         </div>
       )}
+      </>}
     </div>
   );
 }
