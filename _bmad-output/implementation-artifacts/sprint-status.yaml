@@ -138,14 +138,14 @@ development_status:
   epic-3: in-progress
   3-0a-regression-fixture-suite: done
   3-0b-cdu-parent-agency-relationship: done
-  3-1-legacy-upload-intelligent-column-mapping: ready-for-dev
+  3-1-legacy-upload-intelligent-column-mapping: done
   3-2-migration-validation-rate-detection-mda-delineation: ready-for-dev
   3-3-staff-loan-profile-cross-mda-timeline: ready-for-dev
   3-4-baseline-acknowledgment-ledger-entry-creation: ready-for-dev
   3-5-migration-dashboard-master-beneficiary-ledger: ready-for-dev
   3-6-observation-engine-review-workflow: ready-for-dev
   3-7-individual-trace-report-generation: ready-for-dev
-  3-8-multi-mda-file-delineation-deduplication: backlog
+  3-8-multi-mda-file-delineation-deduplication: ready-for-dev
   epic-3-retrospective: optional
 
   # Epic 4: Executive Dashboard & Scheme Visibility (Sprint 6 — first live analytics)

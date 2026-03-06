@@ -791,7 +791,7 @@ docker compose -f docker-compose.dev.yml exec server pnpm db:seed
 | Loan Computation & Financial Engine | FR1-FR9 | `services/computationEngine.ts` | `pages/dashboard/components/` |
 | Data Management & Immutable Ledger | FR10-FR15 | `services/ledgerService.ts`, `db/schema.ts` | — (server-only) |
 | MDA Monthly Submission | FR16-FR24 | `services/submissionService.ts`, `services/comparisonEngine.ts` | `pages/dashboard/SubmissionsPage.tsx` |
-| Data Migration | FR25-FR31 | `services/migrationService.ts` | `pages/dashboard/MigrationPage.tsx` |
+| Data Migration | FR25-FR31 | `services/migrationService.ts`, `services/migrationDashboardService.ts`, `services/beneficiaryLedgerService.ts` | `pages/dashboard/MigrationPage.tsx` |
 | Executive Dashboard & Reporting | FR32-FR41 | `routes/dashboardRoutes.ts` | `pages/dashboard/DashboardPage.tsx` |
 | Access Control & Authentication | FR42-FR48 | `middleware/authenticate.ts`, `middleware/authorise.ts`, `lib/jwt.ts` | `lib/authContext.tsx`, `components/layout/AuthGuard.tsx` |
 | Notifications & Alerts | FR49-FR52 | `services/emailService.ts`, `services/notificationService.ts` | — (server-driven) |
@@ -878,6 +878,8 @@ vlprs/
 │   │       │   │   ├── FileUploadZone.tsx             # CSV drag-drop upload
 │   │       │   │   ├── ComparisonPanel.tsx            # MDA vs system side-by-side
 │   │       │   │   ├── ComputationTransparencyAccordion.tsx # Show calculation derivation
+│   │       │   │   ├── StaffProfilePanel.tsx          # Person-level view: header, timeline, loan details, cross-MDA matches
+│   │       │   │   ├── LoanTimeline.tsx               # Horizontal CSS/SVG timeline of loan cycles across MDAs
 │   │       │   │   ├── AutoStopCertificate.tsx        # Loan completion certificate
 │   │       │   │   └── MigrationProgressCard.tsx      # Migration status display
 │   │       │   │
@@ -1004,6 +1006,8 @@ vlprs/
 │           │   ├── exceptionRoutes.ts    # GET/POST /exceptions, PATCH /exceptions/:id/resolve
 │           │   ├── reportRoutes.ts       # GET /reports/:id/pdf (generates branded PDF)
 │           │   ├── migrationRoutes.ts    # POST /migrations (legacy data intake + historical upload)
+│           │   ├── migrationDashboardRoutes.ts # GET /migrations/dashboard, /dashboard/metrics, /beneficiaries, /beneficiaries/metrics, /beneficiaries/export
+│           │   ├── staffProfileRoutes.ts # GET /migrations/persons, GET /migrations/persons/:key, POST /migrations/match-persons, PATCH /migrations/matches/:id/confirm|reject
 │           │   ├── mdaRoutes.ts          # GET /mdas, GET /mdas/:id/submissions
 │           │   ├── userRoutes.ts         # GET/POST /users (admin CRUD), PATCH /users/:id, POST /users/:id/reset-password
 │           │   ├── employmentEventRoutes.ts # POST /employment-events (mid-cycle filing), GET by staff/MDA
@@ -1011,7 +1015,7 @@ vlprs/
 │           │   ├── preSubmissionRoutes.ts # GET /pre-submission/checkpoint (retirement approaching, zero deductions, pending events)
 │           │   ├── staffIdRoutes.ts      # PATCH /staff-id/:loanId, GET /staff-id/search, POST /staff-id/check-duplicate
 │           │   ├── observationRoutes.ts  # GET /observations (list with filters: type, MDA, status, staff), PATCH /observations/:id (update status), POST /observations/:id/promote (promote to exception — Epic 7 handoff)
-│           │   ├── traceRoutes.ts       # GET /staff/:id/trace (cross-MDA loan trace), GET /staff/:id/trace/report (generate HTML/PDF trace report)
+│           │   ├── traceReportRoutes.ts  # GET /staff/:personKey/trace (cross-MDA loan trace JSON), GET /staff/:personKey/trace/pdf (server-generated PDF download)
 │           │   ├── delineationRoutes.ts # POST /migrations/delineate (preview MDA boundaries in file), POST /migrations/deduplicate (check cross-file duplicates)
 │           │   └── healthRoutes.ts       # GET /health (Docker health check, uptime monitoring)
 │           │
@@ -1059,12 +1063,24 @@ vlprs/
 │           │   ├── userAdminService.test.ts
 │           │   ├── staffIdService.ts    # FR74-75: Staff ID update, system-wide duplicate detection, justification logging
 │           │   ├── staffIdService.test.ts
-│           │   ├── observationEngine.ts # FR87: Auto-generate 6 observation types during migration (rate variance, stalled balance, negative balance, multi-MDA, no approval match, consecutive loan without clearance), data completeness indicators, non-punitive templates from vocabulary.ts
+│           │   ├── observationEngine.ts # FR87: Detection + generation of 6 observation types, data completeness scoring, non-punitive template rendering, idempotent batch generation
 │           │   ├── observationEngine.test.ts
-│           │   ├── personMatchingService.ts # FR88: Cross-MDA person matching for trace reports (name/Staff ID fuzzy matching, confidence scoring)
+│           │   ├── observationService.ts # FR87: Observation CRUD, paginated list, aggregate counts, status transitions (Unreviewed→Reviewed→Resolved→Promoted), promote-to-exception handoff
+│           │   ├── observationService.test.ts
+│           │   ├── personMatchingService.ts # FR88: Cross-MDA person matching (3-level name matching + Staff ID, confidence scoring, match confirmation)
 │           │   ├── personMatchingService.test.ts
+│           │   ├── staffProfileService.ts # FR27+FR88: Person profile aggregation, timeline building, cycle detection, profile completeness
+│           │   ├── staffProfileService.test.ts
+│           │   ├── baselineService.ts # FR28+FR29: Baseline acknowledgment, loan creation, MIGRATION_BASELINE ledger entry, principal derivation
+│           │   ├── baselineService.test.ts
+│           │   ├── migrationDashboardService.ts # FR30+FR31: MDA migration progress (63 MDAs, stage derivation, record counts, baseline completion), hero metrics
+│           │   ├── migrationDashboardService.test.ts
+│           │   ├── beneficiaryLedgerService.ts # FR30+FR31: Master beneficiary ledger (person-level aggregation, metrics strip, CSV export)
+│           │   ├── beneficiaryLedgerService.test.ts
 │           │   ├── traceReportService.ts # FR88: Individual Staff Trace Report generation (cross-MDA loan history, cycle detection, rate analysis, balance trajectory, observations, HTML/PDF export)
 │           │   ├── traceReportService.test.ts
+│           │   ├── pdfGenerator.ts      # Server-side PDF generation via @react-pdf/renderer (reusable — used by traceReportService, later by reportService for Epic 6)
+│           │   ├── pdfGenerator.test.ts
 │           │   ├── fileDelineationService.ts # FR89: Intra-file MDA boundary detection, cross-file deduplication, parent/agency relationship resolution
 │           │   └── fileDelineationService.test.ts
 │           │
@@ -1186,10 +1202,12 @@ PostgreSQL (constraints, triggers, immutability enforcement)
 | `ledger_entries` table | INSERT only. No UPDATE/DELETE at DB, ORM, or API level |
 | `audit_log` table | INSERT only. Same immutability pattern as ledger |
 | `refresh_tokens` table | INSERT + soft-revoke (`revoked_at`). Never DELETE |
-| `observations` table | Full CRUD with soft deletes. Columns: `id` (UUIDv7), `type` (enum: rate_variance, stalled_balance, negative_balance, multi_mda, no_approval_match, consecutive_loan), `staff_name`, `staff_id`, `loan_id` (FK), `mda_id` (FK), `description` (text), `context` (JSONB — structured data specific to observation type), `source_reference` (JSONB — file/row/column traceability), `status` (enum: unreviewed, reviewed, resolved), `data_completeness` (NUMERIC — 0-100 score), `reviewer_id` (FK nullable), `reviewer_note` (text nullable), `resolved_at` (timestamp nullable), `created_at`, `updated_at`, `deleted_at` |
-| `person_matches` table | Full CRUD with soft deletes. Columns: `id` (UUIDv7), `person_a_name`, `person_a_staff_id`, `person_a_mda_id` (FK), `person_b_name`, `person_b_staff_id`, `person_b_mda_id` (FK), `match_type` (enum: exact_staff_id, fuzzy_name, manual), `confidence` (NUMERIC — 0-100), `confirmed_by` (FK nullable), `confirmed_at` (timestamp nullable), `created_at`, `updated_at`, `deleted_at` |
-| `migration_extra_fields` table | Full CRUD with soft deletes. Columns: `id` (UUIDv7), `loan_id` (FK), `field_name` (text — original header name), `field_value` (text), `source_header` (text — exact header string from file), `source_file` (text — filename reference), `created_at`, `deleted_at` |
-| `mda_relationships` table | Full CRUD with soft deletes. Columns: `id` (UUIDv7), `parent_mda_id` (FK), `child_mda_id` (FK), `relationship_type` (enum: parent_department, agency, subsidiary), `created_at`, `updated_at`, `deleted_at`. Enables CDU-as-department-under-Agriculture modelling |
+| `observations` table | Full CRUD with soft deletes. Columns: `id` (UUIDv7), `type` (enum: rate_variance, stalled_balance, negative_balance, multi_mda, no_approval_match, consecutive_loan), `staff_name`, `staff_id`, `loan_id` (FK → loans, nullable), `mda_id` (FK → mdas NOT NULL), `migration_record_id` (FK → migration_records, nullable — links to source record, used in idempotency guard), `upload_id` (FK → migration_uploads, nullable — links to source upload batch), `description` (text NOT NULL), `context` (JSONB NOT NULL — `{ possibleExplanations: string[], suggestedAction: string, dataCompleteness: number, dataPoints: Record<string, unknown> }`), `source_reference` (JSONB nullable — `{ file: string, sheet: string, row: number }`), `status` (enum: unreviewed, reviewed, resolved, promoted — includes `promoted` for exception handoff), `data_completeness` (NUMERIC — 0-100 score), `reviewer_id` (FK → users, nullable), `reviewer_note` (text nullable), `reviewed_at` (timestamptz nullable), `resolution_note` (text nullable), `resolved_at` (timestamptz nullable), `promoted_exception_id` (uuid nullable — FK to exceptions table if promoted), `created_at`, `updated_at`, `deleted_at`. Indexes: `(type, migration_record_id)` unique for idempotency, `(type)`, `(mda_id)`, `(status)`, `(staff_name)`, `(upload_id)` |
+| `person_matches` table | Append-only with status lifecycle (no soft delete — rejections are preserved as informative history). Columns: `id` (UUIDv7), `person_a_name` (text), `person_a_staff_id` (text nullable), `person_a_mda_id` (FK → mdas), `person_b_name` (text), `person_b_staff_id` (text nullable), `person_b_mda_id` (FK → mdas), `match_type` (enum: exact_name, staff_id, surname_initial, fuzzy_name, manual — 5 types reflecting SQ-1's 3-level matching + Staff ID + manual), `confidence` (NUMERIC(3,2) — 0.00 to 1.00), `status` (enum: auto_confirmed, pending_review, confirmed, rejected — default pending_review), `confirmed_by` (FK → users, nullable), `confirmed_at` (timestamptz nullable), `created_at` |
+| `migration_uploads` table | Full CRUD with soft deletes. Columns: `id` (UUIDv7), `mda_id` (FK → mdas), `uploaded_by` (FK → users), `filename` (text), `file_size_bytes` (int), `sheet_count` (int), `total_records` (int), `status` (enum: uploaded, mapped, processing, completed, validated, reconciled, certified, failed), `era_detected` (int nullable), `metadata` (JSONB — stores confirmed column mapping config), `created_at`, `updated_at`, `deleted_at`. Tracks each legacy file upload session through the migration pipeline. Status progression: uploaded → mapped → processing → completed → validated (Story 3.2) → reconciled (Story 3.4) → certified (Story 3.5 final stage) |
+| `migration_records` table | Full CRUD with soft deletes. Columns: `id` (UUIDv7), `upload_id` (FK → migration_uploads), `mda_id` (FK → mdas), `sheet_name`, `row_number` (int), `era` (int), `period_year` (int nullable), `period_month` (int nullable), `staff_name` (text NOT NULL), all 24 canonical financial/temporal fields as nullable columns (NUMERIC(15,2) for money, text for dates/strings, int for counts), `source_file` (text), `source_sheet` (text), `source_row` (int), `created_at`, `deleted_at`. Staging table — one row per extracted data record. Records advance through validation (Story 3.2) → baseline (Story 3.4) before becoming loan records |
+| `migration_extra_fields` table | Full CRUD with soft deletes. Columns: `id` (UUIDv7), `record_id` (FK → migration_records), `field_name` (text — original header name), `field_value` (text), `source_header` (text — exact header string from file), `created_at`, `deleted_at`. Captures non-standard columns (e.g., bank name, phone number) that don't map to canonical fields — no data is discarded |
+| `mdas.parent_mda_id` column | Self-referential nullable FK on `mdas` table (`uuid REFERENCES mdas(id)`). Replaces the originally proposed `mda_relationships` junction table — a simple parent/child column is sufficient since only one level of hierarchy exists (CDU under Agriculture). Established in Story 3.0b |
 | All other tables | Full CRUD with soft deletes (`deleted_at`). Never hard DELETE |
 | Money values | `NUMERIC(15,2)` in DB → string in API → `NairaDisplay` in UI |
 | PII fields | Encrypted at rest via `pgcrypto`. Decrypted in service layer only |
@@ -1215,9 +1233,15 @@ PostgreSQL (constraints, triggers, immutability enforcement)
 | `userAdminService` | User account CRUD, password reset by admin, MDA reassignment | `authService`, `db/queries/*` | Business services |
 | `staffIdService` | Staff ID update, system-wide duplicate detection, justification logging | `db/queries/staffIdQueries` | `computationEngine` |
 | `migrationService` | Legacy import, column mapping, baseline creation, historical upload, service status verification report | `ledgerService`, `comparisonEngine`, `temporalValidationService`, `observationEngine`, `fileDelineationService` | Direct ledger UPDATE/DELETE |
-| `observationEngine` | Auto-generate 6 observation types, data completeness scoring, non-punitive template rendering, observation status management | `computationEngine`, `db/queries/observationQueries`, `vocabulary.ts` | Ledger writes, direct exception creation (uses promote endpoint) |
-| `personMatchingService` | Cross-MDA person matching (name/Staff ID fuzzy matching, confidence scoring, match confirmation) | `migrationService`, `db/queries/traceQueries` | Ledger writes, financial computations |
-| `traceReportService` | Individual Staff Trace Report generation (cross-MDA history assembly, cycle detection, HTML/PDF rendering) | `ledgerService`, `observationEngine`, `personMatchingService`, `computationEngine` | DB writes |
+| `migrationValidationService` | Variance categorisation (Clean/Minor/Significant/Structural/Anomalous), effective interest rate computation, rate tier detection (6 known tiers), multi-MDA content detection, batch validation of migration records | `computationEngine` (for expected values), `mdaService` (for MDA resolution) | `ledgerService`, `observationEngine` (downstream — Story 3.6 reads flags set here) |
+| `observationEngine` | Detection + generation of 6 observation types (rate variance, stalled balance, negative balance, multi-MDA, no approval match, consecutive loan), data completeness scoring, non-punitive template rendering, idempotent batch generation | `migration_records` (direct DB read), `person_matches` (direct DB read), `staffProfileService` (for timelines), `vocabulary.ts` | `observations` table (INSERT only) |
+| `observationService` | Observation CRUD, paginated list with filters, aggregate counts by type/status, status transitions (Unreviewed→Reviewed→Resolved, any→Promoted), promote-to-exception handoff (creates lightweight exception record) | `observations` table, `exceptions` table, `withMdaScope` | Frontend, `exceptionService` (Epic 7 consumes promoted exceptions) |
+| `personMatchingService` | Cross-MDA person matching (3-level name matching: exact → surname+initial → Levenshtein ≤2, Staff ID matching, confidence scoring, match confirmation/rejection) | `migration_records` (direct DB read), `nameMatch` utilities, `mdaService` (for parent/agency awareness) | Ledger writes, financial computations, `migrationService` |
+| `staffProfileService` | Person profile aggregation, timeline building, cycle detection, profile completeness checking (DOB/appointment date presence) | `personMatchingService`, `migration_records` (direct DB read), `migration_uploads` | Ledger writes, `computationEngine` (already ran in Story 3.2) |
+| `baselineService` | Baseline acknowledgment workflow, loan creation from migration records, MIGRATION_BASELINE ledger entry creation (amount = cumulative payments = totalLoan − declaredOutstandingBalance), principal derivation (from totalLoan/rate or monthlyDeduction/tenure/rate), batch baseline processing | `migrationService`, `ledgerService`, `computationEngine`, `staffProfileService` | Direct loan INSERT, ledger writes |
+| `migrationDashboardService` | Migration progress dashboard (all 63 MDAs with stage derivation, record counts per variance category, baseline completion), aggregate hero metrics (total staff migrated, total exposure, MDAs complete, baselines established) | `mdaService`, `migration_uploads` (direct DB read), `migration_records` (direct DB read), `loans` (direct DB read) | Frontend only (read-only service) |
+| `beneficiaryLedgerService` | Master beneficiary ledger (paginated person-level aggregation from migration loans), beneficiary metrics strip, CSV export of filtered data | `loans` (direct DB read), `ledger_entries` (batch balance aggregation), `person_matches` (multi-MDA indicator), `mdaService` | Frontend only (read-only service) |
+| `traceReportService` | Individual Staff Trace Report generation — composition layer assembling cross-MDA history, loan cycle detection, interest rate mathematical verification, balance trajectory, observation summary, data completeness scoring | `staffProfileService` (person profiles + timelines), `observationService` (person observations), `personMatchingService` (cross-MDA matches) | Frontend only (read-only composition service) |
 | `fileDelineationService` | Intra-file MDA boundary detection, cross-file deduplication, parent/agency relationship resolution | `migrationService`, MDA registry (`db/queries`) | Ledger writes |
 
 ### Data Flow: Monthly Submission Lifecycle
@@ -1339,11 +1363,17 @@ MDA Officer or Dept Admin files mid-cycle event
 Dept Admin uploads legacy spreadsheet
     │
     ▼
-[1] migrationRoutes.ts → POST /migrations
-    │  → fileDelineationService.ts detects intra-file MDA boundaries (FR89)
-    │  → migrationService.ts parses, maps columns (FR90), validates (FR26)
+[1] migrationRoutes.ts → POST /migrations/upload + POST /migrations/:id/confirm
+    │  → migrationService.ts parses, detects headers/eras, maps columns (FR90)
+    │  → Extracts records into migration_records (Story 3.1)
     ▼
-[2] observationEngine.ts auto-scan on validated migration batch
+[1b] migrationRoutes.ts → POST /migrations/:id/validate
+    │  → migrationValidationService.ts categorises records (FR26)
+    │  → Computes effective rates, detects rate tier variances
+    │  → Detects multi-MDA content (CDU-in-Agriculture pattern)
+    │  → Stores variance_category, computed_rate, has_rate_variance per record
+    ▼
+[2] observationEngine.ts auto-scan after baseline creation (Story 3.6 — triggered after Story 3.4 baseline, or manually via API)
     │  → Rate Variance: compare each loan's effective rate against 13.33% standard
     │  → Stalled Balance: detect 3+ months unchanged balance (transfer-first hypothesis)
     │  → Negative Balance: flag computed balance < 0

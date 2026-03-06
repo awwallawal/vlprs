@@ -76,6 +76,16 @@ export const VOCABULARY = {
   SERVICE_EXTENSION_MAX_EXCEEDED: 'Extension exceeds maximum allowed period. Please verify the extension date.',
   // Reports (Story 10.4)
   NO_POST_RETIREMENT_ACTIVITY: 'No post-retirement activity detected',
+  // Migration (Story 3.1)
+  MIGRATION_FILE_TOO_LARGE: 'File exceeds the 10MB size limit. Please upload a smaller file.',
+  MIGRATION_FILE_PARSE_ERROR: 'Unable to read the uploaded file. Please ensure it is a valid .xlsx or .csv file.',
+  MIGRATION_FILE_NO_SHEETS: 'No readable sheets found in the uploaded file.',
+  MIGRATION_FILE_NO_DATA: 'No data could be detected in the uploaded file. Please check the file contents.',
+  MIGRATION_TOO_MANY_ROWS: 'Sheet exceeds the 500 row limit. Please split the file into smaller batches.',
+  MIGRATION_UPLOAD_NOT_FOUND: 'The requested upload could not be found.',
+  MIGRATION_UPLOAD_ALREADY_PROCESSED: 'This upload has already been processed.',
+  MIGRATION_FILE_MISMATCH: 'The re-uploaded file does not match the original. Please upload the same file.',
+  MIGRATION_UPLOAD_COMPLETE: 'Upload processed successfully.',
 } as const;
 
 export const UI_COPY = {
