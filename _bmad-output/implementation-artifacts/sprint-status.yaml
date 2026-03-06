@@ -5,7 +5,7 @@
 # story_location: _bmad-output/implementation-artifacts
 # sprint_sequence: 1→E1, 2→E14, 3→E2, 4→E10, 5→E3, 6→E4, 7→E5, 8→E11, 9→E7, 10→E6, 11→E8, 12→E12, 13→E9, 14→E13
 # total_epics: 14
-# total_stories: 65 (Epic 1: 12, Epic 14: 3, Epic 2: 8 incl. 2.0, Epic 3: 8 reshaped from 5 per sprint change proposal, Epic 13: 2 — FR72/FR73 moved from Epic 13 to Epic 1, Story 2.0 added from Epic 1+14 retro, Epic 3 reshaped per PM alignment cascade 2026-03-01)
+# total_stories: 67 (Epic 1: 12, Epic 14: 3, Epic 2: 8 incl. 2.0, Epic 3: 10 incl. 3.0a+3.0b prep from E10 retro, Epic 13: 2 — FR72/FR73 moved from Epic 13 to Epic 1, Story 2.0 added from Epic 1+14 retro, Epic 3 reshaped per PM alignment cascade 2026-03-01, Stories 3.0a+3.0b added per Epic 10 retro 2026-03-05)
 
 # STATUS DEFINITIONS:
 # ==================
@@ -95,15 +95,49 @@ development_status:
   epic-2-retrospective: done
 
   # Epic 10: Staff Temporal Profile & Retirement Validation (Sprint 4)
-  epic-10: in-progress
+  epic-10: done
   10-1-retirement-date-computation-storage: done
   10-2-service-extension-recording: done
   10-3-tenure-vs-remaining-service-gratuity-receivable: done
   10-4-service-status-verification-report: done
-  epic-10-retrospective: optional
+  epic-10-retrospective: done
+
+  # Epic 3 Preparation (from Epic 10 retrospective 2026-03-05)
+  # CRITICAL — must complete before Story 3.1:
+  #   1. Regression fixture suite: 7 representative legacy Excel files in tests/fixtures/legacy-migration/
+  #      - Pre-2018 minimal, 2018-2020 expanded, 2020-2023 standardised, 2023+ modern,
+  #        multi-MDA (CDU/Agriculture), unusual headers, stress test (Education)
+  #      - Each file paired with .expected.json (SQ-1 known-good output)
+  #      - README.md documenting what each file tests and why
+  #      - Owner: Charlie
+  #   2. CDU parent/agency relationship in MDA registry (parent_mda to Agriculture)
+  #      - Owner: Charlie
+  #
+  # PARALLEL — during early stories:
+  #   3. SQ-1 utility tests written during port (part of Stories 3.1/3.2, not separate)
+  #   4. Observation template vocabulary review — all 6 types vs non-punitive vocabulary (Owner: Alice, before Story 3.6)
+  #
+  # UAT CHECKPOINTS:
+  #   - After Story 3.2: First legacy upload through UI — Awwal validates against SQ-1 output for same file
+  #   - After Story 3.5: Migration dashboard + master beneficiary ledger — Awwal validates against SQ-1 HTML reports
+  #
+  # TEAM AGREEMENTS (Epic 10 retro):
+  #   - Validation-first: check inputs before business logic
+  #   - API contracts: verify AC field names match response shape
+  #   - Non-punitive vocabulary: every observation uses approved templates
+  #   - Data completeness indicators: every insight shows what data exists/missing
+  #   - Test-during-port: SQ-1 utilities validated against regression fixtures during server-side port
+  #   - UAT as regression check: app output compared against SQ-1 known-good outputs
+  #
+  # CARRIED FORWARD:
+  #   - 2 deferred LOW from Story 2.7: (a) test redundancy in terminal-status block,
+  #     (b) LOAN_STATUS_VALUES hardcoded duplicate — resolve if Epic 3 touches loan transitions
+  #   - System health monitoring dashboard — backlog item for post-Epic 5
 
   # Epic 3: Data Migration & Legacy Import (Sprint 5 — reshaped from 5 to 8 stories per sprint change proposal 2026-02-28)
-  epic-3: backlog
+  epic-3: in-progress
+  3-0a-regression-fixture-suite: done
+  3-0b-cdu-parent-agency-relationship: ready-for-dev
   3-1-legacy-upload-intelligent-column-mapping: backlog
   3-2-migration-validation-rate-detection-mda-delineation: backlog
   3-3-staff-loan-profile-cross-mda-timeline: backlog
