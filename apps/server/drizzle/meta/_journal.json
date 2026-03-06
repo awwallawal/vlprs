@@ -43,6 +43,13 @@
       "when": 1772375391293,
       "tag": "0005_sparkling_moira_mactaggert",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1772786679692,
+      "tag": "0006_lonely_mystique",
+      "breakpoints": true
     }
   ]
 }
