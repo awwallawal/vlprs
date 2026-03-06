@@ -3,8 +3,10 @@ stepsCompleted: [1, 2, 3, 4]
 lastStep: 4
 status: 'complete'
 completedAt: '2026-02-14'
-lastEdited: '2026-03-01'
+lastEdited: '2026-03-04'
 editHistory:
+  - date: '2026-03-04'
+    changes: 'SQ-1 Analytics Cascade — Enriched 7 story ACs across Epic 4 and Epic 6 per approved executive-dashboard-report-specs.md. Story 4.1: Added analytics hero metrics (outstanding receivables, collection potential, at-risk amount, completion rate), Loan Classification Service + Revenue Projection Service + MDA Aggregation Service as internal dependencies. Story 4.2: Added 5 analytics attention sources (overdue count, stalled count, quick-wins, dark MDAs, onboarding lag) from classification and coverage services. Story 4.3: Added MDA health score badges and loan status badges in drill-down views via Aggregation and Classification services. Story 4.4: Added health score column, coverage %, dark MDA highlighting with "Submission gap observed" label, staleness indicator via Coverage Service. Story 6.1: Added portfolio status breakdown, MDA scorecard (top 10 + bottom 5), receivables ranking, 3-tier recovery summary, coverage summary, onboarding pipeline. Story 6.2: Added overdue/stalled/over-deduction register sections with severity tiers (mild/moderate/elevated). Story 6.3: Added quick-wins section, observation activity summary, portfolio snapshot for weekly trend. Zero new stories added — all changes enrich existing ACs. Story count unchanged at 65. Sprint sequence unchanged.'
   - date: '2026-03-01'
     changes: 'PM Alignment Cascade — Epic 3 reshape + FR87-FR90 + FR61 extension: Added FR87-FR90 to requirements inventory (Observation Engine, Individual Staff Trace Report, Multi-MDA File Delineation, Intelligent Column Mapping). Added FR87-FR90 to FR Coverage Map → Epic 3. Updated FR61 coverage note with Epic 3/11/9 distribution for bidirectional transfer lifecycle. Reshaped Epic 3 from 5 stories to 8 stories: Story 3.1 EXTENDED (added FR90 intelligent column mapping), Story 3.2 EXTENDED (added rate detection + MDA delineation), Story 3.3 RESHAPED (was side-by-side comparison, now person-level StaffProfilePanel with cross-MDA timeline), Story 3.4 KEPT (baseline acknowledgment), Story 3.5 RESHAPED (added MasterBeneficiaryLedger + Data Pending status), Story 3.6 NEW (Observation Engine + review workflow — FR87, FR85), Story 3.7 NEW (Individual Trace Report — FR88), Story 3.8 NEW (Multi-MDA File Delineation & Deduplication — FR89). Updated Epic 3 summary with data intelligence scope and FR87-FR90. Updated Epic 11 summary and Story 11.2 with bidirectional transfer events (Transfer Out, Claim Transfer In, Transfer Search). Updated Epic 9 summary with transfer notifications + escalation. Updated sprint sequence: Epic 3 stories 5→8. Updated total stories 62→65. Updated custom component count 17→24 (added ObservationCard, LoanTimeline, StaffProfilePanel, MasterBeneficiaryLedger, IndividualTraceReport, FileDelineationPreview). Updated server-side service count 16→20. Updated API route groups. Updated demonstrability milestones. Updated FR count references 82→90.'
   - date: '2026-02-27'
@@ -1794,6 +1796,54 @@ So that the complete history of every loan decision is preserved.
 
 Department Admin can import legacy MDA spreadsheet data with intelligent column mapping, validate and categorise records with automated observation generation, view person-level staff profiles with cross-MDA timelines, acknowledge variances, and establish baselines for all 63 MDAs. Observation Engine surfaces data patterns for human review. Individual Trace Reports enable investigation. Department Admin direct reassignment for migration-era transfers.
 
+### Story 3.0a: Regression Fixture Suite for Legacy Migration (Infrastructure)
+
+As a **development team**,
+I want a curated set of 7 representative legacy Excel files with paired known-good expected outputs,
+So that every Epic 3 story can be validated against SQ-1's proven analysis and regressions are caught before they reach UAT.
+
+**Acceptance Criteria:**
+
+**Given** the 122+ legacy Excel files in `docs/legacy_cd/`
+**When** 7 files are selected to form the regression fixture suite
+**Then** they are copied to `tests/fixtures/legacy-migration/` and collectively cover: Era 1 (pre-2018 minimal, 12 columns), Era 2 (2018-2020 expanded, 13-16 columns), Era 3 (2020-2023 CDU standardised template), Era 4 (2023+ modern with START/END DATE), Multi-MDA (CDU/Agriculture embedding), Edge case (unusual headers requiring fallback detection), Stress test (Education ~148 sheets)
+
+**Given** each fixture file
+**When** processed through the SQ-1 `analyze.ts` pipeline
+**Then** a corresponding `.expected.json` file exists alongside it containing per-file entries from `catalog.json` — an exact subset with no manual edits
+
+**Given** the fixture suite
+**When** a developer opens `tests/fixtures/legacy-migration/README.md`
+**Then** it documents what each file tests, the SQ-1 pipeline command used, regeneration instructions, and field mapping between SQ-1 output and VLPRS schema
+
+**Source:** Epic 10 retrospective action item — Critical Prep #1. Blocks Story 3.1.
+
+### Story 3.0b: CDU Parent/Agency Relationship in MDA Registry (Infrastructure)
+
+As a **development team**,
+I want the MDA registry to support parent/agency relationships so that CDU can be configured as an independent MDA with a parent relationship to Agriculture,
+So that the migration engine (Stories 3.1, 3.2, 3.8) can correctly delineate CDU records embedded in Agriculture files and avoid double-counting.
+
+**Acceptance Criteria:**
+
+**Given** the `mdas` table
+**When** the schema is updated
+**Then** a nullable `parent_mda_id` column exists as a self-referential foreign key to `mdas.id`
+
+**Given** the MDA seed data
+**When** the seed runs
+**Then** CDU exists as an independent MDA (`code: 'CDU'`) with `parent_mda_id` pointing to Agriculture, and CDU aliases cover all 5 legacy naming variants observed by SQ-1: `CDU`, `COCOA DEVELOPMENT UNIT`, `OYO STATE COCOA DEVELOPMENT UNIT`, `COCOA`, `TCDU`
+
+**Given** the MDA list API (`GET /api/mdas`)
+**When** a client requests MDAs
+**Then** each MDA includes `parentMdaId` and `parentMdaCode` (denormalized) in the response
+
+**Given** the schema change
+**When** `drizzle-kit` generates a migration
+**Then** the migration adds `parent_mda_id`, is reversible, and all existing rows have `parent_mda_id = null`
+
+**Source:** Epic 10 retrospective action item — Critical Prep #2. Blocks Stories 3.1 and 3.8.
+
 ### Story 3.1: Legacy Upload & Intelligent Column Mapping
 
 As a **Department Admin**,
@@ -1802,7 +1852,7 @@ So that data from varied spreadsheet formats across 4 format eras can be importe
 
 **Acceptance Criteria:**
 
-**Given** the migration tool at `/api/migration/upload`
+**Given** the migration tool at `/api/migrations/upload`
 **When** Department Admin uploads an `.xlsx` or `.csv` file (up to 10MB / 500 rows)
 **Then** the system parses the file, detects the format era (pre-2018 minimal, 2018-2020 expanded, 2020-2023 standardised, 2023+ modern), and presents a column-mapping interface with auto-suggested mappings based on header text similarity and column position patterns (FR25, FR90)
 
@@ -1827,21 +1877,22 @@ So that I can focus attention on significant discrepancies while knowing clean r
 
 **Given** a processed migration upload
 **When** the system validates each record against the computation engine
-**Then** each record is categorised as one of: Clean, Minor Variance (<₦500), Significant Variance (₦500-₦50,000), Structural Error (wrong rate/formula), Anomalous (unexplainable) (FR26)
+**Then** each record is categorised as one of: Clean (<₦1 difference — sub-kobo rounding only), Minor Variance (₦1-₦499), Significant Variance (≥₦500), Structural Error (rate not in any known tier), Anomalous (unexplainable) (FR26)
 
 **Given** the validation step
 **When** a loan's effective interest rate differs from the 13.33% standard
-**Then** a Rate Variance observation is auto-generated with: factual description, rate comparison, possible explanations, and data completeness score (partial FR87)
+**Then** the record is flagged with computed rate and rate variance indicator, checked against known rate tiers (6.67%, 8.0%, 8.89%, 10.66%, 11.11%), and the flag is stored for the observation engine (Story 3.6 generates the actual observation records, partial FR87)
 
 **Given** a single uploaded file
 **When** the system detects records for multiple MDAs within the file
-**Then** a FileDelineationPreview shows detected MDA boundaries with row ranges, detected MDA names, record counts per section, and confidence scores
-**And** Department Admin can confirm, reject, or manually adjust boundaries before processing (partial FR89)
+**Then** detected MDA boundaries (row ranges, MDA names, record counts, confidence scores) are stored on the upload record and surfaced in the validation summary (partial FR89). Full FileDelineationPreview UI with boundary adjustment is Story 3.8
 
 **Given** the categorisation result
 **When** Department Admin views the migration report
 **Then** a summary shows: count and percentage per category (e.g., "Clean: 14 records (61%), Minor Variance: 5 (22%)...")
 **And** all language is non-punitive — "Comparison Complete" header, not "Errors Found"
+
+**Scope note:** Cross-MDA person detection → Story 3.3. Balance trajectory analysis (stalled/negative) → Story 3.6. Full observation record creation → Story 3.6. File delineation UI → Story 3.8. This story detects and flags; downstream stories act on the flags.
 
 ### Story 3.3: Staff Loan Profile & Cross-MDA Timeline
 
@@ -1853,7 +1904,7 @@ So that I can understand cross-MDA patterns and make informed baseline decisions
 
 **Given** migrated records for a staff member
 **When** Department Admin clicks on the staff member from any list view
-**Then** a StaffProfilePanel displays: header (staff name, Staff ID, current MDA, total loans, total observations), LoanTimeline (horizontal timeline showing loan cycles across MDAs, colour-coded by MDA, with gap visualisation), observation summary, and loan details list (FR27)
+**Then** a StaffProfilePanel displays: header (staff name, Staff ID, current MDA, total migration records, total variance count), LoanTimeline (horizontal timeline showing loan cycles across MDAs, colour-coded by MDA, with gap visualisation), profile completeness indicator (DOB/appointment date presence), and loan details list with ComputationTransparencyAccordion (FR27)
 
 **Given** a staff member appearing in records from 2+ MDAs
 **When** the personMatchingService processes migration data
@@ -1890,7 +1941,7 @@ So that I can track batch completion, investigate patterns, and know which MDAs 
 
 **Acceptance Criteria:**
 
-**Given** the migration dashboard at the `/migration` route
+**Given** the migration dashboard at the `/dashboard/migration` route
 **When** Department Admin opens it
 **Then** all 63 MDAs are listed with their current migration status: Data Pending, Received, Imported, Validated, Reconciled, Certified (FR30)
 **And** a MigrationProgressCard for each MDA shows: MDA name + code, current pipeline stage (1-6), record counts per variance category, observation count, last activity timestamp (FR31)
@@ -1966,7 +2017,7 @@ So that I can investigate patterns and brief the committee with a professional, 
 **Given** the trace report
 **When** the user clicks "Download PDF"
 **Then** a server-generated PDF is produced via @react-pdf/renderer with A4 layout and print-optimised typography
-**And** the user can alternatively print the HTML version or email the PDF as an attachment
+**And** the user can alternatively print the HTML version or copy a shareable link (email attachment deferred to Epic 6 report sharing)
 
 ### Story 3.8: Multi-MDA File Delineation & Deduplication
 
@@ -1983,7 +2034,7 @@ So that legacy consolidated files are correctly split and duplicate records acro
 
 **Given** a parent MDA (e.g., Ministry of Agriculture) with subsidiary departments (e.g., CDU)
 **When** records are processed
-**Then** the system recognises the parent/agency relationship via `mda_relationships` table and handles appropriately — CDU records are attributed to CDU as an independent MDA, not merged into Agriculture (FR89)
+**Then** the system recognises the parent/agency relationship via the `parent_mda_id` self-referential foreign key on the `mdas` table (established in Story 3.0b) and handles appropriately — CDU records are attributed to CDU as an independent MDA, not merged into Agriculture (FR89)
 
 **Given** duplicate records identified across MDAs
 **When** Department Admin reviews them
@@ -2019,6 +2070,15 @@ So that I can answer any scheme-level question in real time.
 **When** the dashboard is loading
 **Then** layout skeleton renders within 1 second (no blank white screen) and real data replaces skeletons as API responds
 
+**Given** the dashboard API endpoint `GET /api/dashboard/metrics`
+**When** the AG views hero metrics
+**Then** in addition to the primary 4 metrics, the response includes: totalOutstandingReceivables (sum of all outstanding balances), monthlyCollectionPotential (sum of active monthly deductions via Revenue Projection Service), atRiskAmount (sum of OVERDUE + STALLED outstanding via Loan Classification Service), and loanCompletionRate (COMPLETED / total in 60-month default window)
+**And** all financial values are computed via the Loan Classification Service using a default 60-month accountability window
+**And** the response remains <2KB payload
+**And** on desktop, metrics display in a 2×4 grid (primary row + analytics row); on mobile, all 8 cards stack vertically
+
+**Implementation note:** The Loan Classification Service (`loanClassificationService.ts`) and Revenue Projection Service (`revenueProjectionService.ts`) are built as internal dependencies of this story's API layer — not separate stories. They are tested via the API endpoints they power and via unit tests on the service functions. The MDA Aggregation Service (`mdaAggregationService.ts`) is also built here as it is consumed by Stories 4.2-4.4.
+
 ### Story 4.2: Attention Items & Status Indicators
 
 As the **Accountant General**,
@@ -2043,6 +2103,16 @@ So that I know immediately if anything needs my awareness without digging throug
 **When** the AG taps it
 **Then** it navigates to the relevant detail view (MDA detail, loan record, or certificate)
 
+**Given** attention item sources from analytics services
+**When** any of these conditions exist:
+- Loans classified as OVERDUE by the Loan Classification Service (past expected completion, balance > 0)
+- Loans classified as STALLED by the Loan Classification Service (2+ consecutive identical non-zero balances)
+- Quick-win loans identified by the Loan Classification Service (≤3 installments remaining)
+- MDAs classified as 'dark' by the Submission Coverage Service (no submission in 6+ months)
+- Approved beneficiaries with zero deduction records identified by the Beneficiary Pipeline Service (onboarding lag)
+**Then** each generates an AttentionItemCard with: description, count, amount (where applicable), category badge, and drill-down link to the relevant filtered view
+**And** quick-win attention items show: count of quick-win loans, total amount recoverable, and link to the filtered loan list sorted by outstanding ascending
+
 ### Story 4.3: Progressive Drill-Down (Dashboard → MDA → Loan)
 
 As the **Accountant General**,
@@ -2065,6 +2135,14 @@ So that I can investigate any number at any depth without leaving the system.
 **When** the AG clicks a breadcrumb link
 **Then** navigation returns to that level (NFR-PERF-2: <500ms page transitions)
 
+**Given** the MDA-level breakdown view
+**When** the AG drills into a metric
+**Then** each MDA row shows: MDA name, contribution count, outstanding amount, health score badge (healthy ≥70 green / attention 40-69 amber / for-review <40 grey — never red), and a status distribution indicator showing proportion of completed/on-track/overdue/stalled loans via MDA Aggregation Service
+
+**Given** an individual loan in the detail view
+**When** displayed
+**Then** the loan shows a status badge computed by the Loan Classification Service: green (completed / on-track), amber (past expected completion), grey (balance unchanged), teal info (balance below zero)
+
 ### Story 4.4: MDA Compliance Status View
 
 As the **Accountant General**,
@@ -2085,6 +2163,12 @@ So that I know the submission status of all 63 MDAs at a glance.
 **Given** MDA compliance data
 **When** displayed on mobile
 **Then** the list is compact with MDA name + status badge, scrollable, with submitted MDAs collapsed by default and pending/overdue shown prominently
+
+**Given** the compliance view with analytics enrichment
+**When** the AG views MDA compliance status
+**Then** each MDA row additionally includes: health score badge (healthy/attention/for-review computed by MDA Aggregation Service), historical submission coverage percentage (via Submission Coverage Service), and last submission date (FR36)
+**And** MDAs classified as 'dark' by the Submission Coverage Service (no submission in 6+ months) display an amber "Submission gap observed" label — never "Non-compliant"
+**And** MDAs with data older than 2 months show a staleness indicator: "Data as of {lastSubmissionDate} — {months} months since last update" so the AG knows the recency of the numbers she is viewing
 
 ---
 
@@ -2226,6 +2310,11 @@ So that I have comprehensive, formatted reports for governance meetings and Comm
 **Given** the reports interface
 **When** a user requests an MDA Compliance report
 **Then** the system generates a report showing all 63 MDAs with submission status, dates, record counts, and compliance percentage for the selected period (FR38)
+**And** each MDA row includes: health score badge, submission coverage %, total outstanding, and observation count (unresolved)
+
+**Given** the Executive Summary report
+**When** generated
+**Then** it includes the following sections beyond the existing scope: Loan Portfolio Status (count and % per classification status: completed, on-track, past expected completion, balance unchanged, balance below zero — via Loan Classification Service), MDA Scorecard (top 10 by health score + bottom 5 for attention — via MDA Aggregation Service), Outstanding Receivables ranked by MDA (top 10 by exposure), Recovery Potential Summary (3-tier strategy: quick recovery for stalled ≤4mo or overdue ≤6mo, requires intervention for overdue 7-18mo or stalled 5-12mo, extended follow-up for overdue >18mo or stalled >12mo — with amounts and monthly recovery projections per tier via Revenue Projection Service), Submission Coverage Summary (active/spotty/dark MDA counts via Submission Coverage Service), and Onboarding Pipeline Summary (approved-but-not-collecting count and revenue at risk via Beneficiary Pipeline Service)
 
 ### Story 6.2: Variance & Loan Snapshot Reports
 
@@ -2243,6 +2332,11 @@ So that the system's computations are transparent and verifiable.
 **When** a user requests a Loan Snapshot report for a specific MDA
 **Then** the system generates the computed 16-column view: staff ID, name, grade level, principal, interest rate, tenure, moratorium, deduction amount, installments paid, outstanding balance, status, last deduction date, next deduction date, approval date, loan reference, MDA code (FR40)
 
+**Given** a Variance report for a specific MDA
+**When** generated
+**Then** it includes the existing declared-vs-computed comparison, PLUS a "Loans Past Expected Completion" section listing loans where Loan Classification Service status = OVERDUE with: staff name, months past expected completion, outstanding balance, severity tier (mild ≤6mo / moderate 7-18mo / elevated >18mo), And a "Balance Unchanged" section listing STALLED loans with: staff name, consecutive unchanged months, frozen amount, And a "Balance Below Zero" section listing OVER_DEDUCTED loans with: staff name, negative amount, estimated over-months
+**And** severity labels use: Mild, Moderate, Elevated — never Low/Medium/High, never red badges
+
 ### Story 6.3: Weekly AG Report
 
 As a **Department Admin**,
@@ -2255,6 +2349,10 @@ So that the AG receives a concise operational summary without requesting individ
 **When** Department Admin requests a weekly AG report
 **Then** the report covers the 7-day period ending on the generation date and contains: executive summary, compliance status (submissions received this week), exceptions resolved with resolution notes, and outstanding attention items (FR41)
 **And** the report is generated in <10 seconds (NFR-PERF-4)
+
+**Given** the weekly AG report
+**When** generated
+**Then** it additionally includes: "Quick Recovery Opportunities" section (loans with ≤3 installments remaining via Loan Classification Service, sorted by outstanding ascending — lowest-effort recoveries), "Observation Activity" section (new/reviewed/resolved observation counts since last report date, sourced from Observation Engine data), and "Portfolio Snapshot" section (point-in-time status breakdown via Loan Classification Service for week-over-week trend comparison)
 
 ### Story 6.4: Branded PDF Export & One-Tap Sharing
 

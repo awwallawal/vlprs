@@ -22,6 +22,7 @@ import {
   numeric,
   timestamp,
   date,
+  jsonb,
   index,
   uniqueIndex,
   type AnyPgColumn,
@@ -242,6 +243,105 @@ export const refreshTokens = pgTable(
   (table) => [
     index('idx_refresh_tokens_token_hash').on(table.tokenHash),
     index('idx_refresh_tokens_user_revoked').on(table.userId, table.revokedAt),
+  ],
+);
+
+// ─── Migration Upload Status Enum (Story 3.1) ──────────────────────
+export const migrationUploadStatusEnum = pgEnum('migration_upload_status', [
+  'uploaded', 'mapped', 'processing', 'completed', 'failed',
+]);
+
+// ─── Migration Uploads (Story 3.1) ──────────────────────────────────
+export const migrationUploads = pgTable(
+  'migration_uploads',
+  {
+    id: uuid('id').primaryKey().$defaultFn(generateUuidv7),
+    mdaId: uuid('mda_id').notNull().references(() => mdas.id),
+    uploadedBy: uuid('uploaded_by').notNull().references(() => users.id),
+    filename: varchar('filename', { length: 500 }).notNull(),
+    fileSizeBytes: integer('file_size_bytes').notNull(),
+    sheetCount: integer('sheet_count').notNull().default(0),
+    totalRecords: integer('total_records').notNull().default(0),
+    status: migrationUploadStatusEnum('status').notNull().default('uploaded'),
+    eraDetected: integer('era_detected'),
+    metadata: jsonb('metadata'),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+    deletedAt: timestamp('deleted_at', { withTimezone: true }),
+  },
+  (table) => [
+    index('idx_migration_uploads_mda_id').on(table.mdaId),
+    index('idx_migration_uploads_uploaded_by').on(table.uploadedBy),
+    index('idx_migration_uploads_status').on(table.status),
+    index('idx_migration_uploads_created_at').on(table.createdAt),
+  ],
+);
+
+// ─── Migration Records (Story 3.1) ──────────────────────────────────
+export const migrationRecords = pgTable(
+  'migration_records',
+  {
+    id: uuid('id').primaryKey().$defaultFn(generateUuidv7),
+    uploadId: uuid('upload_id').notNull().references(() => migrationUploads.id),
+    mdaId: uuid('mda_id').notNull().references(() => mdas.id),
+    mdaText: text('mda_text'),
+    sheetName: text('sheet_name').notNull(),
+    rowNumber: integer('row_number').notNull(),
+    era: integer('era').notNull(),
+    periodYear: integer('period_year'),
+    periodMonth: integer('period_month'),
+    serialNumber: text('serial_number'),
+    staffName: text('staff_name').notNull(),
+    principal: numeric('principal', { precision: 15, scale: 2 }),
+    interestTotal: numeric('interest_total', { precision: 15, scale: 2 }),
+    totalLoan: numeric('total_loan', { precision: 15, scale: 2 }),
+    monthlyDeduction: numeric('monthly_deduction', { precision: 15, scale: 2 }),
+    monthlyInterest: numeric('monthly_interest', { precision: 15, scale: 2 }),
+    monthlyPrincipal: numeric('monthly_principal', { precision: 15, scale: 2 }),
+    totalInterestPaid: numeric('total_interest_paid', { precision: 15, scale: 2 }),
+    totalOutstandingInterest: numeric('total_outstanding_interest', { precision: 15, scale: 2 }),
+    totalLoanPaid: numeric('total_loan_paid', { precision: 15, scale: 2 }),
+    outstandingBalance: numeric('outstanding_balance', { precision: 15, scale: 2 }),
+    installmentCount: integer('installment_count'),
+    installmentsPaid: integer('installments_paid'),
+    installmentsOutstanding: integer('installments_outstanding'),
+    employeeNo: text('employee_no'),
+    refId: text('ref_id'),
+    commencementDate: text('commencement_date'),
+    startDate: text('start_date'),
+    endDate: text('end_date'),
+    station: text('station'),
+    remarks: text('remarks'),
+    dateOfBirth: text('date_of_birth'),
+    dateOfFirstAppointment: text('date_of_first_appointment'),
+    sourceFile: text('source_file').notNull(),
+    sourceSheet: text('source_sheet').notNull(),
+    sourceRow: integer('source_row').notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    deletedAt: timestamp('deleted_at', { withTimezone: true }),
+  },
+  (table) => [
+    index('idx_migration_records_upload_id').on(table.uploadId),
+    index('idx_migration_records_mda_id').on(table.mdaId),
+    index('idx_migration_records_staff_name').on(table.staffName),
+    index('idx_migration_records_created_at').on(table.createdAt),
+  ],
+);
+
+// ─── Migration Extra Fields (Story 3.1) ─────────────────────────────
+export const migrationExtraFields = pgTable(
+  'migration_extra_fields',
+  {
+    id: uuid('id').primaryKey().$defaultFn(generateUuidv7),
+    recordId: uuid('record_id').notNull().references(() => migrationRecords.id),
+    fieldName: text('field_name').notNull(),
+    fieldValue: text('field_value'),
+    sourceHeader: text('source_header').notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    deletedAt: timestamp('deleted_at', { withTimezone: true }),
+  },
+  (table) => [
+    index('idx_migration_extra_fields_record_id').on(table.recordId),
   ],
 );
 
