@@ -106,6 +106,15 @@ export const VOCABULARY = {
   PERSON_NOT_FOUND: 'No records found for this person.',
   MATCH_NOT_FOUND: 'The requested match could not be found.',
   MATCH_NOT_PENDING: 'Only pending matches can be updated.',
+  // Baseline Acknowledgment (Story 3.4)
+  BASELINE_CREATED: 'Baseline established — legacy position recorded as declared',
+  BASELINE_BATCH_COMPLETE: 'All baselines established — loan records created',
+  BASELINE_ANNOTATION: 'Migrated from legacy system — baseline as declared',
+  BASELINE_ALREADY_EXISTS: 'Baseline already established for this record',
+  BASELINE_VARIANCE_NOTE: 'Variance acknowledged and recorded for audit',
+  BASELINE_UPLOAD_NOT_VALIDATED: 'This upload must be validated before baselines can be created.',
+  BASELINE_RECORD_NOT_FOUND: 'The requested migration record could not be found.',
+  BASELINE_MISSING_BALANCE: 'Cannot establish baseline — declared outstanding balance is not available for this record.',
 } as const;
 
 export const UI_COPY = {

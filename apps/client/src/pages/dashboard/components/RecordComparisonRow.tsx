@@ -3,6 +3,9 @@ import type { ValidationResultRecord, VarianceCategory } from '@vlprs/shared';
 
 interface RecordComparisonRowProps {
   record: ValidationResultRecord;
+  onBaseline?: (recordId: string) => void;
+  isBaselineLoading?: boolean;
+  isBaselineCreated?: boolean;
 }
 
 const BADGE_STYLES: Record<VarianceCategory, string> = {
@@ -20,7 +23,7 @@ function formatCurrency(value: string | null): string {
   return `\u20A6${num.toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
-export function RecordComparisonRow({ record }: RecordComparisonRowProps) {
+export function RecordComparisonRow({ record, onBaseline, isBaselineLoading, isBaselineCreated }: RecordComparisonRowProps) {
   const label = UI_COPY.VARIANCE_CATEGORY_LABELS[record.varianceCategory] ?? record.varianceCategory;
 
   return (
@@ -54,6 +57,22 @@ export function RecordComparisonRow({ record }: RecordComparisonRowProps) {
           </span>
         )}
       </td>
+      {onBaseline && (
+        <td className="py-2 px-3 text-right">
+          {isBaselineCreated ? (
+            <span className="text-xs text-teal">Established</span>
+          ) : (
+            <button
+              type="button"
+              onClick={() => onBaseline(record.recordId)}
+              disabled={isBaselineLoading}
+              className="px-2 py-1 text-xs bg-teal/10 text-teal border border-teal/20 rounded hover:bg-teal/20 disabled:opacity-50"
+            >
+              {isBaselineLoading ? 'Processing...' : 'Establish Baseline'}
+            </button>
+          )}
+        </td>
+      )}
     </tr>
   );
 }

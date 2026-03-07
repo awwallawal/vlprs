@@ -7,7 +7,7 @@ export { createUserSchema, updateUserSchema, deactivateUserSchema, deleteUserSch
 export { createLoanSchema, searchLoansQuerySchema, transitionLoanSchema, updateTemporalProfileSchema, createServiceExtensionSchema } from './validators/loanSchemas.js';
 export { createLedgerEntrySchema, type CreateLedgerEntryInput } from './validators/ledgerSchemas.js';
 export { mdaQuerySchema } from './validators/mdaSchemas.js';
-export { migrationUploadQuerySchema, confirmMappingBodySchema, validationResultQuerySchema, personListQuerySchema } from './validators/migrationSchemas.js';
+export { migrationUploadQuerySchema, confirmMappingBodySchema, validationResultQuerySchema, personListQuerySchema, createBaselineBodySchema } from './validators/migrationSchemas.js';
 export { serviceStatusVerificationQuerySchema } from './validators/reportSchemas.js';
 
 // Types
@@ -16,7 +16,7 @@ export type { User, JwtPayload, LoginRequest, LoginResponse, RegisterRequest, Re
 export type { AuthenticatedUser, AuthorisedContext } from './types/rbac.js';
 export type { DashboardMetrics, AttentionItem } from './types/dashboard.js';
 export type { SubmissionStatus, MigrationStage, Mda, MdaListItem, MdaAlias, MdaComplianceRow, MdaSummary, MigrationMdaStatus } from './types/mda.js';
-export type { MigrationUploadStatus, CanonicalField, ColumnMappingSuggestion, SheetPreview, MigrationUploadPreview, MigrationUpload, MigrationRecord, MigrationExtraField, MigrationUploadSummary, MigrationUploadDetail, ConfirmedColumnMapping, VarianceCategory, ValidationSummary, MdaBoundary, ValidatedMigrationRecord, ValidationResultRecord, ValidationResult, MatchType, MatchStatus, PersonMatch, PersonListItem, PersonTimelineEntry, PersonTimeline, LoanCycle, PersonProfile } from './types/migration.js';
+export type { MigrationUploadStatus, CanonicalField, ColumnMappingSuggestion, SheetPreview, MigrationUploadPreview, MigrationUpload, MigrationRecord, MigrationExtraField, MigrationUploadSummary, MigrationUploadDetail, ConfirmedColumnMapping, VarianceCategory, ValidationSummary, MdaBoundary, ValidatedMigrationRecord, ValidationResultRecord, ValidationResult, MatchType, MatchStatus, PersonMatch, PersonListItem, PersonTimelineEntry, PersonTimeline, LoanCycle, PersonProfile, BaselineResult, BatchBaselineResult, BaselineSummary } from './types/migration.js';
 export type { LoanStatus, Loan, CreateLoanRequest, LoanSummary, LoanSearchResult, LoanDetail, LoanStateTransition, TransitionLoanRequest, TemporalProfile, TemporalCorrection, UpdateTemporalProfileRequest, ServiceExtension, CreateServiceExtensionRequest, GratuityProjectionResult } from './types/loan.js';
 export type { SubmissionRecord } from './types/submission.js';
 export type { ExceptionPriority, ExceptionCategory, ExceptionItem } from './types/exception.js';

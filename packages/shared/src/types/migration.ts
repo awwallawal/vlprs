@@ -1,6 +1,6 @@
 export type { MigrationStage, MigrationMdaStatus } from './mda.js';
 
-export type MigrationUploadStatus = 'uploaded' | 'mapped' | 'processing' | 'completed' | 'validated' | 'failed';
+export type MigrationUploadStatus = 'uploaded' | 'mapped' | 'processing' | 'completed' | 'validated' | 'reconciled' | 'failed';
 
 export type VarianceCategory = 'clean' | 'minor_variance' | 'significant_variance' | 'structural_error' | 'anomalous';
 
@@ -259,4 +259,31 @@ export interface PersonProfile {
   timelines: PersonTimeline[];
   cycles: LoanCycle[];
   matches: (PersonMatch & { personAMdaCode: string; personBMdaCode: string })[];
+}
+
+// ─── Baseline Acknowledgment (Story 3.4) ────────────────────────────
+
+export interface BaselineResult {
+  loanId: string;
+  loanReference: string;
+  ledgerEntryId: string;
+  varianceCategory: VarianceCategory | null;
+  baselineAmount: string;
+}
+
+export interface BatchBaselineResult {
+  totalProcessed: number;
+  loansCreated: number;
+  entriesCreated: number;
+  byCategory: Record<string, number>;
+  processingTimeMs: number;
+}
+
+export interface BaselineSummary {
+  uploadId: string;
+  totalRecords: number;
+  baselinesCreated: number;
+  baselinesRemaining: number;
+  byCategory: Record<string, number>;
+  status: 'pending' | 'partial' | 'complete';
 }

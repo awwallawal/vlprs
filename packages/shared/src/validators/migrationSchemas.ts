@@ -15,7 +15,7 @@ const CANONICAL_FIELDS = [
 export const migrationUploadQuerySchema = z.object({
   page: z.coerce.number().int().min(1).optional().default(1),
   limit: z.coerce.number().int().min(1).max(100).optional().default(20),
-  status: z.enum(['uploaded', 'mapped', 'processing', 'completed', 'validated', 'failed']).optional(),
+  status: z.enum(['uploaded', 'mapped', 'processing', 'completed', 'validated', 'reconciled', 'failed']).optional(),
 });
 
 export const validationResultQuerySchema = z.object({
@@ -63,4 +63,9 @@ export const confirmMappingBodySchema = z.object({
     (v) => (typeof v === 'string' ? JSON.parse(v) : v),
     sheetsArraySchema,
   ),
+});
+
+// ─── Baseline Acknowledgment (Story 3.4) ────────────────────────────
+export const createBaselineBodySchema = z.object({
+  confirm: z.literal(true),
 });

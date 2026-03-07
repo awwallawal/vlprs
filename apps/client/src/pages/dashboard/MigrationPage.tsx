@@ -5,11 +5,13 @@ import { MigrationUploadResult } from './components/MigrationUploadResult';
 import { ValidationSummaryCard } from './components/ValidationSummaryCard';
 import { RecordComparisonRow } from './components/RecordComparisonRow';
 import { StaffProfilePanel } from './components/StaffProfilePanel';
-import { useUploadMigration, useConfirmMapping, useValidateUpload, useValidationResults, useMdaList } from '@/hooks/useMigration';
+import { useUploadMigration, useConfirmMapping, useValidateUpload, useValidationResults, useMdaList, useCreateBaseline, useCreateBatchBaseline, useBaselineSummary } from '@/hooks/useMigration';
+import { BaselineConfirmationDialog } from './components/BaselineConfirmationDialog';
+import { BaselineResultSummary } from './components/BaselineResultSummary';
 import { usePersonList, useMatchPersons } from '@/hooks/useStaffProfile';
 import { usePageMeta } from '@/hooks/usePageMeta';
 import { Badge } from '@/components/ui/badge';
-import type { MigrationUploadPreview, VarianceCategory } from '@vlprs/shared';
+import type { MigrationUploadPreview, VarianceCategory, BatchBaselineResult } from '@vlprs/shared';
 
 type Step = 'select-mda' | 'upload' | 'review' | 'processing' | 'complete' | 'validating' | 'validated';
 type Tab = 'upload' | 'profiles';
@@ -33,6 +35,10 @@ export function MigrationPage() {
   const [isAgricultureSelected, setIsAgricultureSelected] = useState(false);
   const [categoryFilter, setCategoryFilter] = useState<VarianceCategory | undefined>();
   const [validationPage, setValidationPage] = useState(1);
+  const [showBaselineConfirm, setShowBaselineConfirm] = useState(false);
+  const [baselineResult, setBaselineResult] = useState<BatchBaselineResult | null>(null);
+  const [baselinedRecordIds, setBaselinedRecordIds] = useState<Set<string>>(new Set());
+  const [baselineInProgressId, setBaselineInProgressId] = useState<string | null>(null);
 
   const uploadMutation = useUploadMigration();
   const confirmMutation = useConfirmMapping();
@@ -43,6 +49,9 @@ export function MigrationPage() {
     { page: validationPage, limit: 50, category: categoryFilter },
   );
 
+  const singleBaselineMutation = useCreateBaseline(preview?.uploadId ?? '');
+  const batchBaselineMutation = useCreateBatchBaseline(preview?.uploadId ?? '');
+  const baselineSummary = useBaselineSummary(preview?.uploadId ?? '');
   const { data: mdaList, isLoading: mdaLoading } = useMdaList();
   const personList = usePersonList({ page: personPage, limit: 20 });
   const matchPersonsMutation = useMatchPersons();
@@ -101,6 +110,28 @@ export function MigrationPage() {
     setValidationPage(1);
   }, []);
 
+  const handleBatchBaseline = useCallback(async () => {
+    try {
+      const data = await batchBaselineMutation.mutateAsync();
+      setBaselineResult(data);
+      setShowBaselineConfirm(false);
+    } catch {
+      // Error is handled by mutation state
+    }
+  }, [batchBaselineMutation]);
+
+  const handleSingleBaseline = useCallback(async (recordId: string) => {
+    setBaselineInProgressId(recordId);
+    try {
+      await singleBaselineMutation.mutateAsync({ recordId });
+      setBaselinedRecordIds(prev => new Set(prev).add(recordId));
+    } catch {
+      // Error handled by mutation state
+    } finally {
+      setBaselineInProgressId(null);
+    }
+  }, [singleBaselineMutation]);
+
   const handleReset = useCallback(() => {
     setStep('select-mda');
     setSelectedMdaId('');
@@ -111,6 +142,10 @@ export function MigrationPage() {
     setIsAgricultureSelected(false);
     setCategoryFilter(undefined);
     setValidationPage(1);
+    setShowBaselineConfirm(false);
+    setBaselineResult(null);
+    setBaselinedRecordIds(new Set());
+    setBaselineInProgressId(null);
   }, []);
 
   return (
@@ -433,15 +468,73 @@ export function MigrationPage() {
         </div>
       )}
 
+      {/* Baseline Confirmation Dialog */}
+      {showBaselineConfirm && validationResults.data && (
+        <BaselineConfirmationDialog
+          recordCount={
+            validationResults.data.summary.clean +
+            validationResults.data.summary.minorVariance +
+            validationResults.data.summary.significantVariance +
+            validationResults.data.summary.structuralError +
+            validationResults.data.summary.anomalous
+          }
+          byCategory={{
+            ...(validationResults.data.summary.clean > 0 ? { clean: validationResults.data.summary.clean } : {}),
+            ...(validationResults.data.summary.minorVariance > 0 ? { minor_variance: validationResults.data.summary.minorVariance } : {}),
+            ...(validationResults.data.summary.significantVariance > 0 ? { significant_variance: validationResults.data.summary.significantVariance } : {}),
+            ...(validationResults.data.summary.structuralError > 0 ? { structural_error: validationResults.data.summary.structuralError } : {}),
+            ...(validationResults.data.summary.anomalous > 0 ? { anomalous: validationResults.data.summary.anomalous } : {}),
+          }}
+          isLoading={batchBaselineMutation.isPending}
+          onConfirm={handleBatchBaseline}
+          onCancel={() => setShowBaselineConfirm(false)}
+        />
+      )}
+
       {/* Step 5: Validated — show comparison results */}
       {step === 'validated' && validationResults.data && (
         <div className="space-y-4">
+          {/* Baseline result summary */}
+          {baselineResult && (
+            <BaselineResultSummary
+              result={baselineResult}
+              onViewLoans={() => window.location.assign('/dashboard/loans')}
+            />
+          )}
+
+          {/* Baseline summary status */}
+          {!baselineResult && baselineSummary.data && baselineSummary.data.status === 'complete' && (
+            <div className="bg-teal/5 border border-teal/20 rounded-lg p-4 text-sm text-teal">
+              All baselines established — {baselineSummary.data.baselinesCreated} loan records created.
+            </div>
+          )}
+
           <ValidationSummaryCard
             summary={validationResults.data.summary}
             multiMda={validationResults.data.multiMda}
             onCategoryFilter={handleCategoryFilter}
             activeCategory={categoryFilter}
           />
+
+          {/* Batch baseline button */}
+          {!baselineResult && (!baselineSummary.data || baselineSummary.data.status !== 'complete') && (
+            <div className="flex justify-center">
+              <button
+                type="button"
+                onClick={() => setShowBaselineConfirm(true)}
+                disabled={batchBaselineMutation.isPending}
+                className="px-6 py-2 bg-teal text-white rounded-lg hover:bg-teal-hover transition-colors disabled:opacity-50"
+              >
+                Accept All as Declared — Establish Baselines
+              </button>
+            </div>
+          )}
+
+          {batchBaselineMutation.isError && (
+            <div className="bg-gold/10 border border-gold/30 rounded-lg p-4">
+              <p className="text-sm text-text-primary">{batchBaselineMutation.error?.message}</p>
+            </div>
+          )}
 
           {/* Records table */}
           <div className="bg-white rounded-lg border border-border overflow-hidden">
@@ -457,11 +550,21 @@ export function MigrationPage() {
                     <th className="py-2 px-3 text-xs font-semibold text-text-muted uppercase text-right">Declared Deduction</th>
                     <th className="py-2 px-3 text-xs font-semibold text-text-muted uppercase text-right">Computed Deduction</th>
                     <th className="py-2 px-3 text-xs font-semibold text-text-muted uppercase text-right">Rate</th>
+                    {!baselineResult && (!baselineSummary.data || baselineSummary.data.status !== 'complete') && (
+                      <th className="py-2 px-3 text-xs font-semibold text-text-muted uppercase text-right">Action</th>
+                    )}
                   </tr>
                 </thead>
                 <tbody>
                   {validationResults.data.records.map((record) => (
-                    <RecordComparisonRow key={record.recordId} record={record} />
+                    <RecordComparisonRow
+                      key={record.recordId}
+                      record={record}
+                      onBaseline={!baselineResult && (!baselineSummary.data || baselineSummary.data.status !== 'complete')
+                        ? handleSingleBaseline : undefined}
+                      isBaselineLoading={baselineInProgressId === record.recordId}
+                      isBaselineCreated={baselinedRecordIds.has(record.recordId)}
+                    />
                   ))}
                 </tbody>
               </table>
