@@ -35,7 +35,6 @@ const TOTAL_LOAN = new Decimal(PRINCIPAL)
 const OUTSTANDING_1 = '150000.00';
 const OUTSTANDING_2 = '200000.00';
 const BASELINE_1 = new Decimal(TOTAL_LOAN).minus(new Decimal(OUTSTANDING_1)).toFixed(2); // 416650.00
-const _BASELINE_2 = new Decimal(TOTAL_LOAN).minus(new Decimal(OUTSTANDING_2)).toFixed(2); // 366650.00
 
 beforeAll(async () => {
   resetRateLimiters();
