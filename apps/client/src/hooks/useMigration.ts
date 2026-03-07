@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuthStore } from '@/stores/authStore';
-import type { MigrationUploadPreview, MigrationUploadSummary, MdaListItem, ValidationSummary, ValidationResult, VarianceCategory } from '@vlprs/shared';
+import type { MigrationUploadPreview, MigrationUploadSummary, MdaListItem, ValidationSummary, ValidationResult, VarianceCategory, BaselineResult, BatchBaselineResult, BaselineSummary } from '@vlprs/shared';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
 
@@ -213,5 +213,89 @@ export function useGetMigration(uploadId: string) {
     },
     enabled: !!uploadId,
     staleTime: 30_000,
+  });
+}
+
+// ─── Baseline Acknowledgment (Story 3.4) ────────────────────────────
+
+export function useCreateBaseline(uploadId: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation<BaselineResult, Error, { recordId: string }>({
+    mutationFn: async ({ recordId }) => {
+      const res = await fetch(`${API_BASE}/migrations/${uploadId}/records/${recordId}/baseline`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeaders(),
+        },
+        body: JSON.stringify({ confirm: true }),
+        credentials: 'include',
+      });
+
+      const body = await res.json();
+      if (!res.ok || !body.success) {
+        throw new Error(body.error?.message || 'Baseline creation failed');
+      }
+      return body.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['migrations'] });
+      queryClient.invalidateQueries({ queryKey: ['baseline-summary', uploadId] });
+      queryClient.invalidateQueries({ queryKey: ['validation', uploadId] });
+    },
+  });
+}
+
+export function useCreateBatchBaseline(uploadId: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation<BatchBaselineResult, Error>({
+    mutationFn: async () => {
+      const res = await fetch(`${API_BASE}/migrations/${uploadId}/baseline`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeaders(),
+        },
+        body: JSON.stringify({ confirm: true }),
+        credentials: 'include',
+      });
+
+      const body = await res.json();
+      if (!res.ok || !body.success) {
+        throw new Error(body.error?.message || 'Batch baseline creation failed');
+      }
+      return body.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['migrations'] });
+      queryClient.invalidateQueries({ queryKey: ['baseline-summary', uploadId] });
+      queryClient.invalidateQueries({ queryKey: ['validation', uploadId] });
+    },
+  });
+}
+
+export function useBaselineSummary(uploadId: string) {
+  return useQuery<BaselineSummary>({
+    queryKey: ['baseline-summary', uploadId],
+    queryFn: async () => {
+      const { accessToken } = useAuthStore.getState();
+      const res = await fetch(`${API_BASE}/migrations/${uploadId}/baseline-summary`, {
+        headers: {
+          'Content-Type': 'application/json',
+          ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+        },
+        credentials: 'include',
+      });
+
+      const body = await res.json();
+      if (!res.ok || !body.success) {
+        throw new Error(body.error?.message || 'Failed to load baseline summary');
+      }
+      return body.data;
+    },
+    enabled: !!uploadId,
+    staleTime: 15_000,
   });
 }

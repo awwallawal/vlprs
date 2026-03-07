@@ -255,9 +255,9 @@ export const refreshTokens = pgTable(
   ],
 );
 
-// ─── Migration Upload Status Enum (Story 3.1, extended Story 3.2) ───
+// ─── Migration Upload Status Enum (Story 3.1, extended Story 3.2, Story 3.4) ─
 export const migrationUploadStatusEnum = pgEnum('migration_upload_status', [
-  'uploaded', 'mapped', 'processing', 'completed', 'validated', 'failed',
+  'uploaded', 'mapped', 'processing', 'completed', 'validated', 'reconciled', 'failed',
 ]);
 
 // ─── Variance Category Enum (Story 3.2) ─────────────────────────────
@@ -338,6 +338,8 @@ export const migrationRecords = pgTable(
     computedTotalLoan: numeric('computed_total_loan', { precision: 15, scale: 2 }),
     computedMonthlyDeduction: numeric('computed_monthly_deduction', { precision: 15, scale: 2 }),
     computedOutstandingBalance: numeric('computed_outstanding_balance', { precision: 15, scale: 2 }),
+    loanId: uuid('loan_id').references(() => loans.id),
+    isBaselineCreated: boolean('is_baseline_created').notNull().default(false),
     sourceFile: text('source_file').notNull(),
     sourceSheet: text('source_sheet').notNull(),
     sourceRow: integer('source_row').notNull(),

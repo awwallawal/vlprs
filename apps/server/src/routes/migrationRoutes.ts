@@ -7,12 +7,13 @@ import { authorise } from '../middleware/authorise';
 import { scopeToMda } from '../middleware/scopeToMda';
 import { validate, validateQuery } from '../middleware/validate';
 import { auditLog } from '../middleware/auditLog';
-import { ROLES, migrationUploadQuerySchema, confirmMappingBodySchema, validationResultQuerySchema } from '@vlprs/shared';
+import { ROLES, migrationUploadQuerySchema, confirmMappingBodySchema, validationResultQuerySchema, createBaselineBodySchema } from '@vlprs/shared';
 import type { VarianceCategory } from '@vlprs/shared';
 import { AppError } from '../lib/appError';
 import { param } from '../lib/params';
 import * as migrationService from '../services/migrationService';
 import * as migrationValidationService from '../services/migrationValidationService';
+import * as baselineService from '../services/baselineService';
 
 const router = Router();
 
@@ -148,6 +149,59 @@ router.get(
 
     const result = await migrationValidationService.getValidationResults(uploadId, params, req.mdaScope);
     res.json({ success: true, data: result });
+  },
+);
+
+// POST /api/migrations/:uploadId/records/:recordId/baseline — Single record baseline
+router.post(
+  '/migrations/:uploadId/records/:recordId/baseline',
+  ...adminAuth,
+  validate(createBaselineBodySchema),
+  auditLog,
+  async (req: Request, res: Response) => {
+    const uploadId = param(req.params.uploadId);
+    const recordId = param(req.params.recordId);
+
+    const result = await baselineService.createBaseline(
+      { userId: req.user!.userId, role: req.user!.role, mdaId: req.user!.mdaId ?? null },
+      uploadId,
+      recordId,
+      req.mdaScope,
+    );
+
+    res.status(201).json({ success: true, data: result });
+  },
+);
+
+// POST /api/migrations/:uploadId/baseline — Batch baseline for all records in upload
+router.post(
+  '/migrations/:uploadId/baseline',
+  ...adminAuth,
+  validate(createBaselineBodySchema),
+  auditLog,
+  async (req: Request, res: Response) => {
+    const uploadId = param(req.params.uploadId);
+
+    const result = await baselineService.createBatchBaseline(
+      { userId: req.user!.userId, role: req.user!.role, mdaId: req.user!.mdaId ?? null },
+      uploadId,
+      req.mdaScope,
+    );
+
+    res.status(201).json({ success: true, data: result });
+  },
+);
+
+// GET /api/migrations/:uploadId/baseline-summary — Get baseline creation summary
+router.get(
+  '/migrations/:uploadId/baseline-summary',
+  ...adminAuth,
+  async (req: Request, res: Response) => {
+    const uploadId = param(req.params.uploadId);
+
+    const summary = await baselineService.getBaselineSummary(uploadId, req.mdaScope);
+
+    res.json({ success: true, data: summary });
   },
 );
 
