@@ -132,6 +132,7 @@ interface DerivedLoanData {
   dateOfBirth: Date | null;
   dateOfFirstAppointment: Date | null;
   computedRetirementDate: Date | null;
+  limitedComputation: boolean;
 }
 
 async function deriveLoanFromMigrationRecord(
@@ -141,7 +142,9 @@ async function deriveLoanFromMigrationRecord(
   loanReferenceOverride?: string,
 ): Promise<DerivedLoanData> {
   const rate = record.computedRate || '13.330';
-  const principalAmount = record.principal || derivePrincipal(record, rate) || '0.00';
+  const derivedPrincipal = record.principal || derivePrincipal(record, rate);
+  const principalAmount = derivedPrincipal || '0.00';
+  const limitedComputation = principalAmount === '0.00';
   const tenureMonths = inferTenure(record);
 
   // Monthly deduction: declared or computed from schedule
@@ -207,6 +210,7 @@ async function deriveLoanFromMigrationRecord(
     dateOfBirth,
     dateOfFirstAppointment,
     computedRetirementDate,
+    limitedComputation,
   };
 }
 

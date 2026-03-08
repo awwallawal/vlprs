@@ -115,6 +115,10 @@ export const VOCABULARY = {
   BASELINE_UPLOAD_NOT_VALIDATED: 'This upload must be validated before baselines can be created.',
   BASELINE_RECORD_NOT_FOUND: 'The requested migration record could not be found.',
   BASELINE_MISSING_BALANCE: 'Cannot establish baseline — declared outstanding balance is not available for this record.',
+  // Migration Dashboard (Story 3.5)
+  MIGRATION_DASHBOARD_TITLE: 'Migration Progress',
+  DATA_PENDING_NEUTRAL: 'Data not yet received — archive recovery in progress',
+  BENEFICIARY_LEDGER_TITLE: 'Master Beneficiary Ledger',
 } as const;
 
 export const UI_COPY = {

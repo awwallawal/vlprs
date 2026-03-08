@@ -240,6 +240,13 @@ export const router = createBrowserRouter([
               })),
           },
           {
+            path: 'migration/upload',
+            lazy: () =>
+              import('@/pages/dashboard/MigrationUploadPage').then((m) => ({
+                Component: m.MigrationUploadPage,
+              })),
+          },
+          {
             path: 'exceptions',
             lazy: () =>
               import('@/pages/dashboard/ExceptionsPage').then((m) => ({

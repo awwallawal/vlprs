@@ -1,7 +1,7 @@
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { formatDateTime } from '@/lib/formatters';
-import { UI_COPY } from '@vlprs/shared';
+import { UI_COPY, VOCABULARY } from '@vlprs/shared';
 import type { MigrationStage } from '@vlprs/shared';
 
 const STAGES: MigrationStage[] = ['pending', 'received', 'imported', 'validated', 'reconciled', 'certified'];
@@ -12,8 +12,10 @@ interface MigrationProgressCardProps {
   mdaName: string;
   mdaCode: string;
   stage: MigrationStage;
-  recordCounts?: { clean: number; minor: number; significant: number; structural: number };
+  recordCounts?: { clean: number; minor: number; significant: number; structural: number; anomalous?: number };
   lastActivity?: string;
+  baselineCompletion?: { done: number; total: number };
+  observationCount?: number;
   onClick?: () => void;
   className?: string;
 }
@@ -24,6 +26,8 @@ export function MigrationProgressCard({
   stage,
   recordCounts,
   lastActivity,
+  baselineCompletion,
+  observationCount,
   onClick,
   className,
 }: MigrationProgressCardProps) {
@@ -52,7 +56,7 @@ export function MigrationProgressCard({
           <span className="text-xs text-text-muted">{mdaCode}</span>
         </div>
         <Badge variant={stage === 'certified' ? 'complete' : stage === 'pending' ? 'pending' : 'info'}>
-          {stage}
+          {stage === 'pending' ? 'Data Pending' : stage}
         </Badge>
       </div>
 
@@ -89,7 +93,9 @@ export function MigrationProgressCard({
       </div>
 
       <p className="text-xs text-text-secondary mb-2">
-        Stage {currentIndex + 1} of 6: <span className="capitalize">{stage}</span>
+        {stage === 'pending'
+          ? VOCABULARY.DATA_PENDING_NEUTRAL
+          : `Stage ${currentIndex + 1} of 6: ${stage.charAt(0).toUpperCase() + stage.slice(1)}`}
       </p>
 
       {recordCounts && (
@@ -98,7 +104,22 @@ export function MigrationProgressCard({
           <span className="text-xs text-text-muted">Minor: {recordCounts.minor}</span>
           <span className="text-xs text-text-muted">Significant: {recordCounts.significant}</span>
           <span className="text-xs text-text-muted">Structural: {recordCounts.structural}</span>
+          {typeof recordCounts.anomalous === 'number' && recordCounts.anomalous > 0 && (
+            <span className="text-xs text-text-muted">Anomalous: {recordCounts.anomalous}</span>
+          )}
         </div>
+      )}
+
+      {baselineCompletion && baselineCompletion.total > 0 && (
+        <p className="text-xs text-text-muted mb-2">
+          Baselines: {baselineCompletion.done}/{baselineCompletion.total}
+        </p>
+      )}
+
+      {typeof observationCount === 'number' && observationCount > 0 && (
+        <Badge className="bg-slate-100 text-teal border-slate-200 text-[10px] mb-2">
+          {observationCount} observation{observationCount !== 1 ? 's' : ''}
+        </Badge>
       )}
 
       {lastActivity && (

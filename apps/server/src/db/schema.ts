@@ -107,6 +107,7 @@ export const loans = pgTable(
     dateOfBirth: date('date_of_birth', { mode: 'date' }),
     dateOfFirstAppointment: date('date_of_first_appointment', { mode: 'date' }),
     computedRetirementDate: date('computed_retirement_date', { mode: 'date' }),
+    limitedComputation: boolean('limited_computation').notNull().default(false),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
   },
