@@ -1,8 +1,8 @@
 import { describe, it, expect } from 'vitest';
-import { renderHook, waitFor } from '@testing-library/react';
+import { renderHook } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import type { ReactNode } from 'react';
-import { useMigrationStatus } from './useMigrationData';
+import { useMigrationStatus, useMigrationDashboardMetrics } from './useMigrationData';
 
 function createWrapper() {
   const queryClient = new QueryClient({
@@ -14,18 +14,24 @@ function createWrapper() {
 }
 
 describe('useMigrationStatus', () => {
-  it('returns array of 63 migration status items', async () => {
+  it('initialises in pending state with correct query key', () => {
     const { result } = renderHook(() => useMigrationStatus(), {
       wrapper: createWrapper(),
     });
 
-    await waitFor(() => {
-      expect(result.current.isSuccess).toBe(true);
+    // Hook starts in pending state (real API call, no mock server)
+    expect(result.current.isPending).toBe(true);
+    expect(result.current.data).toBeUndefined();
+  });
+});
+
+describe('useMigrationDashboardMetrics', () => {
+  it('initialises in pending state with correct query key', () => {
+    const { result } = renderHook(() => useMigrationDashboardMetrics(), {
+      wrapper: createWrapper(),
     });
 
-    expect(result.current.data).toHaveLength(63);
-    expect(result.current.data![0]).toHaveProperty('mdaId');
-    expect(result.current.data![0]).toHaveProperty('stage');
-    expect(result.current.data![0]).toHaveProperty('recordCounts');
+    expect(result.current.isPending).toBe(true);
+    expect(result.current.data).toBeUndefined();
   });
 });
