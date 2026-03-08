@@ -59,9 +59,18 @@ export function OperationsHubPage() {
 
       {/* Migration Dashboard */}
       <section aria-labelledby="migration-heading">
-        <h2 id="migration-heading" className="text-lg font-semibold text-text-primary mb-3">
-          Migration Status
-        </h2>
+        <div className="flex items-center justify-between mb-3">
+          <h2 id="migration-heading" className="text-lg font-semibold text-text-primary">
+            Migration Status
+          </h2>
+          <button
+            type="button"
+            onClick={() => navigate('/dashboard/migration')}
+            className="text-sm text-teal hover:text-teal-hover underline"
+          >
+            View All MDAs
+          </button>
+        </div>
 
         <Input
           placeholder="Filter by MDA name..."

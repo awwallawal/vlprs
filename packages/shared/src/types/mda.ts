@@ -61,4 +61,38 @@ export interface MigrationMdaStatus {
   stage: MigrationStage;
   recordCounts: { clean: number; minor: number; significant: number; structural: number; anomalous: number };
   lastActivity: string | null;
+  baselineCompletion?: { done: number; total: number };
+  observationCount?: number;
+}
+
+export interface MigrationDashboardMetrics {
+  totalStaffMigrated: number;
+  totalExposure: string;
+  mdasComplete: number;
+  baselinesEstablished: number;
+}
+
+export interface BeneficiaryListItem {
+  staffName: string;
+  staffId: string;
+  primaryMdaName: string;
+  primaryMdaId: string;
+  loanCount: number;
+  totalExposure: string;
+  observationCount: number;
+  isMultiMda: boolean;
+  lastActivityDate: string | null;
+}
+
+export interface BeneficiaryListMetrics {
+  totalStaff: number;
+  totalLoans: number;
+  totalObservationsUnreviewed: number;
+  totalExposure: string;
+}
+
+export interface PaginatedBeneficiaries {
+  data: BeneficiaryListItem[];
+  pagination: { page: number; pageSize: number; totalItems: number; totalPages: number };
+  metrics: BeneficiaryListMetrics;
 }

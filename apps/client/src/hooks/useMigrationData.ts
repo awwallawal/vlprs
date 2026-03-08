@@ -1,16 +1,19 @@
 import { useQuery } from '@tanstack/react-query';
-import type { MigrationMdaStatus } from '@vlprs/shared';
-import { MOCK_MIGRATION_STATUS } from '@/mocks/migrationStatus';
+import { apiClient } from '@/lib/apiClient';
+import type { MigrationMdaStatus, MigrationDashboardMetrics } from '@vlprs/shared';
 
-/**
- * Fetches migration status for all MDAs.
- * @target GET /api/migration/status
- * @wire Sprint 4 (Epic 3: Data Migration)
- */
 export function useMigrationStatus() {
   return useQuery<MigrationMdaStatus[]>({
     queryKey: ['migration', 'status'],
-    queryFn: async () => MOCK_MIGRATION_STATUS,
+    queryFn: () => apiClient<MigrationMdaStatus[]>('/migrations/dashboard'),
+    staleTime: 30_000,
+  });
+}
+
+export function useMigrationDashboardMetrics() {
+  return useQuery<MigrationDashboardMetrics>({
+    queryKey: ['migration', 'dashboard', 'metrics'],
+    queryFn: () => apiClient<MigrationDashboardMetrics>('/migrations/dashboard/metrics'),
     staleTime: 30_000,
   });
 }

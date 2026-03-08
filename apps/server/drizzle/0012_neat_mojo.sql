@@ -1,0 +1,1 @@
+ALTER TABLE "loans" ADD COLUMN "limited_computation" boolean DEFAULT false NOT NULL;

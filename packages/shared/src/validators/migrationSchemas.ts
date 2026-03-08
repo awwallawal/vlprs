@@ -69,3 +69,13 @@ export const confirmMappingBodySchema = z.object({
 export const createBaselineBodySchema = z.object({
   confirm: z.literal(true),
 });
+
+// ─── Beneficiary Ledger Query (Story 3.5) ───────────────────────────
+export const beneficiaryQuerySchema = z.object({
+  page: z.coerce.number().int().min(1).optional(),
+  pageSize: z.coerce.number().int().min(1).max(100).optional(),
+  mdaId: z.string().uuid().optional(),
+  search: z.string().min(2, 'Search term must be at least 2 characters').optional(),
+  sortBy: z.enum(['staffName', 'totalExposure', 'loanCount', 'lastActivityDate']).optional(),
+  sortOrder: z.enum(['asc', 'desc']).optional(),
+});
