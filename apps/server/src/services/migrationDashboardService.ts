@@ -1,7 +1,7 @@
 import { eq, and, isNull, sql, count } from 'drizzle-orm';
 import Decimal from 'decimal.js';
 import { db } from '../db/index';
-import { mdas, migrationUploads, migrationRecords, loans, ledgerEntries } from '../db/schema';
+import { mdas, migrationUploads, migrationRecords, loans, ledgerEntries, observations } from '../db/schema';
 import { withMdaScope } from '../lib/mdaScope';
 import type { MigrationMdaStatus, MigrationStage, MigrationDashboardMetrics } from '@vlprs/shared';
 
@@ -126,6 +126,19 @@ export async function getMigrationDashboard(
     ]),
   );
 
+  // Observation counts per MDA
+  const observationCounts = await db
+    .select({
+      mdaId: observations.mdaId,
+      cnt: count(),
+    })
+    .from(observations)
+    .groupBy(observations.mdaId);
+
+  const obsCountMap = new Map(
+    observationCounts.map((o) => [o.mdaId, Number(o.cnt)]),
+  );
+
   return allMdas.map((mda) => {
     const upload = uploadMap.get(mda.id);
     const stage = deriveStage(upload?.maxStatus ?? null);
@@ -140,7 +153,7 @@ export async function getMigrationDashboard(
       recordCounts: counts,
       lastActivity: upload?.lastActivity ?? null,
       baselineCompletion: baseline ?? { done: 0, total: 0 },
-      observationCount: 0, // Placeholder until Story 3.6
+      observationCount: obsCountMap.get(mda.id) ?? 0,
     };
   });
 }

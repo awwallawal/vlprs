@@ -1,0 +1,2 @@
+ALTER TABLE "observations" ADD COLUMN "resolved_by" uuid;--> statement-breakpoint
+ALTER TABLE "observations" ADD CONSTRAINT "observations_resolved_by_users_id_fk" FOREIGN KEY ("resolved_by") REFERENCES "public"."users"("id") ON DELETE no action ON UPDATE no action;

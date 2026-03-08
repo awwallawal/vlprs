@@ -3,6 +3,7 @@ import Decimal from 'decimal.js';
 import { db } from '../db/index';
 import { loans, mdas, ledgerEntries, personMatches, migrationRecords } from '../db/schema';
 import { withMdaScope } from '../lib/mdaScope';
+import { getUnreviewedCount, getObservationCountsByStaffNames } from './observationService';
 import type { BeneficiaryListItem, BeneficiaryListMetrics, PaginatedBeneficiaries } from '@vlprs/shared';
 
 // ─── Types ───────────────────────────────────────────────────────────
@@ -200,6 +201,9 @@ export async function listBeneficiaries(
     }
   }
 
+  // Observation counts per person (delegated to observationService)
+  const observationCountMap = await getObservationCountsByStaffNames(staffNames);
+
   // Compute per-person exposure and build result
   const data: BeneficiaryListItem[] = rows.map((row: BeneficiaryRow) => {
     const loanIdsForPerson = row.loan_ids.replace(/[{}]/g, '').split(',').filter(Boolean);
@@ -224,7 +228,7 @@ export async function listBeneficiaries(
       primaryMdaId: row.primary_mda_id,
       loanCount: parseInt(row.loan_count, 10),
       totalExposure: totalExposure.toFixed(2),
-      observationCount: 0, // Placeholder until Story 3.6
+      observationCount: observationCountMap.get(row.staff_name) ?? 0,
       isMultiMda: multiMdaSet.has(row.staff_name),
       lastActivityDate: row.last_activity_date,
     };
@@ -306,7 +310,7 @@ export async function getBeneficiaryMetrics(
   return {
     totalStaff: parseInt(result.totalStaff, 10),
     totalLoans: parseInt(result.totalLoans, 10),
-    totalObservationsUnreviewed: 0, // Placeholder until Story 3.6
+    totalObservationsUnreviewed: await getUnreviewedCount(mdaScope),
     totalExposure: totalExposure.toFixed(2),
   };
 }
@@ -404,6 +408,9 @@ export async function exportBeneficiariesCsv(
     }
   }
 
+  // Observation counts for CSV (delegated to observationService)
+  const obsCountMap = await getObservationCountsByStaffNames(staffNames);
+
   // Build CSV
   const headers = [
     'Staff Name', 'Staff ID', 'MDA', 'Loan Reference', 'Principal Amount',
@@ -439,10 +446,11 @@ export async function exportBeneficiariesCsv(
       balance.toFixed(2),
       row.varianceCategory ?? '',
       multiMdaSet.has(row.staffName) ? 'Yes' : 'No',
-      '0', // Placeholder until Story 3.6
+      String(obsCountMap.get(row.staffName) ?? 0),
       row.createdAt ? new Date(row.createdAt).toISOString().slice(0, 10) : '',
     ].join(','));
   }
 
   return csvRows.join('\n') + '\n';
 }
+

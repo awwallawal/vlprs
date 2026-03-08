@@ -142,8 +142,8 @@ development_status:
   3-2-migration-validation-rate-detection-mda-delineation: done
   3-3-staff-loan-profile-cross-mda-timeline: done
   3-4-baseline-acknowledgment-ledger-entry-creation: done
-  3-5-migration-dashboard-master-beneficiary-ledger: review
-  3-6-observation-engine-review-workflow: ready-for-dev
+  3-5-migration-dashboard-master-beneficiary-ledger: done
+  3-6-observation-engine-review-workflow: done
   3-7-individual-trace-report-generation: ready-for-dev
   3-8-multi-mda-file-delineation-deduplication: ready-for-dev
   epic-3-retrospective: optional

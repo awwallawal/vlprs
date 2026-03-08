@@ -400,6 +400,89 @@ export const personMatches = pgTable(
   ],
 );
 
+// ─── Observation Type Enum (Story 3.6) ──────────────────────────────
+export const observationTypeEnum = pgEnum('observation_type', [
+  'rate_variance', 'stalled_balance', 'negative_balance', 'multi_mda', 'no_approval_match', 'consecutive_loan',
+]);
+
+// ─── Observation Status Enum (Story 3.6) ────────────────────────────
+export const observationStatusEnum = pgEnum('observation_status', [
+  'unreviewed', 'reviewed', 'resolved', 'promoted',
+]);
+
+// ─── Exception Priority Enum (Story 3.6) ────────────────────────────
+export const exceptionPriorityEnum = pgEnum('exception_priority', [
+  'high', 'medium', 'low',
+]);
+
+// ─── Exception Status Enum (Story 3.6) ──────────────────────────────
+export const exceptionStatusEnum = pgEnum('exception_status', [
+  'open', 'resolved',
+]);
+
+// ─── Observations (Story 3.6) ───────────────────────────────────────
+export const observations = pgTable(
+  'observations',
+  {
+    id: uuid('id').primaryKey().$defaultFn(generateUuidv7),
+    type: observationTypeEnum('type').notNull(),
+    staffName: varchar('staff_name', { length: 255 }).notNull(),
+    staffId: varchar('staff_id', { length: 50 }),
+    loanId: uuid('loan_id').references(() => loans.id),
+    mdaId: uuid('mda_id').notNull().references(() => mdas.id),
+    migrationRecordId: uuid('migration_record_id').references(() => migrationRecords.id),
+    uploadId: uuid('upload_id').references(() => migrationUploads.id),
+    description: text('description').notNull(),
+    context: jsonb('context').notNull(),
+    sourceReference: jsonb('source_reference'),
+    status: observationStatusEnum('status').notNull().default('unreviewed'),
+    reviewerId: uuid('reviewer_id').references(() => users.id),
+    reviewerNote: text('reviewer_note'),
+    reviewedAt: timestamp('reviewed_at', { withTimezone: true }),
+    resolutionNote: text('resolution_note'),
+    resolvedAt: timestamp('resolved_at', { withTimezone: true }),
+    resolvedBy: uuid('resolved_by').references(() => users.id),
+    promotedExceptionId: uuid('promoted_exception_id'),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    index('idx_observations_type').on(table.type),
+    index('idx_observations_mda_id').on(table.mdaId),
+    index('idx_observations_status').on(table.status),
+    index('idx_observations_staff_name').on(table.staffName),
+    index('idx_observations_upload_id').on(table.uploadId),
+    // NOTE: Only guards record-level observations. Person-level observations (migrationRecordId=NULL)
+    // are guarded by application-level dedup in observationEngine.batchInsertObservations
+    uniqueIndex('idx_observations_type_record').on(table.type, table.migrationRecordId),
+  ],
+);
+
+// ─── Exceptions (Story 3.6) ─────────────────────────────────────────
+// Lightweight exception queue for "Promote to Exception" handoff to Epic 7.
+export const exceptions = pgTable(
+  'exceptions',
+  {
+    id: uuid('id').primaryKey().$defaultFn(generateUuidv7),
+    observationId: uuid('observation_id').notNull().references(() => observations.id),
+    staffName: varchar('staff_name', { length: 255 }).notNull(),
+    staffId: varchar('staff_id', { length: 50 }),
+    mdaId: uuid('mda_id').notNull().references(() => mdas.id),
+    category: text('category').notNull(),
+    description: text('description').notNull(),
+    priority: exceptionPriorityEnum('priority').notNull().default('medium'),
+    status: exceptionStatusEnum('status').notNull().default('open'),
+    promotedBy: uuid('promoted_by').notNull().references(() => users.id),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    index('idx_exceptions_observation_id').on(table.observationId),
+    index('idx_exceptions_mda_id').on(table.mdaId),
+    index('idx_exceptions_status').on(table.status),
+  ],
+);
+
 // ─── Audit Log (Story 1.5) ─────────────────────────────────────────
 // Append-only, immutable audit trail. No updated_at, no deleted_at.
 // Immutability enforced by DB trigger (fn_prevent_modification).

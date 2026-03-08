@@ -7,8 +7,10 @@ import {
   AccordionTrigger,
 } from '@/components/ui/accordion';
 import { usePersonProfile, useConfirmMatch, useRejectMatch } from '@/hooks/useStaffProfile';
+import { useObservationList } from '@/hooks/useObservationData';
 import { LoanTimeline } from './LoanTimeline';
 import { ComputationTransparencyAccordion } from './ComputationTransparencyAccordion';
+import { ObservationCard } from './ObservationCard';
 import { VOCABULARY } from '@vlprs/shared';
 import type { ValidatedMigrationRecord } from '@vlprs/shared';
 
@@ -39,6 +41,10 @@ export function StaffProfilePanel({ personKey, onBack }: StaffProfilePanelProps)
   const { data: profile, isLoading, error } = usePersonProfile(personKey);
   const confirmMutation = useConfirmMatch();
   const rejectMutation = useRejectMatch();
+  const { data: observationsData } = useObservationList({
+    staffName: profile?.staffName,
+    pageSize: 50,
+  });
 
   if (isLoading) {
     return (
@@ -102,6 +108,12 @@ export function StaffProfilePanel({ personKey, onBack }: StaffProfilePanelProps)
               <p className="text-lg font-bold text-text-primary">{profile.varianceCount}</p>
               <p className="text-xs text-text-muted">Variances</p>
             </div>
+            {observationsData && observationsData.pagination.totalItems > 0 && (
+              <div className="text-center">
+                <p className="text-lg font-bold text-teal">{observationsData.pagination.totalItems}</p>
+                <p className="text-xs text-text-muted">Observations</p>
+              </div>
+            )}
           </div>
         </div>
 
@@ -237,6 +249,23 @@ export function StaffProfilePanel({ personKey, onBack }: StaffProfilePanelProps)
                   </div>
                 )}
               </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Observations */}
+      {observationsData && observationsData.data.length > 0 && (
+        <div className="bg-white rounded-lg border border-border p-6">
+          <div className="flex items-center gap-2 mb-4">
+            <h3 className="text-sm font-semibold text-text-primary">Observations</h3>
+            <Badge className="text-[10px] bg-teal/10 text-teal border-teal/20">
+              {observationsData.pagination.totalItems}
+            </Badge>
+          </div>
+          <div className="space-y-3">
+            {observationsData.data.map((obs) => (
+              <ObservationCard key={obs.id} observation={obs} />
             ))}
           </div>
         </div>
