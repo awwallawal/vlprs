@@ -119,6 +119,16 @@ export const VOCABULARY = {
   MIGRATION_DASHBOARD_TITLE: 'Migration Progress',
   DATA_PENDING_NEUTRAL: 'Data not yet received — archive recovery in progress',
   BENEFICIARY_LEDGER_TITLE: 'Master Beneficiary Ledger',
+  // Observation Engine (Story 3.6)
+  OBSERVATION_GENERATED: 'Observations generated for review',
+  OBSERVATION_REVIEWED: 'Observation marked as reviewed',
+  OBSERVATION_RESOLVED: 'Observation resolved',
+  OBSERVATION_PROMOTED: 'Observation promoted to exception for follow-up',
+  OBSERVATION_ALREADY_REVIEWED: 'This observation has already been reviewed',
+  OBSERVATION_REQUIRES_REVIEW: 'Observation must be reviewed before it can be resolved',
+  OBSERVATION_NOT_FOUND: 'The requested observation could not be found',
+  NO_APPROVAL_MATCH: 'No matching approval record found',
+  BALANCE_BELOW_ZERO: 'Balance below zero',
 } as const;
 
 export const UI_COPY = {
@@ -155,4 +165,7 @@ export const UI_COPY = {
   } as Record<string, string>,
   RATE_VARIANCE_DESCRIPTION: 'Rate differs from standard — for review',
   MULTI_MDA_BANNER: 'This file contains records for multiple MDAs — review recommended',
+  // Observation UI (Story 3.6)
+  OBSERVATION_EMPTY: 'No observations — all records are clear',
+  OBSERVATION_CARD_ICON: 'info',
 } as const;

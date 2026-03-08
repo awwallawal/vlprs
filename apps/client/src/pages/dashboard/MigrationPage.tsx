@@ -6,12 +6,13 @@ import { HeroMetricCard } from '@/components/shared/HeroMetricCard';
 import { WelcomeGreeting } from '@/components/shared/WelcomeGreeting';
 import { MigrationProgressBar } from './components/MigrationProgressBar';
 import { MasterBeneficiaryLedger } from './components/MasterBeneficiaryLedger';
+import { ObservationsList } from './components/ObservationsList';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { usePageMeta } from '@/hooks/usePageMeta';
 import { VOCABULARY } from '@vlprs/shared';
 
-type Tab = 'mda-progress' | 'beneficiary-ledger';
+type Tab = 'mda-progress' | 'beneficiary-ledger' | 'observations';
 
 export function MigrationPage() {
   usePageMeta({ title: VOCABULARY.MIGRATION_DASHBOARD_TITLE, description: 'Migration progress and beneficiary ledger' });
@@ -98,6 +99,17 @@ export function MigrationPage() {
         >
           Master Beneficiary Ledger
         </button>
+        <button
+          type="button"
+          onClick={() => setActiveTab('observations')}
+          className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+            activeTab === 'observations'
+              ? 'border-teal text-teal'
+              : 'border-transparent text-text-muted hover:text-text-secondary'
+          }`}
+        >
+          Observations
+        </button>
       </div>
 
       {/* MDA Progress Tab */}
@@ -146,6 +158,13 @@ export function MigrationPage() {
       {activeTab === 'beneficiary-ledger' && (
         <section aria-label={VOCABULARY.BENEFICIARY_LEDGER_TITLE}>
           <MasterBeneficiaryLedger />
+        </section>
+      )}
+
+      {/* Observations Tab */}
+      {activeTab === 'observations' && (
+        <section aria-label="Observations">
+          <ObservationsList />
         </section>
       )}
     </div>

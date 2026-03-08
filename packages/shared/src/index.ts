@@ -8,6 +8,7 @@ export { createLoanSchema, searchLoansQuerySchema, transitionLoanSchema, updateT
 export { createLedgerEntrySchema, type CreateLedgerEntryInput } from './validators/ledgerSchemas.js';
 export { mdaQuerySchema } from './validators/mdaSchemas.js';
 export { migrationUploadQuerySchema, confirmMappingBodySchema, validationResultQuerySchema, personListQuerySchema, createBaselineBodySchema, beneficiaryQuerySchema } from './validators/migrationSchemas.js';
+export { observationQuerySchema, reviewObservationSchema, resolveObservationSchema, promoteObservationSchema, generateObservationsSchema } from './validators/observationSchemas.js';
 export { serviceStatusVerificationQuerySchema } from './validators/reportSchemas.js';
 
 // Types
@@ -20,6 +21,7 @@ export type { MigrationUploadStatus, CanonicalField, ColumnMappingSuggestion, Sh
 export type { LoanStatus, Loan, CreateLoanRequest, LoanSummary, LoanSearchResult, LoanDetail, LoanStateTransition, TransitionLoanRequest, TemporalProfile, TemporalCorrection, UpdateTemporalProfileRequest, ServiceExtension, CreateServiceExtensionRequest, GratuityProjectionResult } from './types/loan.js';
 export type { SubmissionRecord } from './types/submission.js';
 export type { ExceptionPriority, ExceptionCategory, ExceptionItem } from './types/exception.js';
+export type { ObservationType, ObservationStatus, ObservationContext, SourceReference, Observation, ObservationListItem, ObservationCounts, PaginatedObservations, ExceptionRecord } from './types/observation.js';
 export type { LedgerEntryType, LedgerEntry } from './types/ledger.js';
 export type { ComputationParams, ScheduleRow, RepaymentSchedule, AutoSplitResult } from './types/computation.js';
 export type { BalanceResult, LedgerEntryForBalance } from './types/balance.js';
