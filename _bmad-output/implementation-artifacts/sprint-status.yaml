@@ -144,7 +144,7 @@ development_status:
   3-4-baseline-acknowledgment-ledger-entry-creation: done
   3-5-migration-dashboard-master-beneficiary-ledger: done
   3-6-observation-engine-review-workflow: done
-  3-7-individual-trace-report-generation: ready-for-dev
+  3-7-individual-trace-report-generation: done
   3-8-multi-mda-file-delineation-deduplication: ready-for-dev
   epic-3-retrospective: optional
 

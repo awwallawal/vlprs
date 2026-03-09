@@ -75,6 +75,7 @@ export interface MigrationDashboardMetrics {
 export interface BeneficiaryListItem {
   staffName: string;
   staffId: string;
+  primaryMdaCode: string;
   primaryMdaName: string;
   primaryMdaId: string;
   loanCount: number;

@@ -26,6 +26,7 @@ export type { LedgerEntryType, LedgerEntry } from './types/ledger.js';
 export type { ComputationParams, ScheduleRow, RepaymentSchedule, AutoSplitResult } from './types/computation.js';
 export type { BalanceResult, LedgerEntryForBalance } from './types/balance.js';
 export type { ServiceStatusVerificationRow, ServiceStatusVerificationSummary, ServiceStatusVerificationReport } from './types/report.js';
+export type { TraceReportData, TraceLoanCycle, BalanceEntry, RateAnalysis, TraceReportMetadata, TraceReportSummary, DataCompletenessScore } from './types/traceReport.js';
 
 // Constants
 export { ROLES, ALL_ROLES, ROLE_HIERARCHY, getManageableRoles, canManageRole, type Role } from './constants/roles.js';

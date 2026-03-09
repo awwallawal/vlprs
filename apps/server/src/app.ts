@@ -15,6 +15,7 @@ import staffProfileRoutes from './routes/staffProfileRoutes';
 import migrationRoutes from './routes/migrationRoutes';
 import migrationDashboardRoutes from './routes/migrationDashboardRoutes';
 import observationRoutes from './routes/observationRoutes';
+import traceReportRoutes from './routes/traceReportRoutes';
 import { AppError } from './lib/appError';
 import { VOCABULARY } from '@vlprs/shared';
 import { requestLogger } from './middleware/requestLogger';
@@ -56,6 +57,7 @@ app.use('/api', reportRoutes);
 app.use('/api', staffProfileRoutes);
 app.use('/api', migrationDashboardRoutes);
 app.use('/api', observationRoutes);
+app.use('/api', traceReportRoutes);
 app.use('/api', migrationRoutes);
 
 // 404 handler

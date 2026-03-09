@@ -247,6 +247,20 @@ export const router = createBrowserRouter([
               })),
           },
           {
+            path: 'migration/persons/:personKey',
+            lazy: () =>
+              import('@/pages/dashboard/PersonDetailPage').then((m) => ({
+                Component: m.PersonDetailPage,
+              })),
+          },
+          {
+            path: 'migration/trace/:personKey',
+            lazy: () =>
+              import('@/pages/dashboard/TraceReportPage').then((m) => ({
+                Component: m.TraceReportPage,
+              })),
+          },
+          {
             path: 'exceptions',
             lazy: () =>
               import('@/pages/dashboard/ExceptionsPage').then((m) => ({

@@ -20,6 +20,7 @@ interface BeneficiaryFilters {
 interface BeneficiaryRow {
   staff_name: string;
   staff_id: string;
+  primary_mda_code: string;
   primary_mda_name: string;
   primary_mda_id: string;
   loan_count: string;
@@ -109,6 +110,7 @@ export async function listBeneficiaries(
     SELECT
       ${loans.staffName} AS staff_name,
       ${loans.staffId} AS staff_id,
+      MIN(${mdas.code}) AS primary_mda_code,
       MIN(${mdas.name}) AS primary_mda_name,
       MIN(${mdas.id}::text) AS primary_mda_id,
       COUNT(${loans.id})::text AS loan_count,
@@ -224,6 +226,7 @@ export async function listBeneficiaries(
     return {
       staffName: row.staff_name,
       staffId: row.staff_id,
+      primaryMdaCode: row.primary_mda_code,
       primaryMdaName: row.primary_mda_name,
       primaryMdaId: row.primary_mda_id,
       loanCount: parseInt(row.loan_count, 10),

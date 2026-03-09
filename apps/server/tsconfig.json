@@ -5,6 +5,7 @@
     "module": "ESNext",
     "outDir": "./dist",
     "rootDir": "./src",
+    "jsx": "react-jsx",
     "declaration": false,
     "declarationMap": false,
     "noEmit": true
