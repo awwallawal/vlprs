@@ -1,4 +1,6 @@
+import { useNavigate } from 'react-router';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
   Accordion,
@@ -13,6 +15,7 @@ import { ComputationTransparencyAccordion } from './ComputationTransparencyAccor
 import { ObservationCard } from './ObservationCard';
 import { VOCABULARY } from '@vlprs/shared';
 import type { ValidatedMigrationRecord } from '@vlprs/shared';
+import { FileText } from 'lucide-react';
 
 interface PersonMatchDisplay {
   id: string;
@@ -38,6 +41,7 @@ interface StaffProfilePanelProps {
 }
 
 export function StaffProfilePanel({ personKey, onBack }: StaffProfilePanelProps) {
+  const navigate = useNavigate();
   const { data: profile, isLoading, error } = usePersonProfile(personKey);
   const confirmMutation = useConfirmMatch();
   const rejectMutation = useRejectMatch();
@@ -85,7 +89,17 @@ export function StaffProfilePanel({ personKey, onBack }: StaffProfilePanelProps)
       <div className="bg-white rounded-lg border border-border p-6">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
-            <h2 className="text-lg font-bold text-text-primary">{profile.staffName}</h2>
+            <div className="flex items-center gap-3">
+              <h2 className="text-lg font-bold text-text-primary">{profile.staffName}</h2>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => navigate(`/dashboard/migration/trace/${encodeURIComponent(personKey)}`)}
+              >
+                <FileText className="h-4 w-4 mr-1" />
+                Generate Trace Report
+              </Button>
+            </div>
             <div className="flex flex-wrap items-center gap-2 mt-2">
               {profile.staffId && (
                 <Badge variant="outline" className="text-xs">

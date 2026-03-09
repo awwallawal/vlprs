@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { formatCount, formatDate } from '@/lib/formatters';
-import { Download } from 'lucide-react';
+import { Download, FileText } from 'lucide-react';
 
 export function MasterBeneficiaryLedger() {
   const navigate = useNavigate();
@@ -177,13 +177,15 @@ export function MasterBeneficiaryLedger() {
                 >
                   Last Activity{sortArrow('lastActivityDate')}
                 </th>
+                <th className="py-2 px-3 text-xs font-semibold text-text-muted uppercase text-center w-12">
+                </th>
               </tr>
             </thead>
             <tbody>
               {isPending ? (
                 Array.from({ length: 8 }).map((_, i) => (
                   <tr key={i} className="border-b border-border/50">
-                    <td colSpan={7} className="py-2 px-3">
+                    <td colSpan={8} className="py-2 px-3">
                       <Skeleton className="h-5 w-full" />
                     </td>
                   </tr>
@@ -195,11 +197,11 @@ export function MasterBeneficiaryLedger() {
                     className="border-b border-border/50 hover:bg-slate-50 cursor-pointer transition-colors"
                     role="link"
                     tabIndex={0}
-                    onClick={() => navigate(`/dashboard/migration/persons/${encodeURIComponent(person.staffName)}`)}
+                    onClick={() => navigate(`/dashboard/migration/persons/${encodeURIComponent(`${person.primaryMdaCode}:${person.staffName}`)}`)}
                     onKeyDown={(e) => {
                       if (e.key === 'Enter' || e.key === ' ') {
                         e.preventDefault();
-                        navigate(`/dashboard/migration/persons/${encodeURIComponent(person.staffName)}`);
+                        navigate(`/dashboard/migration/persons/${encodeURIComponent(`${person.primaryMdaCode}:${person.staffName}`)}`);
                       }
                     }}
                   >
@@ -223,11 +225,25 @@ export function MasterBeneficiaryLedger() {
                     <td className="py-2 px-3 text-right text-text-muted text-xs">
                       {person.lastActivityDate ? formatDate(person.lastActivityDate) : '-'}
                     </td>
+                    <td className="py-2 px-3 text-center">
+                      <button
+                        type="button"
+                        title="Generate Trace Report"
+                        aria-label={`Generate Trace Report for ${person.staffName}`}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigate(`/dashboard/migration/trace/${encodeURIComponent(`${person.primaryMdaCode}:${person.staffName}`)}`);
+                        }}
+                        className="inline-flex items-center justify-center h-7 w-7 rounded hover:bg-teal/10 text-teal transition-colors"
+                      >
+                        <FileText className="h-4 w-4" />
+                      </button>
+                    </td>
                   </tr>
                 ))
               ) : (
                 <tr>
-                  <td colSpan={7} className="py-8 text-center text-sm text-text-muted">
+                  <td colSpan={8} className="py-8 text-center text-sm text-text-muted">
                     No beneficiaries found
                   </td>
                 </tr>

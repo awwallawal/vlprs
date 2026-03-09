@@ -129,6 +129,13 @@ export const VOCABULARY = {
   OBSERVATION_NOT_FOUND: 'The requested observation could not be found',
   NO_APPROVAL_MATCH: 'No matching approval record found',
   BALANCE_BELOW_ZERO: 'Balance below zero',
+  // Trace Report (Story 3.7)
+  TRACE_REPORT_TITLE: 'Individual Loan Trace Report',
+  TRACE_DATA_SOURCE: 'Generated from legacy data migration records',
+  TRACE_NO_OBSERVATIONS: 'No observations — all records are clear',
+  TRACE_DATA_GAP: 'No records available for this period',
+  TRACE_INFERRED_LOAN: 'Loan inferred from available data — source records not available',
+  TRACE_NOT_FOUND: 'No trace data found for this person.',
 } as const;
 
 export const UI_COPY = {
