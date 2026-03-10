@@ -150,10 +150,10 @@ development_status:
 
   # Epic 4: Executive Dashboard & Scheme Visibility (Sprint 6 — first live analytics)
   epic-4: in-progress
-  4-1-dashboard-hero-metrics-api-display: ready-for-dev
-  4-2-attention-items-status-indicators: backlog
-  4-3-progressive-drill-down-dashboard-mda-loan: backlog
-  4-4-mda-compliance-status-view: backlog
+  4-1-dashboard-hero-metrics-api-display: done
+  4-2-attention-items-status-indicators: ready-for-dev
+  4-3-progressive-drill-down-dashboard-mda-loan: ready-for-dev
+  4-4-mda-compliance-status-view: ready-for-dev
   epic-4-retrospective: optional
 
   # Epic 5: MDA Monthly Submission (Sprint 7 — adoption engine, moved before Reports)

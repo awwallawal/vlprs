@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router';
-import { FileText } from 'lucide-react';
+import { FileText, Info } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { formatDate, formatCount } from '@/lib/formatters';
 import { useDashboardMetrics } from '@/hooks/useDashboardData';
@@ -57,7 +57,7 @@ export function DashboardPage() {
         </div>
       </div>
 
-      {/* Hero metrics grid */}
+      {/* Hero metrics grid — Primary Row */}
       <section aria-label="Key metrics">
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
           <HeroMetricCard
@@ -74,19 +74,106 @@ export function DashboardPage() {
             isPending={metrics.isPending}
             onClick={() => navigate('/dashboard/operations')}
           />
+          {/* Fund Available — conditional rendering for unconfigured state */}
+          {metrics.isPending ? (
+            <HeroMetricCard
+              label="Fund Available"
+              value="0"
+              format="currency"
+              isPending={true}
+            />
+          ) : metrics.data?.fundConfigured === false ? (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div
+                    className="rounded-lg border bg-white p-6 cursor-default"
+                    aria-label="Fund Available: Awaiting Configuration"
+                  >
+                    <p className="text-sm text-text-secondary mb-1">Fund Available</p>
+                    <div className="mb-1 flex items-center gap-2">
+                      <span className="text-lg font-semibold text-text-secondary">Awaiting Configuration</span>
+                      <Badge variant="info"><Info className="h-3 w-3" /></Badge>
+                    </div>
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Enter your scheme fund total in Settings when confirmed by the committee</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          ) : (
+            <HeroMetricCard
+              label="Fund Available"
+              value={metrics.data?.fundAvailable ?? '0'}
+              format="currency"
+              isPending={false}
+              onClick={() => navigate('/dashboard/reports')}
+            />
+          )}
+          <div>
+            <HeroMetricCard
+              label="Monthly Recovery"
+              value={metrics.data?.monthlyRecovery ?? '0'}
+              format="currency"
+              isPending={metrics.isPending}
+              onClick={() => navigate('/dashboard/reports')}
+            />
+            {metrics.data?.recoveryPeriod && (
+              <p className="mt-1 text-xs text-text-secondary text-center">
+                {(() => {
+                  const [y, m] = metrics.data.recoveryPeriod.split('-');
+                  if (!y || !m) return '';
+                  const date = new Date(Number(y), Number(m) - 1);
+                  return date.toLocaleDateString('en-GB', { month: 'short', year: 'numeric' });
+                })()}
+              </p>
+            )}
+          </div>
+        </div>
+      </section>
+
+      {/* Portfolio Analytics Row */}
+      <section aria-label="Portfolio analytics">
+        <h2 className="mb-4 text-lg font-semibold text-text-primary">
+          Portfolio Analytics
+        </h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6 gap-4">
           <HeroMetricCard
-            label="Fund Available"
-            value={metrics.data?.fundAvailable ?? '0'}
-            format="currency"
+            label="Loans in Window"
+            value={metrics.data?.loansInWindow ?? 0}
+            format="count"
             isPending={metrics.isPending}
-            onClick={() => navigate('/dashboard/reports')}
           />
           <HeroMetricCard
-            label="Monthly Recovery"
-            value={metrics.data?.monthlyRecovery ?? '0'}
+            label="Outstanding Receivables"
+            value={metrics.data?.totalOutstandingReceivables ?? '0'}
             format="currency"
             isPending={metrics.isPending}
-            onClick={() => navigate('/dashboard/reports')}
+          />
+          <HeroMetricCard
+            label="Collection Potential"
+            value={metrics.data?.monthlyCollectionPotential ?? '0'}
+            format="currency"
+            isPending={metrics.isPending}
+          />
+          <HeroMetricCard
+            label="At-Risk Amount"
+            value={metrics.data?.atRiskAmount ?? '0'}
+            format="currency"
+            isPending={metrics.isPending}
+          />
+          <HeroMetricCard
+            label="Completion Rate (60m)"
+            value={metrics.data?.loanCompletionRate ?? 0}
+            format="percentage"
+            isPending={metrics.isPending}
+          />
+          <HeroMetricCard
+            label="Completion Rate (All-Time)"
+            value={metrics.data?.loanCompletionRateLifetime ?? 0}
+            format="percentage"
+            isPending={metrics.isPending}
           />
         </div>
       </section>

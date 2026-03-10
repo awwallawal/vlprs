@@ -10,6 +10,7 @@ export { mdaQuerySchema } from './validators/mdaSchemas.js';
 export { migrationUploadQuerySchema, confirmMappingBodySchema, validationResultQuerySchema, personListQuerySchema, createBaselineBodySchema, beneficiaryQuerySchema, confirmDelineationSchema, resolveDuplicateSchema, duplicateListQuerySchema } from './validators/migrationSchemas.js';
 export { observationQuerySchema, reviewObservationSchema, resolveObservationSchema, promoteObservationSchema, generateObservationsSchema } from './validators/observationSchemas.js';
 export { serviceStatusVerificationQuerySchema } from './validators/reportSchemas.js';
+export { dashboardMetricsSchema, type DashboardMetricsResponse } from './validators/dashboardSchemas.js';
 
 // Types
 export type { ApiResponse, ApiError, ApiResult } from './types/api.js';

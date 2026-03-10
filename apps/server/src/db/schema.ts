@@ -519,6 +519,21 @@ export const deduplicationCandidates = pgTable(
   ],
 );
 
+// ─── Scheme Config (Story 4.1) ───────────────────────────────────
+// Lightweight key-value configuration table for scheme-level settings.
+// First entry: key = 'scheme_fund_total'. AG populates when committee confirms.
+export const schemeConfig = pgTable(
+  'scheme_config',
+  {
+    id: uuid('id').primaryKey().$defaultFn(generateUuidv7),
+    key: varchar('key', { length: 100 }).notNull().unique(),
+    value: text('value'),
+    description: text('description'),
+    updatedBy: uuid('updated_by').references(() => users.id),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+);
+
 // ─── Audit Log (Story 1.5) ─────────────────────────────────────────
 // Append-only, immutable audit trail. No updated_at, no deleted_at.
 // Immutability enforced by DB trigger (fn_prevent_modification).
