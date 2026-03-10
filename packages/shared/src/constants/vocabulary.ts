@@ -136,6 +136,19 @@ export const VOCABULARY = {
   TRACE_DATA_GAP: 'No records available for this period',
   TRACE_INFERRED_LOAN: 'Loan inferred from available data — source records not available',
   TRACE_NOT_FOUND: 'No trace data found for this person.',
+  // Delineation & Deduplication (Story 3.8)
+  DELINEATION_DETECTED: 'Multiple MDAs detected in this file',
+  DELINEATION_SINGLE_MDA: 'Single MDA file — no delineation needed',
+  DELINEATION_CONFIRMED: 'MDA boundaries confirmed',
+  DELINEATION_AMBIGUOUS: 'MDA boundary unclear — requires confirmation',
+  DELINEATION_NOT_RUN: 'Delineation has not been run for this upload.',
+  DELINEATION_ALREADY_CONFIRMED: 'Delineation boundaries have already been confirmed.',
+  DUPLICATE_DETECTED: 'Potential duplicate found across parent and sub-agency files',
+  DUPLICATE_RESOLVED: 'Duplicate resolved',
+  DUPLICATE_MULTI_MDA: 'Confirmed as legitimate multi-MDA staff',
+  DUPLICATE_REASSIGNED: 'Records reassigned to correct MDA',
+  DUPLICATE_NOT_FOUND: 'The requested duplicate candidate could not be found.',
+  DUPLICATE_ALREADY_RESOLVED: 'This duplicate has already been resolved.',
 } as const;
 
 export const UI_COPY = {
@@ -175,4 +188,7 @@ export const UI_COPY = {
   // Observation UI (Story 3.6)
   OBSERVATION_EMPTY: 'No observations — all records are clear',
   OBSERVATION_CARD_ICON: 'info',
+  // Delineation & Deduplication UI (Story 3.8)
+  DELINEATION_EMPTY: 'No MDA boundaries detected — all records belong to the selected MDA',
+  DUPLICATE_EMPTY: 'No duplicates found — all records are unique',
 } as const;

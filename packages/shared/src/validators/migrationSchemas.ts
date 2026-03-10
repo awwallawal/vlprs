@@ -65,6 +65,29 @@ export const confirmMappingBodySchema = z.object({
   ),
 });
 
+// ─── Delineation & Deduplication (Story 3.8) ─────────────────────────
+
+export const confirmDelineationSchema = z.object({
+  sections: z.array(z.object({
+    sectionIndex: z.number().int().min(0),
+    mdaId: z.string().uuid(),
+  })).min(1),
+});
+
+export const resolveDuplicateSchema = z.object({
+  resolution: z.enum(['confirmed_multi_mda', 'reassigned', 'flagged']),
+  note: z.string().max(1000).optional(),
+});
+
+export const duplicateListQuerySchema = z.object({
+  page: z.coerce.number().int().min(1).optional().default(1),
+  pageSize: z.coerce.number().int().min(1).max(100).optional().default(20),
+  parentMdaId: z.string().uuid().optional(),
+  childMdaId: z.string().uuid().optional(),
+  status: z.enum(['pending', 'confirmed_multi_mda', 'reassigned', 'flagged']).optional(),
+  staffName: z.string().min(2).optional(),
+});
+
 // ─── Baseline Acknowledgment (Story 3.4) ────────────────────────────
 export const createBaselineBodySchema = z.object({
   confirm: z.literal(true),
