@@ -11,9 +11,11 @@ import { BaselineResultSummary } from './components/BaselineResultSummary';
 import { usePersonList, useMatchPersons } from '@/hooks/useStaffProfile';
 import { usePageMeta } from '@/hooks/usePageMeta';
 import { Badge } from '@/components/ui/badge';
-import type { MigrationUploadPreview, VarianceCategory, BatchBaselineResult } from '@vlprs/shared';
+import { FileDelineationPreview } from './components/FileDelineationPreview';
+import { useTriggerDelineation, useConfirmDelineation } from '@/hooks/useDeduplication';
+import type { MigrationUploadPreview, VarianceCategory, BatchBaselineResult, DelineationResult } from '@vlprs/shared';
 
-type Step = 'select-mda' | 'upload' | 'review' | 'processing' | 'complete' | 'validating' | 'validated';
+type Step = 'select-mda' | 'upload' | 'review' | 'processing' | 'complete' | 'delineation' | 'validating' | 'validated';
 type Tab = 'upload' | 'profiles';
 
 export function MigrationUploadPage() {
@@ -39,6 +41,7 @@ export function MigrationUploadPage() {
   const [baselineResult, setBaselineResult] = useState<BatchBaselineResult | null>(null);
   const [baselinedRecordIds, setBaselinedRecordIds] = useState<Set<string>>(new Set());
   const [baselineInProgressId, setBaselineInProgressId] = useState<string | null>(null);
+  const [delineationResult, setDelineationResult] = useState<DelineationResult | null>(null);
 
   const uploadMutation = useUploadMigration();
   const confirmMutation = useConfirmMapping();
@@ -52,6 +55,8 @@ export function MigrationUploadPage() {
   const singleBaselineMutation = useCreateBaseline(preview?.uploadId ?? '');
   const batchBaselineMutation = useCreateBatchBaseline(preview?.uploadId ?? '');
   const baselineSummary = useBaselineSummary(preview?.uploadId ?? '');
+  const delineationMutation = useTriggerDelineation(preview?.uploadId ?? '');
+  const confirmDelineationMutation = useConfirmDelineation(preview?.uploadId ?? '');
   const { data: mdaList, isLoading: mdaLoading } = useMdaList();
   const personList = usePersonList({ page: personPage, limit: 20 });
   const matchPersonsMutation = useMatchPersons();
@@ -89,10 +94,21 @@ export function MigrationUploadPage() {
       });
       setResult(data);
       setStep('complete');
+      // Auto-trigger delineation detection
+      try {
+        const delineation = await delineationMutation.mutateAsync();
+        setDelineationResult(delineation);
+        if (delineation.delineated) {
+          setStep('delineation');
+          return;
+        }
+      } catch {
+        // Delineation is optional — if it fails, proceed normally
+      }
     } catch {
       setStep('review');
     }
-  }, [preview, selectedFile, selectedMdaId, confirmMutation]);
+  }, [preview, selectedFile, selectedMdaId, confirmMutation, delineationMutation]);
 
   const handleValidate = useCallback(async () => {
     if (!preview) return;
@@ -146,6 +162,24 @@ export function MigrationUploadPage() {
     setBaselineResult(null);
     setBaselinedRecordIds(new Set());
     setBaselineInProgressId(null);
+    setDelineationResult(null);
+  }, []);
+
+  const handleConfirmDelineation = useCallback(async (
+    sections: Array<{ sectionIndex: number; mdaId: string }>,
+  ) => {
+    if (!preview) return;
+    try {
+      await confirmDelineationMutation.mutateAsync({ sections });
+      setStep('complete');
+    } catch {
+      // Error handled by mutation state
+    }
+  }, [preview, confirmDelineationMutation]);
+
+  const handleRejectDelineation = useCallback(() => {
+    // Reject = skip delineation, proceed to validation as-is
+    setStep('complete');
   }, []);
 
   return (
@@ -326,7 +360,8 @@ export function MigrationUploadPage() {
           { key: 'upload', label: '2. Upload File', active: ['upload'] as Step[] },
           { key: 'review', label: '3. Review Mapping', active: ['review'] as Step[] },
           { key: 'complete', label: '4. Extract', active: ['processing', 'complete'] as Step[] },
-          { key: 'validated', label: '5. Comparison', active: ['validating', 'validated'] as Step[] },
+          { key: 'delineation', label: '5. Delineation', active: ['delineation'] as Step[] },
+          { key: 'validated', label: '6. Comparison', active: ['validating', 'validated'] as Step[] },
         ]).map((s, i) => (
           <div key={s.key} className="flex items-center gap-2">
             {i > 0 && <span className="text-border">/</span>}
@@ -378,7 +413,7 @@ export function MigrationUploadPage() {
         <div className="bg-gold/10 border border-gold/30 rounded-lg p-4">
           <p className="text-sm text-text-primary">
             <span className="font-medium">Note:</span> Agriculture files may contain embedded records for sub-agencies
-            (e.g., CDU — Cocoa Development Unit). These will be detected during the delineation phase (Story 3.8).
+            (e.g., CDU — Cocoa Development Unit). These will be detected during the delineation phase.
           </p>
         </div>
       )}
@@ -459,7 +494,26 @@ export function MigrationUploadPage() {
         </div>
       )}
 
-      {/* Step 4.5: Validating */}
+      {/* Step 5: Delineation */}
+      {step === 'delineation' && delineationResult && (
+        <div className="space-y-4">
+          <FileDelineationPreview
+            delineationResult={delineationResult}
+            mdaList={mdaList ?? []}
+            isLoading={false}
+            isConfirming={confirmDelineationMutation.isPending}
+            onConfirm={handleConfirmDelineation}
+            onReject={handleRejectDelineation}
+          />
+          {confirmDelineationMutation.isError && (
+            <div className="bg-gold/10 border border-gold/30 rounded-lg p-4">
+              <p className="text-sm text-text-primary">{confirmDelineationMutation.error?.message}</p>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Step 5.5: Validating */}
       {step === 'validating' && (
         <div className="flex flex-col items-center gap-4 py-12">
           <div className="h-8 w-8 border-2 border-teal border-t-transparent rounded-full animate-spin" />
@@ -490,7 +544,7 @@ export function MigrationUploadPage() {
         />
       )}
 
-      {/* Step 5: Validated */}
+      {/* Step 6: Validated */}
       {step === 'validated' && validationResults.data && (
         <div className="space-y-4">
           {baselineResult && (

@@ -70,6 +70,7 @@ export interface MigrationDashboardMetrics {
   totalExposure: string;
   mdasComplete: number;
   baselinesEstablished: number;
+  pendingDuplicates: number;
 }
 
 export interface BeneficiaryListItem {

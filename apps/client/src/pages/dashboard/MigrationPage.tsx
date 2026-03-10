@@ -7,12 +7,13 @@ import { WelcomeGreeting } from '@/components/shared/WelcomeGreeting';
 import { MigrationProgressBar } from './components/MigrationProgressBar';
 import { MasterBeneficiaryLedger } from './components/MasterBeneficiaryLedger';
 import { ObservationsList } from './components/ObservationsList';
+import { DuplicateResolutionTable } from './components/DuplicateResolutionTable';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { usePageMeta } from '@/hooks/usePageMeta';
 import { VOCABULARY } from '@vlprs/shared';
 
-type Tab = 'mda-progress' | 'beneficiary-ledger' | 'observations';
+type Tab = 'mda-progress' | 'beneficiary-ledger' | 'observations' | 'duplicates';
 
 export function MigrationPage() {
   usePageMeta({ title: VOCABULARY.MIGRATION_DASHBOARD_TITLE, description: 'Migration progress and beneficiary ledger' });
@@ -37,7 +38,7 @@ export function MigrationPage() {
       <WelcomeGreeting subtitle={VOCABULARY.MIGRATION_DASHBOARD_TITLE} />
 
       {/* Hero Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-4">
         <HeroMetricCard
           label="Total Staff Migrated"
           value={metrics?.totalStaffMigrated ?? 0}
@@ -59,6 +60,12 @@ export function MigrationPage() {
         <HeroMetricCard
           label="Baselines Established"
           value={metrics?.baselinesEstablished ?? 0}
+          format="count"
+          isPending={isMetricsPending}
+        />
+        <HeroMetricCard
+          label="Pending Duplicates"
+          value={metrics?.pendingDuplicates ?? 0}
           format="count"
           isPending={isMetricsPending}
         />
@@ -109,6 +116,17 @@ export function MigrationPage() {
           }`}
         >
           Observations
+        </button>
+        <button
+          type="button"
+          onClick={() => setActiveTab('duplicates')}
+          className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+            activeTab === 'duplicates'
+              ? 'border-teal text-teal'
+              : 'border-transparent text-text-muted hover:text-text-secondary'
+          }`}
+        >
+          Duplicates
         </button>
       </div>
 
@@ -165,6 +183,13 @@ export function MigrationPage() {
       {activeTab === 'observations' && (
         <section aria-label="Observations">
           <ObservationsList />
+        </section>
+      )}
+
+      {/* Duplicates Tab */}
+      {activeTab === 'duplicates' && (
+        <section aria-label="Potential Duplicates">
+          <DuplicateResolutionTable />
         </section>
       )}
     </div>

@@ -145,12 +145,12 @@ development_status:
   3-5-migration-dashboard-master-beneficiary-ledger: done
   3-6-observation-engine-review-workflow: done
   3-7-individual-trace-report-generation: done
-  3-8-multi-mda-file-delineation-deduplication: ready-for-dev
+  3-8-multi-mda-file-delineation-deduplication: done
   epic-3-retrospective: optional
 
   # Epic 4: Executive Dashboard & Scheme Visibility (Sprint 6 — first live analytics)
-  epic-4: backlog
-  4-1-dashboard-hero-metrics-api-display: backlog
+  epic-4: in-progress
+  4-1-dashboard-hero-metrics-api-display: ready-for-dev
   4-2-attention-items-status-indicators: backlog
   4-3-progressive-drill-down-dashboard-mda-loan: backlog
   4-4-mda-compliance-status-view: backlog

@@ -282,6 +282,7 @@ export const migrationUploads = pgTable(
     metadata: jsonb('metadata'),
     hasMultiMda: boolean('has_multi_mda').notNull().default(false),
     multiMdaBoundaries: jsonb('multi_mda_boundaries'),
+    delineationResult: jsonb('delineation_result'),
     validationSummary: jsonb('validation_summary'),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
@@ -480,6 +481,41 @@ export const exceptions = pgTable(
     index('idx_exceptions_observation_id').on(table.observationId),
     index('idx_exceptions_mda_id').on(table.mdaId),
     index('idx_exceptions_status').on(table.status),
+  ],
+);
+
+// ─── Deduplication Candidate Status Enum (Story 3.8) ─────────────────
+export const deduplicationCandidateStatusEnum = pgEnum('deduplication_candidate_status', [
+  'pending', 'confirmed_multi_mda', 'reassigned', 'flagged',
+]);
+
+// ─── Deduplication Candidates (Story 3.8) ────────────────────────────
+// Cross-file duplicate detection results between parent and sub-agency MDAs.
+export const deduplicationCandidates = pgTable(
+  'deduplication_candidates',
+  {
+    id: uuid('id').primaryKey().$defaultFn(generateUuidv7),
+    parentMdaId: uuid('parent_mda_id').notNull().references(() => mdas.id),
+    childMdaId: uuid('child_mda_id').notNull().references(() => mdas.id),
+    staffName: varchar('staff_name', { length: 255 }).notNull(),
+    staffId: varchar('staff_id', { length: 50 }),
+    parentRecordCount: integer('parent_record_count').notNull(),
+    childRecordCount: integer('child_record_count').notNull(),
+    matchConfidence: numeric('match_confidence', { precision: 3, scale: 2 }).notNull(),
+    matchType: text('match_type').notNull(), // 'exact_name' | 'surname_initial' | 'fuzzy_name' | 'staff_id'
+    status: deduplicationCandidateStatusEnum('status').notNull().default('pending'),
+    resolvedBy: uuid('resolved_by').references(() => users.id),
+    resolvedAt: timestamp('resolved_at', { withTimezone: true }),
+    resolutionNote: text('resolution_note'),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    index('idx_dedup_parent_mda').on(table.parentMdaId),
+    index('idx_dedup_child_mda').on(table.childMdaId),
+    index('idx_dedup_status').on(table.status),
+    index('idx_dedup_staff_name').on(table.staffName),
+    uniqueIndex('idx_dedup_unique_candidate').on(table.parentMdaId, table.childMdaId, table.staffName),
   ],
 );
 

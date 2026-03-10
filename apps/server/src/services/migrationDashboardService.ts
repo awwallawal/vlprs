@@ -1,7 +1,7 @@
 import { eq, and, isNull, sql, count } from 'drizzle-orm';
 import Decimal from 'decimal.js';
 import { db } from '../db/index';
-import { mdas, migrationUploads, migrationRecords, loans, ledgerEntries, observations } from '../db/schema';
+import { mdas, migrationUploads, migrationRecords, loans, ledgerEntries, observations, deduplicationCandidates } from '../db/schema';
 import { withMdaScope } from '../lib/mdaScope';
 import type { MigrationMdaStatus, MigrationStage, MigrationDashboardMetrics } from '@vlprs/shared';
 
@@ -241,10 +241,17 @@ export async function getDashboardMetrics(
       isNull(migrationRecords.deletedAt),
     ));
 
+  // Pending duplicates
+  const [pendingDupResult] = await db
+    .select({ cnt: count() })
+    .from(deduplicationCandidates)
+    .where(eq(deduplicationCandidates.status, 'pending'));
+
   return {
     totalStaffMigrated,
     totalExposure: totalExposure.toFixed(2),
     mdasComplete,
     baselinesEstablished: Number(baselineResult.cnt),
+    pendingDuplicates: Number(pendingDupResult.cnt),
   };
 }

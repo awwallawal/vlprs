@@ -18,7 +18,7 @@ export interface MdaBoundary {
   endRow: number;
   detectedMda: string;
   recordCount: number;
-  confidence: 'high' | 'medium' | 'low';
+  confidence: 'high' | 'medium' | 'low' | 'detected' | 'ambiguous' | 'confirmed';
 }
 
 export type CanonicalField =
@@ -259,6 +259,62 @@ export interface PersonProfile {
   timelines: PersonTimeline[];
   cycles: LoanCycle[];
   matches: (PersonMatch & { personAMdaCode: string; personBMdaCode: string })[];
+}
+
+// ─── File Delineation (Story 3.8) ────────────────────────────────────
+
+export type DelineationConfidence = 'detected' | 'ambiguous' | 'confirmed';
+
+export interface DelineationBoundaryRecord {
+  sourceRow: number;
+  staffName: string;
+  mdaText: string | null;
+  position: 'start' | 'end';
+}
+
+export interface DelineationSection {
+  sectionIndex: number;
+  sheetName?: string;
+  mdaId: string | null;
+  mdaCode: string | null;
+  mdaName: string;
+  resolvedMdaName: string | null;
+  startRow: number;
+  endRow: number;
+  recordCount: number;
+  confidence: DelineationConfidence;
+  boundaryRecords?: DelineationBoundaryRecord[];
+}
+
+export interface DelineationResult {
+  uploadId: string;
+  targetMdaId: string;
+  targetMdaName: string;
+  delineated: boolean;
+  sections: DelineationSection[];
+  totalRecords: number;
+}
+
+export type DuplicateResolution = 'confirmed_multi_mda' | 'reassigned' | 'flagged';
+export type DuplicateMatchType = 'exact_name' | 'surname_initial' | 'fuzzy_name' | 'staff_id';
+
+export interface DuplicateCandidate {
+  id: string;
+  parentMdaId: string;
+  parentMdaName: string;
+  childMdaId: string;
+  childMdaName: string;
+  staffName: string;
+  staffId: string | null;
+  parentRecordCount: number;
+  childRecordCount: number;
+  matchConfidence: string;
+  matchType: DuplicateMatchType;
+  status: DuplicateResolution | 'pending';
+  resolvedBy: string | null;
+  resolvedAt: string | null;
+  resolutionNote: string | null;
+  createdAt: string;
 }
 
 // ─── Baseline Acknowledgment (Story 3.4) ────────────────────────────
