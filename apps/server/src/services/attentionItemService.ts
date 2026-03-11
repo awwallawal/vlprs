@@ -1,0 +1,488 @@
+import Decimal from 'decimal.js';
+import { db } from '../db';
+import { loans, ledgerEntries, mdas } from '../db/schema';
+import { eq, and, sql, inArray } from 'drizzle-orm';
+import { withMdaScope } from '../lib/mdaScope';
+import { generateUuidv7 } from '../lib/uuidv7';
+import { computeBalanceFromEntries } from './computationEngine';
+import * as loanClassificationService from './loanClassificationService';
+import { LoanClassification } from './loanClassificationService';
+import type { AttentionItem } from '@vlprs/shared';
+import type { LedgerEntryForBalance } from '@vlprs/shared';
+
+// ─── Orchestrator ────────────────────────────────────────────────
+
+export async function getAttentionItems(
+  mdaScope?: string | null,
+): Promise<AttentionItem[]> {
+  // Pre-fetch loan classifications once (used by overdue + stalled detectors)
+  const classifications = await loanClassificationService.classifyAllLoans(mdaScope);
+
+  const results = await Promise.all([
+    detectZeroDeductionLoans(mdaScope),
+    detectPostRetirementActive(mdaScope),
+    detectMissingStaffId(mdaScope),
+    detectOverdueLoans(mdaScope, classifications),
+    detectStalledLoans(mdaScope, classifications),
+    detectQuickWinLoans(mdaScope),
+    detectSubmissionVariance(mdaScope),
+    detectOverdueSubmissions(mdaScope),
+    detectPendingAutoStop(mdaScope),
+    detectPendingEarlyExit(mdaScope),
+    detectDarkMdas(mdaScope),
+    detectOnboardingLag(mdaScope),
+  ]);
+
+  return results.flat().sort((a, b) => a.priority - b.priority);
+}
+
+// ─── Per-MDA Detectors ───────────────────────────────────────────
+
+/**
+ * (c) Loans with zero deduction for 60+ consecutive days.
+ * Per-MDA detector: returns max 3 MDA items + "and N more" if applicable.
+ */
+async function detectZeroDeductionLoans(
+  mdaScope?: string | null,
+): Promise<AttentionItem[]> {
+  const scopeCondition = withMdaScope(loans.mdaId, mdaScope);
+
+  // Find ACTIVE loans whose most recent ledger entry is >60 days ago (or have none)
+  const result = await db.execute(sql`
+    SELECT m.id AS mda_id, m.name AS mda_name, COUNT(l.id)::int AS affected_count
+    FROM loans l
+    JOIN mdas m ON l.mda_id = m.id
+    LEFT JOIN LATERAL (
+      SELECT MAX(le.created_at) AS latest_entry
+      FROM ledger_entries le
+      WHERE le.loan_id = l.id
+    ) latest ON TRUE
+    WHERE l.status = 'ACTIVE'
+      ${scopeCondition ? sql`AND l.mda_id = ${mdaScope}` : sql``}
+      AND (latest.latest_entry < NOW() - INTERVAL '60 days' OR latest.latest_entry IS NULL)
+    GROUP BY m.id, m.name
+    ORDER BY affected_count DESC
+  `);
+
+  const rows = result.rows as Array<{ mda_id: string; mda_name: string; affected_count: number }>;
+  if (rows.length === 0) return [];
+
+  return buildPerMdaItems(
+    rows,
+    'zero_deduction',
+    'review',
+    10,
+    (row) => `${row.affected_count} loan${row.affected_count === 1 ? '' : 's'} with no deduction for 60+ days`,
+    (row) => `/dashboard/loans?filter=zero-deduction&mda=${row.mda_id}`,
+    '/dashboard/loans?filter=zero-deduction',
+  );
+}
+
+/**
+ * (e) Staff with active deductions past computed retirement date.
+ * Per-MDA detector: returns max 3 MDA items + "and N more" if applicable.
+ */
+async function detectPostRetirementActive(
+  mdaScope?: string | null,
+): Promise<AttentionItem[]> {
+  const scopeCondition = withMdaScope(loans.mdaId, mdaScope);
+
+  const conditions = [
+    eq(loans.status, 'ACTIVE'),
+    sql`${loans.computedRetirementDate} IS NOT NULL`,
+    sql`${loans.computedRetirementDate} < CURRENT_DATE`,
+  ];
+  if (scopeCondition) conditions.push(scopeCondition);
+
+  const result = await db
+    .select({
+      mdaId: mdas.id,
+      mdaName: mdas.name,
+      affectedCount: sql<number>`COUNT(*)::int`,
+    })
+    .from(loans)
+    .innerJoin(mdas, eq(loans.mdaId, mdas.id))
+    .where(and(...conditions))
+    .groupBy(mdas.id, mdas.name)
+    .orderBy(sql`COUNT(*) DESC`);
+
+  if (result.length === 0) return [];
+
+  return buildPerMdaItems(
+    result.map((r) => ({ mda_id: r.mdaId, mda_name: r.mdaName, affected_count: r.affectedCount })),
+    'post_retirement_active',
+    'review',
+    20,
+    (row) => `${row.affected_count} active loan${row.affected_count === 1 ? '' : 's'} past retirement date`,
+    (row) => `/dashboard/loans?filter=post-retirement&mda=${row.mda_id}`,
+    '/dashboard/loans?filter=post-retirement',
+  );
+}
+
+// ─── Aggregate Detectors ─────────────────────────────────────────
+
+/**
+ * (g) Records missing Staff ID with percentage-complete metric.
+ * Aggregate (scheme-wide) item.
+ */
+async function detectMissingStaffId(
+  mdaScope?: string | null,
+): Promise<AttentionItem[]> {
+  const scopeCondition = withMdaScope(loans.mdaId, mdaScope);
+  const conditions: ReturnType<typeof eq>[] = [];
+  if (scopeCondition) conditions.push(scopeCondition);
+
+  const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
+
+  const [totals] = await db
+    .select({
+      total: sql<number>`COUNT(*)::int`,
+      missing: sql<number>`COUNT(*) FILTER (WHERE ${loans.staffId} = '' OR ${loans.staffId} IS NULL)::int`,
+    })
+    .from(loans)
+    .where(whereClause);
+
+  const total = totals?.total ?? 0;
+  const missing = totals?.missing ?? 0;
+
+  if (missing === 0) return [];
+
+  const covered = total - missing;
+  const coveragePercent = total > 0
+    ? new Decimal(covered).div(total).mul(100).toDecimalPlaces(1).toNumber()
+    : 0;
+
+  return [{
+    id: generateUuidv7(),
+    type: 'missing_staff_id',
+    description: `${coveragePercent}% of records have Staff ID \u2014 ${missing} record${missing === 1 ? '' : 's'} missing`,
+    mdaName: 'Scheme-wide',
+    category: 'info',
+    priority: 50,
+    count: missing,
+    drillDownUrl: '/dashboard/loans?filter=missing-staff-id',
+    timestamp: new Date().toISOString(),
+  }];
+}
+
+/**
+ * (h) Overdue loans via Loan Classification Service.
+ * Aggregate (scheme-wide) item.
+ */
+async function detectOverdueLoans(
+  mdaScope?: string | null,
+  preloadedClassifications?: Map<string, LoanClassification>,
+): Promise<AttentionItem[]> {
+  const classifications = preloadedClassifications ?? await loanClassificationService.classifyAllLoans(mdaScope);
+
+  const overdueIds: string[] = [];
+  for (const [loanId, classification] of classifications) {
+    if (classification === LoanClassification.OVERDUE) {
+      overdueIds.push(loanId);
+    }
+  }
+
+  if (overdueIds.length === 0) return [];
+
+  const totalOutstanding = await computeBalanceSumForIds(overdueIds);
+
+  return [{
+    id: generateUuidv7(),
+    type: 'overdue_loans',
+    description: `${overdueIds.length} overdue loan${overdueIds.length === 1 ? '' : 's'} \u2014 \u20A6${formatAmount(totalOutstanding)} at risk`,
+    mdaName: 'Scheme-wide',
+    category: 'review',
+    priority: 15,
+    count: overdueIds.length,
+    amount: totalOutstanding,
+    drillDownUrl: '/dashboard/loans?filter=overdue',
+    timestamp: new Date().toISOString(),
+  }];
+}
+
+/**
+ * (i) Stalled deductions via Loan Classification Service.
+ * Aggregate (scheme-wide) item. Drill-down links to observation list.
+ */
+async function detectStalledLoans(
+  mdaScope?: string | null,
+  preloadedClassifications?: Map<string, LoanClassification>,
+): Promise<AttentionItem[]> {
+  const classifications = preloadedClassifications ?? await loanClassificationService.classifyAllLoans(mdaScope);
+
+  const stalledIds: string[] = [];
+  for (const [loanId, classification] of classifications) {
+    if (classification === LoanClassification.STALLED) {
+      stalledIds.push(loanId);
+    }
+  }
+
+  if (stalledIds.length === 0) return [];
+
+  const totalOutstanding = await computeBalanceSumForIds(stalledIds);
+
+  return [{
+    id: generateUuidv7(),
+    type: 'stalled_deductions',
+    description: `${stalledIds.length} stalled deduction${stalledIds.length === 1 ? '' : 's'} \u2014 \u20A6${formatAmount(totalOutstanding)} at risk`,
+    mdaName: 'Scheme-wide',
+    category: 'info',
+    priority: 30,
+    count: stalledIds.length,
+    amount: totalOutstanding,
+    drillDownUrl: '/dashboard/observations?type=stalled_balance',
+    timestamp: new Date().toISOString(),
+  }];
+}
+
+/**
+ * (j) Quick-win opportunities: loans with ≤3 installments remaining.
+ * Aggregate (scheme-wide) item.
+ *
+ * Performance note: fetches all active loans + their entries for balance
+ * computation. At scale (1000s of loans), consider a SQL-only approach
+ * or caching layer if this becomes a bottleneck.
+ */
+async function detectQuickWinLoans(
+  mdaScope?: string | null,
+): Promise<AttentionItem[]> {
+  const scopeCondition = withMdaScope(loans.mdaId, mdaScope);
+
+  const conditions = [eq(loans.status, 'ACTIVE')];
+  if (scopeCondition) conditions.push(scopeCondition);
+
+  const activeLoanRows = await db
+    .select({
+      id: loans.id,
+      principalAmount: loans.principalAmount,
+      interestRate: loans.interestRate,
+      tenureMonths: loans.tenureMonths,
+      monthlyDeductionAmount: loans.monthlyDeductionAmount,
+    })
+    .from(loans)
+    .where(and(...conditions));
+
+  if (activeLoanRows.length === 0) return [];
+
+  // Batch-fetch all ledger entries for active loans
+  const loanIds = activeLoanRows.map((l) => l.id);
+  const allEntries = await db
+    .select({
+      loanId: ledgerEntries.loanId,
+      amount: ledgerEntries.amount,
+      principalComponent: ledgerEntries.principalComponent,
+      interestComponent: ledgerEntries.interestComponent,
+      entryType: ledgerEntries.entryType,
+    })
+    .from(ledgerEntries)
+    .where(inArray(ledgerEntries.loanId, loanIds));
+
+  const entriesMap = new Map<string, LedgerEntryForBalance[]>();
+  for (const entry of allEntries) {
+    const existing = entriesMap.get(entry.loanId) ?? [];
+    existing.push(entry);
+    entriesMap.set(entry.loanId, existing);
+  }
+
+  let quickWinCount = 0;
+  let totalRecoverable = new Decimal('0');
+
+  for (const loan of activeLoanRows) {
+    const entries = entriesMap.get(loan.id) ?? [];
+    const balance = computeBalanceFromEntries(
+      loan.principalAmount,
+      loan.interestRate,
+      loan.tenureMonths,
+      entries,
+      null,
+    );
+    const outstandingBalance = new Decimal(balance.computedBalance);
+    const monthlyDeduction = new Decimal(loan.monthlyDeductionAmount);
+
+    if (outstandingBalance.gt(0) && monthlyDeduction.gt(0)) {
+      const remainingInstallments = Math.ceil(
+        outstandingBalance.div(monthlyDeduction).toNumber(),
+      );
+      if (remainingInstallments <= 3) {
+        quickWinCount++;
+        totalRecoverable = totalRecoverable.plus(outstandingBalance);
+      }
+    }
+  }
+
+  if (quickWinCount === 0) return [];
+
+  const recoverableStr = totalRecoverable.toFixed(2);
+
+  return [{
+    id: generateUuidv7(),
+    type: 'quick_win',
+    description: `${quickWinCount} loan${quickWinCount === 1 ? '' : 's'} within 3 installments of completion \u2014 \u20A6${formatAmount(recoverableStr)} recoverable`,
+    mdaName: 'Scheme-wide',
+    category: 'info',
+    priority: 40,
+    count: quickWinCount,
+    amount: recoverableStr,
+    drillDownUrl: '/dashboard/loans?filter=quick-win&sort=outstanding-asc',
+    timestamp: new Date().toISOString(),
+  }];
+}
+
+// ─── Stub Detectors (future epics) ──────────────────────────────
+
+// TODO: Wire in Epic 5 when submission data exists
+async function detectSubmissionVariance(_mdaScope?: string | null): Promise<AttentionItem[]> {
+  return [];
+}
+
+// TODO: Wire in Epic 5 when submission data exists
+async function detectOverdueSubmissions(_mdaScope?: string | null): Promise<AttentionItem[]> {
+  return [];
+}
+
+// TODO: Wire in Epic 8 when auto-stop certificates exist
+async function detectPendingAutoStop(_mdaScope?: string | null): Promise<AttentionItem[]> {
+  return [];
+}
+
+// TODO: Wire in Epic 12 when early exit processing exists
+async function detectPendingEarlyExit(_mdaScope?: string | null): Promise<AttentionItem[]> {
+  return [];
+}
+
+// TODO: Wire in Epic 5 when Submission Coverage Service exists
+async function detectDarkMdas(_mdaScope?: string | null): Promise<AttentionItem[]> {
+  return [];
+}
+
+// TODO: Wire in Epic 5 when Beneficiary Pipeline Service exists
+async function detectOnboardingLag(_mdaScope?: string | null): Promise<AttentionItem[]> {
+  return [];
+}
+
+// ─── Helpers ─────────────────────────────────────────────────────
+
+interface MdaRow {
+  mda_id: string;
+  mda_name: string;
+  affected_count: number;
+}
+
+/**
+ * Build per-MDA attention items (max 3, with "and N more" on last if truncated).
+ */
+export function buildPerMdaItems(
+  rows: MdaRow[],
+  type: AttentionItem['type'],
+  category: AttentionItem['category'],
+  priority: number,
+  descriptionFn: (row: MdaRow) => string,
+  drillDownFn: (row: MdaRow) => string,
+  allMdasDrillDown: string,
+): AttentionItem[] {
+  const items: AttentionItem[] = [];
+  const maxItems = 3;
+  const now = new Date().toISOString();
+
+  for (let i = 0; i < Math.min(rows.length, maxItems); i++) {
+    const row = rows[i];
+    const isLast = i === maxItems - 1;
+    const remaining = rows.length - maxItems;
+
+    if (isLast && remaining > 0) {
+      items.push({
+        id: generateUuidv7(),
+        type,
+        description: `${descriptionFn(row)}, and ${remaining} more MDA${remaining === 1 ? '' : 's'}`,
+        mdaName: row.mda_name,
+        category,
+        priority,
+        count: row.affected_count,
+        hasMore: remaining,
+        drillDownUrl: allMdasDrillDown,
+        timestamp: now,
+      });
+    } else {
+      items.push({
+        id: generateUuidv7(),
+        type,
+        description: descriptionFn(row),
+        mdaName: row.mda_name,
+        category,
+        priority,
+        count: row.affected_count,
+        drillDownUrl: drillDownFn(row),
+        timestamp: now,
+      });
+    }
+  }
+
+  return items;
+}
+
+/**
+ * Batch-compute sum of outstanding balances for a set of loan IDs.
+ */
+export async function computeBalanceSumForIds(loanIds: string[]): Promise<string> {
+  if (loanIds.length === 0) return '0.00';
+
+  const loanRows = await db
+    .select({
+      id: loans.id,
+      principalAmount: loans.principalAmount,
+      interestRate: loans.interestRate,
+      tenureMonths: loans.tenureMonths,
+    })
+    .from(loans)
+    .where(inArray(loans.id, loanIds));
+
+  const allEntries = await db
+    .select({
+      loanId: ledgerEntries.loanId,
+      amount: ledgerEntries.amount,
+      principalComponent: ledgerEntries.principalComponent,
+      interestComponent: ledgerEntries.interestComponent,
+      entryType: ledgerEntries.entryType,
+    })
+    .from(ledgerEntries)
+    .where(inArray(ledgerEntries.loanId, loanIds));
+
+  const entriesMap = new Map<string, LedgerEntryForBalance[]>();
+  for (const entry of allEntries) {
+    const existing = entriesMap.get(entry.loanId) ?? [];
+    existing.push(entry);
+    entriesMap.set(entry.loanId, existing);
+  }
+
+  let total = new Decimal('0');
+  for (const loan of loanRows) {
+    const entries = entriesMap.get(loan.id) ?? [];
+    const balance = computeBalanceFromEntries(
+      loan.principalAmount,
+      loan.interestRate,
+      loan.tenureMonths,
+      entries,
+      null,
+    );
+    const bal = new Decimal(balance.computedBalance);
+    if (bal.gt(0)) total = total.plus(bal);
+  }
+
+  return total.toFixed(2);
+}
+
+/**
+ * Format a numeric string with commas for display in descriptions.
+ */
+export function formatAmount(amount: string): string {
+  try {
+    const d = new Decimal(amount);
+    if (d.isNaN()) return amount;
+    const fixed = d.toFixed(2);
+    const [intPart, decPart] = fixed.split('.');
+    const withCommas = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    return `${withCommas}.${decPart}`;
+  } catch {
+    return amount;
+  }
+}

@@ -198,17 +198,29 @@ export function DashboardPage() {
               </div>
             ))}
           </div>
-        ) : attention.data && attention.data.length > 0 ? (
-          <div className="space-y-3">
-            {attention.data.map((item) => (
+        ) : attention.data && attention.data.items.length > 0 ? (
+          <div className="space-y-3" role="list">
+            {attention.data.items.map((item) => (
               <AttentionItemCard
                 key={item.id}
                 description={item.description}
                 mdaName={item.mdaName}
                 category={item.category}
                 timestamp={item.timestamp}
+                type={item.type}
+                count={item.count}
+                amount={item.amount}
+                drillDownUrl={item.drillDownUrl}
               />
             ))}
+            {attention.data.totalCount > 10 && (
+              <button
+                className="text-sm font-medium text-teal hover:underline"
+                onClick={() => navigate('/dashboard/attention')}
+              >
+                View all attention items ({attention.data!.totalCount})
+              </button>
+            )}
           </div>
         ) : (
           <AttentionEmptyState />

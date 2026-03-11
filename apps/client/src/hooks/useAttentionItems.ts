@@ -1,16 +1,20 @@
 import { useQuery } from '@tanstack/react-query';
 import type { AttentionItem } from '@vlprs/shared';
-import { MOCK_ATTENTION_ITEMS } from '@/mocks/attentionItems';
+import { apiClient } from '@/lib/apiClient';
+
+interface AttentionItemsResponse {
+  items: AttentionItem[];
+  totalCount: number;
+}
 
 /**
  * Fetches attention items for dashboard.
  * @target GET /api/dashboard/attention
- * @wire Sprint 5 (Epic 4: Executive Dashboard)
  */
 export function useAttentionItems() {
-  return useQuery<AttentionItem[]>({
+  return useQuery<AttentionItemsResponse>({
     queryKey: ['dashboard', 'attention'],
-    queryFn: async () => MOCK_ATTENTION_ITEMS,
+    queryFn: () => apiClient<AttentionItemsResponse>('/dashboard/attention'),
     staleTime: 30_000,
   });
 }

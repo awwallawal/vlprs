@@ -54,15 +54,21 @@ const mockCompliance = [
   },
 ];
 
-const mockAttention = [
-  {
-    id: 'att-001',
-    description: 'Submission pending, 3 days past due',
-    mdaName: 'Ministry of Works',
-    category: 'review' as const,
-    timestamp: '2026-02-18T10:00:00Z',
-  },
-];
+const mockAttention = {
+  items: [
+    {
+      id: 'att-001',
+      type: 'zero_deduction' as const,
+      description: 'Submission pending, 3 days past due',
+      mdaName: 'Ministry of Works',
+      category: 'review' as const,
+      priority: 10,
+      drillDownUrl: '/dashboard/loans?filter=zero-deduction',
+      timestamp: '2026-02-18T10:00:00Z',
+    },
+  ],
+  totalCount: 1,
+};
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const mockUseDashboardMetrics = vi.fn((): any => ({ data: mockMetrics, isPending: false }));
