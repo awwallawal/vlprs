@@ -22,10 +22,30 @@ export interface DashboardMetrics {
   staffIdCoverage: { covered: number; total: number };
 }
 
+export type AttentionItemType =
+  | 'zero_deduction'           // (c) 60+ days no deduction
+  | 'post_retirement_active'   // (e) active past retirement
+  | 'missing_staff_id'         // (g) records without Staff ID
+  | 'overdue_loans'            // (h) past expected completion
+  | 'stalled_deductions'       // (i) unchanged balance 2+ months
+  | 'quick_win'                // (j) ≤3 installments remaining
+  | 'submission_variance'      // (a) future: Epic 5
+  | 'overdue_submission'       // (b) future: Epic 5
+  | 'pending_auto_stop'        // (d) future: Epic 8
+  | 'pending_early_exit'       // (f) future: Epic 12
+  | 'dark_mda'                 // (k) future: Epic 5
+  | 'onboarding_lag';          // (l) future: Epic 5
+
 export interface AttentionItem {
   id: string;
+  type: AttentionItemType;
   description: string;
-  mdaName: string;
+  mdaName: string;                 // MDA name or "Scheme-wide" for aggregate items
   category: 'review' | 'info' | 'complete';
-  timestamp: string;
+  priority: number;                // sort order (lower = higher priority)
+  count?: number;                  // e.g., "12 overdue loans"
+  amount?: string;                 // e.g., "₦45,000,000.00" (string for decimal safety)
+  drillDownUrl?: string;           // navigation target when tapped
+  hasMore?: number;                // if set, description includes "and {hasMore} more MDAs"
+  timestamp: string;               // ISO 8601 — when condition was last evaluated
 }

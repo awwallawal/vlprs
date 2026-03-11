@@ -3,7 +3,7 @@ import request from 'supertest';
 import { sql, eq } from 'drizzle-orm';
 import app from '../app';
 import { db } from '../db/index';
-import { users, mdas, schemeConfig } from '../db/schema';
+import { users, mdas, schemeConfig, loans } from '../db/schema';
 import { hashPassword } from '../lib/password';
 import { signAccessToken } from '../lib/jwt';
 import { generateUuidv7 } from '../lib/uuidv7';
@@ -156,5 +156,275 @@ describe('GET /api/dashboard/metrics', () => {
 
     const payloadSize = Buffer.byteLength(JSON.stringify(res.body.data), 'utf-8');
     expect(payloadSize).toBeLessThan(2048);
+  });
+});
+
+describe('GET /api/dashboard/attention', () => {
+  it('returns 401 without authentication', async () => {
+    const res = await request(app).get('/api/dashboard/attention');
+    expect(res.status).toBe(401);
+  });
+
+  it('returns success envelope with items array and totalCount', async () => {
+    const res = await request(app)
+      .get('/api/dashboard/attention')
+      .set('Authorization', `Bearer ${adminToken}`);
+
+    expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
+    expect(res.body.data).toBeDefined();
+    expect(Array.isArray(res.body.data.items)).toBe(true);
+    expect(typeof res.body.data.totalCount).toBe('number');
+  });
+
+  it('returns items sorted by priority (ascending)', async () => {
+    const res = await request(app)
+      .get('/api/dashboard/attention')
+      .set('Authorization', `Bearer ${adminToken}`);
+
+    expect(res.status).toBe(200);
+    const items = res.body.data.items;
+    for (let i = 1; i < items.length; i++) {
+      expect(items[i].priority).toBeGreaterThanOrEqual(items[i - 1].priority);
+    }
+  });
+
+  it('returns max 10 items in items array', async () => {
+    const res = await request(app)
+      .get('/api/dashboard/attention')
+      .set('Authorization', `Bearer ${adminToken}`);
+
+    expect(res.status).toBe(200);
+    expect(res.body.data.items.length).toBeLessThanOrEqual(10);
+  });
+
+  it('allows MDA_OFFICER access (scoped to their MDA)', async () => {
+    const res = await request(app)
+      .get('/api/dashboard/attention')
+      .set('Authorization', `Bearer ${officerToken}`);
+
+    expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
+    expect(Array.isArray(res.body.data.items)).toBe(true);
+  });
+
+  it('each item has required fields (type, category, priority, timestamp)', async () => {
+    const res = await request(app)
+      .get('/api/dashboard/attention')
+      .set('Authorization', `Bearer ${adminToken}`);
+
+    expect(res.status).toBe(200);
+    for (const item of res.body.data.items) {
+      expect(typeof item.id).toBe('string');
+      expect(typeof item.type).toBe('string');
+      expect(typeof item.description).toBe('string');
+      expect(typeof item.mdaName).toBe('string');
+      expect(['review', 'info', 'complete']).toContain(item.category);
+      expect(typeof item.priority).toBe('number');
+      expect(typeof item.timestamp).toBe('string');
+    }
+  });
+
+  it('returns empty items when no conditions exist (no loans)', async () => {
+    const res = await request(app)
+      .get('/api/dashboard/attention')
+      .set('Authorization', `Bearer ${adminToken}`);
+
+    expect(res.status).toBe(200);
+    expect(res.body.data.items).toEqual([]);
+    expect(res.body.data.totalCount).toBe(0);
+  });
+});
+
+describe('GET /api/dashboard/attention (detector integration)', () => {
+  // Seed 3 ACTIVE loans that trigger different detectors:
+  //  1. Empty staffId → missing_staff_id
+  //  2. computedRetirementDate in the past → post_retirement_active
+  //  3. No ledger entries at all → zero_deduction (60+ day gap)
+  // All 3 share testMdaId, so per-MDA detectors aggregate them under "Dashboard Test MDA"
+
+  beforeAll(async () => {
+    await db.insert(loans).values([
+      {
+        id: generateUuidv7(),
+        staffId: '',
+        staffName: 'Missing ID Worker',
+        gradeLevel: 'GL-08',
+        mdaId: testMdaId,
+        principalAmount: '500000.00',
+        interestRate: '5.000',
+        tenureMonths: 24,
+        moratoriumMonths: 0,
+        monthlyDeductionAmount: '21875.00',
+        approvalDate: new Date('2025-01-01'),
+        firstDeductionDate: new Date('2025-03-01'),
+        loanReference: 'ATT-TEST-001',
+        status: 'ACTIVE',
+        limitedComputation: false,
+      },
+      {
+        id: generateUuidv7(),
+        staffId: 'STF-ATT-002',
+        staffName: 'Retired Worker',
+        gradeLevel: 'GL-14',
+        mdaId: testMdaId,
+        principalAmount: '1000000.00',
+        interestRate: '5.000',
+        tenureMonths: 48,
+        moratoriumMonths: 0,
+        monthlyDeductionAmount: '21875.00',
+        approvalDate: new Date('2022-01-01'),
+        firstDeductionDate: new Date('2022-03-01'),
+        loanReference: 'ATT-TEST-002',
+        status: 'ACTIVE',
+        computedRetirementDate: new Date('2025-06-01'),
+        limitedComputation: false,
+      },
+      {
+        id: generateUuidv7(),
+        staffId: 'STF-ATT-003',
+        staffName: 'Zero Deduction Worker',
+        gradeLevel: 'GL-10',
+        mdaId: testMdaId,
+        principalAmount: '300000.00',
+        interestRate: '5.000',
+        tenureMonths: 24,
+        moratoriumMonths: 0,
+        monthlyDeductionAmount: '26250.00',
+        approvalDate: new Date('2025-01-01'),
+        firstDeductionDate: new Date('2025-02-01'),
+        loanReference: 'ATT-TEST-003',
+        status: 'ACTIVE',
+        limitedComputation: false,
+      },
+    ]);
+  });
+
+  it('detects loans with missing staff ID (aggregate, scheme-wide)', async () => {
+    const res = await request(app)
+      .get('/api/dashboard/attention')
+      .set('Authorization', `Bearer ${adminToken}`);
+
+    expect(res.status).toBe(200);
+    const items = res.body.data.items;
+    const item = items.find((i: { type: string }) => i.type === 'missing_staff_id');
+    expect(item).toBeDefined();
+    expect(item.category).toBe('info');
+    expect(item.priority).toBe(50);
+    expect(item.mdaName).toBe('Scheme-wide');
+    expect(item.count).toBeGreaterThanOrEqual(1);
+    expect(item.description).toContain('records');
+    expect(item.description).toContain('Staff ID');
+    expect(item.drillDownUrl).toBe('/dashboard/loans?filter=missing-staff-id');
+  });
+
+  it('detects post-retirement active loans (per-MDA)', async () => {
+    const res = await request(app)
+      .get('/api/dashboard/attention')
+      .set('Authorization', `Bearer ${adminToken}`);
+
+    expect(res.status).toBe(200);
+    const items = res.body.data.items;
+    const item = items.find((i: { type: string }) => i.type === 'post_retirement_active');
+    expect(item).toBeDefined();
+    expect(item.category).toBe('review');
+    expect(item.priority).toBe(20);
+    expect(item.mdaName).toBe('Dashboard Test MDA');
+    expect(item.count).toBeGreaterThanOrEqual(1);
+    expect(item.description).toContain('retirement');
+    expect(item.drillDownUrl).toContain('post-retirement');
+  });
+
+  it('detects zero deduction loans — no ledger entries (per-MDA)', async () => {
+    const res = await request(app)
+      .get('/api/dashboard/attention')
+      .set('Authorization', `Bearer ${adminToken}`);
+
+    expect(res.status).toBe(200);
+    const items = res.body.data.items;
+    const item = items.find((i: { type: string }) => i.type === 'zero_deduction');
+    expect(item).toBeDefined();
+    expect(item.category).toBe('review');
+    expect(item.priority).toBe(10);
+    expect(item.mdaName).toBe('Dashboard Test MDA');
+    expect(item.count).toBeGreaterThanOrEqual(1);
+    expect(item.drillDownUrl).toContain('zero-deduction');
+  });
+
+  it('returns items sorted by priority across multiple detector types', async () => {
+    const res = await request(app)
+      .get('/api/dashboard/attention')
+      .set('Authorization', `Bearer ${adminToken}`);
+
+    expect(res.status).toBe(200);
+    const items = res.body.data.items;
+    // At least 3 detector types should fire: zero_deduction, post_retirement, missing_staff_id
+    expect(items.length).toBeGreaterThanOrEqual(3);
+    for (let i = 1; i < items.length; i++) {
+      expect(items[i].priority).toBeGreaterThanOrEqual(items[i - 1].priority);
+    }
+  });
+
+  it('totalCount matches items length when <= 10', async () => {
+    const res = await request(app)
+      .get('/api/dashboard/attention')
+      .set('Authorization', `Bearer ${adminToken}`);
+
+    expect(res.status).toBe(200);
+    expect(res.body.data.totalCount).toBeGreaterThanOrEqual(3);
+    expect(res.body.data.items.length).toBeLessThanOrEqual(10);
+    expect(res.body.data.items.length).toBeLessThanOrEqual(res.body.data.totalCount);
+  });
+
+  it('MDA_OFFICER sees scoped per-MDA items for their MDA only', async () => {
+    const res = await request(app)
+      .get('/api/dashboard/attention')
+      .set('Authorization', `Bearer ${officerToken}`);
+
+    expect(res.status).toBe(200);
+    const items = res.body.data.items;
+    // Per-MDA items should be scoped to the officer's MDA
+    for (const item of items) {
+      if (item.type === 'zero_deduction' || item.type === 'post_retirement_active') {
+        expect(item.mdaName).toBe('Dashboard Test MDA');
+      }
+    }
+  });
+
+  it('stub detectors return no items (future epic types absent)', async () => {
+    const res = await request(app)
+      .get('/api/dashboard/attention')
+      .set('Authorization', `Bearer ${adminToken}`);
+
+    expect(res.status).toBe(200);
+    const items = res.body.data.items;
+    const futureTypes = [
+      'submission_variance', 'overdue_submission', 'pending_auto_stop',
+      'pending_early_exit', 'dark_mda', 'onboarding_lag',
+    ];
+    for (const ft of futureTypes) {
+      expect(items.find((i: { type: string }) => i.type === ft)).toBeUndefined();
+    }
+  });
+
+  it('each item has all required AttentionItem fields', async () => {
+    const res = await request(app)
+      .get('/api/dashboard/attention')
+      .set('Authorization', `Bearer ${adminToken}`);
+
+    expect(res.status).toBe(200);
+    for (const item of res.body.data.items) {
+      expect(typeof item.id).toBe('string');
+      expect(typeof item.type).toBe('string');
+      expect(typeof item.description).toBe('string');
+      expect(typeof item.mdaName).toBe('string');
+      expect(['review', 'info', 'complete']).toContain(item.category);
+      expect(typeof item.priority).toBe('number');
+      expect(typeof item.timestamp).toBe('string');
+      // ISO 8601 format
+      expect(item.timestamp).toMatch(/^\d{4}-\d{2}-\d{2}T/);
+      // drillDownUrl should be present for all implemented detectors
+      expect(typeof item.drillDownUrl).toBe('string');
+    }
   });
 });

@@ -11,13 +11,13 @@ import { db } from '../db';
 import { loans, ledgerEntries } from '../db/schema';
 import { eq, and, sql, count, inArray } from 'drizzle-orm';
 import { withMdaScope } from '../lib/mdaScope';
-import { computeBalanceFromEntries } from '../services/computationEngine';
 import * as loanClassificationService from '../services/loanClassificationService';
 import { LoanClassification } from '../services/loanClassificationService';
 import * as revenueProjectionService from '../services/revenueProjectionService';
 import * as schemeConfigService from '../services/schemeConfigService';
 import * as gratuityProjectionService from '../services/gratuityProjectionService';
-import type { LedgerEntryForBalance } from '@vlprs/shared';
+import * as attentionItemService from '../services/attentionItemService';
+import { computeBalanceSumForIds } from '../services/attentionItemService';
 
 const router = Router();
 
@@ -29,58 +29,6 @@ const dashboardAuth = [
   readLimiter,
   auditLog,
 ];
-
-/**
- * Batch-compute sum of outstanding balances for a set of loan IDs.
- * Returns '0.00' if no IDs provided.
- */
-async function computeBalanceSumForIds(loanIds: string[]): Promise<string> {
-  if (loanIds.length === 0) return '0.00';
-
-  const loanRows = await db
-    .select({
-      id: loans.id,
-      principalAmount: loans.principalAmount,
-      interestRate: loans.interestRate,
-      tenureMonths: loans.tenureMonths,
-    })
-    .from(loans)
-    .where(inArray(loans.id, loanIds));
-
-  const allEntries = await db
-    .select({
-      loanId: ledgerEntries.loanId,
-      amount: ledgerEntries.amount,
-      principalComponent: ledgerEntries.principalComponent,
-      interestComponent: ledgerEntries.interestComponent,
-      entryType: ledgerEntries.entryType,
-    })
-    .from(ledgerEntries)
-    .where(inArray(ledgerEntries.loanId, loanIds));
-
-  const entriesMap = new Map<string, LedgerEntryForBalance[]>();
-  for (const entry of allEntries) {
-    const existing = entriesMap.get(entry.loanId) ?? [];
-    existing.push(entry);
-    entriesMap.set(entry.loanId, existing);
-  }
-
-  let total = new Decimal('0');
-  for (const loan of loanRows) {
-    const entries = entriesMap.get(loan.id) ?? [];
-    const balance = computeBalanceFromEntries(
-      loan.principalAmount,
-      loan.interestRate,
-      loan.tenureMonths,
-      entries,
-      null,
-    );
-    const bal = new Decimal(balance.computedBalance);
-    if (bal.gt(0)) total = total.plus(bal);
-  }
-
-  return total.toFixed(2);
-}
 
 // GET /api/dashboard/metrics — Executive dashboard hero metrics + analytics
 router.get(
@@ -266,6 +214,30 @@ router.get(
     };
 
     res.json({ success: true, data: metrics });
+  },
+);
+
+// Attention items middleware — MDA_OFFICER included (sees own MDA's items)
+const attentionAuth = [
+  authenticate,
+  requirePasswordChange,
+  authorise(ROLES.SUPER_ADMIN, ROLES.DEPT_ADMIN, ROLES.MDA_OFFICER),
+  scopeToMda,
+  readLimiter,
+  auditLog,
+];
+
+// GET /api/dashboard/attention — Attention items for dashboard
+router.get(
+  '/dashboard/attention',
+  ...attentionAuth,
+  async (req: Request, res: Response) => {
+    const mdaScope = req.mdaScope ?? null;
+    const items = await attentionItemService.getAttentionItems(mdaScope);
+    res.json({
+      success: true,
+      data: { items: items.slice(0, 10), totalCount: items.length },
+    });
   },
 );
 
