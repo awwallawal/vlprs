@@ -85,3 +85,53 @@ export const breakdownQuerySchema = z.object({
 });
 
 export type BreakdownQuery = z.infer<typeof breakdownQuerySchema>;
+
+// ─── Compliance Schemas (Story 4.4) ─────────────────────────────────
+
+const complianceRowSchema = z.object({
+  mdaId: z.string(),
+  mdaCode: z.string(),
+  mdaName: z.string(),
+  status: z.enum(['submitted', 'pending', 'overdue']),
+  lastSubmission: z.string().nullable(),
+  recordCount: z.number().int().min(0),
+  alignedCount: z.number().int().min(0),
+  varianceCount: z.number().int().min(0),
+  healthScore: z.number().min(0).max(100),
+  healthBand: z.enum(['healthy', 'attention', 'for-review']),
+  submissionCoveragePercent: z.number().min(0).max(100).nullable(),
+  isDark: z.boolean(),
+  stalenessMonths: z.number().int().min(0).nullable(),
+});
+
+const heatmapCellSchema = z.object({
+  month: z.string(),
+  status: z.enum(['on-time', 'grace-period', 'missing', 'current-pending']),
+});
+
+const heatmapRowSchema = z.object({
+  mdaId: z.string(),
+  mdaName: z.string(),
+  mdaCode: z.string(),
+  complianceRate: z.number().min(0).max(100),
+  cells: z.array(heatmapCellSchema),
+});
+
+export const complianceResponseSchema = z.object({
+  rows: z.array(complianceRowSchema),
+  heatmap: z.array(heatmapRowSchema),
+  summary: z.object({
+    submitted: z.number().int().min(0),
+    pending: z.number().int().min(0),
+    overdue: z.number().int().min(0),
+    total: z.number().int().min(0),
+    deadlineDate: z.string(),
+    heatmapSummary: z.object({
+      onTime: z.number().int().min(0),
+      gracePeriod: z.number().int().min(0),
+      awaiting: z.number().int().min(0),
+    }),
+  }),
+});
+
+export type ComplianceResponse = z.infer<typeof complianceResponseSchema>;

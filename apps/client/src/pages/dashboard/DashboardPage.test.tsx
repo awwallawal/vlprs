@@ -31,28 +31,49 @@ const mockMetrics = {
   staffIdCoverage: { covered: 2564, total: 2847 },
 };
 
-const mockCompliance = [
-  {
-    mdaId: 'mda-001',
-    mdaCode: 'MOF',
-    mdaName: 'Ministry of Finance',
-    status: 'submitted' as const,
-    lastSubmission: '2026-02-15T09:30:00Z',
-    recordCount: 142,
-    alignedCount: 140,
-    varianceCount: 2,
+const mockCompliance = {
+  rows: [
+    {
+      mdaId: 'mda-001',
+      mdaCode: 'MOF',
+      mdaName: 'Ministry of Finance',
+      status: 'submitted' as const,
+      lastSubmission: '2026-02-15T09:30:00Z',
+      recordCount: 142,
+      alignedCount: 140,
+      varianceCount: 2,
+      healthScore: 82,
+      healthBand: 'healthy' as const,
+      submissionCoveragePercent: 90,
+      isDark: false,
+      stalenessMonths: null,
+    },
+    {
+      mdaId: 'mda-002',
+      mdaCode: 'MOE',
+      mdaName: 'Ministry of Education',
+      status: 'pending' as const,
+      lastSubmission: null,
+      recordCount: 210,
+      alignedCount: 0,
+      varianceCount: 0,
+      healthScore: 55,
+      healthBand: 'attention' as const,
+      submissionCoveragePercent: null,
+      isDark: false,
+      stalenessMonths: null,
+    },
+  ],
+  heatmap: [],
+  summary: {
+    submitted: 1,
+    pending: 1,
+    overdue: 0,
+    total: 2,
+    deadlineDate: '2026-03-28T00:00:00.000Z',
+    heatmapSummary: { onTime: 0, gracePeriod: 0, awaiting: 2 },
   },
-  {
-    mdaId: 'mda-002',
-    mdaCode: 'MOE',
-    mdaName: 'Ministry of Education',
-    status: 'pending' as const,
-    lastSubmission: null,
-    recordCount: 210,
-    alignedCount: 0,
-    varianceCount: 0,
-  },
-];
+};
 
 const mockAttention = {
   items: [
@@ -133,14 +154,16 @@ describe('DashboardPage', () => {
     expect(
       screen.getByRole('heading', { level: 2, name: 'MDA Compliance Status' }),
     ).toBeInTheDocument();
-    expect(screen.getByText('Ministry of Finance')).toBeInTheDocument();
-    expect(screen.getByText('Ministry of Education')).toBeInTheDocument();
+    // Both mobile and desktop views render MDA names
+    expect(screen.getAllByText('Ministry of Finance').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText('Ministry of Education').length).toBeGreaterThanOrEqual(1);
   });
 
   it('renders compliance status badges', () => {
     renderPage();
-    expect(screen.getByText('Submitted')).toBeInTheDocument();
-    expect(screen.getByText('Pending')).toBeInTheDocument();
+    // Both mobile and desktop views render badges, so use getAllByText
+    expect(screen.getAllByText('Submitted').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText('Pending').length).toBeGreaterThanOrEqual(1);
   });
 
   it('renders Share as PDF button (disabled)', () => {
@@ -170,5 +193,97 @@ describe('DashboardPage (pending state)', () => {
     mockUseDashboardMetrics.mockReturnValue({ data: mockMetrics, isPending: false });
     mockUseMdaComplianceGrid.mockReturnValue({ data: mockCompliance, isPending: false });
     mockUseAttentionItems.mockReturnValue({ data: mockAttention, isPending: false });
+  });
+});
+
+describe('DashboardPage (analytics enrichment — AC4)', () => {
+  it('renders "Submission gap observed" badge for dark MDAs', () => {
+    const darkCompliance = {
+      ...mockCompliance,
+      rows: [
+        ...mockCompliance.rows,
+        {
+          mdaId: 'mda-003',
+          mdaCode: 'MOH',
+          mdaName: 'Ministry of Health',
+          status: 'pending' as const,
+          lastSubmission: '2025-09-15T09:30:00Z',
+          recordCount: 100,
+          alignedCount: 0,
+          varianceCount: 0,
+          healthScore: 30,
+          healthBand: 'for-review' as const,
+          submissionCoveragePercent: 20,
+          isDark: true,
+          stalenessMonths: 6,
+        },
+      ],
+      summary: { ...mockCompliance.summary, total: 3, pending: 2 },
+    };
+    mockUseMdaComplianceGrid.mockReturnValue({ data: darkCompliance, isPending: false });
+
+    renderPage();
+
+    expect(screen.getAllByText('Submission gap observed').length).toBeGreaterThanOrEqual(1);
+
+    // Restore
+    mockUseMdaComplianceGrid.mockReturnValue({ data: mockCompliance, isPending: false });
+  });
+
+  it('renders staleness indicator for MDAs with stalenessMonths >= 2', () => {
+    const staleCompliance = {
+      ...mockCompliance,
+      rows: [
+        ...mockCompliance.rows,
+        {
+          mdaId: 'mda-004',
+          mdaCode: 'MOW',
+          mdaName: 'Ministry of Works',
+          status: 'pending' as const,
+          lastSubmission: '2025-12-15T09:30:00Z',
+          recordCount: 50,
+          alignedCount: 0,
+          varianceCount: 0,
+          healthScore: 45,
+          healthBand: 'attention' as const,
+          submissionCoveragePercent: 40,
+          isDark: false,
+          stalenessMonths: 3,
+        },
+      ],
+      summary: { ...mockCompliance.summary, total: 3, pending: 2 },
+    };
+    mockUseMdaComplianceGrid.mockReturnValue({ data: staleCompliance, isPending: false });
+
+    renderPage();
+
+    expect(screen.getAllByText(/months since last update/).length).toBeGreaterThanOrEqual(1);
+
+    // Restore
+    mockUseMdaComplianceGrid.mockReturnValue({ data: mockCompliance, isPending: false });
+  });
+});
+
+describe('DashboardPage (heatmap section — AC5)', () => {
+  it('renders Submission History heading on desktop', () => {
+    renderPage();
+    expect(
+      screen.getByText('Submission History (12 months)'),
+    ).toBeInTheDocument();
+  });
+});
+
+describe('DashboardPage (compliance progress — AC1/AC2)', () => {
+  it('renders progress header with submission count', () => {
+    renderPage();
+    expect(screen.getByText(/1 of 2 MDAs submitted/)).toBeInTheDocument();
+  });
+
+  it('renders progress bar with aria attributes', () => {
+    renderPage();
+    const progressBar = screen.getByRole('progressbar');
+    expect(progressBar).toBeInTheDocument();
+    expect(progressBar.getAttribute('aria-valuenow')).toBe('1');
+    expect(progressBar.getAttribute('aria-valuemax')).toBe('2');
   });
 });

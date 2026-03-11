@@ -1,17 +1,16 @@
 import { useQuery } from '@tanstack/react-query';
-import type { MdaComplianceRow, MdaSummary, LoanSearchResult } from '@vlprs/shared';
+import type { MdaSummary, LoanSearchResult, ComplianceResponse } from '@vlprs/shared';
 import { apiClient } from '@/lib/apiClient';
-import { MOCK_MDA_COMPLIANCE } from '@/mocks/mdaComplianceGrid';
 
 /**
- * Fetches MDA compliance grid data.
+ * Fetches MDA compliance grid data including heatmap and summary.
  * @target GET /api/dashboard/compliance
- * @wire Story 4.4 (not this story)
+ * @wired Story 4.4
  */
 export function useMdaComplianceGrid() {
-  return useQuery<MdaComplianceRow[]>({
+  return useQuery<ComplianceResponse>({
     queryKey: ['mda', 'compliance'],
-    queryFn: async () => MOCK_MDA_COMPLIANCE,
+    queryFn: () => apiClient<ComplianceResponse>('/dashboard/compliance'),
     staleTime: 30_000,
   });
 }
