@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import { z } from 'zod/v4';
 
 export const dashboardMetricsSchema = z.object({
   // Primary Hero Row
@@ -64,3 +64,24 @@ export const attentionItemsResponseSchema = z.object({
 });
 
 export type AttentionItemsResponse = z.infer<typeof attentionItemsResponseSchema>;
+
+// ─── Drill-Down Schemas (Story 4.3) ─────────────────────────────────
+
+export const drillDownMetricSchema = z.enum([
+  'activeLoans',
+  'totalExposure',
+  'fundAvailable',
+  'monthlyRecovery',
+  'loansInWindow',
+  'outstandingReceivables',
+  'collectionPotential',
+  'atRisk',
+  'completionRate',
+  'completionRateLifetime',
+]);
+
+export const breakdownQuerySchema = z.object({
+  metric: drillDownMetricSchema,
+});
+
+export type BreakdownQuery = z.infer<typeof breakdownQuerySchema>;

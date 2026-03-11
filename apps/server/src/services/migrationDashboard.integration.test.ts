@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeAll, beforeEach, afterAll } from 'vitest';
 import request from 'supertest';
-import { sql } from 'drizzle-orm';
 import Decimal from 'decimal.js';
 import app from '../app';
+import { resetDb } from '../test/resetDb';
 import { db } from '../db/index';
 import {
   users,
@@ -55,19 +55,7 @@ const now = new Date();
 beforeAll(async () => {
   resetRateLimiters();
 
-  // Clean tables in dependency order
-  await db.execute(sql`TRUNCATE
-    person_matches,
-    ledger_entries,
-    loan_state_transitions,
-    migration_records,
-    migration_uploads,
-    loans,
-    audit_log,
-    refresh_tokens,
-    users,
-    mdas
-    CASCADE`);
+  await resetDb();
 
   // Create MDAs
   await db.insert(mdas).values([
@@ -353,18 +341,7 @@ beforeEach(() => {
 });
 
 afterAll(async () => {
-  await db.execute(sql`TRUNCATE
-    person_matches,
-    ledger_entries,
-    loan_state_transitions,
-    migration_records,
-    migration_uploads,
-    loans,
-    audit_log,
-    refresh_tokens,
-    users,
-    mdas
-    CASCADE`);
+  await resetDb();
 });
 
 // ─── Dashboard API Tests (AC 6, 8) ──────────────────────────────────

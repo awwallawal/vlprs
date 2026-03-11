@@ -9,7 +9,7 @@
  * - JSON endpoint returns structured report data
  */
 
-import { describe, it, expect, beforeAll, beforeEach } from 'vitest';
+import { describe, it, expect, beforeAll, beforeEach, afterAll } from 'vitest';
 import request from 'supertest';
 import { sql } from 'drizzle-orm';
 import app from '../app';
@@ -19,6 +19,7 @@ import { signAccessToken } from '../lib/jwt';
 import { generateUuidv7 } from '../lib/uuidv7';
 import { resetRateLimiters } from '../middleware/rateLimiter';
 import { resetSequenceCounter } from '../services/traceReportService';
+import { resetDb } from '../test/resetDb';
 
 let mdaJusticeId: string;
 let mdaInfoId: string;
@@ -28,7 +29,7 @@ let uploadJusticeId: string;
 let uploadInfoId: string;
 
 beforeAll(async () => {
-  await db.execute(sql`TRUNCATE person_matches, migration_records, migration_extra_fields, migration_uploads, audit_log, refresh_tokens, users, mda_aliases, mdas CASCADE`);
+  await resetDb();
 
   mdaJusticeId = generateUuidv7();
   mdaInfoId = generateUuidv7();
@@ -71,6 +72,10 @@ beforeEach(async () => {
     { id: uploadJusticeId, mdaId: mdaJusticeId, uploadedBy: testUserId, filename: 'justice.xlsx', fileSizeBytes: 1024, sheetCount: 1, totalRecords: 2, status: 'completed' },
     { id: uploadInfoId, mdaId: mdaInfoId, uploadedBy: testUserId, filename: 'info.xlsx', fileSizeBytes: 1024, sheetCount: 1, totalRecords: 1, status: 'completed' },
   ]);
+});
+
+afterAll(async () => {
+  await resetDb();
 });
 
 describe('GET /api/staff/:personKey/trace', () => {

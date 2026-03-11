@@ -83,6 +83,10 @@ export interface LoanSearchResult {
   installmentsRemaining: number;
   principalAmount: string;
   tenureMonths: number;
+  mdaId?: string;
+  classification?: import('./dashboard.js').LoanClassification;
+  lastDeductionDate?: string;
+  computedRetirementDate?: string;
 }
 
 export interface TemporalProfile {

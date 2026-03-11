@@ -11,6 +11,18 @@ const mockMdaDetail = {
   loanCount: 45,
   totalExposure: '125000000.00',
   monthlyRecovery: '5200000.00',
+  healthScore: 72,
+  healthBand: 'attention' as const,
+  statusDistribution: {
+    completed: 10,
+    onTrack: 20,
+    overdue: 8,
+    stalled: 5,
+    overDeducted: 2,
+  },
+  expectedMonthlyDeduction: '6000000.00',
+  actualMonthlyRecovery: '5200000.00',
+  variancePercent: -13.3,
 };
 
 const mockSubmissions = [
@@ -25,6 +37,23 @@ const mockSubmissions = [
   },
 ];
 
+const mockLoans = {
+  data: [
+    {
+      loanId: 'loan-001',
+      staffName: 'Akinwale Babatunde',
+      staffId: 'OY/MOH/2019/0451',
+      loanReference: 'VL-2024-00451',
+      outstandingBalance: '1875000.00',
+      classification: 'ON_TRACK' as const,
+      lastDeductionDate: '2026-02-28',
+      computedRetirementDate: '2030-06-15',
+      mdaName: 'Ministry of Health',
+    },
+  ],
+  pagination: { page: 1, pageSize: 25, totalItems: 1, totalPages: 1 },
+};
+
 vi.mock('react-router', async () => {
   const actual = await vi.importActual('react-router');
   return {
@@ -36,24 +65,11 @@ vi.mock('react-router', async () => {
 vi.mock('@/hooks/useMdaData', () => ({
   useMdaDetail: () => ({ data: mockMdaDetail, isPending: false }),
   useMdaComplianceGrid: () => ({ data: [], isPending: false }),
+  useMdaLoans: () => ({ data: mockLoans, isPending: false }),
 }));
 
 vi.mock('@/hooks/useSubmissionData', () => ({
   useSubmissionHistory: () => ({ data: mockSubmissions, isPending: false }),
-}));
-
-vi.mock('@/mocks/loanDetail', () => ({
-  MOCK_LOAN_DETAILS: {
-    'loan-001': {
-      loanId: 'loan-001',
-      borrowerName: 'Akinwale Babatunde',
-      staffId: 'OY/MOH/2019/0451',
-      mdaName: 'Ministry of Health',
-      loanRef: 'VL-2024-00451',
-      outstandingBalance: '1875000.00',
-      status: 'ACTIVE',
-    },
-  },
 }));
 
 function renderPage(initialEntries = ['/dashboard/mda/mda-003']) {
@@ -98,19 +114,29 @@ describe('MdaDetailPage', () => {
     expect(screen.getByText('MOH-2026-02-0001')).toBeInTheDocument();
   });
 
-  it('renders loans table', async () => {
+  it('renders loans table with loan data', () => {
     renderPage();
     expect(
       screen.getByRole('heading', { level: 2, name: 'Loans' }),
     ).toBeInTheDocument();
-    // Loan data loads via async useQuery — wait for it to resolve
-    expect(await screen.findByText('Akinwale Babatunde')).toBeInTheDocument();
+    expect(screen.getByText('Akinwale Babatunde')).toBeInTheDocument();
+    expect(screen.getByText('VL-2024-00451')).toBeInTheDocument();
   });
 
-  it('renders back to dashboard button', () => {
+  it('renders back button', () => {
     renderPage();
     expect(
-      screen.getByRole('button', { name: /Back to Dashboard/ }),
+      screen.getByRole('button', { name: /Back/ }),
     ).toBeInTheDocument();
+  });
+
+  it('renders health score badge', () => {
+    renderPage();
+    expect(screen.getByText(/72/)).toBeInTheDocument();
+  });
+
+  it('renders variance information', () => {
+    renderPage();
+    expect(screen.getByText(/below expected/)).toBeInTheDocument();
   });
 });

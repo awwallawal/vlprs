@@ -30,14 +30,18 @@ const REQUIRED_SHEET_FIELDS = [
 ] as const;
 const REQUIRED_RECORD_FIELDS = ['sourceFile', 'sheet', 'rowNumber', 'period', 'mda', 'fields'] as const;
 
+interface FixtureRecord { sourceFile: string; sheet: string; rowNumber: number; period: string; mda: string; fields: { staffName: string; [k: string]: unknown } }
+interface FixtureSheet { sheet: string; period: string; era: number; headerConfidence: number; columnCount: number; unrecognizedColumns: string[]; recordCount: number; records: FixtureRecord[] }
+interface FixtureData { filename: string; mda: { code: string; name: string; confidence: string; source: string; rawInput: string }; sheets: FixtureSheet[] }
+
 // Cache parsed JSON to avoid redundant reads of large files (Education = 13.5MB)
-const jsonCache = new Map<string, any>();
-function loadExpectedJson(fixture: string) {
+const jsonCache = new Map<string, FixtureData>();
+function loadExpectedJson(fixture: string): FixtureData {
   if (!jsonCache.has(fixture)) {
     const raw = fs.readFileSync(path.join(FIXTURE_DIR, `${fixture}.expected.json`), 'utf8');
     jsonCache.set(fixture, JSON.parse(raw));
   }
-  return jsonCache.get(fixture);
+  return jsonCache.get(fixture)!;
 }
 
 describe('Legacy Migration Regression Fixtures', () => {
@@ -153,7 +157,7 @@ describe('Legacy Migration Regression Fixtures', () => {
     const catalog = JSON.parse(fs.readFileSync(CATALOG_PATH, 'utf8'));
     for (const fixture of EXPECTED_FIXTURES) {
       const expected = loadExpectedJson(fixture);
-      const catalogEntry = catalog.find((e: any) => e.filename === fixture);
+      const catalogEntry = catalog.find((e: Record<string, unknown>) => e.filename === fixture);
       expect(catalogEntry, `${fixture} not found in catalog.json`).toBeDefined();
       expect(JSON.stringify(expected)).toBe(JSON.stringify(catalogEntry));
     }

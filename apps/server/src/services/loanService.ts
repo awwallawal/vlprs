@@ -10,7 +10,8 @@ import { computeBalanceFromEntries, computeRepaymentSchedule, computeRetirementD
 import { buildTemporalProfile, getExtensionDataForLoan } from './temporalProfileService';
 import * as gratuityProjectionService from './gratuityProjectionService';
 import { VOCABULARY } from '@vlprs/shared';
-import type { Loan, LoanSearchResult, LoanDetail, LoanStatus } from '@vlprs/shared';
+import type { Loan, LoanSearchResult, LoanDetail, LoanStatus, LoanClassification as SharedLoanClassification } from '@vlprs/shared';
+import { classifyAllLoans, LoanClassification } from './loanClassificationService';
 import { toDateString } from '../lib/dateUtils';
 
 // ─── Types ───────────────────────────────────────────────────────────
@@ -183,8 +184,10 @@ interface SearchLoansFilters {
   pageSize?: number;
   status?: LoanStatus;
   mdaId?: string;
-  sortBy?: 'createdAt' | 'staffName' | 'loanReference' | 'status';
+  sortBy?: 'createdAt' | 'staffName' | 'loanReference' | 'status' | 'principalAmount';
   sortOrder?: 'asc' | 'desc';
+  classification?: SharedLoanClassification;
+  filter?: 'zero-deduction' | 'post-retirement' | 'missing-staff-id';
 }
 
 interface PaginatedLoans {
@@ -202,6 +205,7 @@ const SORT_COLUMNS = {
   staffName: loans.staffName,
   loanReference: loans.loanReference,
   status: loans.status,
+  principalAmount: loans.principalAmount,
 } as const;
 
 export async function searchLoans(
@@ -227,6 +231,53 @@ export async function searchLoans(
   // Optional MDA filter (from query param, separate from scope)
   if (filters.mdaId) {
     conditions.push(eq(loans.mdaId, filters.mdaId));
+  }
+
+  // Attention item filters (Story 4.3)
+  if (filters.filter === 'zero-deduction') {
+    conditions.push(eq(loans.status, 'ACTIVE'));
+    conditions.push(
+      sql`${loans.id} NOT IN (
+        SELECT DISTINCT ${ledgerEntries.loanId} FROM ${ledgerEntries}
+        WHERE ${ledgerEntries.entryType} = 'PAYROLL'
+        AND ${ledgerEntries.createdAt} > NOW() - INTERVAL '60 days'
+      )`,
+    );
+  } else if (filters.filter === 'post-retirement') {
+    conditions.push(eq(loans.status, 'ACTIVE'));
+    conditions.push(sql`${loans.computedRetirementDate} < NOW()`);
+  } else if (filters.filter === 'missing-staff-id') {
+    conditions.push(
+      or(
+        eq(loans.staffId, ''),
+        sql`${loans.staffId} IS NULL`,
+      )!,
+    );
+  }
+
+  // Classification enum mapping (shared between pre-filter and badge display)
+  const classEnumMap: Record<LoanClassification, SharedLoanClassification> = {
+    [LoanClassification.COMPLETED]: 'COMPLETED',
+    [LoanClassification.ON_TRACK]: 'ON_TRACK',
+    [LoanClassification.OVERDUE]: 'OVERDUE',
+    [LoanClassification.STALLED]: 'STALLED',
+    [LoanClassification.OVER_DEDUCTED]: 'OVER_DEDUCTED',
+  };
+
+  // Pre-filter by classification at SQL level (not post-hoc) — fixes pagination
+  let preClassifications: Map<string, LoanClassification> | null = null;
+  if (filters.classification) {
+    preClassifications = await classifyAllLoans(filters.mdaId ?? mdaScope);
+    const matchingIds: string[] = [];
+    for (const [loanId, cls] of preClassifications) {
+      if (classEnumMap[cls] === filters.classification) {
+        matchingIds.push(loanId);
+      }
+    }
+    if (matchingIds.length === 0) {
+      return { data: [], pagination: { page, pageSize, totalItems: 0, totalPages: 0 } };
+    }
+    conditions.push(inArray(loans.id, matchingIds));
   }
 
   // Multi-field search
@@ -262,6 +313,7 @@ export async function searchLoans(
   const rows = await db
     .select({
       id: loans.id,
+      mdaId: loans.mdaId,
       staffId: loans.staffId,
       staffName: loans.staffName,
       mdaName: mdas.name,
@@ -297,6 +349,49 @@ export async function searchLoans(
     balanceMap = new Map(sums.map((s) => [s.loanId, { totalPaid: s.totalPaid, installments: Number(s.installments) }]));
   }
 
+  // Classification lookup: reuse pre-fetched classifications or fetch fresh
+  const classificationMap = new Map<string, SharedLoanClassification>();
+  if (loanIds.length > 0) {
+    const allClassifications = preClassifications ?? await classifyAllLoans(mdaScope);
+    for (const id of loanIds) {
+      const cls = allClassifications.get(id);
+      if (cls) {
+        classificationMap.set(id, classEnumMap[cls]);
+      }
+    }
+  }
+
+  // Fetch last deduction date and retirement date for enriched results
+  let lastDeductionMap = new Map<string, string>();
+  const retirementMap = new Map<string, string>();
+  if (loanIds.length > 0) {
+    const lastDeductions = await db
+      .select({
+        loanId: ledgerEntries.loanId,
+        lastDate: sql<string>`MAX(${ledgerEntries.periodYear} || '-' || LPAD(${ledgerEntries.periodMonth}::text, 2, '0') || '-01')`,
+      })
+      .from(ledgerEntries)
+      .where(and(
+        inArray(ledgerEntries.loanId, loanIds),
+        eq(ledgerEntries.entryType, 'PAYROLL'),
+      ))
+      .groupBy(ledgerEntries.loanId);
+    lastDeductionMap = new Map(lastDeductions.map((d) => [d.loanId, d.lastDate]));
+
+    const retirementDates = await db
+      .select({
+        id: loans.id,
+        retirementDate: loans.computedRetirementDate,
+      })
+      .from(loans)
+      .where(inArray(loans.id, loanIds));
+    for (const r of retirementDates) {
+      if (r.retirementDate) {
+        retirementMap.set(r.id, toDateString(r.retirementDate));
+      }
+    }
+  }
+
   // Map to LoanSearchResult with computed balances
   const data: LoanSearchResult[] = rows.map((row) => {
     const ledgerAgg = balanceMap.get(row.id);
@@ -309,6 +404,7 @@ export async function searchLoans(
 
     return {
       loanId: row.id,
+      mdaId: row.mdaId,
       staffName: row.staffName,
       staffId: row.staffId,
       mdaName: row.mdaName,
@@ -319,6 +415,9 @@ export async function searchLoans(
       installmentsRemaining: Math.max(0, row.tenureMonths - installmentsPaid),
       principalAmount: row.principalAmount,
       tenureMonths: row.tenureMonths,
+      classification: classificationMap.get(row.id),
+      lastDeductionDate: lastDeductionMap.get(row.id),
+      computedRetirementDate: retirementMap.get(row.id),
     };
   });
 

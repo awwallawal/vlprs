@@ -12,7 +12,7 @@ let agricultureMdaId: string;
 let cduMdaId: string;
 
 beforeAll(async () => {
-  await db.execute(sql`TRUNCATE audit_log, refresh_tokens, users, mdas CASCADE`);
+  await db.execute(sql`TRUNCATE refresh_tokens, audit_log, users, mdas CASCADE`);
 
   healthMdaId = generateUuidv7();
   financeMdaId = generateUuidv7();
@@ -39,7 +39,7 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  await db.execute(sql`TRUNCATE audit_log, refresh_tokens, users, mdas CASCADE`);
+  await db.execute(sql`TRUNCATE refresh_tokens, audit_log, users, mdas CASCADE`);
 });
 
 describe('mdaService.listMdas', () => {

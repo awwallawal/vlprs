@@ -8,6 +8,7 @@ import { hashPassword } from '../lib/password';
 import { generateUuidv7 } from '../lib/uuidv7';
 import * as authService from '../services/authService';
 import { autoSplitDeduction } from '../services/computationEngine';
+import { resetDb } from '../test/resetDb';
 
 let testMdaId: string;
 let secondMdaId: string;
@@ -18,7 +19,7 @@ let adminUserId: string;
 const testPassword = 'SecurePass1';
 
 beforeAll(async () => {
-  await db.execute(sql`TRUNCATE audit_log, refresh_tokens, users, mdas CASCADE`);
+  await resetDb();
 
   testMdaId = generateUuidv7();
   secondMdaId = generateUuidv7();
@@ -65,7 +66,7 @@ beforeEach(async () => {
 });
 
 afterAll(async () => {
-  await db.execute(sql`TRUNCATE audit_log, refresh_tokens, users, mdas CASCADE`);
+  await resetDb();
 });
 
 const validLoanBody = () => ({

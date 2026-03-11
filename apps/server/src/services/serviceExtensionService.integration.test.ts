@@ -7,6 +7,7 @@ import { mdas, users, loans, serviceExtensions, temporalCorrections } from '../d
 import { hashPassword } from '../lib/password';
 import { generateUuidv7 } from '../lib/uuidv7';
 import * as authService from '../services/authService';
+import { resetDb } from '../test/resetDb';
 
 let testMdaId: string;
 let secondMdaId: string;
@@ -20,7 +21,7 @@ let officerUserId: string;
 const testPassword = 'SecurePass1';
 
 beforeAll(async () => {
-  await db.execute(sql`TRUNCATE audit_log, refresh_tokens, temporal_corrections, loan_state_transitions, ledger_entries, service_extensions, loans, users, mdas CASCADE`);
+  await resetDb();
 
   testMdaId = generateUuidv7();
   secondMdaId = generateUuidv7();
@@ -82,7 +83,7 @@ beforeEach(async () => {
 });
 
 afterAll(async () => {
-  await db.execute(sql`TRUNCATE audit_log, refresh_tokens, temporal_corrections, loan_state_transitions, ledger_entries, service_extensions, loans, users, mdas CASCADE`);
+  await resetDb();
 });
 
 /** Helper: create a loan directly in DB */

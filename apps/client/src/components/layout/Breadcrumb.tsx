@@ -1,5 +1,7 @@
-import { useLocation, useParams, Link } from 'react-router';
+import { useLocation, useParams, useSearchParams, Link } from 'react-router';
+import { useQueryClient } from '@tanstack/react-query';
 import { ChevronRight } from 'lucide-react';
+import type { MdaSummary } from '@vlprs/shared';
 
 const PATH_LABELS: Record<string, string> = {
   dashboard: 'Dashboard',
@@ -12,33 +14,33 @@ const PATH_LABELS: Record<string, string> = {
   mda: 'MDA',
   loan: 'Loan',
   placeholder: 'Feature',
+  loans: 'Loans',
 };
 
-// Mock MDA name lookup — will be replaced with real data in future stories
-const MOCK_MDA_NAMES: Record<string, string> = {
-  'mda-001': 'Ministry of Finance',
-  'mda-002': 'Ministry of Education',
-  'mda-003': 'Ministry of Health',
-  'mda-004': 'Ministry of Works and Transport',
-  'mda-005': 'Ministry of Agriculture',
+const METRIC_LABELS: Record<string, string> = {
+  'active-loans': 'Active Loans',
+  'total-exposure': 'Total Exposure',
+  'fund-available': 'Fund Available',
+  'monthly-recovery': 'Monthly Recovery',
+  'loans-in-window': 'Loans in Window (60m)',
+  'outstanding-receivables': 'Outstanding Receivables',
+  'collection-potential': 'Collection Potential',
+  'at-risk': 'At-Risk Amount',
+  'completion-rate': 'Completion Rate (60m)',
+  'completion-rate-lifetime': 'Completion Rate (All-Time)',
 };
 
-// Mock loan ref lookup — will be replaced with real data in future stories
-const MOCK_LOAN_REFS: Record<string, string> = {
-  'loan-001': 'VL-2024-00451',
-  'loan-002': 'VL-2024-00832',
-  'loan-003': 'VL-2023-01204',
-  'loan-004': 'VL-2024-00623',
-  'loan-005': 'VL-2023-00195',
+const FILTER_LABELS: Record<string, string> = {
+  overdue: 'Overdue Loans',
+  stalled: 'Stalled Deductions',
+  'quick-win': 'Quick-Win Opportunities',
+  'zero-deduction': 'Zero Deduction (60+ Days)',
+  'post-retirement': 'Post-Retirement Active Loans',
+  'missing-staff-id': 'Missing Staff ID',
+  onTrack: 'On-Track Loans',
+  completed: 'Completed Loans',
+  overDeducted: 'Over-Deducted Loans',
 };
-
-function getMdaLabel(mdaId: string): string {
-  return MOCK_MDA_NAMES[mdaId] ?? `MDA ${mdaId}`;
-}
-
-function getLoanLabel(loanId: string): string {
-  return MOCK_LOAN_REFS[loanId] ?? `Loan ${loanId}`;
-}
 
 interface BreadcrumbItem {
   label: string;
@@ -48,6 +50,9 @@ interface BreadcrumbItem {
 function buildCrumbs(
   segments: string[],
   params: Record<string, string | undefined>,
+  getMdaName: (id: string) => string,
+  getLoanRef: (id: string) => string,
+  filterLabel: string | null,
 ): BreadcrumbItem[] {
   const crumbs: BreadcrumbItem[] = [];
   let currentPath = '';
@@ -62,20 +67,38 @@ function buildCrumbs(
       continue;
     }
 
+    // Drill-down segment: next segment is the metric slug
+    if (segment === 'drill-down') {
+      continue;
+    }
+
+    // If previous segment was 'drill-down', this is the metric slug
+    if (segments[i - 1] === 'drill-down') {
+      const metricLabel = METRIC_LABELS[segment] ?? segment;
+      crumbs.push({ label: metricLabel, path: currentPath });
+      continue;
+    }
+
     // If the previous segment was 'mda' and this is the mdaId
     if (segments[i - 1] === 'mda' && params.mdaId === segment) {
-      crumbs.push({ label: getMdaLabel(segment), path: currentPath });
+      crumbs.push({ label: getMdaName(segment), path: currentPath });
       continue;
     }
 
     // If the previous segment was 'loan' and this is the loanId
     if (segments[i - 1] === 'loan' && params.loanId === segment) {
-      crumbs.push({ label: getLoanLabel(segment), path: currentPath });
+      crumbs.push({ label: getLoanRef(segment), path: currentPath });
       continue;
     }
 
     // Skip 'mda' and 'loan' path segments themselves — use the param value instead
     if (segment === 'mda' || segment === 'loan') {
+      continue;
+    }
+
+    // /dashboard/loans with filter param: show filter label
+    if (segment === 'loans' && filterLabel) {
+      crumbs.push({ label: filterLabel, path: currentPath });
       continue;
     }
 
@@ -89,8 +112,26 @@ function buildCrumbs(
 export function Breadcrumb() {
   const location = useLocation();
   const params = useParams();
+  const [searchParams] = useSearchParams();
+  const queryClient = useQueryClient();
   const segments = location.pathname.split('/').filter(Boolean);
-  const crumbs = buildCrumbs(segments, params);
+
+  // Use TanStack Query cache for MDA/loan labels — no extra API calls
+  const getMdaName = (mdaId: string) => {
+    const mdaData = queryClient.getQueryData<MdaSummary>(['mda', mdaId]);
+    return mdaData?.name ?? `MDA ${mdaId.substring(0, 8)}`;
+  };
+
+  const getLoanRef = (loanId: string) => {
+    const loanData = queryClient.getQueryData<{ loanReference: string }>(['loan', loanId]);
+    return loanData?.loanReference ?? `Loan ${loanId.substring(0, 8)}`;
+  };
+
+  // Filter label for /dashboard/loans?filter=X
+  const filter = searchParams.get('filter');
+  const filterLabel = filter ? (FILTER_LABELS[filter] ?? filter) : null;
+
+  const crumbs = buildCrumbs(segments, params, getMdaName, getLoanRef, filterLabel);
 
   if (crumbs.length <= 1) return null;
 

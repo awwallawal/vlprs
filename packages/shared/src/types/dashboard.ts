@@ -1,3 +1,48 @@
+// ─── Drill-Down Types (Story 4.3) ────────────────────────────────────
+
+export type LoanClassification = 'COMPLETED' | 'ON_TRACK' | 'OVERDUE' | 'STALLED' | 'OVER_DEDUCTED';
+
+export type DrillDownMetric =
+  | 'activeLoans'
+  | 'totalExposure'
+  | 'fundAvailable'
+  | 'monthlyRecovery'
+  | 'loansInWindow'
+  | 'outstandingReceivables'
+  | 'collectionPotential'
+  | 'atRisk'
+  | 'completionRate'
+  | 'completionRateLifetime';
+
+export type HealthBand = 'healthy' | 'attention' | 'for-review';
+
+export interface StatusDistribution {
+  completed: number;
+  onTrack: number;
+  overdue: number;
+  stalled: number;
+  overDeducted: number;
+}
+
+export interface MdaBreakdownRow {
+  mdaId: string;
+  mdaName: string;
+  mdaCode: string;
+  contributionCount: number;
+  contributionAmount: string;
+  expectedMonthlyDeduction: string;
+  actualMonthlyRecovery: string;
+  variancePercent: number | null;
+  submissionStatus: string | null;
+  healthScore: number;
+  healthBand: HealthBand;
+  statusDistribution: StatusDistribution;
+}
+
+export type LoanFilterType = 'zero-deduction' | 'post-retirement' | 'missing-staff-id';
+
+// ─── Hero Metrics ────────────────────────────────────────────────────
+
 export interface DashboardMetrics {
   // Primary Hero Row
   activeLoans: number;

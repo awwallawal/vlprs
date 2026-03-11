@@ -65,14 +65,14 @@ export function DashboardPage() {
             value={metrics.data?.activeLoans ?? 0}
             format="count"
             isPending={metrics.isPending}
-            onClick={() => navigate('/dashboard/operations')}
+            onClick={() => navigate('/dashboard/drill-down/active-loans')}
           />
           <HeroMetricCard
             label="Total Exposure"
             value={metrics.data?.totalExposure ?? '0'}
             format="currency"
             isPending={metrics.isPending}
-            onClick={() => navigate('/dashboard/operations')}
+            onClick={() => navigate('/dashboard/drill-down/total-exposure')}
           />
           {/* Fund Available — conditional rendering for unconfigured state */}
           {metrics.isPending ? (
@@ -108,7 +108,7 @@ export function DashboardPage() {
               value={metrics.data?.fundAvailable ?? '0'}
               format="currency"
               isPending={false}
-              onClick={() => navigate('/dashboard/reports')}
+              onClick={() => navigate('/dashboard/drill-down/fund-available')}
             />
           )}
           <div>
@@ -117,7 +117,7 @@ export function DashboardPage() {
               value={metrics.data?.monthlyRecovery ?? '0'}
               format="currency"
               isPending={metrics.isPending}
-              onClick={() => navigate('/dashboard/reports')}
+              onClick={() => navigate('/dashboard/drill-down/monthly-recovery')}
             />
             {metrics.data?.recoveryPeriod && (
               <p className="mt-1 text-xs text-text-secondary text-center">
@@ -144,36 +144,42 @@ export function DashboardPage() {
             value={metrics.data?.loansInWindow ?? 0}
             format="count"
             isPending={metrics.isPending}
+            onClick={() => navigate('/dashboard/drill-down/loans-in-window')}
           />
           <HeroMetricCard
             label="Outstanding Receivables"
             value={metrics.data?.totalOutstandingReceivables ?? '0'}
             format="currency"
             isPending={metrics.isPending}
+            onClick={() => navigate('/dashboard/drill-down/outstanding-receivables')}
           />
           <HeroMetricCard
             label="Collection Potential"
             value={metrics.data?.monthlyCollectionPotential ?? '0'}
             format="currency"
             isPending={metrics.isPending}
+            onClick={() => navigate('/dashboard/drill-down/collection-potential')}
           />
           <HeroMetricCard
             label="At-Risk Amount"
             value={metrics.data?.atRiskAmount ?? '0'}
             format="currency"
             isPending={metrics.isPending}
+            onClick={() => navigate('/dashboard/drill-down/at-risk')}
           />
           <HeroMetricCard
             label="Completion Rate (60m)"
             value={metrics.data?.loanCompletionRate ?? 0}
             format="percentage"
             isPending={metrics.isPending}
+            onClick={() => navigate('/dashboard/drill-down/completion-rate')}
           />
           <HeroMetricCard
             label="Completion Rate (All-Time)"
             value={metrics.data?.loanCompletionRateLifetime ?? 0}
             format="percentage"
             isPending={metrics.isPending}
+            onClick={() => navigate('/dashboard/drill-down/completion-rate-lifetime')}
           />
         </div>
       </section>

@@ -46,12 +46,12 @@ describe('Seed verification: MDAs match authoritative list', () => {
 
   beforeAll(async () => {
     authEntries = parseAuthoritativeList(authListPath);
-    await db.execute(sql`TRUNCATE audit_log, refresh_tokens, users, loans, mdas CASCADE`);
+    await db.execute(sql`TRUNCATE loans, refresh_tokens, audit_log, users, mdas CASCADE`);
     await runDemoSeed();
   });
 
   afterAll(async () => {
-    await db.execute(sql`TRUNCATE audit_log, refresh_tokens, users, loans, mdas CASCADE`);
+    await db.execute(sql`TRUNCATE loans, refresh_tokens, audit_log, users, mdas CASCADE`);
   });
 
   it('authoritative list contains exactly 63 entries', () => {

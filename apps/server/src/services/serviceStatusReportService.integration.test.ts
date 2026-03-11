@@ -2,6 +2,7 @@ import { describe, it, expect, beforeAll, beforeEach, afterAll } from 'vitest';
 import request from 'supertest';
 import { sql } from 'drizzle-orm';
 import app from '../app';
+import { resetDb } from '../test/resetDb';
 import { db } from '../db/index';
 import { mdas, users, loans, serviceExtensions, ledgerEntries } from '../db/schema';
 import { hashPassword } from '../lib/password';
@@ -28,7 +29,7 @@ const futureDate = new Date('2028-06-01');
 const futureDateExtension = new Date('2027-06-01');
 
 beforeAll(async () => {
-  await db.execute(sql`TRUNCATE audit_log, refresh_tokens, temporal_corrections, loan_state_transitions, ledger_entries, service_extensions, loans, users, mdas CASCADE`);
+  await resetDb();
 
   mda1Id = generateUuidv7();
   mda2Id = generateUuidv7();
@@ -86,7 +87,7 @@ beforeEach(async () => {
 });
 
 afterAll(async () => {
-  await db.execute(sql`TRUNCATE audit_log, refresh_tokens, temporal_corrections, loan_state_transitions, ledger_entries, service_extensions, loans, users, mdas CASCADE`);
+  await resetDb();
 });
 
 /** Helper: create a loan directly in DB */

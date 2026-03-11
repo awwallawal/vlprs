@@ -4,13 +4,13 @@ import { db } from '../db/index';
 import { users, mdas, refreshTokens } from '../db/schema';
 import { hashPassword } from '../lib/password';
 import { generateUuidv7 } from '../lib/uuidv7';
+import { resetDb } from '../test/resetDb';
 import * as authService from './authService';
 
 let testMdaId: string;
 
 beforeAll(async () => {
-  // Clean up tables (truncate audit_log first — FK + immutability trigger)
-  await db.execute(sql`TRUNCATE audit_log, refresh_tokens, users, mdas CASCADE`);
+  await resetDb();
 
   // Create a test MDA
   testMdaId = generateUuidv7();
@@ -18,11 +18,13 @@ beforeAll(async () => {
 });
 
 beforeEach(async () => {
-  await db.execute(sql`TRUNCATE audit_log, refresh_tokens, users CASCADE`);
+  // Truncate user-scoped tables only, preserving MDA created in beforeAll.
+  // Table order matches resetDb() to prevent lock-ordering deadlocks.
+  await db.execute(sql`TRUNCATE refresh_tokens, audit_log, users CASCADE`);
 });
 
 afterAll(async () => {
-  await db.execute(sql`TRUNCATE audit_log, refresh_tokens, users, mdas CASCADE`);
+  await resetDb();
 });
 
 describe('authService.register', () => {

@@ -8,11 +8,12 @@ import { hashPassword } from '../lib/password';
 import { signAccessToken } from '../lib/jwt';
 import { generateUuidv7 } from '../lib/uuidv7';
 import { resetRateLimiters } from '../middleware/rateLimiter';
+import { resetDb } from '../test/resetDb';
 
 let testMdaId: string;
 
 beforeAll(async () => {
-  await db.execute(sql`TRUNCATE audit_log, refresh_tokens, users, mdas CASCADE`);
+  await resetDb();
 
   testMdaId = generateUuidv7();
   await db.insert(mdas).values({ id: testMdaId, name: 'Test MDA', code: 'TSTI', abbreviation: 'Test MDA' });
@@ -20,11 +21,11 @@ beforeAll(async () => {
 
 beforeEach(async () => {
   resetRateLimiters();
-  await db.execute(sql`TRUNCATE audit_log, refresh_tokens, users CASCADE`);
+  await db.execute(sql`TRUNCATE refresh_tokens, audit_log, users CASCADE`);
 });
 
 afterAll(async () => {
-  await db.execute(sql`TRUNCATE audit_log, refresh_tokens, users, mdas CASCADE`);
+  await resetDb();
 });
 
 async function createTestUser(overrides: Partial<typeof users.$inferInsert> = {}) {

@@ -7,6 +7,7 @@ import { users, mdas, migrationUploads, migrationRecords } from '../db/schema';
 import { signAccessToken } from '../lib/jwt';
 import { generateUuidv7 } from '../lib/uuidv7';
 import { resetRateLimiters } from '../middleware/rateLimiter';
+import { resetDb } from '../test/resetDb';
 
 let testMdaId: string;
 let testUserId: string;
@@ -16,7 +17,7 @@ let deptAdminToken: string;
 let uploadId: string;
 
 beforeAll(async () => {
-  await db.execute(sql`TRUNCATE migration_records, migration_extra_fields, migration_uploads, audit_log, refresh_tokens, users, mda_aliases, mdas CASCADE`);
+  await resetDb();
 
   // Create test MDA
   testMdaId = generateUuidv7();
@@ -136,7 +137,7 @@ beforeEach(async () => {
 });
 
 afterAll(async () => {
-  await db.execute(sql`TRUNCATE migration_records, migration_extra_fields, migration_uploads, audit_log, refresh_tokens, users, mda_aliases, mdas CASCADE`);
+  await resetDb();
 });
 
 describe('Migration Validation Integration Tests', () => {
