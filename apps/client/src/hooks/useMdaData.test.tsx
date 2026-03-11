@@ -23,7 +23,16 @@ beforeEach(() => {
 });
 
 describe('useMdaComplianceGrid', () => {
-  it('returns array of 63 MDA compliance rows', async () => {
+  it('returns ComplianceResponse with rows, heatmap, and summary', async () => {
+    const mockResponse = {
+      rows: [
+        { mdaId: 'mda-001', mdaCode: 'OY-FIN', mdaName: 'Ministry of Finance', status: 'pending', lastSubmission: null, recordCount: 0, alignedCount: 0, varianceCount: 0, healthScore: 72, healthBand: 'healthy', submissionCoveragePercent: null, isDark: false, stalenessMonths: null },
+      ],
+      heatmap: [],
+      summary: { submitted: 0, pending: 1, overdue: 0, total: 1, deadlineDate: '2026-03-28T00:00:00.000Z', heatmapSummary: { onTime: 0, gracePeriod: 0, awaiting: 1 } },
+    };
+    mockApiClient.mockResolvedValueOnce(mockResponse);
+
     const { result } = renderHook(() => useMdaComplianceGrid(), {
       wrapper: createWrapper(),
     });
@@ -32,10 +41,26 @@ describe('useMdaComplianceGrid', () => {
       expect(result.current.isSuccess).toBe(true);
     });
 
-    expect(result.current.data).toHaveLength(63);
-    expect(result.current.data![0]).toHaveProperty('mdaId');
-    expect(result.current.data![0]).toHaveProperty('mdaName');
-    expect(result.current.data![0]).toHaveProperty('status');
+    expect(result.current.data!.rows).toHaveLength(1);
+    expect(result.current.data!.rows[0]).toHaveProperty('mdaId');
+    expect(result.current.data!.rows[0]).toHaveProperty('mdaName');
+    expect(result.current.data!.rows[0]).toHaveProperty('status');
+    expect(result.current.data!.summary).toBeDefined();
+    expect(result.current.data!.heatmap).toBeDefined();
+  });
+
+  it('calls apiClient with /dashboard/compliance', async () => {
+    mockApiClient.mockResolvedValueOnce({ rows: [], heatmap: [], summary: { submitted: 0, pending: 0, overdue: 0, total: 0, deadlineDate: '', heatmapSummary: { onTime: 0, gracePeriod: 0, awaiting: 0 } } });
+
+    const { result } = renderHook(() => useMdaComplianceGrid(), {
+      wrapper: createWrapper(),
+    });
+
+    await waitFor(() => {
+      expect(result.current.isSuccess).toBe(true);
+    });
+
+    expect(mockApiClient).toHaveBeenCalledWith('/dashboard/compliance');
   });
 });
 

@@ -544,3 +544,118 @@ describe('GET /api/dashboard/breakdown', () => {
     }
   });
 });
+
+// ─── Story 4.4: Compliance Status View ───────────────────────────────
+
+describe('GET /api/dashboard/compliance', () => {
+  it('returns 401 without authentication', async () => {
+    const res = await request(app).get('/api/dashboard/compliance');
+    expect(res.status).toBe(401);
+  });
+
+  it('returns success envelope with rows, heatmap, and summary', async () => {
+    const res = await request(app)
+      .get('/api/dashboard/compliance')
+      .set('Authorization', `Bearer ${adminToken}`);
+
+    expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
+    expect(res.body.data).toBeDefined();
+    expect(Array.isArray(res.body.data.rows)).toBe(true);
+    expect(Array.isArray(res.body.data.heatmap)).toBe(true);
+    expect(res.body.data.summary).toBeDefined();
+  });
+
+  it('summary has all required fields including heatmapSummary', async () => {
+    const res = await request(app)
+      .get('/api/dashboard/compliance')
+      .set('Authorization', `Bearer ${adminToken}`);
+
+    expect(res.status).toBe(200);
+    const summary = res.body.data.summary;
+    expect(typeof summary.submitted).toBe('number');
+    expect(typeof summary.pending).toBe('number');
+    expect(typeof summary.overdue).toBe('number');
+    expect(typeof summary.total).toBe('number');
+    expect(typeof summary.deadlineDate).toBe('string');
+    expect(summary.heatmapSummary).toBeDefined();
+    expect(typeof summary.heatmapSummary.onTime).toBe('number');
+    expect(typeof summary.heatmapSummary.gracePeriod).toBe('number');
+    expect(typeof summary.heatmapSummary.awaiting).toBe('number');
+  });
+
+  it('deadlineDate is a valid ISO date string with 28th of a month', async () => {
+    const res = await request(app)
+      .get('/api/dashboard/compliance')
+      .set('Authorization', `Bearer ${adminToken}`);
+
+    expect(res.status).toBe(200);
+    const deadline = new Date(res.body.data.summary.deadlineDate);
+    expect(deadline.getDate()).toBe(28);
+  });
+
+  it('each compliance row has all required MdaComplianceRow fields', async () => {
+    const res = await request(app)
+      .get('/api/dashboard/compliance')
+      .set('Authorization', `Bearer ${adminToken}`);
+
+    expect(res.status).toBe(200);
+    for (const row of res.body.data.rows) {
+      expect(typeof row.mdaId).toBe('string');
+      expect(typeof row.mdaCode).toBe('string');
+      expect(typeof row.mdaName).toBe('string');
+      expect(['submitted', 'pending', 'overdue']).toContain(row.status);
+      expect(typeof row.recordCount).toBe('number');
+      expect(typeof row.alignedCount).toBe('number');
+      expect(typeof row.varianceCount).toBe('number');
+      expect(typeof row.healthScore).toBe('number');
+      expect(['healthy', 'attention', 'for-review']).toContain(row.healthBand);
+      expect(typeof row.isDark).toBe('boolean');
+    }
+  });
+
+  it('pre-Epic 5: all MDAs have pending status', async () => {
+    const res = await request(app)
+      .get('/api/dashboard/compliance')
+      .set('Authorization', `Bearer ${adminToken}`);
+
+    expect(res.status).toBe(200);
+    for (const row of res.body.data.rows) {
+      expect(row.status).toBe('pending');
+    }
+  });
+
+  it('pre-Epic 5: heatmap has empty cells for each MDA', async () => {
+    const res = await request(app)
+      .get('/api/dashboard/compliance')
+      .set('Authorization', `Bearer ${adminToken}`);
+
+    expect(res.status).toBe(200);
+    for (const row of res.body.data.heatmap) {
+      expect(row.cells).toEqual([]);
+      expect(row.complianceRate).toBe(0);
+    }
+  });
+
+  it('allows MDA_OFFICER access (scoped to their MDA)', async () => {
+    const res = await request(app)
+      .get('/api/dashboard/compliance')
+      .set('Authorization', `Bearer ${officerToken}`);
+
+    expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
+    // MDA_OFFICER should only see their own MDA
+    for (const row of res.body.data.rows) {
+      expect(row.mdaId).toBe(testMdaId);
+    }
+  });
+
+  it('summary total matches rows length', async () => {
+    const res = await request(app)
+      .get('/api/dashboard/compliance')
+      .set('Authorization', `Bearer ${adminToken}`);
+
+    expect(res.status).toBe(200);
+    expect(res.body.data.summary.total).toBe(res.body.data.rows.length);
+  });
+});

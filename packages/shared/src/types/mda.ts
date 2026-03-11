@@ -41,6 +41,25 @@ export interface MdaComplianceRow {
   recordCount: number;
   alignedCount: number;
   varianceCount: number;
+  // Story 4.4: Analytics enrichment
+  healthScore: number;
+  healthBand: 'healthy' | 'attention' | 'for-review';
+  submissionCoveragePercent: number | null;
+  isDark: boolean;
+  stalenessMonths: number | null;
+}
+
+export interface HeatmapCell {
+  month: string;
+  status: 'on-time' | 'grace-period' | 'missing' | 'current-pending';
+}
+
+export interface MdaHeatmapRow {
+  mdaId: string;
+  mdaName: string;
+  mdaCode: string;
+  complianceRate: number;
+  cells: HeatmapCell[];
 }
 
 export interface MdaSummary {

@@ -6,7 +6,7 @@ import { authorise } from '../middleware/authorise';
 import { scopeToMda } from '../middleware/scopeToMda';
 import { readLimiter } from '../middleware/rateLimiter';
 import { auditLog } from '../middleware/auditLog';
-import { ROLES, breakdownQuerySchema } from '@vlprs/shared';
+import { ROLES, breakdownQuerySchema, type MdaComplianceRow } from '@vlprs/shared';
 import { db } from '../db';
 import { loans, ledgerEntries } from '../db/schema';
 import { eq, and, sql, count, inArray } from 'drizzle-orm';
@@ -19,6 +19,8 @@ import * as gratuityProjectionService from '../services/gratuityProjectionServic
 import * as attentionItemService from '../services/attentionItemService';
 import { computeBalanceSumForIds } from '../services/attentionItemService';
 import * as mdaAggregationService from '../services/mdaAggregationService';
+import * as submissionCoverageService from '../services/submissionCoverageService';
+import { listMdas } from '../services/mdaService';
 
 const router = Router();
 
@@ -277,6 +279,88 @@ router.get(
     res.json({
       success: true,
       data: { items: items.slice(0, 10), totalCount: items.length },
+    });
+  },
+);
+
+// ─── Compliance Endpoint (Story 4.4) ─────────────────────────────────
+
+// GET /api/dashboard/compliance — MDA compliance status view + heatmap
+router.get(
+  '/dashboard/compliance',
+  ...drillDownAuth,
+  async (req: Request, res: Response) => {
+    const mdaScope = req.mdaScope ?? null;
+
+    // Fetch all data sources in parallel
+    const [allMdas, healthResults, coverageData, heatmapData] = await Promise.all([
+      listMdas(undefined, mdaScope),
+      mdaAggregationService.getMdaBreakdown(mdaScope),
+      submissionCoverageService.getSubmissionCoverage(mdaScope ?? undefined),
+      submissionCoverageService.getSubmissionHeatmap(mdaScope),
+    ]);
+
+    // Build lookup maps
+    const healthMap = new Map(healthResults.map((h) => [h.mdaId, h]));
+    const coverageMap = new Map(coverageData.map((c) => [c.mdaId, c]));
+
+    // Compute deadline date: 28th of current month, or next month if past 28th
+    const today = new Date();
+    const currentMonth28 = new Date(today.getFullYear(), today.getMonth(), 28);
+    const deadlineDate = today <= currentMonth28
+      ? currentMonth28.toISOString()
+      : new Date(today.getFullYear(), today.getMonth() + 1, 28).toISOString();
+
+    // Assemble compliance rows
+    const rows: MdaComplianceRow[] = allMdas.map((mda) => {
+      const health = healthMap.get(mda.id);
+      const coverage = coverageMap.get(mda.id);
+
+      return {
+        mdaId: mda.id,
+        mdaCode: mda.code,
+        mdaName: mda.name,
+        status: 'pending' as const, // Pre-Epic 5: all MDAs are "pending"
+        lastSubmission: coverage?.lastSubmissionDate ?? null,
+        recordCount: 0,
+        alignedCount: 0,
+        varianceCount: 0,
+        healthScore: health?.healthScore ?? 0,
+        healthBand: health?.healthBand ?? 'for-review',
+        submissionCoveragePercent: coverage?.coveragePercent ?? null,
+        isDark: coverage?.isDark ?? false,
+        stalenessMonths: coverage?.stalenessMonths ?? null,
+      };
+    });
+
+    // Summary counts
+    let submitted = 0;
+    let pending = 0;
+    let overdue = 0;
+    for (const row of rows) {
+      if (row.status === 'submitted') submitted++;
+      else if (row.status === 'pending') pending++;
+      else overdue++;
+    }
+
+    res.json({
+      success: true,
+      data: {
+        rows,
+        heatmap: heatmapData,
+        summary: {
+          submitted,
+          pending,
+          overdue,
+          total: rows.length,
+          deadlineDate,
+          heatmapSummary: {
+            onTime: 0,
+            gracePeriod: 0,
+            awaiting: rows.length,
+          },
+        },
+      },
     });
   },
 );

@@ -1,5 +1,6 @@
+import { useMemo } from 'react';
 import { useNavigate } from 'react-router';
-import { FileText, Info } from 'lucide-react';
+import { FileText, Info, CheckCircle2, Clock, Flag } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { formatDate, formatCount } from '@/lib/formatters';
 import { useDashboardMetrics } from '@/hooks/useDashboardData';
@@ -7,28 +8,44 @@ import { useMdaComplianceGrid } from '@/hooks/useMdaData';
 import { useAttentionItems } from '@/hooks/useAttentionItems';
 import { HeroMetricCard } from '@/components/shared/HeroMetricCard';
 import { WelcomeGreeting } from '@/components/shared/WelcomeGreeting';
+import { ComplianceProgressHeader } from '@/components/shared/ComplianceProgressHeader';
+import { HealthScoreBadge } from '@/components/shared/HealthScoreBadge';
+import { SubmissionHeatmap } from '@/components/shared/SubmissionHeatmap';
 import { AttentionItemCard, AttentionEmptyState } from '@/components/shared/AttentionItemCard';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/ui/collapsible';
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
+import type { MdaComplianceRow, SubmissionStatus } from '@vlprs/shared';
 
-const STATUS_BADGE_MAP = {
-  submitted: { variant: 'complete' as const, label: 'Submitted' },
-  pending: { variant: 'pending' as const, label: 'Pending' },
-  overdue: { variant: 'review' as const, label: 'Awaiting' },
-} as const;
+const STATUS_BADGE_MAP: Record<SubmissionStatus, { variant: 'complete' | 'pending' | 'review'; label: string; Icon: typeof CheckCircle2; iconColor: string }> = {
+  submitted: { variant: 'complete', label: 'Submitted', Icon: CheckCircle2, iconColor: 'text-green-600' },
+  pending: { variant: 'pending', label: 'Pending', Icon: Clock, iconColor: 'text-teal-600' },
+  overdue: { variant: 'review', label: 'Awaiting', Icon: Flag, iconColor: 'text-amber-600' },
+};
+
+function sortComplianceRows(rows: MdaComplianceRow[]): MdaComplianceRow[] {
+  const pending = rows.filter((r) => r.status !== 'submitted').sort((a, b) => a.mdaName.localeCompare(b.mdaName));
+  const submitted = rows.filter((r) => r.status === 'submitted').sort((a, b) => a.mdaName.localeCompare(b.mdaName));
+  return [...pending, ...submitted];
+}
 
 export function DashboardPage() {
   const navigate = useNavigate();
   const metrics = useDashboardMetrics();
   const compliance = useMdaComplianceGrid();
   const attention = useAttentionItems();
+
+  const sortedComplianceRows = useMemo(
+    () => compliance.data ? sortComplianceRows(compliance.data.rows) : [],
+    [compliance.data],
+  );
 
   return (
     <div className="space-y-8">
@@ -233,48 +250,122 @@ export function DashboardPage() {
         )}
       </section>
 
-      {/* MDA Compliance Grid */}
+      {/* MDA Compliance Status */}
       <section aria-label="MDA compliance status">
         <h2 className="mb-4 text-lg font-semibold text-text-primary">
           MDA Compliance Status
         </h2>
-        <div className="overflow-x-auto rounded-lg border">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b bg-slate-50">
-                <th className="px-4 py-3 text-left font-medium text-text-secondary">
-                  MDA Name
-                </th>
-                <th className="px-4 py-3 text-left font-medium text-text-secondary">
-                  Status
-                </th>
-                <th className="px-4 py-3 text-left font-medium text-text-secondary">
-                  Last Submission
-                </th>
-                <th className="px-4 py-3 text-right font-medium text-text-secondary">
-                  Records
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {compliance.isPending
-                ? Array.from({ length: 8 }).map((_, i) => (
-                    <tr key={i} className="border-b">
-                      <td className="px-4 py-3">
-                        <Skeleton className="h-4 w-48" />
-                      </td>
-                      <td className="px-4 py-3">
-                        <Skeleton className="h-5 w-20 rounded-full" />
-                      </td>
-                      <td className="px-4 py-3">
-                        <Skeleton className="h-4 w-28" />
-                      </td>
-                      <td className="px-4 py-3 text-right">
-                        <Skeleton className="ml-auto h-4 w-12" />
-                      </td>
-                    </tr>
-                  ))
-                : compliance.data?.map((row) => {
+
+        {/* Progress Header + Countdown (Task 5) */}
+        {compliance.data?.summary && (
+          <div className="mb-4">
+            <ComplianceProgressHeader
+              submitted={compliance.data.summary.submitted}
+              total={compliance.data.summary.total}
+              deadlineDate={compliance.data.summary.deadlineDate}
+            />
+          </div>
+        )}
+
+        {compliance.isPending ? (
+          <div className="space-y-3">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <div key={i} className="rounded-lg border p-4">
+                <div className="flex items-center gap-3">
+                  <Skeleton className="h-4 w-48" />
+                  <Skeleton className="h-5 w-20 rounded-full" />
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : compliance.data ? (
+          <>
+            {/* Mobile compact view (<768px) — Task 8 */}
+            <div className="md:hidden space-y-4">
+              {(() => {
+                const pendingRows = sortedComplianceRows.filter((r) => r.status !== 'submitted');
+                const submittedRows = sortedComplianceRows.filter((r) => r.status === 'submitted');
+                return (
+                  <>
+                    {/* Pending/Awaiting shown first, always expanded */}
+                    {pendingRows.length > 0 && (
+                      <div className="space-y-1">
+                        <h3 className="text-sm font-medium text-text-secondary">
+                          Awaiting Submission ({pendingRows.length})
+                        </h3>
+                        <div className="space-y-1">
+                          {pendingRows.map((row) => {
+                            const badge = STATUS_BADGE_MAP[row.status];
+                            return (
+                              <button
+                                key={row.mdaId}
+                                className="flex w-full items-center justify-between rounded-lg border p-3 text-left transition-colors hover:bg-slate-50 min-h-[44px]"
+                                onClick={() => navigate(`/dashboard/mda/${row.mdaId}`)}
+                              >
+                                <span className="text-sm font-medium text-text-primary truncate mr-2">
+                                  {row.mdaName}
+                                </span>
+                                <Badge variant={badge.variant} className="shrink-0">
+                                  <badge.Icon className={cn('mr-1 h-3 w-3', badge.iconColor)} />
+                                  {badge.label}
+                                </Badge>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Submitted collapsed by default */}
+                    {submittedRows.length > 0 && (
+                      <Collapsible>
+                        <CollapsibleTrigger className="flex w-full items-center justify-between rounded-lg border p-3 text-left hover:bg-slate-50 min-h-[44px]">
+                          <span className="text-sm font-medium text-text-secondary">
+                            Submitted ({submittedRows.length})
+                          </span>
+                          <span className="text-xs text-text-secondary">Tap to expand</span>
+                        </CollapsibleTrigger>
+                        <CollapsibleContent>
+                          <div className="mt-1 space-y-1">
+                            {submittedRows.map((row) => (
+                              <button
+                                key={row.mdaId}
+                                className="flex w-full items-center justify-between rounded-lg border p-3 text-left transition-colors hover:bg-slate-50 min-h-[44px]"
+                                onClick={() => navigate(`/dashboard/mda/${row.mdaId}`)}
+                              >
+                                <span className="text-sm font-medium text-text-primary truncate mr-2">
+                                  {row.mdaName}
+                                </span>
+                                <Badge variant="complete" className="shrink-0">
+                                  <CheckCircle2 className="mr-1 h-3 w-3 text-green-600" />
+                                  Submitted
+                                </Badge>
+                              </button>
+                            ))}
+                          </div>
+                        </CollapsibleContent>
+                      </Collapsible>
+                    )}
+                  </>
+                );
+              })()}
+            </div>
+
+            {/* Desktop full table (>=768px) — Task 6 */}
+            <div className="hidden md:block overflow-x-auto rounded-lg border">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b bg-slate-50">
+                    <th className="px-4 py-3 text-left font-medium text-text-secondary">MDA Name</th>
+                    <th className="px-4 py-3 text-left font-medium text-text-secondary">Status</th>
+                    <th className="px-4 py-3 text-left font-medium text-text-secondary">Health</th>
+                    <th className="px-4 py-3 text-right font-medium text-text-secondary">Coverage %</th>
+                    <th className="px-4 py-3 text-left font-medium text-text-secondary">Last Submission</th>
+                    <th className="px-4 py-3 text-right font-medium text-text-secondary">Records</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {sortedComplianceRows.map((row) => {
                     const badge = STATUS_BADGE_MAP[row.status];
                     return (
                       <tr
@@ -285,9 +376,7 @@ export function DashboardPage() {
                         )}
                         role="link"
                         tabIndex={0}
-                        onClick={() =>
-                          navigate(`/dashboard/mda/${row.mdaId}`)
-                        }
+                        onClick={() => navigate(`/dashboard/mda/${row.mdaId}`)}
                         onKeyDown={(e) => {
                           if (e.key === 'Enter' || e.key === ' ') {
                             e.preventDefault();
@@ -295,16 +384,35 @@ export function DashboardPage() {
                           }
                         }}
                       >
-                        <td className="px-4 py-3 font-medium text-text-primary">
-                          {row.mdaName}
+                        <td className="px-4 py-3">
+                          <div>
+                            <span className="font-medium text-text-primary">{row.mdaName}</span>
+                            {row.isDark && (
+                              <Badge variant="review" className="ml-2 text-xs">Submission gap observed</Badge>
+                            )}
+                            {row.stalenessMonths !== null && row.stalenessMonths >= 2 && (
+                              <p className="text-xs text-text-secondary mt-0.5">
+                                Data as of {row.lastSubmission ? formatDate(row.lastSubmission) : 'N/A'} — {row.stalenessMonths} months since last update
+                              </p>
+                            )}
+                          </div>
                         </td>
                         <td className="px-4 py-3">
-                          <Badge variant={badge.variant}>{badge.label}</Badge>
+                          <Badge variant={badge.variant}>
+                            <badge.Icon className={cn('mr-1 h-3 w-3', badge.iconColor)} />
+                            {badge.label}
+                          </Badge>
+                        </td>
+                        <td className="px-4 py-3">
+                          <HealthScoreBadge score={row.healthScore} band={row.healthBand} />
+                        </td>
+                        <td className="px-4 py-3 text-right font-mono text-text-secondary">
+                          {row.submissionCoveragePercent !== null
+                            ? `${Math.round(row.submissionCoveragePercent)}%`
+                            : '—'}
                         </td>
                         <td className="px-4 py-3 text-text-secondary">
-                          {row.lastSubmission
-                            ? formatDate(row.lastSubmission)
-                            : '—'}
+                          {row.lastSubmission ? formatDate(row.lastSubmission) : '—'}
                         </td>
                         <td className="px-4 py-3 text-right font-mono text-text-secondary">
                           {formatCount(row.recordCount)}
@@ -312,9 +420,38 @@ export function DashboardPage() {
                       </tr>
                     );
                   })}
-            </tbody>
-          </table>
-        </div>
+                </tbody>
+              </table>
+            </div>
+          </>
+        ) : null}
+      </section>
+
+      {/* Submission Heatmap — desktop only (Task 9, 10) */}
+      <section aria-label="Submission history heatmap" className="hidden md:block">
+        {compliance.isPending ? (
+          <div className="rounded-lg border p-6 space-y-3">
+            <Skeleton className="h-5 w-64" />
+            <Skeleton className="h-40 w-full" />
+          </div>
+        ) : compliance.data ? (
+          <Collapsible defaultOpen>
+            <CollapsibleTrigger className="flex w-full items-center justify-between rounded-lg border p-4 text-left hover:bg-slate-50">
+              <h2 className="text-lg font-semibold text-text-primary">
+                Submission History (12 months)
+              </h2>
+              <span className="text-xs text-text-secondary">Click to toggle</span>
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <div className="mt-2 rounded-lg border p-4">
+                <SubmissionHeatmap
+                  rows={compliance.data.heatmap}
+                  summary={compliance.data.summary.heatmapSummary}
+                />
+              </div>
+            </CollapsibleContent>
+          </Collapsible>
+        ) : null}
       </section>
     </div>
   );
