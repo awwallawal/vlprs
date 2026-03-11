@@ -1,10 +1,10 @@
 import Decimal from 'decimal.js';
 import { db } from '../db';
-import { loans, ledgerEntries } from '../db/schema';
-import { eq, and, sql, count } from 'drizzle-orm';
+import { loans, ledgerEntries, mdas } from '../db/schema';
+import { eq, and, sql, inArray } from 'drizzle-orm';
 import { computeBalanceFromEntries } from './computationEngine';
 import { classifyAllLoans, LoanClassification } from './loanClassificationService';
-import { withMdaScope } from '../lib/mdaScope';
+import type { MdaBreakdownRow as SharedMdaBreakdownRow } from '@vlprs/shared';
 
 Decimal.set({ precision: 20, rounding: Decimal.ROUND_HALF_UP });
 
@@ -87,33 +87,89 @@ export async function getMdaHealthScore(
 /**
  * Get per-MDA breakdown of metrics.
  *
- * TODO(Stories 4.2-4.4): Refactor to batch queries before exposing via API.
- * Current implementation has N+1 pattern: classifyAllLoans + ledger queries per MDA.
- * For 50+ MDAs this will generate hundreds of DB queries. Needs batch classification
- * with groupBy MDA, or a single classifyAllLoans() call with post-hoc MDA grouping.
+ * Batched implementation: single classifyAllLoans call + grouped SQL queries.
+ * Reduces from O(N_MDAs × M_queries) to ~4 total queries.
  */
 export async function getMdaBreakdown(
   mdaScope?: string | null,
 ): Promise<MdaHealthResult[]> {
-  // Get all MDAs with active loans
-  const conditions = [];
-  const scopeCondition = withMdaScope(loans.mdaId, mdaScope);
-  if (scopeCondition) conditions.push(scopeCondition);
+  // 1. Single classification call for all loans (respects mdaScope)
+  const classifications = await classifyAllLoans(mdaScope);
+  if (classifications.size === 0) return [];
 
-  const mdaLoanCounts = await db
+  const classifiedLoanIds = Array.from(classifications.keys());
+
+  // 2. Batch fetch loan data for all classified loans
+  const loanRows = await db
     .select({
+      id: loans.id,
       mdaId: loans.mdaId,
-      count: count(),
+      status: loans.status,
+      principalAmount: loans.principalAmount,
+      interestRate: loans.interestRate,
+      tenureMonths: loans.tenureMonths,
     })
     .from(loans)
-    .where(conditions.length > 0 ? and(...conditions) : undefined)
-    .groupBy(loans.mdaId);
+    .where(inArray(loans.id, classifiedLoanIds));
 
+  // Group loans by MDA
+  const mdaLoanMap = new Map<string, typeof loanRows>();
+  for (const loan of loanRows) {
+    const arr = mdaLoanMap.get(loan.mdaId) ?? [];
+    arr.push(loan);
+    mdaLoanMap.set(loan.mdaId, arr);
+  }
+
+  // 3. Batch fetch ALL ledger entries for classified loans
+  const allEntries = await db
+    .select({
+      loanId: ledgerEntries.loanId,
+      amount: ledgerEntries.amount,
+      principalComponent: ledgerEntries.principalComponent,
+      interestComponent: ledgerEntries.interestComponent,
+      entryType: ledgerEntries.entryType,
+    })
+    .from(ledgerEntries)
+    .where(inArray(ledgerEntries.loanId, classifiedLoanIds));
+
+  // Group entries by loan ID
+  const entryMap = new Map<string, typeof allEntries>();
+  for (const entry of allEntries) {
+    const arr = entryMap.get(entry.loanId) ?? [];
+    arr.push(entry);
+    entryMap.set(entry.loanId, arr);
+  }
+
+  // 4. Batch fetch recovery per MDA (latest period per MDA)
+  const mdaIds = Array.from(mdaLoanMap.keys());
+  const recoveryData = mdaIds.length > 0
+    ? await db
+        .select({
+          mdaId: ledgerEntries.mdaId,
+          total: sql<string>`SUM(${ledgerEntries.amount})`,
+          periodMonth: ledgerEntries.periodMonth,
+          periodYear: ledgerEntries.periodYear,
+        })
+        .from(ledgerEntries)
+        .where(and(
+          eq(ledgerEntries.entryType, 'PAYROLL'),
+          inArray(ledgerEntries.mdaId, mdaIds),
+        ))
+        .groupBy(ledgerEntries.mdaId, ledgerEntries.periodMonth, ledgerEntries.periodYear)
+        .orderBy(sql`${ledgerEntries.periodYear} DESC`, sql`${ledgerEntries.periodMonth} DESC`)
+    : [];
+
+  // Latest period recovery per MDA (first row per MDA due to ordering)
+  const recoveryMap = new Map<string, string>();
+  for (const row of recoveryData) {
+    if (!recoveryMap.has(row.mdaId)) {
+      recoveryMap.set(row.mdaId, row.total ?? '0');
+    }
+  }
+
+  // 5. Build results per MDA in memory
   const results: MdaHealthResult[] = [];
-
-  for (const { mdaId } of mdaLoanCounts) {
-    const classifications = await classifyAllLoans(mdaId);
-
+  for (const [mdaId, mdaLoans] of mdaLoanMap) {
     const distribution: Record<LoanClassification, number> = {
       [LoanClassification.COMPLETED]: 0,
       [LoanClassification.ON_TRACK]: 0,
@@ -122,42 +178,18 @@ export async function getMdaBreakdown(
       [LoanClassification.OVER_DEDUCTED]: 0,
     };
 
-    for (const classification of classifications.values()) {
-      distribution[classification]++;
+    for (const loan of mdaLoans) {
+      const cls = classifications.get(loan.id);
+      if (cls) distribution[cls]++;
     }
 
     const { score, band } = computeHealthScore(distribution);
 
-    // Active loans count
-    const activeConditions = [eq(loans.status, 'ACTIVE'), eq(loans.mdaId, mdaId)];
-    const [activeResult] = await db
-      .select({ value: count() })
-      .from(loans)
-      .where(and(...activeConditions));
-
-    // Total exposure (outstanding balances of active loans)
-    const activeLoanRows = await db
-      .select({
-        id: loans.id,
-        principalAmount: loans.principalAmount,
-        interestRate: loans.interestRate,
-        tenureMonths: loans.tenureMonths,
-      })
-      .from(loans)
-      .where(and(eq(loans.status, 'ACTIVE'), eq(loans.mdaId, mdaId)));
-
+    // Active loans and exposure (computed from already-fetched entries)
+    const activeLoanRows = mdaLoans.filter(l => l.status === 'ACTIVE');
     let totalExposure = new Decimal('0');
     for (const loan of activeLoanRows) {
-      const entries = await db
-        .select({
-          amount: ledgerEntries.amount,
-          principalComponent: ledgerEntries.principalComponent,
-          interestComponent: ledgerEntries.interestComponent,
-          entryType: ledgerEntries.entryType,
-        })
-        .from(ledgerEntries)
-        .where(eq(ledgerEntries.loanId, loan.id));
-
+      const entries = entryMap.get(loan.id) ?? [];
       const balance = computeBalanceFromEntries(
         loan.principalAmount,
         loan.interestRate,
@@ -169,35 +201,82 @@ export async function getMdaBreakdown(
       if (bal.gt(0)) totalExposure = totalExposure.plus(bal);
     }
 
-    // Monthly recovery (last period for this MDA)
-    const [recoveryResult] = await db
-      .select({
-        total: sql<string>`COALESCE(SUM(${ledgerEntries.amount}), '0.00')`,
-      })
-      .from(ledgerEntries)
-      .where(
-        and(
-          eq(ledgerEntries.entryType, 'PAYROLL'),
-          eq(ledgerEntries.mdaId, mdaId),
-        ),
-      )
-      .groupBy(ledgerEntries.periodMonth, ledgerEntries.periodYear)
-      .orderBy(
-        sql`${ledgerEntries.periodYear} DESC`,
-        sql`${ledgerEntries.periodMonth} DESC`,
-      )
-      .limit(1);
-
     results.push({
       mdaId,
       healthScore: score,
       healthBand: band,
-      activeLoans: activeResult?.value ?? 0,
+      activeLoans: activeLoanRows.length,
       totalExposure: totalExposure.toFixed(2),
-      monthlyRecovery: new Decimal(recoveryResult?.total ?? '0').toFixed(2),
+      monthlyRecovery: new Decimal(recoveryMap.get(mdaId) ?? '0').toFixed(2),
       statusDistribution: distribution,
     });
   }
 
   return results;
+}
+
+/**
+ * Enriched per-MDA breakdown for drill-down API (Story 4.3).
+ * Extends getMdaBreakdown with MDA name/code, expected monthly deduction, and variance.
+ * Uses batched queries for MDA details and expected deductions.
+ */
+export async function getEnrichedMdaBreakdown(
+  mdaScope?: string | null,
+): Promise<SharedMdaBreakdownRow[]> {
+  const baseResults = await getMdaBreakdown(mdaScope);
+  if (baseResults.length === 0) return [];
+
+  const mdaIds = baseResults.map((r) => r.mdaId);
+
+  // Batch-fetch MDA details and expected deductions in parallel
+  const [mdaRows, expectedRows] = await Promise.all([
+    db
+      .select({ id: mdas.id, name: mdas.name, code: mdas.code })
+      .from(mdas)
+      .where(sql`${mdas.id} IN (${sql.join(mdaIds.map(id => sql`${id}`), sql`, `)})`),
+    db
+      .select({
+        mdaId: loans.mdaId,
+        total: sql<string>`COALESCE(SUM(${loans.monthlyDeductionAmount}), '0.00')`,
+      })
+      .from(loans)
+      .where(and(
+        eq(loans.status, 'ACTIVE'),
+        sql`${loans.mdaId} IN (${sql.join(mdaIds.map(id => sql`${id}`), sql`, `)})`,
+      ))
+      .groupBy(loans.mdaId),
+  ]);
+
+  const mdaMap = new Map(mdaRows.map((m) => [m.id, m]));
+  const expectedMap = new Map(expectedRows.map((e) => [e.mdaId, e.total]));
+
+  return baseResults.map((result) => {
+    const mda = mdaMap.get(result.mdaId);
+    const expected = new Decimal(expectedMap.get(result.mdaId) ?? '0');
+    const actual = new Decimal(result.monthlyRecovery);
+    const variancePercent = expected.gt(0)
+      ? Number(actual.minus(expected).div(expected).mul(100).toDecimalPlaces(1, Decimal.ROUND_HALF_UP).toNumber())
+      : null;
+
+    return {
+      mdaId: result.mdaId,
+      mdaName: mda?.name ?? result.mdaId,
+      mdaCode: mda?.code ?? '',
+      contributionCount: result.activeLoans,
+      contributionAmount: result.totalExposure,
+      expectedMonthlyDeduction: expected.toFixed(2),
+      actualMonthlyRecovery: result.monthlyRecovery,
+      variancePercent,
+      submissionStatus: null, // Stub until Epic 5
+      healthScore: result.healthScore,
+      healthBand: result.healthBand,
+      statusDistribution: {
+        completed: result.statusDistribution[LoanClassification.COMPLETED],
+        onTrack: result.statusDistribution[LoanClassification.ON_TRACK],
+        overdue: result.statusDistribution[LoanClassification.OVERDUE],
+        stalled: result.statusDistribution[LoanClassification.STALLED],
+        overDeducted: result.statusDistribution[LoanClassification.OVER_DEDUCTED],
+      },
+    };
+  });
 }

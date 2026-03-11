@@ -15,7 +15,7 @@ let adminUserId: string;
 let officerToken: string;
 
 beforeAll(async () => {
-  await db.execute(sql`TRUNCATE audit_log, ledger_entries, loan_state_transitions, loans, scheme_config, refresh_tokens, users, mdas CASCADE`);
+  await db.execute(sql`TRUNCATE loan_state_transitions, ledger_entries, loans, scheme_config, refresh_tokens, audit_log, users, mdas CASCADE`);
 
   testMdaId = generateUuidv7();
   await db.insert(mdas).values({ id: testMdaId, name: 'Dashboard Test MDA', code: 'DSHT', abbreviation: 'Dashboard Test' });
@@ -54,7 +54,7 @@ beforeEach(() => {
 });
 
 afterAll(async () => {
-  await db.execute(sql`TRUNCATE audit_log, ledger_entries, loan_state_transitions, loans, scheme_config, refresh_tokens, users, mdas CASCADE`);
+  await db.execute(sql`TRUNCATE loan_state_transitions, ledger_entries, loans, scheme_config, refresh_tokens, audit_log, users, mdas CASCADE`);
 });
 
 describe('GET /api/dashboard/metrics', () => {
@@ -425,6 +425,122 @@ describe('GET /api/dashboard/attention (detector integration)', () => {
       expect(item.timestamp).toMatch(/^\d{4}-\d{2}-\d{2}T/);
       // drillDownUrl should be present for all implemented detectors
       expect(typeof item.drillDownUrl).toBe('string');
+    }
+  });
+});
+
+// ─── Story 4.3: Dashboard Breakdown Drill-Down ──────────────────────
+
+describe('GET /api/dashboard/breakdown', () => {
+  it('returns 401 without authentication', async () => {
+    const res = await request(app).get('/api/dashboard/breakdown?metric=activeLoans');
+    expect(res.status).toBe(401);
+  });
+
+  it('returns 400 for invalid metric parameter', async () => {
+    const res = await request(app)
+      .get('/api/dashboard/breakdown?metric=invalidMetric')
+      .set('Authorization', `Bearer ${adminToken}`);
+    expect(res.status).toBe(400);
+  });
+
+  it('returns 400 when metric parameter is missing', async () => {
+    const res = await request(app)
+      .get('/api/dashboard/breakdown')
+      .set('Authorization', `Bearer ${adminToken}`);
+    expect(res.status).toBe(400);
+  });
+
+  it('returns success envelope with data array for activeLoans metric', async () => {
+    const res = await request(app)
+      .get('/api/dashboard/breakdown?metric=activeLoans')
+      .set('Authorization', `Bearer ${adminToken}`);
+
+    expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
+    expect(Array.isArray(res.body.data)).toBe(true);
+  });
+
+  it('each MDA row has all required MdaBreakdownRow fields', async () => {
+    const res = await request(app)
+      .get('/api/dashboard/breakdown?metric=activeLoans')
+      .set('Authorization', `Bearer ${adminToken}`);
+
+    expect(res.status).toBe(200);
+    for (const row of res.body.data) {
+      expect(typeof row.mdaId).toBe('string');
+      expect(typeof row.mdaName).toBe('string');
+      expect(typeof row.mdaCode).toBe('string');
+      expect(typeof row.contributionCount).toBe('number');
+      expect(typeof row.contributionAmount).toBe('string');
+      expect(typeof row.expectedMonthlyDeduction).toBe('string');
+      expect(typeof row.actualMonthlyRecovery).toBe('string');
+      expect(row.variancePercent === null || typeof row.variancePercent === 'number').toBe(true);
+      expect(row.submissionStatus).toBeNull(); // Stubbed until Epic 5
+      expect(typeof row.healthScore).toBe('number');
+      expect(['healthy', 'attention', 'for-review']).toContain(row.healthBand);
+      expect(typeof row.statusDistribution).toBe('object');
+      expect(typeof row.statusDistribution.completed).toBe('number');
+      expect(typeof row.statusDistribution.onTrack).toBe('number');
+      expect(typeof row.statusDistribution.overdue).toBe('number');
+      expect(typeof row.statusDistribution.stalled).toBe('number');
+      expect(typeof row.statusDistribution.overDeducted).toBe('number');
+    }
+  });
+
+  it('returns data for all valid metric types', async () => {
+    const metrics = [
+      'activeLoans', 'totalExposure', 'fundAvailable', 'monthlyRecovery',
+      'loansInWindow', 'outstandingReceivables', 'collectionPotential',
+      'atRisk', 'completionRate', 'completionRateLifetime',
+    ];
+
+    for (const metric of metrics) {
+      const res = await request(app)
+        .get(`/api/dashboard/breakdown?metric=${metric}`)
+        .set('Authorization', `Bearer ${adminToken}`);
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+    }
+  });
+
+  it('includes variance computation for breakdown rows with loans', async () => {
+    const res = await request(app)
+      .get('/api/dashboard/breakdown?metric=monthlyRecovery')
+      .set('Authorization', `Bearer ${adminToken}`);
+
+    expect(res.status).toBe(200);
+    // All rows should have expectedMonthlyDeduction and actualMonthlyRecovery
+    for (const row of res.body.data) {
+      expect(typeof row.expectedMonthlyDeduction).toBe('string');
+      expect(typeof row.actualMonthlyRecovery).toBe('string');
+    }
+  });
+
+  it('allows MDA_OFFICER access (scoped to their MDA)', async () => {
+    const res = await request(app)
+      .get('/api/dashboard/breakdown?metric=activeLoans')
+      .set('Authorization', `Bearer ${officerToken}`);
+
+    expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
+    // MDA_OFFICER should only see their own MDA's data
+    for (const row of res.body.data) {
+      expect(row.mdaId).toBe(testMdaId);
+    }
+  });
+
+  it('monthlyRecovery metric sorts by variancePercent ascending (worst variance first)', async () => {
+    const res = await request(app)
+      .get('/api/dashboard/breakdown?metric=monthlyRecovery')
+      .set('Authorization', `Bearer ${adminToken}`);
+
+    expect(res.status).toBe(200);
+    const rows = res.body.data;
+    for (let i = 1; i < rows.length; i++) {
+      if (rows[i].variancePercent !== null && rows[i - 1].variancePercent !== null) {
+        expect(rows[i].variancePercent).toBeGreaterThanOrEqual(rows[i - 1].variancePercent);
+      }
     }
   });
 });

@@ -31,7 +31,7 @@ const validLoanData = {
 };
 
 beforeAll(async () => {
-  await db.execute(sql`TRUNCATE audit_log, refresh_tokens, users, mdas CASCADE`);
+  await db.execute(sql`TRUNCATE refresh_tokens, audit_log, users, mdas CASCADE`);
 
   testMdaId = generateUuidv7();
   await db.insert(mdas).values({
@@ -60,7 +60,7 @@ beforeEach(async () => {
 });
 
 afterAll(async () => {
-  await db.execute(sql`TRUNCATE audit_log, refresh_tokens, users, mdas CASCADE`);
+  await db.execute(sql`TRUNCATE refresh_tokens, audit_log, users, mdas CASCADE`);
 });
 
 describe('loanService.createLoan', () => {

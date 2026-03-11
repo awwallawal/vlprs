@@ -10,13 +10,13 @@ export { mdaQuerySchema } from './validators/mdaSchemas.js';
 export { migrationUploadQuerySchema, confirmMappingBodySchema, validationResultQuerySchema, personListQuerySchema, createBaselineBodySchema, beneficiaryQuerySchema, confirmDelineationSchema, resolveDuplicateSchema, duplicateListQuerySchema } from './validators/migrationSchemas.js';
 export { observationQuerySchema, reviewObservationSchema, resolveObservationSchema, promoteObservationSchema, generateObservationsSchema } from './validators/observationSchemas.js';
 export { serviceStatusVerificationQuerySchema } from './validators/reportSchemas.js';
-export { dashboardMetricsSchema, attentionItemSchema, attentionItemsResponseSchema, type DashboardMetricsResponse, type AttentionItemsResponse } from './validators/dashboardSchemas.js';
+export { dashboardMetricsSchema, attentionItemSchema, attentionItemsResponseSchema, drillDownMetricSchema, breakdownQuerySchema, type DashboardMetricsResponse, type AttentionItemsResponse, type BreakdownQuery } from './validators/dashboardSchemas.js';
 
 // Types
 export type { ApiResponse, ApiError, ApiResult } from './types/api.js';
 export type { User, JwtPayload, LoginRequest, LoginResponse, RegisterRequest, RefreshResponse, UserListItem, PaginatedResponse } from './types/auth.js';
 export type { AuthenticatedUser, AuthorisedContext } from './types/rbac.js';
-export type { DashboardMetrics, AttentionItem, AttentionItemType } from './types/dashboard.js';
+export type { DashboardMetrics, AttentionItem, AttentionItemType, LoanClassification, DrillDownMetric, HealthBand, StatusDistribution, MdaBreakdownRow, LoanFilterType } from './types/dashboard.js';
 export type { SubmissionStatus, MigrationStage, Mda, MdaListItem, MdaAlias, MdaComplianceRow, MdaSummary, MigrationMdaStatus, MigrationDashboardMetrics, BeneficiaryListItem, BeneficiaryListMetrics, PaginatedBeneficiaries } from './types/mda.js';
 export type { MigrationUploadStatus, CanonicalField, ColumnMappingSuggestion, SheetPreview, MigrationUploadPreview, MigrationUpload, MigrationRecord, MigrationExtraField, MigrationUploadSummary, MigrationUploadDetail, ConfirmedColumnMapping, VarianceCategory, ValidationSummary, MdaBoundary, ValidatedMigrationRecord, ValidationResultRecord, ValidationResult, MatchType, MatchStatus, PersonMatch, PersonListItem, PersonTimelineEntry, PersonTimeline, LoanCycle, PersonProfile, BaselineResult, BatchBaselineResult, BaselineSummary, DelineationConfidence, DelineationBoundaryRecord, DelineationSection, DelineationResult, DuplicateResolution, DuplicateMatchType, DuplicateCandidate } from './types/migration.js';
 export type { LoanStatus, Loan, CreateLoanRequest, LoanSummary, LoanSearchResult, LoanDetail, LoanStateTransition, TransitionLoanRequest, TemporalProfile, TemporalCorrection, UpdateTemporalProfileRequest, ServiceExtension, CreateServiceExtensionRequest, GratuityProjectionResult } from './types/loan.js';

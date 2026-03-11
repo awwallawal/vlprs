@@ -205,6 +205,20 @@ export const router = createBrowserRouter([
               })),
           },
           {
+            path: 'drill-down/:metric',
+            lazy: () =>
+              import('@/pages/dashboard/MetricDrillDownPage').then((m) => ({
+                Component: m.MetricDrillDownPage,
+              })),
+          },
+          {
+            path: 'loans',
+            lazy: () =>
+              import('@/pages/dashboard/FilteredLoanListPage').then((m) => ({
+                Component: m.FilteredLoanListPage,
+              })),
+          },
+          {
             path: 'mda/:mdaId',
             lazy: () =>
               import('@/pages/dashboard/MdaDetailPage').then((m) => ({

@@ -52,6 +52,12 @@ export interface MdaSummary {
   totalExposure: string;
   monthlyRecovery: string;
   submissionHistory: SubmissionRecord[];
+  healthScore?: number;
+  healthBand?: import('../types/dashboard.js').HealthBand;
+  statusDistribution?: import('../types/dashboard.js').StatusDistribution;
+  expectedMonthlyDeduction?: string;
+  actualMonthlyRecovery?: string;
+  variancePercent?: number | null;
 }
 
 export interface MigrationMdaStatus {

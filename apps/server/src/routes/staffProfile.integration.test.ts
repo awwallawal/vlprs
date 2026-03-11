@@ -7,6 +7,7 @@ import { users, mdas, migrationUploads, migrationRecords, personMatches } from '
 import { signAccessToken } from '../lib/jwt';
 import { generateUuidv7 } from '../lib/uuidv7';
 import { resetRateLimiters } from '../middleware/rateLimiter';
+import { resetDb } from '../test/resetDb';
 
 let mdaJusticeId: string;
 let mdaInfoId: string;
@@ -18,7 +19,7 @@ let uploadJusticeId: string;
 let uploadInfoId: string;
 
 beforeAll(async () => {
-  await db.execute(sql`TRUNCATE person_matches, migration_records, migration_extra_fields, migration_uploads, audit_log, refresh_tokens, users, mda_aliases, mdas CASCADE`);
+  await resetDb();
 
   // Create test MDAs
   mdaJusticeId = generateUuidv7();
@@ -87,7 +88,7 @@ beforeEach(async () => {
 });
 
 afterAll(async () => {
-  await db.execute(sql`TRUNCATE person_matches, migration_records, migration_extra_fields, migration_uploads, audit_log, refresh_tokens, users, mda_aliases, mdas CASCADE`);
+  await resetDb();
 });
 
 describe('POST /api/migrations/match-persons', () => {

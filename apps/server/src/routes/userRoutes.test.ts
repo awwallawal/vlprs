@@ -7,6 +7,7 @@ import { users, mdas, refreshTokens } from '../db/schema';
 import { hashPassword } from '../lib/password';
 import { signAccessToken } from '../lib/jwt';
 import { generateUuidv7 } from '../lib/uuidv7';
+import { resetDb } from '../test/resetDb';
 
 vi.mock('../lib/email', () => ({
   sendWelcomeEmail: vi.fn(),
@@ -16,18 +17,19 @@ vi.mock('../lib/email', () => ({
 let testMdaId: string;
 
 beforeAll(async () => {
-  await db.execute(sql`TRUNCATE audit_log, refresh_tokens, users, mdas CASCADE`);
+  await resetDb();
 
   testMdaId = generateUuidv7();
   await db.insert(mdas).values({ id: testMdaId, name: 'Test MDA', code: 'RBAC', abbreviation: 'Test MDA' });
 });
 
 beforeEach(async () => {
-  await db.execute(sql`TRUNCATE audit_log, refresh_tokens, users CASCADE`);
+  // Table order matches resetDb() to prevent lock-ordering deadlocks.
+  await db.execute(sql`TRUNCATE refresh_tokens, audit_log, users CASCADE`);
 });
 
 afterAll(async () => {
-  await db.execute(sql`TRUNCATE audit_log, refresh_tokens, users, mdas CASCADE`);
+  await resetDb();
 });
 
 async function createTestUser(overrides: Partial<typeof users.$inferInsert> = {}) {

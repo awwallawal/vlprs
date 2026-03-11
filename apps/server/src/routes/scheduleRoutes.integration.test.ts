@@ -1,12 +1,12 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import request from 'supertest';
-import { sql } from 'drizzle-orm';
 import app from '../app';
 import { db } from '../db/index';
 import { mdas, users } from '../db/schema';
 import { hashPassword } from '../lib/password';
 import { generateUuidv7 } from '../lib/uuidv7';
 import * as authService from '../services/authService';
+import { resetDb } from '../test/resetDb';
 
 let testMdaId: string;
 let adminToken: string;
@@ -15,7 +15,7 @@ let testLoanId: string;
 const testPassword = 'SecurePass1';
 
 beforeAll(async () => {
-  await db.execute(sql`TRUNCATE audit_log, refresh_tokens, loans, users, mdas CASCADE`);
+  await resetDb();
 
   testMdaId = generateUuidv7();
   await db.insert(mdas).values({
@@ -61,7 +61,7 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  await db.execute(sql`TRUNCATE audit_log, refresh_tokens, loans, users, mdas CASCADE`);
+  await resetDb();
 });
 
 describe('GET /api/loans/:loanId/schedule', () => {

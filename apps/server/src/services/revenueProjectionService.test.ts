@@ -18,7 +18,7 @@ let activeLoanId2: string;
 let completedLoanId: string;
 
 beforeAll(async () => {
-  await db.execute(sql`TRUNCATE audit_log, ledger_entries, loan_state_transitions, loans, scheme_config, refresh_tokens, users, mdas CASCADE`);
+  await db.execute(sql`TRUNCATE loan_state_transitions, ledger_entries, loans, scheme_config, refresh_tokens, audit_log, users, mdas CASCADE`);
 
   testMdaId = generateUuidv7();
   await db.insert(mdas).values({
@@ -150,7 +150,7 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  await db.execute(sql`TRUNCATE audit_log, ledger_entries, loan_state_transitions, loans, scheme_config, refresh_tokens, users, mdas CASCADE`);
+  await db.execute(sql`TRUNCATE loan_state_transitions, ledger_entries, loans, scheme_config, refresh_tokens, audit_log, users, mdas CASCADE`);
 });
 
 describe('revenueProjectionService', () => {

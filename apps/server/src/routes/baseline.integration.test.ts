@@ -16,6 +16,7 @@ import {
 import { signAccessToken } from '../lib/jwt';
 import { generateUuidv7 } from '../lib/uuidv7';
 import { resetRateLimiters } from '../middleware/rateLimiter';
+import { resetDb } from '../test/resetDb';
 
 // ─── Test fixture IDs ────────────────────────────────────────────────
 let testMdaId: string;
@@ -40,9 +41,7 @@ beforeAll(async () => {
   resetRateLimiters();
 
   // Clean all relevant tables
-  await db.execute(
-    sql`TRUNCATE migration_records, migration_uploads, loan_state_transitions, ledger_entries, loans, audit_log, refresh_tokens, users, mdas CASCADE`,
-  );
+  await resetDb();
 
   // Create test MDA
   testMdaId = generateUuidv7();
@@ -142,9 +141,7 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  await db.execute(
-    sql`TRUNCATE migration_records, migration_uploads, loan_state_transitions, ledger_entries, loans, audit_log, refresh_tokens, users, mdas CASCADE`,
-  );
+  await resetDb();
 });
 
 describe('Baseline Integration Tests (Story 3.4 AC 7)', () => {

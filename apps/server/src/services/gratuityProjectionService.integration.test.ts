@@ -3,6 +3,7 @@ import request from 'supertest';
 import { sql } from 'drizzle-orm';
 import { addMonths } from 'date-fns';
 import app from '../app';
+import { resetDb } from '../test/resetDb';
 import { db } from '../db/index';
 import { mdas, users, loans, ledgerEntries } from '../db/schema';
 import { hashPassword } from '../lib/password';
@@ -40,7 +41,7 @@ const simpleLoanParams = {
 };
 
 beforeAll(async () => {
-  await db.execute(sql`TRUNCATE audit_log, refresh_tokens, ledger_entries, loan_state_transitions, temporal_corrections, service_extensions, loans, users, mdas CASCADE`);
+  await resetDb();
 
   testMdaId = generateUuidv7();
   secondMdaId = generateUuidv7();
@@ -153,7 +154,7 @@ beforeEach(async () => {
 });
 
 afterAll(async () => {
-  await db.execute(sql`TRUNCATE audit_log, refresh_tokens, ledger_entries, loan_state_transitions, temporal_corrections, service_extensions, loans, users, mdas CASCADE`);
+  await resetDb();
 });
 
 /** Helper: seed PAYROLL ledger entries for a loan */

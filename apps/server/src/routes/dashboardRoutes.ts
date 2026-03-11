@@ -6,7 +6,7 @@ import { authorise } from '../middleware/authorise';
 import { scopeToMda } from '../middleware/scopeToMda';
 import { readLimiter } from '../middleware/rateLimiter';
 import { auditLog } from '../middleware/auditLog';
-import { ROLES } from '@vlprs/shared';
+import { ROLES, breakdownQuerySchema } from '@vlprs/shared';
 import { db } from '../db';
 import { loans, ledgerEntries } from '../db/schema';
 import { eq, and, sql, count, inArray } from 'drizzle-orm';
@@ -18,6 +18,7 @@ import * as schemeConfigService from '../services/schemeConfigService';
 import * as gratuityProjectionService from '../services/gratuityProjectionService';
 import * as attentionItemService from '../services/attentionItemService';
 import { computeBalanceSumForIds } from '../services/attentionItemService';
+import * as mdaAggregationService from '../services/mdaAggregationService';
 
 const router = Router();
 
@@ -217,8 +218,8 @@ router.get(
   },
 );
 
-// Attention items middleware — MDA_OFFICER included (sees own MDA's items)
-const attentionAuth = [
+// Breakdown + attention middleware — all three roles (MDA_OFFICER scoped via scopeToMda)
+const drillDownAuth = [
   authenticate,
   requirePasswordChange,
   authorise(ROLES.SUPER_ADMIN, ROLES.DEPT_ADMIN, ROLES.MDA_OFFICER),
@@ -226,6 +227,45 @@ const attentionAuth = [
   readLimiter,
   auditLog,
 ];
+
+// GET /api/dashboard/breakdown — MDA breakdown for a given metric (Story 4.3)
+router.get(
+  '/dashboard/breakdown',
+  ...drillDownAuth,
+  async (req: Request, res: Response) => {
+    const parsed = breakdownQuerySchema.safeParse(req.query);
+    if (!parsed.success) {
+      res.status(400).json({ success: false, error: 'Invalid metric parameter' });
+      return;
+    }
+
+    const mdaScope = req.mdaScope;
+    const breakdown = await mdaAggregationService.getEnrichedMdaBreakdown(mdaScope);
+
+    const metric = parsed.data.metric;
+
+    // Sort: monthlyRecovery by variancePercent ascending (worst first), others by contributionAmount descending
+    if (metric === 'monthlyRecovery') {
+      breakdown.sort((a, b) => {
+        if (a.variancePercent === null && b.variancePercent === null) return 0;
+        if (a.variancePercent === null) return 1;
+        if (b.variancePercent === null) return -1;
+        return a.variancePercent - b.variancePercent;
+      });
+    } else {
+      breakdown.sort((a, b) => {
+        const aVal = new Decimal(a.contributionAmount);
+        const bVal = new Decimal(b.contributionAmount);
+        return bVal.minus(aVal).toNumber();
+      });
+    }
+
+    res.json({ success: true, data: breakdown });
+  },
+);
+
+// Attention items middleware — same role set as drill-down
+const attentionAuth = drillDownAuth;
 
 // GET /api/dashboard/attention — Attention items for dashboard
 router.get(

@@ -65,24 +65,22 @@ import {
 } from './observationService';
 import { db } from '../db/index';
 
+type MockFn = ReturnType<typeof vi.fn>;
+const mockDb = db as unknown as Record<'select' | 'insert' | 'update', MockFn>;
+
 // ─── Mock Helpers ────────────────────────────────────────────────────
 
 /** Creates a thenable chain mock that resolves to `result` when awaited. */
 function mockChain(result: unknown) {
   const promise = Promise.resolve(result);
-  const chain: Record<string, any> = {};
-  chain.from = vi.fn().mockReturnValue(chain);
-  chain.where = vi.fn().mockReturnValue(chain);
-  chain.limit = vi.fn().mockReturnValue(chain);
-  chain.leftJoin = vi.fn().mockReturnValue(chain);
-  chain.orderBy = vi.fn().mockReturnValue(chain);
-  chain.offset = vi.fn().mockReturnValue(chain);
-  chain.groupBy = vi.fn().mockReturnValue(chain);
-  chain.set = vi.fn().mockReturnValue(chain);
-  chain.values = vi.fn().mockReturnValue(chain);
-  chain.returning = vi.fn().mockReturnValue(chain);
-  chain.then = promise.then.bind(promise);
-  chain.catch = promise.catch.bind(promise);
+  const fns = [vi.fn(), vi.fn(), vi.fn(), vi.fn(), vi.fn(), vi.fn(), vi.fn(), vi.fn(), vi.fn(), vi.fn()];
+  const chain = {
+    from: fns[0], where: fns[1], limit: fns[2], leftJoin: fns[3], orderBy: fns[4],
+    offset: fns[5], groupBy: fns[6], set: fns[7], values: fns[8], returning: fns[9],
+    then: promise.then.bind(promise),
+    catch: promise.catch.bind(promise),
+  };
+  fns.forEach(fn => fn.mockReturnValue(chain));
   return chain;
 }
 
@@ -92,11 +90,11 @@ describe('observationService — markAsReviewed', () => {
   beforeEach(() => vi.clearAllMocks());
 
   it('transitions unreviewed → reviewed, records reviewerId and note', async () => {
-    (db.select as any).mockReturnValueOnce(
+    mockDb.select.mockReturnValueOnce(
       mockChain([{ id: 'obs1', status: 'unreviewed' }]),
     );
     const updateChain = mockChain(undefined);
-    (db.update as any).mockReturnValueOnce(updateChain);
+    mockDb.update.mockReturnValueOnce(updateChain);
 
     await markAsReviewed('obs1', 'user1', 'Checked the records');
 
@@ -110,24 +108,24 @@ describe('observationService — markAsReviewed', () => {
   });
 
   it('records reviewedAt timestamp', async () => {
-    (db.select as any).mockReturnValueOnce(
+    mockDb.select.mockReturnValueOnce(
       mockChain([{ id: 'obs1', status: 'unreviewed' }]),
     );
     const updateChain = mockChain(undefined);
-    (db.update as any).mockReturnValueOnce(updateChain);
+    mockDb.update.mockReturnValueOnce(updateChain);
 
     await markAsReviewed('obs1', 'user1');
 
-    const setArg = (updateChain.set as any).mock.calls[0][0];
+    const setArg = updateChain.set.mock.calls[0][0];
     expect(setArg.reviewedAt).toBeInstanceOf(Date);
   });
 
   it('allows note to be omitted', async () => {
-    (db.select as any).mockReturnValueOnce(
+    mockDb.select.mockReturnValueOnce(
       mockChain([{ id: 'obs1', status: 'unreviewed' }]),
     );
     const updateChain = mockChain(undefined);
-    (db.update as any).mockReturnValueOnce(updateChain);
+    mockDb.update.mockReturnValueOnce(updateChain);
 
     await markAsReviewed('obs1', 'user1');
 
@@ -139,7 +137,7 @@ describe('observationService — markAsReviewed', () => {
   });
 
   it('throws 404 when observation not found', async () => {
-    (db.select as any).mockReturnValueOnce(mockChain([]));
+    mockDb.select.mockReturnValueOnce(mockChain([]));
 
     await expect(markAsReviewed('missing', 'user1')).rejects.toThrow(
       'The requested observation could not be found',
@@ -147,7 +145,7 @@ describe('observationService — markAsReviewed', () => {
   });
 
   it('throws 400 when already reviewed', async () => {
-    (db.select as any).mockReturnValueOnce(
+    mockDb.select.mockReturnValueOnce(
       mockChain([{ id: 'obs1', status: 'reviewed' }]),
     );
 
@@ -157,7 +155,7 @@ describe('observationService — markAsReviewed', () => {
   });
 
   it('rejects transition from resolved status', async () => {
-    (db.select as any).mockReturnValueOnce(
+    mockDb.select.mockReturnValueOnce(
       mockChain([{ id: 'obs1', status: 'resolved' }]),
     );
 
@@ -167,7 +165,7 @@ describe('observationService — markAsReviewed', () => {
   });
 
   it('rejects transition from promoted status', async () => {
-    (db.select as any).mockReturnValueOnce(
+    mockDb.select.mockReturnValueOnce(
       mockChain([{ id: 'obs1', status: 'promoted' }]),
     );
 
@@ -183,11 +181,11 @@ describe('observationService — markAsResolved', () => {
   beforeEach(() => vi.clearAllMocks());
 
   it('transitions reviewed → resolved with resolution note and resolvedBy', async () => {
-    (db.select as any).mockReturnValueOnce(
+    mockDb.select.mockReturnValueOnce(
       mockChain([{ id: 'obs1', status: 'reviewed' }]),
     );
     const updateChain = mockChain(undefined);
-    (db.update as any).mockReturnValueOnce(updateChain);
+    mockDb.update.mockReturnValueOnce(updateChain);
 
     await markAsResolved('obs1', 'user1', 'Confirmed with MDA payroll');
 
@@ -201,20 +199,20 @@ describe('observationService — markAsResolved', () => {
   });
 
   it('records resolvedAt timestamp', async () => {
-    (db.select as any).mockReturnValueOnce(
+    mockDb.select.mockReturnValueOnce(
       mockChain([{ id: 'obs1', status: 'reviewed' }]),
     );
     const updateChain = mockChain(undefined);
-    (db.update as any).mockReturnValueOnce(updateChain);
+    mockDb.update.mockReturnValueOnce(updateChain);
 
     await markAsResolved('obs1', 'user1', 'Done');
 
-    const setArg = (updateChain.set as any).mock.calls[0][0];
+    const setArg = updateChain.set.mock.calls[0][0];
     expect(setArg.resolvedAt).toBeInstanceOf(Date);
   });
 
   it('rejects transition from unreviewed (must review first)', async () => {
-    (db.select as any).mockReturnValueOnce(
+    mockDb.select.mockReturnValueOnce(
       mockChain([{ id: 'obs1', status: 'unreviewed' }]),
     );
 
@@ -224,7 +222,7 @@ describe('observationService — markAsResolved', () => {
   });
 
   it('throws 404 when observation not found', async () => {
-    (db.select as any).mockReturnValueOnce(mockChain([]));
+    mockDb.select.mockReturnValueOnce(mockChain([]));
 
     await expect(
       markAsResolved('missing', 'user1', 'note'),
@@ -248,11 +246,11 @@ describe('observationService — promoteToException', () => {
   };
 
   it('creates exception record and sets status to promoted', async () => {
-    (db.select as any).mockReturnValueOnce(mockChain([sampleObs]));
+    mockDb.select.mockReturnValueOnce(mockChain([sampleObs]));
     const insertChain = mockChain([{ id: 'exc1' }]);
-    (db.insert as any).mockReturnValueOnce(insertChain);
+    mockDb.insert.mockReturnValueOnce(insertChain);
     const updateChain = mockChain(undefined);
-    (db.update as any).mockReturnValueOnce(updateChain);
+    mockDb.update.mockReturnValueOnce(updateChain);
 
     const result = await promoteToException('obs1', 'user1', 'high');
 
@@ -277,21 +275,21 @@ describe('observationService — promoteToException', () => {
   });
 
   it('allows promotion from reviewed status', async () => {
-    (db.select as any).mockReturnValueOnce(
+    mockDb.select.mockReturnValueOnce(
       mockChain([{ ...sampleObs, status: 'reviewed' }]),
     );
-    (db.insert as any).mockReturnValueOnce(mockChain([{ id: 'exc2' }]));
-    (db.update as any).mockReturnValueOnce(mockChain(undefined));
+    mockDb.insert.mockReturnValueOnce(mockChain([{ id: 'exc2' }]));
+    mockDb.update.mockReturnValueOnce(mockChain(undefined));
 
     const result = await promoteToException('obs1', 'user1');
     expect(result).toEqual({ exceptionId: 'exc2' });
   });
 
   it('defaults priority to medium when not specified', async () => {
-    (db.select as any).mockReturnValueOnce(mockChain([sampleObs]));
+    mockDb.select.mockReturnValueOnce(mockChain([sampleObs]));
     const insertChain = mockChain([{ id: 'exc3' }]);
-    (db.insert as any).mockReturnValueOnce(insertChain);
-    (db.update as any).mockReturnValueOnce(mockChain(undefined));
+    mockDb.insert.mockReturnValueOnce(insertChain);
+    mockDb.update.mockReturnValueOnce(mockChain(undefined));
 
     await promoteToException('obs1', 'user1');
 
@@ -301,7 +299,7 @@ describe('observationService — promoteToException', () => {
   });
 
   it('rejects promotion of resolved observation', async () => {
-    (db.select as any).mockReturnValueOnce(
+    mockDb.select.mockReturnValueOnce(
       mockChain([{ ...sampleObs, status: 'resolved' }]),
     );
 
@@ -311,7 +309,7 @@ describe('observationService — promoteToException', () => {
   });
 
   it('rejects promotion of already promoted observation', async () => {
-    (db.select as any).mockReturnValueOnce(
+    mockDb.select.mockReturnValueOnce(
       mockChain([{ ...sampleObs, status: 'promoted' }]),
     );
 
@@ -321,7 +319,7 @@ describe('observationService — promoteToException', () => {
   });
 
   it('throws 404 when observation not found', async () => {
-    (db.select as any).mockReturnValueOnce(mockChain([]));
+    mockDb.select.mockReturnValueOnce(mockChain([]));
 
     await expect(promoteToException('missing', 'user1')).rejects.toThrow(
       'The requested observation could not be found',
@@ -335,7 +333,7 @@ describe('observationService — getObservationCounts', () => {
   beforeEach(() => vi.clearAllMocks());
 
   it('returns counts grouped by type and status', async () => {
-    (db.select as any).mockReturnValueOnce(
+    mockDb.select.mockReturnValueOnce(
       mockChain([{
         total: 100,
         rateVariance: '50',

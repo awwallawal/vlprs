@@ -13,11 +13,11 @@ const testEmail = 'refresh-test@test.com';
 const testPassword = 'SecurePass1';
 
 beforeAll(async () => {
-  await db.execute(sql`TRUNCATE audit_log, refresh_tokens, users, mdas CASCADE`);
+  await db.execute(sql`TRUNCATE refresh_tokens, audit_log, users, mdas CASCADE`);
 });
 
 beforeEach(async () => {
-  await db.execute(sql`TRUNCATE audit_log, refresh_tokens, users CASCADE`);
+  await db.execute(sql`TRUNCATE refresh_tokens, audit_log, users CASCADE`);
 
   const hashed = await hashPassword(testPassword);
   testUserId = generateUuidv7();
@@ -33,7 +33,7 @@ beforeEach(async () => {
 });
 
 afterAll(async () => {
-  await db.execute(sql`TRUNCATE audit_log, refresh_tokens, users, mdas CASCADE`);
+  await db.execute(sql`TRUNCATE refresh_tokens, audit_log, users, mdas CASCADE`);
 });
 
 async function seedRefreshToken(

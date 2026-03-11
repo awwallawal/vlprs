@@ -7,6 +7,7 @@ import { users, mdas, loans, ledgerEntries } from '../db/schema';
 import { signAccessToken } from '../lib/jwt';
 import { generateUuidv7 } from '../lib/uuidv7';
 import { resetRateLimiters } from '../middleware/rateLimiter';
+import { resetDb } from '../test/resetDb';
 
 let testMdaId: string;
 let testMda2Id: string;
@@ -20,7 +21,7 @@ let officerToken: string;
 let officer2Token: string;
 
 beforeAll(async () => {
-  await db.execute(sql`TRUNCATE ledger_entries, loans, audit_log, refresh_tokens, users, mdas CASCADE`);
+  await resetDb();
 
   // Create test MDAs
   testMdaId = generateUuidv7();
@@ -141,7 +142,7 @@ beforeEach(async () => {
 });
 
 afterAll(async () => {
-  await db.execute(sql`TRUNCATE ledger_entries, loans, audit_log, refresh_tokens, users, mdas CASCADE`);
+  await resetDb();
 });
 
 describe('Balance Integration Tests (Story 2.5)', () => {

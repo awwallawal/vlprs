@@ -41,14 +41,18 @@ function shouldSkipSheet(name: string): boolean {
   return SKIP_SHEET_PATTERNS.some(p => p.test(name));
 }
 
+interface ExpectedRecord { fields: Record<string, unknown> }
+interface ExpectedSheet { sheet: string; recordCount: number; era: number; records: ExpectedRecord[] }
+interface ExpectedFixture { sheets: ExpectedSheet[] }
+
 // Cache expected JSONs
-const jsonCache = new Map<string, any>();
-function loadExpected(fixture: string) {
+const jsonCache = new Map<string, ExpectedFixture>();
+function loadExpected(fixture: string): ExpectedFixture {
   if (!jsonCache.has(fixture)) {
     const raw = fs.readFileSync(path.join(FIXTURE_DIR, `${fixture}.expected.json`), 'utf8');
     jsonCache.set(fixture, JSON.parse(raw));
   }
-  return jsonCache.get(fixture);
+  return jsonCache.get(fixture)!;
 }
 
 /**
