@@ -113,7 +113,7 @@ export async function apiClient<T>(
   }
 
   // Guard against non-JSON responses (e.g. 502 HTML from nginx during deploys)
-  let body: { success?: boolean; data?: unknown; error?: { code: string; message: string } };
+  let body: { success?: boolean; data?: unknown; error?: { code: string; message: string; details?: unknown } };
   try {
     body = await res.json();
   } catch {
@@ -131,6 +131,7 @@ export async function apiClient<T>(
     throw Object.assign(new Error(error.message), {
       code: error.code,
       status: res.status,
+      details: error.details,
     });
   }
 

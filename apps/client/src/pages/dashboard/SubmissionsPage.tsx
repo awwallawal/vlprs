@@ -1,26 +1,18 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router';
-import { Info, FileText } from 'lucide-react';
+import { Info, FileText, AlertTriangle } from 'lucide-react';
 import { useAuthStore } from '@/stores/authStore';
-import { useSubmissionHistory } from '@/hooks/useSubmissionData';
+import { useSubmissionHistory, useSubmissionUpload } from '@/hooks/useSubmissionData';
 import { FileUploadZone } from '@/components/shared/FileUploadZone';
 import { WelcomeGreeting } from '@/components/shared/WelcomeGreeting';
+import { SubmissionConfirmation } from './components/SubmissionConfirmation';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { formatDate, formatCount } from '@/lib/formatters';
 import { cn } from '@/lib/utils';
-import { UI_COPY } from '@vlprs/shared';
-
-/** Map known mock mdaIds to display names. */
-const MDA_NAME_MAP: Record<string, string> = {
-  'mda-001': 'Ministry of Finance',
-  'mda-002': 'Ministry of Education',
-  'mda-003': 'Ministry of Health',
-};
-
-/** Fallback mdaId when user's MDA has no mock data. */
-const FALLBACK_MDA_ID = 'mda-003';
+import { UI_COPY, VOCABULARY } from '@vlprs/shared';
+import type { SubmissionValidationError } from '@vlprs/shared';
 
 const STATUS_BADGE_VARIANT: Record<string, 'complete' | 'info' | 'review'> = {
   confirmed: 'complete',
@@ -37,28 +29,39 @@ export function SubmissionsPage() {
   const user = useAuthStore((s) => s.user);
   const navigate = useNavigate();
 
-  const userMdaId = user?.mdaId ?? null;
-  const mdaName = userMdaId ? (MDA_NAME_MAP[userMdaId] ?? 'Your MDA') : 'All MDAs';
-  const effectiveMdaId =
-    userMdaId && MDA_NAME_MAP[userMdaId] ? userMdaId : FALLBACK_MDA_ID;
+  const userMdaId = user?.mdaId ?? '';
 
-  const { data: submissions, isPending } = useSubmissionHistory(effectiveMdaId);
+  const { data: historyData, isPending } = useSubmissionHistory(userMdaId);
+  const submissions = historyData?.items ?? [];
+
+  const uploadMutation = useSubmissionUpload();
 
   const [checkpointConfirmed, setCheckpointConfirmed] = useState(false);
-  const [uploadStatus, setUploadStatus] = useState<'idle' | 'success'>('idle');
-  const [uploadedFileName, setUploadedFileName] = useState<string | undefined>();
 
-  const mostRecent = submissions?.[0] ?? null;
+  // Derive upload status from mutation state
+  const uploadStatus: 'idle' | 'uploading' | 'success' | 'error' = uploadMutation.isPending
+    ? 'uploading'
+    : uploadMutation.isSuccess
+      ? 'success'
+      : uploadMutation.isError
+        ? 'error'
+        : 'idle';
 
   const handleFileSelect = (file: File) => {
-    setUploadedFileName(file.name);
-    setUploadStatus('success');
+    uploadMutation.mutate(file);
   };
 
   const handleFileRemove = () => {
-    setUploadedFileName(undefined);
-    setUploadStatus('idle');
+    uploadMutation.reset();
   };
+
+  // Extract validation errors from mutation error
+  const validationErrors: SubmissionValidationError[] =
+    uploadMutation.error && 'details' in uploadMutation.error
+      ? (uploadMutation.error.details as SubmissionValidationError[]) ?? []
+      : [];
+
+  const mostRecent = submissions[0] ?? null;
 
   return (
     <div className="space-y-8">
@@ -68,7 +71,7 @@ export function SubmissionsPage() {
         <div>
           <h1 className="text-2xl font-bold text-text-primary">Monthly Submissions</h1>
           <p className="mt-1 text-sm text-text-secondary">
-            You are viewing data for: <span className="font-medium">{mdaName}</span>
+            Upload your monthly deduction data or enter records manually.
           </p>
         </div>
       </div>
@@ -131,7 +134,11 @@ export function SubmissionsPage() {
             onFileRemove={handleFileRemove}
             templateDownloadUrl="/templates/submission-template.csv"
             status={uploadStatus}
-            fileName={uploadedFileName}
+            errorMessage={
+              uploadMutation.isError
+                ? uploadMutation.error.message
+                : undefined
+            }
           />
 
           <div className="mt-4 flex items-center gap-3">
@@ -147,6 +154,37 @@ export function SubmissionsPage() {
           </div>
         </div>
       </section>
+
+      {/* Success confirmation */}
+      {uploadMutation.isSuccess && uploadMutation.data && (
+        <SubmissionConfirmation data={uploadMutation.data} />
+      )}
+
+      {/* Error display — row-level validation errors with non-punitive language */}
+      {uploadMutation.isError && validationErrors.length > 0 && (
+        <section
+          aria-labelledby="validation-errors-heading"
+          className="rounded-lg border border-gold/30 bg-gold-50 p-4"
+        >
+          <div className="flex items-center gap-2 mb-3">
+            <AlertTriangle className="h-5 w-5 text-gold" aria-hidden="true" />
+            <h3
+              id="validation-errors-heading"
+              className="text-base font-semibold text-text-primary"
+            >
+              {VOCABULARY.SUBMISSION_NEEDS_ATTENTION}
+            </h3>
+          </div>
+          <ul className="space-y-1.5 text-sm text-text-secondary">
+            {validationErrors.map((err, i) => (
+              <li key={i} className="flex items-start gap-2">
+                <span className="text-gold mt-0.5">&#8226;</span>
+                <span>{err.message}</span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       {/* Comparison summary for most recent submission */}
       {mostRecent && mostRecent.varianceCount > 0 && (
@@ -192,7 +230,7 @@ export function SubmissionsPage() {
               <Skeleton key={i} className="h-12 w-full rounded-md" />
             ))}
           </div>
-        ) : !submissions || submissions.length === 0 ? (
+        ) : submissions.length === 0 ? (
           <p className="text-sm text-text-muted py-4">No submissions on record.</p>
         ) : (
           <div className="overflow-x-auto rounded-lg border">

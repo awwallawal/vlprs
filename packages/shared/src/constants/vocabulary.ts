@@ -149,6 +149,20 @@ export const VOCABULARY = {
   DUPLICATE_REASSIGNED: 'Records reassigned to correct MDA',
   DUPLICATE_NOT_FOUND: 'The requested duplicate candidate could not be found.',
   DUPLICATE_ALREADY_RESOLVED: 'This duplicate has already been resolved.',
+  // Submissions (Story 5.1)
+  SUBMISSION_CONFIRMED: 'Submission confirmed and recorded',
+  SUBMISSION_NEEDS_ATTENTION: 'Upload needs attention — please review the items below',
+  SUBMISSION_DUPLICATE_ROW: 'Row {row}: Staff ID {staffId} already has a submission for {month}',
+  SUBMISSION_AMOUNT_FORMAT: "Row {row}: Amount '{value}' is not a valid number",
+  SUBMISSION_PERIOD_CLOSED: 'Submission period {period} is not currently open',
+  SUBMISSION_EVENT_DATE_REQUIRED: 'Row {row}: Event Date is required when Event Flag is not NONE',
+  SUBMISSION_CESSATION_REQUIRED: 'Row {row}: Cessation Reason is required when Amount is ₦0 and Event Flag is NONE',
+  SUBMISSION_MDA_MISMATCH: "Row {row}: MDA Code '{code}' does not match your assigned MDA",
+  SUBMISSION_STAFF_NOT_FOUND: "Row {row}: Staff ID '{staffId}' not found in your MDA",
+  SUBMISSION_MONTH_FORMAT: "Row {row}: Month '{value}' is not a valid YYYY-MM format",
+  SUBMISSION_FILE_TOO_LARGE: 'File exceeds the 5MB size limit',
+  SUBMISSION_FILE_TYPE: 'Only CSV files are accepted',
+  SUBMISSION_EMPTY_FILE: 'CSV file contains no data rows',
 } as const;
 
 export const UI_COPY = {

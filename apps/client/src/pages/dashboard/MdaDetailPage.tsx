@@ -184,7 +184,7 @@ export function MdaDetailPage() {
                       <td className="px-4 py-3"><Skeleton className="h-5 w-20 rounded-full" /></td>
                     </tr>
                   ))
-                : submissions.data?.map((record) => {
+                : submissions.data?.items?.map((record) => {
                     const badge = SUBMISSION_STATUS_MAP[record.status];
                     return (
                       <tr key={record.id} className="border-b">
@@ -205,7 +205,7 @@ export function MdaDetailPage() {
                   })}
             </tbody>
           </table>
-          {!submissions.isPending && submissions.data && submissions.data.length === 0 && (
+          {!submissions.isPending && submissions.data && submissions.data.items.length === 0 && (
             <p className="px-4 py-6 text-center text-sm text-text-secondary">
               No submission history available.
             </p>
