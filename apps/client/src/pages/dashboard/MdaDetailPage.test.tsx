@@ -69,7 +69,10 @@ vi.mock('@/hooks/useMdaData', () => ({
 }));
 
 vi.mock('@/hooks/useSubmissionData', () => ({
-  useSubmissionHistory: () => ({ data: mockSubmissions, isPending: false }),
+  useSubmissionHistory: () => ({
+    data: { items: mockSubmissions, total: mockSubmissions.length, page: 1, pageSize: 20 },
+    isPending: false,
+  }),
 }));
 
 function renderPage(initialEntries = ['/dashboard/mda/mda-003']) {

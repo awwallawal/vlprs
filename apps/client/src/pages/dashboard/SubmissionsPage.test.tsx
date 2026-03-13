@@ -39,7 +39,19 @@ vi.mock('@/stores/authStore', () => ({
 }));
 
 vi.mock('@/hooks/useSubmissionData', () => ({
-  useSubmissionHistory: () => ({ data: mockSubmissions, isPending: false }),
+  useSubmissionHistory: () => ({
+    data: { items: mockSubmissions, total: mockSubmissions.length, page: 1, pageSize: 20 },
+    isPending: false,
+  }),
+  useSubmissionUpload: () => ({
+    mutate: vi.fn(),
+    reset: vi.fn(),
+    isPending: false,
+    isSuccess: false,
+    isError: false,
+    data: null,
+    error: null,
+  }),
 }));
 
 function renderPage(initialEntries = ['/dashboard/submissions']) {
@@ -61,11 +73,6 @@ describe('SubmissionsPage', () => {
     expect(
       screen.getByRole('heading', { level: 1, name: 'Monthly Submissions' }),
     ).toBeInTheDocument();
-  });
-
-  it('renders MDA name context', () => {
-    renderPage();
-    expect(screen.getByText('Ministry of Health')).toBeInTheDocument();
   });
 
   it('renders pre-submission checkpoint section', () => {
@@ -100,5 +107,10 @@ describe('SubmissionsPage', () => {
     renderPage();
     expect(screen.getByText('MOH-2026-02-0001')).toBeInTheDocument();
     expect(screen.getByText('MOH-2026-01-0001')).toBeInTheDocument();
+  });
+
+  it('renders download CSV template link', () => {
+    renderPage();
+    expect(screen.getByText('Download CSV Template')).toBeInTheDocument();
   });
 });

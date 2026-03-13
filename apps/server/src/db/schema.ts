@@ -519,6 +519,67 @@ export const deduplicationCandidates = pgTable(
   ],
 );
 
+// ─── Submission Record Status Enum (Story 5.1) ───────────────────
+export const submissionRecordStatusEnum = pgEnum('submission_record_status', [
+  'processing', 'confirmed', 'rejected',
+]);
+
+// ─── Event Flag Type Enum (Story 5.1) ────────────────────────────
+export const eventFlagTypeEnum = pgEnum('event_flag_type', [
+  'NONE', 'RETIREMENT', 'DEATH', 'SUSPENSION', 'TRANSFER_OUT',
+  'TRANSFER_IN', 'LEAVE_WITHOUT_PAY', 'REINSTATEMENT', 'TERMINATION',
+]);
+
+// ─── MDA Submissions (Story 5.1) ─────────────────────────────────
+// Submission header — one row per CSV upload.
+export const mdaSubmissions = pgTable(
+  'mda_submissions',
+  {
+    id: uuid('id').primaryKey().$defaultFn(generateUuidv7),
+    mdaId: uuid('mda_id').notNull().references(() => mdas.id),
+    uploadedBy: uuid('uploaded_by').notNull().references(() => users.id),
+    period: varchar('period', { length: 7 }).notNull(), // YYYY-MM
+    referenceNumber: varchar('reference_number', { length: 50 }).notNull().unique(),
+    status: submissionRecordStatusEnum('status').notNull().default('processing'),
+    recordCount: integer('record_count').notNull(),
+    filename: varchar('filename', { length: 500 }),
+    fileSizeBytes: integer('file_size_bytes'),
+    validationErrors: jsonb('validation_errors'),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    index('idx_mda_submissions_mda_id').on(table.mdaId),
+    index('idx_mda_submissions_period').on(table.period),
+    uniqueIndex('idx_mda_submissions_reference').on(table.referenceNumber),
+  ],
+);
+
+// ─── Submission Rows (Story 5.1) ─────────────────────────────────
+// Individual CSV rows — one row per CSV data row.
+export const submissionRows = pgTable(
+  'submission_rows',
+  {
+    id: uuid('id').primaryKey().$defaultFn(generateUuidv7),
+    submissionId: uuid('submission_id').notNull().references(() => mdaSubmissions.id),
+    rowNumber: integer('row_number').notNull(),
+    staffId: varchar('staff_id', { length: 50 }).notNull(),
+    month: varchar('month', { length: 7 }).notNull(), // YYYY-MM
+    amountDeducted: numeric('amount_deducted', { precision: 15, scale: 2 }).notNull(),
+    payrollBatchReference: varchar('payroll_batch_reference', { length: 100 }).notNull(),
+    mdaCode: varchar('mda_code', { length: 50 }).notNull(),
+    eventFlag: eventFlagTypeEnum('event_flag').notNull(),
+    eventDate: date('event_date', { mode: 'date' }),
+    cessationReason: varchar('cessation_reason', { length: 255 }),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    index('idx_submission_rows_submission_id').on(table.submissionId),
+    index('idx_submission_rows_staff_id').on(table.staffId),
+    index('idx_submission_rows_month').on(table.month),
+  ],
+);
+
 // ─── Scheme Config (Story 4.1) ───────────────────────────────────
 // Lightweight key-value configuration table for scheme-level settings.
 // First entry: key = 'scheme_fund_total'. AG populates when committee confirms.

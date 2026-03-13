@@ -1,0 +1,558 @@
+import Papa from 'papaparse';
+import { eq, and, inArray, sql, desc, count } from 'drizzle-orm';
+import { db } from '../db/index';
+import { mdaSubmissions, submissionRows, mdas, loans } from '../db/schema';
+import { AppError } from '../lib/appError';
+import { withMdaScope } from '../lib/mdaScope';
+import { generateUuidv7 } from '../lib/uuidv7';
+import { VOCABULARY, submissionRowSchema } from '@vlprs/shared';
+import type {
+  SubmissionRow,
+  SubmissionUploadResponse,
+  SubmissionDetail,
+  SubmissionValidationError,
+  SubmissionRecordStatus,
+  EventFlagType,
+} from '@vlprs/shared';
+
+// ─── CSV Parsing ────────────────────────────────────────────────────
+
+const CSV_HEADERS = [
+  'Staff ID', 'Month', 'Amount Deducted', 'Payroll Batch Reference',
+  'MDA Code', 'Event Flag', 'Event Date', 'Cessation Reason',
+] as const;
+
+interface ParsedCsvRow {
+  rowNumber: number;
+  staffId: string;
+  month: string;
+  amountDeducted: string;
+  payrollBatchReference: string;
+  mdaCode: string;
+  eventFlag: string;
+  eventDate: string | null;
+  cessationReason: string | null;
+}
+
+export function parseSubmissionCsv(buffer: Buffer): ParsedCsvRow[] {
+  // Strip BOM if present
+  let csvText = buffer.toString('utf-8');
+  if (csvText.charCodeAt(0) === 0xFEFF) {
+    csvText = csvText.slice(1);
+  }
+
+  const result = Papa.parse<string[]>(csvText, {
+    header: false,
+    skipEmptyLines: true,
+    delimiter: ',',
+  });
+
+  if (result.errors.length > 0 && result.data.length === 0) {
+    throw new AppError(422, 'CSV_PARSE_ERROR', VOCABULARY.SUBMISSION_EMPTY_FILE);
+  }
+
+  // Skip header row if present (first row matches expected headers or is text-like)
+  let dataRows = result.data;
+  if (dataRows.length > 0) {
+    const firstRow = dataRows[0];
+    const isHeader = firstRow.some(
+      (cell) => CSV_HEADERS.some((h) => h.toLowerCase() === cell.trim().toLowerCase()),
+    );
+    if (isHeader) {
+      dataRows = dataRows.slice(1);
+    }
+  }
+
+  if (dataRows.length === 0) {
+    throw new AppError(422, 'SUBMISSION_VALIDATION_FAILED', VOCABULARY.SUBMISSION_EMPTY_FILE);
+  }
+
+  return dataRows.map((row, idx) => ({
+    rowNumber: idx + 2, // 1-based, +1 for header row
+    staffId: (row[0] || '').trim(),
+    month: (row[1] || '').trim(),
+    amountDeducted: (row[2] || '').trim(),
+    payrollBatchReference: (row[3] || '').trim(),
+    mdaCode: (row[4] || '').trim(),
+    eventFlag: (row[5] || '').trim(),
+    eventDate: row[6]?.trim() || null,
+    cessationReason: row[7]?.trim() || null,
+  }));
+}
+
+// ─── Row Validation ─────────────────────────────────────────────────
+
+export function validateSubmissionRows(
+  rows: ParsedCsvRow[],
+): { validRows: SubmissionRow[]; errors: SubmissionValidationError[] } {
+  const errors: SubmissionValidationError[] = [];
+  const validRows: SubmissionRow[] = [];
+
+  for (const row of rows) {
+    const result = submissionRowSchema.safeParse({
+      staffId: row.staffId,
+      month: row.month,
+      amountDeducted: row.amountDeducted,
+      payrollBatchReference: row.payrollBatchReference,
+      mdaCode: row.mdaCode,
+      eventFlag: row.eventFlag,
+      eventDate: row.eventDate,
+      cessationReason: row.cessationReason,
+    });
+
+    if (!result.success) {
+      for (const issue of result.error.issues) {
+        const field = issue.path[0]?.toString() || 'unknown';
+        let message: string;
+
+        if (field === 'amountDeducted') {
+          message = VOCABULARY.SUBMISSION_AMOUNT_FORMAT
+            .replace('{row}', String(row.rowNumber))
+            .replace('{value}', row.amountDeducted);
+        } else if (field === 'month') {
+          message = VOCABULARY.SUBMISSION_MONTH_FORMAT
+            .replace('{row}', String(row.rowNumber))
+            .replace('{value}', row.month);
+        } else if (field === 'eventDate') {
+          message = VOCABULARY.SUBMISSION_EVENT_DATE_REQUIRED
+            .replace('{row}', String(row.rowNumber));
+        } else if (field === 'cessationReason') {
+          message = VOCABULARY.SUBMISSION_CESSATION_REQUIRED
+            .replace('{row}', String(row.rowNumber));
+        } else {
+          message = `Row ${row.rowNumber}: ${issue.message}`;
+        }
+
+        errors.push({ row: row.rowNumber, field, message });
+      }
+    } else {
+      validRows.push(result.data as SubmissionRow);
+    }
+  }
+
+  // Check intra-file duplicates (same Staff ID + same Month within CSV)
+  const seen = new Map<string, number>();
+  for (const row of rows) {
+    const key = `${row.staffId}::${row.month}`;
+    if (seen.has(key)) {
+      errors.push({
+        row: row.rowNumber,
+        field: 'staffId',
+        message: VOCABULARY.SUBMISSION_DUPLICATE_ROW
+          .replace('{row}', String(row.rowNumber))
+          .replace('{staffId}', row.staffId)
+          .replace('{month}', row.month),
+      });
+    } else {
+      seen.set(key, row.rowNumber);
+    }
+  }
+
+  return { validRows, errors };
+}
+
+// ─── MDA Code Validation ─────────────────────────────────────────────
+
+export async function validateMdaCodes(
+  rows: ParsedCsvRow[],
+  mdaScope: string | null,
+): Promise<{ mdaId: string; errors: SubmissionValidationError[] }> {
+  const errors: SubmissionValidationError[] = [];
+
+  // Get unique MDA codes from CSV
+  const mdaCodes = [...new Set(rows.map((r) => r.mdaCode))];
+
+  if (mdaScope !== null) {
+    // MDA_OFFICER: all rows must match their assigned MDA
+    const assignedMda = await db.select({ id: mdas.id, code: mdas.code })
+      .from(mdas)
+      .where(eq(mdas.id, mdaScope))
+      .limit(1);
+
+    if (assignedMda.length === 0) {
+      throw new AppError(400, 'MDA_NOT_FOUND', VOCABULARY.MDA_NOT_FOUND);
+    }
+
+    const mdaCode = assignedMda[0].code;
+    for (const row of rows) {
+      if (row.mdaCode !== mdaCode) {
+        errors.push({
+          row: row.rowNumber,
+          field: 'mdaCode',
+          message: VOCABULARY.SUBMISSION_MDA_MISMATCH
+            .replace('{row}', String(row.rowNumber))
+            .replace('{code}', row.mdaCode),
+        });
+      }
+    }
+
+    return { mdaId: mdaScope, errors };
+  }
+
+  // DEPT_ADMIN: resolve MDA from CSV data
+  if (mdaCodes.length > 1) {
+    errors.push({
+      row: 0,
+      field: 'mdaCode',
+      message: 'All rows must belong to the same MDA',
+    });
+    return { mdaId: '', errors };
+  }
+
+  const matchedMda = await db.select({ id: mdas.id })
+    .from(mdas)
+    .where(eq(mdas.code, mdaCodes[0]))
+    .limit(1);
+
+  if (matchedMda.length === 0) {
+    errors.push({
+      row: 0,
+      field: 'mdaCode',
+      message: `MDA Code '${mdaCodes[0]}' not found in the system`,
+    });
+    return { mdaId: '', errors };
+  }
+
+  return { mdaId: matchedMda[0].id, errors };
+}
+
+// ─── Staff ID Validation (batch) ─────────────────────────────────────
+
+export async function validateStaffIds(
+  rows: ParsedCsvRow[],
+  mdaId: string,
+): Promise<SubmissionValidationError[]> {
+  const errors: SubmissionValidationError[] = [];
+  const uniqueStaffIds = [...new Set(rows.map((r) => r.staffId))];
+
+  if (uniqueStaffIds.length === 0) return errors;
+
+  // Batch query: find all staff IDs that exist for this MDA
+  const existing = await db.select({ staffId: loans.staffId })
+    .from(loans)
+    .where(and(
+      inArray(loans.staffId, uniqueStaffIds),
+      eq(loans.mdaId, mdaId),
+    ));
+
+  const existingSet = new Set(existing.map((r) => r.staffId));
+
+  for (const row of rows) {
+    if (!existingSet.has(row.staffId)) {
+      errors.push({
+        row: row.rowNumber,
+        field: 'staffId',
+        message: VOCABULARY.SUBMISSION_STAFF_NOT_FOUND
+          .replace('{row}', String(row.rowNumber))
+          .replace('{staffId}', row.staffId),
+      });
+    }
+  }
+
+  return errors;
+}
+
+// ─── Duplicate Check (against existing confirmed submissions) ────────
+
+export async function checkDuplicates(
+  rows: ParsedCsvRow[],
+  mdaId: string,
+): Promise<SubmissionValidationError[]> {
+  const errors: SubmissionValidationError[] = [];
+  const uniqueStaffIds = [...new Set(rows.map((r) => r.staffId))];
+  const uniqueMonths = [...new Set(rows.map((r) => r.month))];
+
+  if (uniqueStaffIds.length === 0) return errors;
+
+  // Single composite query: find existing confirmed submission rows for these staff+month combos
+  const existingRows = await db.select({
+    staffId: submissionRows.staffId,
+    month: submissionRows.month,
+  })
+    .from(submissionRows)
+    .innerJoin(mdaSubmissions, eq(submissionRows.submissionId, mdaSubmissions.id))
+    .where(and(
+      eq(mdaSubmissions.mdaId, mdaId),
+      eq(mdaSubmissions.status, 'confirmed'),
+      inArray(submissionRows.staffId, uniqueStaffIds),
+      inArray(submissionRows.month, uniqueMonths),
+    ));
+
+  const existingSet = new Set(existingRows.map((r) => `${r.staffId}::${r.month}`));
+
+  for (const row of rows) {
+    const key = `${row.staffId}::${row.month}`;
+    if (existingSet.has(key)) {
+      errors.push({
+        row: row.rowNumber,
+        field: 'staffId',
+        message: VOCABULARY.SUBMISSION_DUPLICATE_ROW
+          .replace('{row}', String(row.rowNumber))
+          .replace('{staffId}', row.staffId)
+          .replace('{month}', row.month),
+      });
+    }
+  }
+
+  return errors;
+}
+
+// ─── Period Lock ──────────────────────────────────────────────────────
+
+export function checkPeriodLock(period: string): SubmissionValidationError | null {
+  const now = new Date();
+  const currentYear = now.getUTCFullYear();
+  const currentMonth = now.getUTCMonth() + 1; // 1-based, UTC
+
+  const [yearStr, monthStr] = period.split('-');
+  const year = parseInt(yearStr, 10);
+  const month = parseInt(monthStr, 10);
+
+  // Calculate current period and previous period
+  const currentPeriod = currentYear * 12 + currentMonth;
+  const submissionPeriod = year * 12 + month;
+  const previousPeriod = currentPeriod - 1;
+
+  // Open: current month or previous month
+  if (submissionPeriod === currentPeriod || submissionPeriod === previousPeriod) {
+    return null;
+  }
+
+  const periodLabel = `${yearStr}-${monthStr}`;
+  return {
+    row: 0,
+    field: 'period',
+    message: VOCABULARY.SUBMISSION_PERIOD_CLOSED.replace('{period}', periodLabel),
+  };
+}
+
+// ─── Process Submission (orchestrator) ───────────────────────────────
+
+export async function processSubmission(
+  file: Express.Multer.File,
+  mdaScope: string | null,
+  userId: string,
+): Promise<SubmissionUploadResponse> {
+  // 1. Parse CSV
+  const rows = parseSubmissionCsv(file.buffer);
+  const allErrors: SubmissionValidationError[] = [];
+
+  // 2. Validate row data (schema + intra-file duplicates)
+  const { errors: rowErrors } = validateSubmissionRows(rows);
+  allErrors.push(...rowErrors);
+
+  // 3. Validate MDA codes & resolve MDA ID
+  const { mdaId, errors: mdaErrors } = await validateMdaCodes(rows, mdaScope);
+  allErrors.push(...mdaErrors);
+
+  // 4. Check period lock (validate once, all rows should share the same period for practical use)
+  const periods = [...new Set(rows.map((r) => r.month))];
+  for (const period of periods) {
+    const periodError = checkPeriodLock(period);
+    if (periodError) {
+      allErrors.push(periodError);
+    }
+  }
+
+  // If we have errors already or no valid MDA, reject early before DB lookups
+  if (allErrors.length > 0) {
+    throw new AppError(422, 'SUBMISSION_VALIDATION_FAILED', VOCABULARY.SUBMISSION_NEEDS_ATTENTION, allErrors);
+  }
+
+  // 5. Validate Staff IDs exist (batch query)
+  const staffErrors = await validateStaffIds(rows, mdaId);
+  allErrors.push(...staffErrors);
+
+  // 6. Check duplicates against existing confirmed submissions
+  const dupErrors = await checkDuplicates(rows, mdaId);
+  allErrors.push(...dupErrors);
+
+  // If any DB-level validation errors, reject
+  if (allErrors.length > 0) {
+    throw new AppError(422, 'SUBMISSION_VALIDATION_FAILED', VOCABULARY.SUBMISSION_NEEDS_ATTENTION, allErrors);
+  }
+
+  // 7. Validate all rows share the same period (submission.period is singular)
+  if (periods.length > 1) {
+    allErrors.push({
+      row: 0,
+      field: 'month',
+      message: 'All rows must belong to the same submission period',
+    });
+    throw new AppError(422, 'SUBMISSION_VALIDATION_FAILED', VOCABULARY.SUBMISSION_NEEDS_ATTENTION, allErrors);
+  }
+
+  const period = periods[0];
+
+  // 8. Atomic INSERT — reference generation + submission + all rows in single transaction
+  const submissionId = generateUuidv7();
+  const now = new Date();
+
+  const referenceNumber = await db.transaction(async (tx) => {
+    // Generate reference number INSIDE transaction to prevent race conditions
+    const refResult = await tx.select({ referenceNumber: mdaSubmissions.referenceNumber })
+      .from(mdaSubmissions)
+      .where(sql`${mdaSubmissions.referenceNumber} LIKE ${'BIR-' + period + '-%'}`)
+      .orderBy(desc(mdaSubmissions.referenceNumber))
+      .limit(1);
+
+    let nextSeq = 1;
+    if (refResult.length > 0) {
+      const lastRef = refResult[0].referenceNumber;
+      const seqPart = lastRef.split('-').pop();
+      if (seqPart) {
+        nextSeq = parseInt(seqPart, 10) + 1;
+      }
+    }
+    const refNumber = `BIR-${period}-${String(nextSeq).padStart(4, '0')}`;
+
+    await tx.insert(mdaSubmissions).values({
+      id: submissionId,
+      mdaId,
+      uploadedBy: userId,
+      period,
+      referenceNumber: refNumber,
+      status: 'confirmed',
+      recordCount: rows.length,
+      filename: file.originalname,
+      fileSizeBytes: file.size,
+      createdAt: now,
+      updatedAt: now,
+    });
+
+    const rowValues = rows.map((row) => ({
+      id: generateUuidv7(),
+      submissionId,
+      rowNumber: row.rowNumber,
+      staffId: row.staffId,
+      month: row.month,
+      amountDeducted: row.amountDeducted.replace(/,/g, ''),
+      payrollBatchReference: row.payrollBatchReference,
+      mdaCode: row.mdaCode,
+      eventFlag: row.eventFlag as EventFlagType,
+      eventDate: row.eventDate ? new Date(row.eventDate) : null,
+      cessationReason: row.cessationReason,
+      createdAt: now,
+    }));
+
+    await tx.insert(submissionRows).values(rowValues);
+
+    return refNumber;
+  });
+
+  return {
+    referenceNumber,
+    recordCount: rows.length,
+    submissionDate: now.toISOString(),
+    status: 'confirmed' as SubmissionRecordStatus,
+  };
+}
+
+// ─── Get Submissions (paginated list) ────────────────────────────────
+
+export async function getSubmissions(
+  mdaScope: string | null,
+  filters: { page: number; pageSize: number; period?: string; mdaId?: string },
+): Promise<{
+  items: Array<{
+    id: string;
+    referenceNumber: string;
+    submissionDate: string;
+    recordCount: number;
+    status: string;
+    period: string;
+  }>;
+  total: number;
+  page: number;
+  pageSize: number;
+}> {
+  const { page, pageSize, period, mdaId } = filters;
+  const offset = (page - 1) * pageSize;
+
+  const conditions = [];
+  const scopeCondition = withMdaScope(mdaSubmissions.mdaId, mdaScope);
+  if (scopeCondition) conditions.push(scopeCondition);
+  if (period) conditions.push(eq(mdaSubmissions.period, period));
+  if (mdaId) conditions.push(eq(mdaSubmissions.mdaId, mdaId));
+
+  const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
+
+  const [items, totalResult] = await Promise.all([
+    db.select({
+      id: mdaSubmissions.id,
+      referenceNumber: mdaSubmissions.referenceNumber,
+      submissionDate: mdaSubmissions.createdAt,
+      recordCount: mdaSubmissions.recordCount,
+      status: mdaSubmissions.status,
+      period: mdaSubmissions.period,
+    })
+      .from(mdaSubmissions)
+      .where(whereClause)
+      .orderBy(desc(mdaSubmissions.createdAt))
+      .limit(pageSize)
+      .offset(offset),
+    db.select({ count: count() })
+      .from(mdaSubmissions)
+      .where(whereClause),
+  ]);
+
+  return {
+    items: items.map((item) => ({
+      ...item,
+      submissionDate: item.submissionDate.toISOString(),
+      alignedCount: 0, // Default until comparison engine (Story 5.4)
+      varianceCount: 0,
+    })),
+    total: totalResult[0].count,
+    page,
+    pageSize,
+  };
+}
+
+// ─── Get Submission By ID ────────────────────────────────────────────
+
+export async function getSubmissionById(
+  id: string,
+  mdaScope: string | null,
+): Promise<SubmissionDetail> {
+  const conditions = [eq(mdaSubmissions.id, id)];
+  const scopeCondition = withMdaScope(mdaSubmissions.mdaId, mdaScope);
+  if (scopeCondition) conditions.push(scopeCondition);
+
+  const submission = await db.select()
+    .from(mdaSubmissions)
+    .where(and(...conditions))
+    .limit(1);
+
+  if (submission.length === 0) {
+    throw new AppError(404, 'NOT_FOUND', 'Submission not found');
+  }
+
+  const rows = await db.select()
+    .from(submissionRows)
+    .where(eq(submissionRows.submissionId, id))
+    .orderBy(submissionRows.rowNumber);
+
+  const sub = submission[0];
+  return {
+    id: sub.id,
+    mdaId: sub.mdaId,
+    period: sub.period,
+    referenceNumber: sub.referenceNumber,
+    status: sub.status,
+    recordCount: sub.recordCount,
+    filename: sub.filename,
+    fileSizeBytes: sub.fileSizeBytes,
+    createdAt: sub.createdAt.toISOString(),
+    rows: rows.map((r) => ({
+      staffId: r.staffId,
+      month: r.month,
+      amountDeducted: r.amountDeducted,
+      payrollBatchReference: r.payrollBatchReference,
+      mdaCode: r.mdaCode,
+      eventFlag: r.eventFlag as EventFlagType,
+      eventDate: r.eventDate ? r.eventDate.toISOString().split('T')[0] : null,
+      cessationReason: r.cessationReason,
+    })),
+  };
+}

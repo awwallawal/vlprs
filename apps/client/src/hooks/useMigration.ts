@@ -1,23 +1,9 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuthStore } from '@/stores/authStore';
+import { getAuthHeaders } from '@/lib/fetchHelpers';
 import type { MigrationUploadPreview, MigrationUploadSummary, MdaListItem, ValidationSummary, ValidationResult, VarianceCategory, BaselineResult, BatchBaselineResult, BaselineSummary } from '@vlprs/shared';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
-
-function getAuthHeaders(): Record<string, string> {
-  const { accessToken } = useAuthStore.getState();
-  const headers: Record<string, string> = {};
-  if (accessToken) {
-    headers['Authorization'] = `Bearer ${accessToken}`;
-  }
-  const csrfMatch = document.cookie
-    .split('; ')
-    .find((row) => row.startsWith('__csrf='));
-  if (csrfMatch) {
-    headers['x-csrf-token'] = decodeURIComponent(csrfMatch.split('=')[1]);
-  }
-  return headers;
-}
 
 export function useUploadMigration() {
   const queryClient = useQueryClient();

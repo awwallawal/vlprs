@@ -1,0 +1,64 @@
+import { z } from 'zod';
+
+const EVENT_FLAG_VALUES = [
+  'NONE', 'RETIREMENT', 'DEATH', 'SUSPENSION', 'TRANSFER_OUT',
+  'TRANSFER_IN', 'LEAVE_WITHOUT_PAY', 'REINSTATEMENT', 'TERMINATION',
+] as const;
+
+const YYYY_MM_REGEX = /^\d{4}-(0[1-9]|1[0-2])$/;
+
+/**
+ * Validates a single CSV submission row (8 fields).
+ * Conditional refinements:
+ * - Event Date required when Event Flag != NONE
+ * - Cessation Reason required when Amount = 0 AND Event Flag = NONE
+ */
+export const submissionRowSchema = z.object({
+  staffId: z.string().min(1, 'Staff ID is required'),
+  month: z.string().regex(YYYY_MM_REGEX, 'Month must be in YYYY-MM format'),
+  amountDeducted: z.string().refine((val) => {
+    const cleaned = val.replace(/,/g, '');
+    const num = Number(cleaned);
+    return !isNaN(num) && num >= 0;
+  }, 'Amount must be a valid number >= 0'),
+  payrollBatchReference: z.string().min(1, 'Payroll Batch Reference is required'),
+  mdaCode: z.string().min(1, 'MDA Code is required'),
+  eventFlag: z.enum(EVENT_FLAG_VALUES),
+  eventDate: z.string().nullable().refine((val) => {
+    if (val === null || val === '') return true;
+    const d = new Date(val);
+    return !isNaN(d.getTime());
+  }, 'Event Date must be a valid date (YYYY-MM-DD)'),
+  cessationReason: z.string().nullable(),
+}).superRefine((data, ctx) => {
+  // Event Date required when Event Flag != NONE
+  if (data.eventFlag !== 'NONE' && (!data.eventDate || data.eventDate.trim() === '')) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'Event Date is required when Event Flag is not NONE',
+      path: ['eventDate'],
+    });
+  }
+
+  // Cessation Reason required when Amount = 0 AND Event Flag = NONE
+  const cleanedAmount = data.amountDeducted.replace(/,/g, '');
+  const numAmount = Number(cleanedAmount);
+  if (numAmount === 0 && data.eventFlag === 'NONE' && (!data.cessationReason || data.cessationReason.trim() === '')) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'Cessation Reason is required when Amount is 0 and Event Flag is NONE',
+      path: ['cessationReason'],
+    });
+  }
+});
+
+export const submissionUploadQuerySchema = z.object({
+  mdaId: z.string().uuid().optional(),
+});
+
+export const submissionListQuerySchema = z.object({
+  page: z.coerce.number().int().min(1).default(1),
+  pageSize: z.coerce.number().int().min(1).max(100).default(20),
+  period: z.string().regex(YYYY_MM_REGEX).optional(),
+  mdaId: z.string().uuid().optional(),
+});
