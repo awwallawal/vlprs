@@ -5,10 +5,10 @@ import { authenticate } from '../middleware/authenticate';
 import { requirePasswordChange } from '../middleware/requirePasswordChange';
 import { authorise } from '../middleware/authorise';
 import { scopeToMda } from '../middleware/scopeToMda';
-import { validateQuery } from '../middleware/validate';
+import { validate, validateQuery } from '../middleware/validate';
 import { auditLog } from '../middleware/auditLog';
 import { writeLimiter, readLimiter } from '../middleware/rateLimiter';
-import { ROLES, submissionListQuerySchema, VOCABULARY } from '@vlprs/shared';
+import { ROLES, submissionListQuerySchema, manualSubmissionBodySchema, VOCABULARY } from '@vlprs/shared';
 import { AppError } from '../lib/appError';
 import { param } from '../lib/params';
 import * as submissionService from '../services/submissionService';
@@ -61,6 +61,39 @@ router.post(
       req.file,
       (req as Request & { mdaScope?: string | null }).mdaScope ?? null,
       (req as Request & { user?: { id: string } }).user!.id,
+    );
+
+    res.status(201).json({
+      success: true,
+      data: result,
+    });
+  },
+);
+
+// POST /submissions/manual — Manual entry submission
+router.post(
+  '/submissions/manual',
+  ...writeAuth,
+  writeLimiter,
+  validate(manualSubmissionBodySchema),
+  auditLog,
+  async (req: Request, res: Response) => {
+    const { rows } = req.body as { rows: Array<{
+      staffId: string;
+      month: string;
+      amountDeducted: string;
+      payrollBatchReference: string;
+      mdaCode: string;
+      eventFlag: string;
+      eventDate: string | null;
+      cessationReason: string | null;
+    }> };
+
+    const result = await submissionService.processSubmissionRows(
+      rows,
+      (req as Request & { mdaScope?: string | null }).mdaScope ?? null,
+      (req as Request & { user?: { id: string } }).user!.id,
+      'manual',
     );
 
     res.status(201).json({

@@ -62,3 +62,10 @@ export const submissionListQuerySchema = z.object({
   period: z.string().regex(YYYY_MM_REGEX).optional(),
   mdaId: z.string().uuid().optional(),
 });
+
+/** Manual entry request body — array of 1-50 rows using the same row schema as CSV. */
+export const manualSubmissionBodySchema = z.object({
+  rows: z.array(submissionRowSchema).min(1).max(50),
+});
+
+export type ManualSubmissionBody = z.infer<typeof manualSubmissionBodySchema>;

@@ -1,0 +1,1 @@
+ALTER TABLE "mda_submissions" ADD COLUMN "source" varchar(10) DEFAULT 'csv' NOT NULL;

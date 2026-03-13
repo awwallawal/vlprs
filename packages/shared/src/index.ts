@@ -10,7 +10,7 @@ export { mdaQuerySchema } from './validators/mdaSchemas.js';
 export { migrationUploadQuerySchema, confirmMappingBodySchema, validationResultQuerySchema, personListQuerySchema, createBaselineBodySchema, beneficiaryQuerySchema, confirmDelineationSchema, resolveDuplicateSchema, duplicateListQuerySchema } from './validators/migrationSchemas.js';
 export { observationQuerySchema, reviewObservationSchema, resolveObservationSchema, promoteObservationSchema, generateObservationsSchema } from './validators/observationSchemas.js';
 export { serviceStatusVerificationQuerySchema } from './validators/reportSchemas.js';
-export { submissionRowSchema, submissionUploadQuerySchema, submissionListQuerySchema } from './validators/submissionSchemas.js';
+export { submissionRowSchema, submissionUploadQuerySchema, submissionListQuerySchema, manualSubmissionBodySchema, type ManualSubmissionBody } from './validators/submissionSchemas.js';
 export { dashboardMetricsSchema, attentionItemSchema, attentionItemsResponseSchema, drillDownMetricSchema, breakdownQuerySchema, complianceResponseSchema, type DashboardMetricsResponse, type AttentionItemsResponse, type BreakdownQuery, type ComplianceResponse } from './validators/dashboardSchemas.js';
 
 // Types
