@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getAuthHeaders } from '@/lib/fetchHelpers';
 import { apiClient } from '@/lib/apiClient';
-import type { SubmissionRecord, SubmissionUploadResponse } from '@vlprs/shared';
+import type { SubmissionRecord, SubmissionRow, SubmissionUploadResponse } from '@vlprs/shared';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
 
@@ -36,6 +36,29 @@ export function useSubmissionUpload() {
         throw err;
       }
       return body.data as SubmissionUploadResponse;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['submissions'] });
+    },
+  });
+}
+
+/**
+ * Submit manual entry rows.
+ * Uses apiClient which preserves error.details for inline form field mapping.
+ */
+export function useManualSubmission() {
+  const queryClient = useQueryClient();
+  return useMutation<
+    SubmissionUploadResponse,
+    Error & { code?: string; status?: number; details?: unknown[] },
+    SubmissionRow[]
+  >({
+    mutationFn: async (rows: SubmissionRow[]) => {
+      return apiClient<SubmissionUploadResponse>('/submissions/manual', {
+        method: 'POST',
+        body: JSON.stringify({ rows }),
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['submissions'] });

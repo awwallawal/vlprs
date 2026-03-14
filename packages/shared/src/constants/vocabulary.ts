@@ -163,6 +163,10 @@ export const VOCABULARY = {
   SUBMISSION_FILE_TOO_LARGE: 'File exceeds the 5MB size limit',
   SUBMISSION_FILE_TYPE: 'Only CSV files are accepted',
   SUBMISSION_EMPTY_FILE: 'CSV file contains no data rows',
+  // Manual Entry (Story 5.2)
+  SUBMISSION_MANUAL_MAX_ROWS: 'Maximum of 50 rows reached',
+  SUBMISSION_MANUAL_MIN_ROWS: 'At least one row is required',
+  SUBMISSION_ITEMS_NEED_ATTENTION: '{count} items need your attention',
 } as const;
 
 export const UI_COPY = {

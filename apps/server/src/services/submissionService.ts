@@ -34,6 +34,19 @@ interface ParsedCsvRow {
   cessationReason: string | null;
 }
 
+/** Row type used internally by the shared processing pipeline. */
+interface IndexedRow {
+  rowIndex: number; // 0-based array index (used in error.row)
+  staffId: string;
+  month: string;
+  amountDeducted: string;
+  payrollBatchReference: string;
+  mdaCode: string;
+  eventFlag: string;
+  eventDate: string | null;
+  cessationReason: string | null;
+}
+
 export function parseSubmissionCsv(buffer: Buffer): ParsedCsvRow[] {
   // Strip BOM if present
   let csvText = buffer.toString('utf-8');
@@ -83,12 +96,13 @@ export function parseSubmissionCsv(buffer: Buffer): ParsedCsvRow[] {
 // ─── Row Validation ─────────────────────────────────────────────────
 
 export function validateSubmissionRows(
-  rows: ParsedCsvRow[],
+  rows: IndexedRow[],
 ): { validRows: SubmissionRow[]; errors: SubmissionValidationError[] } {
   const errors: SubmissionValidationError[] = [];
   const validRows: SubmissionRow[] = [];
 
   for (const row of rows) {
+    const displayRow = row.rowIndex + 1; // 1-based for human-readable messages
     const result = submissionRowSchema.safeParse({
       staffId: row.staffId,
       month: row.month,
@@ -107,44 +121,44 @@ export function validateSubmissionRows(
 
         if (field === 'amountDeducted') {
           message = VOCABULARY.SUBMISSION_AMOUNT_FORMAT
-            .replace('{row}', String(row.rowNumber))
+            .replace('{row}', String(displayRow))
             .replace('{value}', row.amountDeducted);
         } else if (field === 'month') {
           message = VOCABULARY.SUBMISSION_MONTH_FORMAT
-            .replace('{row}', String(row.rowNumber))
+            .replace('{row}', String(displayRow))
             .replace('{value}', row.month);
         } else if (field === 'eventDate') {
           message = VOCABULARY.SUBMISSION_EVENT_DATE_REQUIRED
-            .replace('{row}', String(row.rowNumber));
+            .replace('{row}', String(displayRow));
         } else if (field === 'cessationReason') {
           message = VOCABULARY.SUBMISSION_CESSATION_REQUIRED
-            .replace('{row}', String(row.rowNumber));
+            .replace('{row}', String(displayRow));
         } else {
-          message = `Row ${row.rowNumber}: ${issue.message}`;
+          message = `Row ${displayRow}: ${issue.message}`;
         }
 
-        errors.push({ row: row.rowNumber, field, message });
+        errors.push({ row: row.rowIndex, field, message });
       }
     } else {
       validRows.push(result.data as SubmissionRow);
     }
   }
 
-  // Check intra-file duplicates (same Staff ID + same Month within CSV)
+  // Check intra-file duplicates (same Staff ID + same Month within submission)
   const seen = new Map<string, number>();
   for (const row of rows) {
     const key = `${row.staffId}::${row.month}`;
     if (seen.has(key)) {
       errors.push({
-        row: row.rowNumber,
+        row: row.rowIndex,
         field: 'staffId',
         message: VOCABULARY.SUBMISSION_DUPLICATE_ROW
-          .replace('{row}', String(row.rowNumber))
+          .replace('{row}', String(row.rowIndex + 1))
           .replace('{staffId}', row.staffId)
           .replace('{month}', row.month),
       });
     } else {
-      seen.set(key, row.rowNumber);
+      seen.set(key, row.rowIndex);
     }
   }
 
@@ -154,12 +168,12 @@ export function validateSubmissionRows(
 // ─── MDA Code Validation ─────────────────────────────────────────────
 
 export async function validateMdaCodes(
-  rows: ParsedCsvRow[],
+  rows: IndexedRow[],
   mdaScope: string | null,
 ): Promise<{ mdaId: string; errors: SubmissionValidationError[] }> {
   const errors: SubmissionValidationError[] = [];
 
-  // Get unique MDA codes from CSV
+  // Get unique MDA codes from submission
   const mdaCodes = [...new Set(rows.map((r) => r.mdaCode))];
 
   if (mdaScope !== null) {
@@ -177,10 +191,10 @@ export async function validateMdaCodes(
     for (const row of rows) {
       if (row.mdaCode !== mdaCode) {
         errors.push({
-          row: row.rowNumber,
+          row: row.rowIndex,
           field: 'mdaCode',
           message: VOCABULARY.SUBMISSION_MDA_MISMATCH
-            .replace('{row}', String(row.rowNumber))
+            .replace('{row}', String(row.rowIndex + 1))
             .replace('{code}', row.mdaCode),
         });
       }
@@ -189,7 +203,7 @@ export async function validateMdaCodes(
     return { mdaId: mdaScope, errors };
   }
 
-  // DEPT_ADMIN: resolve MDA from CSV data
+  // DEPT_ADMIN: resolve MDA from submission data
   if (mdaCodes.length > 1) {
     errors.push({
       row: 0,
@@ -219,7 +233,7 @@ export async function validateMdaCodes(
 // ─── Staff ID Validation (batch) ─────────────────────────────────────
 
 export async function validateStaffIds(
-  rows: ParsedCsvRow[],
+  rows: IndexedRow[],
   mdaId: string,
 ): Promise<SubmissionValidationError[]> {
   const errors: SubmissionValidationError[] = [];
@@ -240,10 +254,10 @@ export async function validateStaffIds(
   for (const row of rows) {
     if (!existingSet.has(row.staffId)) {
       errors.push({
-        row: row.rowNumber,
+        row: row.rowIndex,
         field: 'staffId',
         message: VOCABULARY.SUBMISSION_STAFF_NOT_FOUND
-          .replace('{row}', String(row.rowNumber))
+          .replace('{row}', String(row.rowIndex + 1))
           .replace('{staffId}', row.staffId),
       });
     }
@@ -255,7 +269,7 @@ export async function validateStaffIds(
 // ─── Duplicate Check (against existing confirmed submissions) ────────
 
 export async function checkDuplicates(
-  rows: ParsedCsvRow[],
+  rows: IndexedRow[],
   mdaId: string,
 ): Promise<SubmissionValidationError[]> {
   const errors: SubmissionValidationError[] = [];
@@ -284,10 +298,10 @@ export async function checkDuplicates(
     const key = `${row.staffId}::${row.month}`;
     if (existingSet.has(key)) {
       errors.push({
-        row: row.rowNumber,
+        row: row.rowIndex,
         field: 'staffId',
         message: VOCABULARY.SUBMISSION_DUPLICATE_ROW
-          .replace('{row}', String(row.rowNumber))
+          .replace('{row}', String(row.rowIndex + 1))
           .replace('{staffId}', row.staffId)
           .replace('{month}', row.month),
       });
@@ -326,26 +340,48 @@ export function checkPeriodLock(period: string): SubmissionValidationError | nul
   };
 }
 
-// ─── Process Submission (orchestrator) ───────────────────────────────
+// ─── Process Submission Rows (shared pipeline for CSV + manual) ──────
 
-export async function processSubmission(
-  file: Express.Multer.File,
+/**
+ * Shared processing pipeline for both CSV upload and manual entry.
+ * Validates rows, checks business rules, and persists atomically.
+ *
+ * Row errors use 0-based indices in `details[].row`.
+ * Human-readable messages display 1-based row numbers.
+ */
+export async function processSubmissionRows(
+  rawRows: Array<{
+    staffId: string;
+    month: string;
+    amountDeducted: string;
+    payrollBatchReference: string;
+    mdaCode: string;
+    eventFlag: string;
+    eventDate: string | null;
+    cessationReason: string | null;
+  }>,
   mdaScope: string | null,
   userId: string,
+  source: 'csv' | 'manual',
+  fileInfo?: { filename: string; fileSizeBytes: number },
 ): Promise<SubmissionUploadResponse> {
-  // 1. Parse CSV
-  const rows = parseSubmissionCsv(file.buffer);
+  // Convert to indexed rows with 0-based indices
+  const rows: IndexedRow[] = rawRows.map((r, idx) => ({
+    rowIndex: idx,
+    ...r,
+  }));
+
   const allErrors: SubmissionValidationError[] = [];
 
-  // 2. Validate row data (schema + intra-file duplicates)
+  // 1. Validate row data (schema + intra-file duplicates)
   const { errors: rowErrors } = validateSubmissionRows(rows);
   allErrors.push(...rowErrors);
 
-  // 3. Validate MDA codes & resolve MDA ID
+  // 2. Validate MDA codes & resolve MDA ID
   const { mdaId, errors: mdaErrors } = await validateMdaCodes(rows, mdaScope);
   allErrors.push(...mdaErrors);
 
-  // 4. Check period lock (validate once, all rows should share the same period for practical use)
+  // 3. Check period lock (validate once, all rows should share the same period)
   const periods = [...new Set(rows.map((r) => r.month))];
   for (const period of periods) {
     const periodError = checkPeriodLock(period);
@@ -359,11 +395,11 @@ export async function processSubmission(
     throw new AppError(422, 'SUBMISSION_VALIDATION_FAILED', VOCABULARY.SUBMISSION_NEEDS_ATTENTION, allErrors);
   }
 
-  // 5. Validate Staff IDs exist (batch query)
+  // 4. Validate Staff IDs exist (batch query)
   const staffErrors = await validateStaffIds(rows, mdaId);
   allErrors.push(...staffErrors);
 
-  // 6. Check duplicates against existing confirmed submissions
+  // 5. Check duplicates against existing confirmed submissions
   const dupErrors = await checkDuplicates(rows, mdaId);
   allErrors.push(...dupErrors);
 
@@ -372,7 +408,7 @@ export async function processSubmission(
     throw new AppError(422, 'SUBMISSION_VALIDATION_FAILED', VOCABULARY.SUBMISSION_NEEDS_ATTENTION, allErrors);
   }
 
-  // 7. Validate all rows share the same period (submission.period is singular)
+  // 6. Validate all rows share the same period (submission.period is singular)
   if (periods.length > 1) {
     allErrors.push({
       row: 0,
@@ -384,7 +420,7 @@ export async function processSubmission(
 
   const period = periods[0];
 
-  // 8. Atomic INSERT — reference generation + submission + all rows in single transaction
+  // 7. Atomic INSERT — reference generation + submission + all rows in single transaction
   const submissionId = generateUuidv7();
   const now = new Date();
 
@@ -414,8 +450,9 @@ export async function processSubmission(
       referenceNumber: refNumber,
       status: 'confirmed',
       recordCount: rows.length,
-      filename: file.originalname,
-      fileSizeBytes: file.size,
+      source,
+      filename: fileInfo?.filename ?? null,
+      fileSizeBytes: fileInfo?.fileSizeBytes ?? null,
       createdAt: now,
       updatedAt: now,
     });
@@ -423,7 +460,7 @@ export async function processSubmission(
     const rowValues = rows.map((row) => ({
       id: generateUuidv7(),
       submissionId,
-      rowNumber: row.rowNumber,
+      rowNumber: row.rowIndex + 1, // 1-based for DB storage
       staffId: row.staffId,
       month: row.month,
       amountDeducted: row.amountDeducted.replace(/,/g, ''),
@@ -446,6 +483,24 @@ export async function processSubmission(
     submissionDate: now.toISOString(),
     status: 'confirmed' as SubmissionRecordStatus,
   };
+}
+
+// ─── Process Submission — CSV entry point (delegates to shared pipeline) ─
+
+export async function processSubmission(
+  file: Express.Multer.File,
+  mdaScope: string | null,
+  userId: string,
+): Promise<SubmissionUploadResponse> {
+  const csvRows = parseSubmissionCsv(file.buffer);
+
+  // Strip CSV-specific rowNumber and pass to shared pipeline
+  const rows = csvRows.map(({ rowNumber: _rn, ...rest }) => rest);
+
+  return processSubmissionRows(rows, mdaScope, userId, 'csv', {
+    filename: file.originalname,
+    fileSizeBytes: file.size,
+  });
 }
 
 // ─── Get Submissions (paginated list) ────────────────────────────────

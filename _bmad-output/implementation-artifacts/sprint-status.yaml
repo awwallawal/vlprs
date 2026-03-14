@@ -159,7 +159,7 @@ development_status:
   # Epic 5: MDA Monthly Submission (Sprint 7 — adoption engine, moved before Reports)
   epic-5: in-progress
   5-1-csv-upload-atomic-validation: done
-  5-2-manual-entry-form: ready-for-dev
+  5-2-manual-entry-form: done
   5-3-submission-confirmation-reference: ready-for-dev
   5-4-comparison-summary-with-neutral-language: ready-for-dev
   5-5-submission-frontend-template-download: ready-for-dev

@@ -1,14 +1,14 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router';
-import { Info, FileText, AlertTriangle } from 'lucide-react';
+import { Info, AlertTriangle } from 'lucide-react';
 import { useAuthStore } from '@/stores/authStore';
 import { useSubmissionHistory, useSubmissionUpload } from '@/hooks/useSubmissionData';
 import { FileUploadZone } from '@/components/shared/FileUploadZone';
 import { WelcomeGreeting } from '@/components/shared/WelcomeGreeting';
 import { SubmissionConfirmation } from './components/SubmissionConfirmation';
+import { ManualEntryForm } from './components/ManualEntryForm';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { formatDate, formatCount } from '@/lib/formatters';
 import { cn } from '@/lib/utils';
 import { UI_COPY, VOCABULARY } from '@vlprs/shared';
@@ -27,7 +27,6 @@ const CHECKPOINT_ITEMS = [
 
 export function SubmissionsPage() {
   const user = useAuthStore((s) => s.user);
-  const navigate = useNavigate();
 
   const userMdaId = user?.mdaId ?? '';
 
@@ -36,6 +35,7 @@ export function SubmissionsPage() {
 
   const uploadMutation = useSubmissionUpload();
 
+  // Checkpoint state — lifted above Tabs to preserve across tab switches
   const [checkpointConfirmed, setCheckpointConfirmed] = useState(false);
 
   // Derive upload status from mutation state
@@ -104,87 +104,100 @@ export function SubmissionsPage() {
         </label>
       </section>
 
-      {/* File upload section */}
-      <section aria-labelledby="upload-heading">
-        <h2 id="upload-heading" className="text-lg font-semibold text-text-primary mb-3">
-          Upload Deduction File
+      {/* Submission entry — Tabs: CSV Upload / Manual Entry */}
+      <section aria-labelledby="submission-heading">
+        <h2 id="submission-heading" className="text-lg font-semibold text-text-primary mb-3">
+          Submit Deduction Data
         </h2>
 
-        <p className="text-sm text-text-secondary mb-3">
-          Upload your monthly 8-field CSV deduction file.{' '}
-          <a
-            href="/templates/submission-template.csv"
-            className="text-teal underline hover:text-teal-hover"
-          >
-            Download CSV Template
-          </a>
-        </p>
+        <Tabs defaultValue="csv" className="w-full">
+          <TabsList>
+            <TabsTrigger value="csv">CSV Upload</TabsTrigger>
+            <TabsTrigger value="manual">Manual Entry</TabsTrigger>
+          </TabsList>
 
-        <div
-          className={cn(
-            'transition-opacity',
-            !checkpointConfirmed && 'opacity-50 pointer-events-none',
-          )}
-          aria-disabled={!checkpointConfirmed}
-        >
-          <FileUploadZone
-            accept=".csv"
-            maxSizeMb={5}
-            onFileSelect={handleFileSelect}
-            onFileRemove={handleFileRemove}
-            templateDownloadUrl="/templates/submission-template.csv"
-            status={uploadStatus}
-            errorMessage={
-              uploadMutation.isError
-                ? uploadMutation.error.message
-                : undefined
-            }
-          />
-
-          <div className="mt-4 flex items-center gap-3">
-            <span className="text-sm text-text-muted">or</span>
-            <Button
-              variant="outline"
-              disabled={!checkpointConfirmed}
-              onClick={() => navigate('/dashboard/placeholder/manual-entry')}
+          {/* CSV Upload Tab */}
+          <TabsContent value="csv">
+            <div
+              className={cn(
+                'transition-opacity',
+                !checkpointConfirmed && 'opacity-50 pointer-events-none',
+              )}
+              aria-disabled={!checkpointConfirmed}
             >
-              <FileText className="h-4 w-4" aria-hidden="true" />
-              Manual Entry
-            </Button>
-          </div>
-        </div>
+              <p className="text-sm text-text-secondary mb-3">
+                Upload your monthly 8-field CSV deduction file.{' '}
+                <a
+                  href="/templates/submission-template.csv"
+                  className="text-teal underline hover:text-teal-hover"
+                >
+                  Download CSV Template
+                </a>
+              </p>
+
+              <FileUploadZone
+                accept=".csv"
+                maxSizeMb={5}
+                onFileSelect={handleFileSelect}
+                onFileRemove={handleFileRemove}
+                templateDownloadUrl="/templates/submission-template.csv"
+                status={uploadStatus}
+                errorMessage={
+                  uploadMutation.isError
+                    ? uploadMutation.error.message
+                    : undefined
+                }
+              />
+            </div>
+
+            {/* Success confirmation */}
+            {uploadMutation.isSuccess && uploadMutation.data && (
+              <div className="mt-4">
+                <SubmissionConfirmation data={uploadMutation.data} />
+              </div>
+            )}
+
+            {/* Error display — row-level validation errors with non-punitive language */}
+            {uploadMutation.isError && validationErrors.length > 0 && (
+              <section
+                aria-labelledby="validation-errors-heading"
+                className="mt-4 rounded-lg border border-gold/30 bg-gold-50 p-4"
+              >
+                <div className="flex items-center gap-2 mb-3">
+                  <AlertTriangle className="h-5 w-5 text-gold" aria-hidden="true" />
+                  <h3
+                    id="validation-errors-heading"
+                    className="text-base font-semibold text-text-primary"
+                  >
+                    {VOCABULARY.SUBMISSION_NEEDS_ATTENTION}
+                  </h3>
+                </div>
+                <ul className="space-y-1.5 text-sm text-text-secondary">
+                  {validationErrors.map((err, i) => (
+                    <li key={i} className="flex items-start gap-2">
+                      <span className="text-gold mt-0.5">&#8226;</span>
+                      <span>{err.message}</span>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            )}
+          </TabsContent>
+
+          {/* Manual Entry Tab — forceMount preserves form data on tab switch */}
+          <TabsContent value="manual" forceMount className="data-[state=inactive]:hidden">
+            <div
+              className={cn(
+                'transition-opacity',
+                !checkpointConfirmed && 'opacity-50 pointer-events-none',
+              )}
+              aria-disabled={!checkpointConfirmed}
+            >
+              <ManualEntryForm disabled={!checkpointConfirmed} />
+            </div>
+          </TabsContent>
+        </Tabs>
       </section>
-
-      {/* Success confirmation */}
-      {uploadMutation.isSuccess && uploadMutation.data && (
-        <SubmissionConfirmation data={uploadMutation.data} />
-      )}
-
-      {/* Error display — row-level validation errors with non-punitive language */}
-      {uploadMutation.isError && validationErrors.length > 0 && (
-        <section
-          aria-labelledby="validation-errors-heading"
-          className="rounded-lg border border-gold/30 bg-gold-50 p-4"
-        >
-          <div className="flex items-center gap-2 mb-3">
-            <AlertTriangle className="h-5 w-5 text-gold" aria-hidden="true" />
-            <h3
-              id="validation-errors-heading"
-              className="text-base font-semibold text-text-primary"
-            >
-              {VOCABULARY.SUBMISSION_NEEDS_ATTENTION}
-            </h3>
-          </div>
-          <ul className="space-y-1.5 text-sm text-text-secondary">
-            {validationErrors.map((err, i) => (
-              <li key={i} className="flex items-start gap-2">
-                <span className="text-gold mt-0.5">&#8226;</span>
-                <span>{err.message}</span>
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
 
       {/* Comparison summary for most recent submission */}
       {mostRecent && mostRecent.varianceCount > 0 && (

@@ -530,8 +530,8 @@ export const eventFlagTypeEnum = pgEnum('event_flag_type', [
   'TRANSFER_IN', 'LEAVE_WITHOUT_PAY', 'REINSTATEMENT', 'TERMINATION',
 ]);
 
-// ─── MDA Submissions (Story 5.1) ─────────────────────────────────
-// Submission header — one row per CSV upload.
+// ─── MDA Submissions (Story 5.1, extended Story 5.2) ─────────────
+// Submission header — one row per CSV upload or manual entry batch.
 export const mdaSubmissions = pgTable(
   'mda_submissions',
   {
@@ -542,6 +542,7 @@ export const mdaSubmissions = pgTable(
     referenceNumber: varchar('reference_number', { length: 50 }).notNull().unique(),
     status: submissionRecordStatusEnum('status').notNull().default('processing'),
     recordCount: integer('record_count').notNull(),
+    source: varchar('source', { length: 10 }).notNull().default('csv'), // 'csv' | 'manual'
     filename: varchar('filename', { length: 500 }),
     fileSizeBytes: integer('file_size_bytes'),
     validationErrors: jsonb('validation_errors'),

@@ -1,4 +1,5 @@
 import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { describe, expect, it, vi } from 'vitest';
@@ -52,6 +53,20 @@ vi.mock('@/hooks/useSubmissionData', () => ({
     data: null,
     error: null,
   }),
+  useManualSubmission: () => ({
+    mutate: vi.fn(),
+    mutateAsync: vi.fn(),
+    reset: vi.fn(),
+    isPending: false,
+    isSuccess: false,
+    isError: false,
+    data: null,
+    error: null,
+  }),
+}));
+
+vi.mock('@/lib/apiClient', () => ({
+  apiClient: vi.fn().mockResolvedValue([]),
 }));
 
 function renderPage(initialEntries = ['/dashboard/submissions']) {
@@ -96,11 +111,27 @@ describe('SubmissionsPage', () => {
     ).toBeInTheDocument();
   });
 
-  it('renders upload section', () => {
+  it('renders submission data section with tabs', () => {
     renderPage();
     expect(
-      screen.getByRole('heading', { level: 2, name: 'Upload Deduction File' }),
+      screen.getByRole('heading', { level: 2, name: 'Submit Deduction Data' }),
     ).toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: 'CSV Upload' })).toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: 'Manual Entry' })).toBeInTheDocument();
+  });
+
+  it('shows CSV Upload tab as default active tab', () => {
+    renderPage();
+    const csvTab = screen.getByRole('tab', { name: 'CSV Upload' });
+    expect(csvTab).toHaveAttribute('data-state', 'active');
+  });
+
+  it('switches to Manual Entry tab when clicked', async () => {
+    renderPage();
+    const user = userEvent.setup();
+    const manualTab = screen.getByRole('tab', { name: 'Manual Entry' });
+    await user.click(manualTab);
+    expect(manualTab).toHaveAttribute('data-state', 'active');
   });
 
   it('renders submission history table', () => {
@@ -112,5 +143,23 @@ describe('SubmissionsPage', () => {
   it('renders download CSV template link', () => {
     renderPage();
     expect(screen.getByText('Download CSV Template')).toBeInTheDocument();
+  });
+
+  it('preserves manual entry form when switching tabs (forceMount)', async () => {
+    renderPage();
+    const user = userEvent.setup();
+
+    // Switch to Manual Entry tab
+    await user.click(screen.getByRole('tab', { name: 'Manual Entry' }));
+
+    // The manual entry form should be rendered (forceMount keeps it alive)
+    expect(screen.getByText('Submit All')).toBeInTheDocument();
+
+    // Switch back to CSV Upload
+    await user.click(screen.getByRole('tab', { name: 'CSV Upload' }));
+
+    // Switch back to Manual Entry — form data should be preserved (forceMount)
+    await user.click(screen.getByRole('tab', { name: 'Manual Entry' }));
+    expect(screen.getByText('Submit All')).toBeInTheDocument();
   });
 });
