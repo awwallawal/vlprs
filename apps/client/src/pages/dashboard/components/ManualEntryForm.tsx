@@ -12,7 +12,6 @@ import { useAuthStore } from '@/stores/authStore';
 import { useManualSubmission } from '@/hooks/useSubmissionData';
 import { apiClient } from '@/lib/apiClient';
 import { ManualEntryRow } from './ManualEntryRow';
-import { SubmissionConfirmation } from './SubmissionConfirmation';
 import {
   manualSubmissionBodySchema,
   VOCABULARY,
@@ -46,9 +45,10 @@ function createDefaultRow(mdaCode: string, currentPeriod: string): SubmissionRow
 
 interface ManualEntryFormProps {
   disabled?: boolean;
+  onSuccess?: (data: SubmissionUploadResponse) => void;
 }
 
-export function ManualEntryForm({ disabled }: ManualEntryFormProps) {
+export function ManualEntryForm({ disabled, onSuccess }: ManualEntryFormProps) {
   const user = useAuthStore((s) => s.user);
   const isMdaOfficer = user?.role === ROLES.MDA_OFFICER;
 
@@ -90,18 +90,16 @@ export function ManualEntryForm({ disabled }: ManualEntryFormProps) {
   }, [resolvedMdaCode, form]);
 
   const mutation = useManualSubmission();
-  const [confirmationData, setConfirmationData] = useState<SubmissionUploadResponse | null>(null);
   const [hasBusinessErrors, setHasBusinessErrors] = useState(false);
 
   const onSubmit = async (data: ManualSubmissionBody) => {
-    setConfirmationData(null);
     setHasBusinessErrors(false);
     try {
       const result = await mutation.mutateAsync(data.rows as SubmissionRow[]);
-      setConfirmationData(result);
       toast.success(VOCABULARY.SUBMISSION_CONFIRMED);
       // Reset form to single empty row
       form.reset({ rows: [createDefaultRow(resolvedMdaCode, currentPeriod)] });
+      onSuccess?.(result);
     } catch (error: unknown) {
       const err = error as Error & { status?: number; details?: Array<{ row: number; field: string; message: string }> };
 
@@ -159,11 +157,6 @@ export function ManualEntryForm({ disabled }: ManualEntryFormProps) {
             </span>
           </div>
         </div>
-      )}
-
-      {/* Success confirmation */}
-      {confirmationData && (
-        <SubmissionConfirmation data={confirmationData} />
       )}
 
       <Form {...form}>

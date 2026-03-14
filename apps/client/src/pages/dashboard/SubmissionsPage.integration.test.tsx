@@ -1,0 +1,173 @@
+import { render, screen, fireEvent, act } from '@testing-library/react';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+
+vi.mock('sonner', () => ({ toast: { success: vi.fn(), info: vi.fn() } }));
+
+// Capture CSV upload onSuccess callback
+let csvOnSuccess: ((data: Record<string, unknown>) => void) | null = null;
+const mockMutate = vi.fn((_file: unknown, options?: { onSuccess?: (data: Record<string, unknown>) => void }) => {
+  csvOnSuccess = options?.onSuccess ?? null;
+});
+const mockReset = vi.fn();
+
+vi.mock('@/hooks/useSubmissionData', () => ({
+  useSubmissionHistory: vi.fn(() => ({
+    data: { items: [], total: 0, page: 1, pageSize: 20 },
+    isPending: false,
+  })),
+  useSubmissionUpload: vi.fn(() => ({
+    mutate: mockMutate,
+    mutateAsync: vi.fn(),
+    reset: mockReset,
+    isPending: false,
+    isSuccess: false,
+    isError: false,
+    error: null,
+    data: null,
+  })),
+}));
+
+vi.mock('@/stores/authStore', () => ({
+  useAuthStore: vi.fn((selector: (state: Record<string, unknown>) => unknown) =>
+    selector({ user: { id: '1', name: 'Test', role: 'mda_officer', mdaId: 'mda-1' } }),
+  ),
+}));
+
+vi.mock('./components/ManualEntryForm', () => ({
+  ManualEntryForm: ({ onSuccess }: { onSuccess?: (data: Record<string, unknown>) => void; disabled?: boolean }) => (
+    <button
+      data-testid="mock-manual-submit"
+      onClick={() =>
+        onSuccess?.({
+          referenceNumber: 'BIR-2026-03-0002',
+          recordCount: 5,
+          submissionDate: '2026-03-14T12:00:00.000Z',
+          status: 'confirmed',
+        })
+      }
+    >
+      Mock Submit Manual
+    </button>
+  ),
+}));
+
+vi.mock('@/components/shared/FileUploadZone', () => ({
+  FileUploadZone: ({ onFileSelect }: { onFileSelect: (file: File) => void }) => (
+    <button
+      data-testid="mock-csv-upload"
+      onClick={() => onFileSelect(new File(['test'], 'test.csv', { type: 'text/csv' }))}
+    >
+      Mock Upload CSV
+    </button>
+  ),
+}));
+
+vi.mock('@/components/shared/WelcomeGreeting', () => ({
+  WelcomeGreeting: () => <div data-testid="welcome-greeting" />,
+}));
+
+import { SubmissionsPage } from './SubmissionsPage';
+
+const mockCsvResponse = {
+  referenceNumber: 'BIR-2026-03-0001',
+  recordCount: 10,
+  submissionDate: '2026-03-14T10:00:00.000Z',
+  status: 'confirmed' as const,
+};
+
+describe('SubmissionsPage Integration (Story 5.3)', () => {
+  let originalClipboard: Clipboard;
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    csvOnSuccess = null;
+    originalClipboard = navigator.clipboard;
+    Object.assign(navigator, {
+      clipboard: { writeText: vi.fn().mockResolvedValue(undefined) },
+    });
+  });
+
+  afterEach(() => {
+    Object.assign(navigator, { clipboard: originalClipboard });
+  });
+
+  it('renders confirmation with source="csv" after CSV upload success', () => {
+    render(<SubmissionsPage />);
+
+    // Enable upload by checking checkpoint
+    fireEvent.click(screen.getByRole('checkbox'));
+
+    // Trigger CSV upload
+    fireEvent.click(screen.getByTestId('mock-csv-upload'));
+    expect(mockMutate).toHaveBeenCalled();
+
+    // Simulate mutation success
+    act(() => {
+      csvOnSuccess?.(mockCsvResponse);
+    });
+
+    // Confirmation should be visible with CSV source
+    expect(screen.getByText('Upload Complete')).toBeInTheDocument();
+    expect(screen.getByText('BIR-2026-03-0001')).toBeInTheDocument();
+    expect(screen.getByText('Submitted via CSV upload')).toBeInTheDocument();
+  });
+
+  it('renders confirmation with source="manual" after manual entry success', () => {
+    render(<SubmissionsPage />);
+
+    // Enable forms
+    fireEvent.click(screen.getByRole('checkbox'));
+
+    // Switch to manual tab
+    fireEvent.click(screen.getByRole('tab', { name: /manual entry/i }));
+
+    // Trigger manual submission via mock
+    fireEvent.click(screen.getByTestId('mock-manual-submit'));
+
+    // Confirmation should show manual source
+    expect(screen.getByText('Upload Complete')).toBeInTheDocument();
+    expect(screen.getByText('BIR-2026-03-0002')).toBeInTheDocument();
+    expect(screen.getByText('Submitted via manual entry')).toBeInTheDocument();
+  });
+
+  it('"Submit Another" resets to upload view with unchecked checkpoint', () => {
+    render(<SubmissionsPage />);
+
+    // Enter confirmation view via CSV upload
+    fireEvent.click(screen.getByRole('checkbox'));
+    fireEvent.click(screen.getByTestId('mock-csv-upload'));
+    act(() => {
+      csvOnSuccess?.(mockCsvResponse);
+    });
+
+    // Verify in confirmation view — checkpoint should be hidden
+    expect(screen.getByText('Upload Complete')).toBeInTheDocument();
+    expect(screen.queryByRole('checkbox')).not.toBeInTheDocument();
+
+    // Click Submit Another
+    fireEvent.click(screen.getByRole('button', { name: /submit another/i }));
+
+    // Back to upload view
+    expect(screen.queryByText('Upload Complete')).not.toBeInTheDocument();
+    expect(screen.getByRole('checkbox')).toBeInTheDocument();
+    expect(screen.getByRole('checkbox')).not.toBeChecked();
+    expect(mockReset).toHaveBeenCalled();
+  });
+
+  it('submission history remains visible in confirmation view', () => {
+    render(<SubmissionsPage />);
+
+    // History visible in upload view
+    expect(screen.getByText('Submission History')).toBeInTheDocument();
+
+    // Enter confirmation view
+    fireEvent.click(screen.getByRole('checkbox'));
+    fireEvent.click(screen.getByTestId('mock-csv-upload'));
+    act(() => {
+      csvOnSuccess?.(mockCsvResponse);
+    });
+
+    // History still visible in confirmation view
+    expect(screen.getByText('Submission History')).toBeInTheDocument();
+  });
+});
