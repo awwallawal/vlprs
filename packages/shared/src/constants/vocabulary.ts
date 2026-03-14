@@ -209,4 +209,10 @@ export const UI_COPY = {
   // Delineation & Deduplication UI (Story 3.8)
   DELINEATION_EMPTY: 'No MDA boundaries detected — all records belong to the selected MDA',
   DUPLICATE_EMPTY: 'No duplicates found — all records are unique',
+  // Submission Confirmation (Story 5.3)
+  SUBMISSION_REFERENCE_COPIED: 'Reference number copied to clipboard',
+  SUBMISSION_CONFIRMATION_RECORDS: '{count} records submitted',
+  SUBMISSION_CONFIRMATION_SOURCE_CSV: 'Submitted via CSV upload',
+  SUBMISSION_CONFIRMATION_SOURCE_MANUAL: 'Submitted via manual entry',
+  SUBMISSION_SUBMIT_ANOTHER: 'Submit Another',
 } as const;
