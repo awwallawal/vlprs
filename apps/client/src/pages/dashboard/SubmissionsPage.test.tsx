@@ -49,8 +49,8 @@ let mockUploadMutation = {
   isPending: false,
   isSuccess: false,
   isError: false,
-  data: null,
-  error: null,
+  data: null as Record<string, unknown> | null,
+  error: null as (Error & { details?: unknown[] }) | null,
 };
 
 vi.mock('@/hooks/useSubmissionData', () => ({
