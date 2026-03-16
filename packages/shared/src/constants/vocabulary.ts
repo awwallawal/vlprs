@@ -227,4 +227,8 @@ export const UI_COPY = {
   COMPARISON_VARIANCE_LABEL: 'Variance',
   COMPARISON_EXPAND_DETAIL: 'View variance detail',
   COMPARISON_COLLAPSE_DETAIL: 'Hide variance detail',
+  // Submission Error Display (Story 5.5)
+  SUBMISSION_NO_DATA_PROCESSED:
+    'No data was processed — your previous submission is unchanged',
+  SUBMISSION_FIX_AND_REUPLOAD: 'Fix the items above in your CSV and re-upload',
 } as const;

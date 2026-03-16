@@ -1,12 +1,15 @@
 import { render, screen, fireEvent, act } from '@testing-library/react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 vi.mock('sonner', () => ({ toast: { success: vi.fn(), info: vi.fn() } }));
 
 // Capture CSV upload onSuccess callback
 let csvOnSuccess: ((data: Record<string, unknown>) => void) | null = null;
-const mockMutate = vi.fn((_file: unknown, options?: { onSuccess?: (data: Record<string, unknown>) => void }) => {
+let csvOnError: ((error: Error & { details?: unknown[] }) => void) | null = null;
+const mockMutate = vi.fn((_file: unknown, options?: { onSuccess?: (data: Record<string, unknown>) => void; onError?: (error: Error & { details?: unknown[] }) => void }) => {
   csvOnSuccess = options?.onSuccess ?? null;
+  csvOnError = options?.onError ?? null;
 });
 const mockReset = vi.fn();
 
@@ -73,7 +76,22 @@ vi.mock('@/components/shared/WelcomeGreeting', () => ({
   WelcomeGreeting: () => <div data-testid="welcome-greeting" />,
 }));
 
+vi.mock('@/lib/apiClient', () => ({
+  apiClient: vi.fn().mockResolvedValue([{ id: 'mda-1', name: 'Ministry of Health', code: 'HLT' }]),
+}));
+
 import { SubmissionsPage } from './SubmissionsPage';
+
+function renderWithProviders(ui: React.ReactElement) {
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false } },
+  });
+  return render(
+    <QueryClientProvider client={queryClient}>
+      {ui}
+    </QueryClientProvider>,
+  );
+}
 
 const mockCsvResponse = {
   id: 'sub-001',
@@ -91,6 +109,7 @@ describe('SubmissionsPage Integration (Story 5.3)', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     csvOnSuccess = null;
+    csvOnError = null;
     originalClipboard = navigator.clipboard;
     Object.assign(navigator, {
       clipboard: { writeText: vi.fn().mockResolvedValue(undefined) },
@@ -102,7 +121,7 @@ describe('SubmissionsPage Integration (Story 5.3)', () => {
   });
 
   it('renders confirmation with source="csv" after CSV upload success', () => {
-    render(<SubmissionsPage />);
+    renderWithProviders(<SubmissionsPage />);
 
     // Enable upload by checking checkpoint
     fireEvent.click(screen.getByRole('checkbox'));
@@ -123,7 +142,7 @@ describe('SubmissionsPage Integration (Story 5.3)', () => {
   });
 
   it('renders confirmation with source="manual" after manual entry success', () => {
-    render(<SubmissionsPage />);
+    renderWithProviders(<SubmissionsPage />);
 
     // Enable forms
     fireEvent.click(screen.getByRole('checkbox'));
@@ -141,7 +160,7 @@ describe('SubmissionsPage Integration (Story 5.3)', () => {
   });
 
   it('"Submit Another" resets to upload view with unchecked checkpoint', () => {
-    render(<SubmissionsPage />);
+    renderWithProviders(<SubmissionsPage />);
 
     // Enter confirmation view via CSV upload
     fireEvent.click(screen.getByRole('checkbox'));
@@ -165,7 +184,7 @@ describe('SubmissionsPage Integration (Story 5.3)', () => {
   });
 
   it('submission history remains visible in confirmation view', () => {
-    render(<SubmissionsPage />);
+    renderWithProviders(<SubmissionsPage />);
 
     // History visible in upload view
     expect(screen.getByText('Submission History')).toBeInTheDocument();
@@ -179,5 +198,41 @@ describe('SubmissionsPage Integration (Story 5.3)', () => {
 
     // History still visible in confirmation view
     expect(screen.getByText('Submission History')).toBeInTheDocument();
+  });
+
+  it('error → re-upload → success flow', () => {
+    renderWithProviders(<SubmissionsPage />);
+
+    // Enable upload
+    fireEvent.click(screen.getByRole('checkbox'));
+
+    // First upload
+    fireEvent.click(screen.getByTestId('mock-csv-upload'));
+    expect(mockMutate).toHaveBeenCalledTimes(1);
+
+    // Simulate error
+    act(() => {
+      csvOnError?.(Object.assign(new Error('Upload needs attention'), {
+        details: [{ row: 0, field: 'month', message: "Month 'bad' is not valid" }],
+      }));
+    });
+
+    // Error view shown
+    expect(screen.getByRole('alert')).toBeInTheDocument();
+    expect(screen.getByText('Upload needs attention')).toBeInTheDocument();
+
+    // Re-upload from error view
+    fireEvent.click(screen.getByTestId('mock-csv-upload'));
+    expect(mockMutate).toHaveBeenCalledTimes(2);
+
+    // Simulate success on re-upload
+    act(() => {
+      csvOnSuccess?.(mockCsvResponse);
+    });
+
+    // Confirmation shown, error cleared
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    expect(screen.getByText('Upload Complete')).toBeInTheDocument();
+    expect(screen.getByText('BIR-2026-03-0001')).toBeInTheDocument();
   });
 });

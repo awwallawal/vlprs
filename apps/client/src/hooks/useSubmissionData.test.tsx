@@ -53,11 +53,15 @@ describe('useSubmissionHistory', () => {
     expect(result.current.data?.total).toBe(1);
   });
 
-  it('does not fetch when mdaId is empty', () => {
-    const { result } = renderHook(() => useSubmissionHistory(''), {
+  it('fetches without mdaId (server scopes via JWT)', async () => {
+    const { result } = renderHook(() => useSubmissionHistory(), {
       wrapper: createWrapper(),
     });
 
-    expect(result.current.fetchStatus).toBe('idle');
+    await waitFor(() => {
+      expect(result.current.isSuccess).toBe(true);
+    });
+
+    expect(result.current.data?.items).toHaveLength(1);
   });
 });

@@ -70,12 +70,12 @@ export function useManualSubmission() {
  * Fetches submission history for a specific MDA (or all MDAs for admins).
  * @target GET /api/submissions?mdaId=&page=&pageSize=
  */
-export function useSubmissionHistory(mdaId: string, page = 1, pageSize = 20) {
+export function useSubmissionHistory(mdaId?: string, page = 1, pageSize = 20) {
+  const params = new URLSearchParams({ page: String(page), pageSize: String(pageSize) });
+  if (mdaId) params.set('mdaId', mdaId);
   return useQuery<{ items: SubmissionRecord[]; total: number; page: number; pageSize: number }>({
-    queryKey: ['submissions', mdaId, { page, pageSize }],
-    queryFn: () =>
-      apiClient(`/submissions?mdaId=${mdaId}&page=${page}&pageSize=${pageSize}`),
-    enabled: !!mdaId,
+    queryKey: ['submissions', mdaId ?? 'all', { page, pageSize }],
+    queryFn: () => apiClient(`/submissions?${params.toString()}`),
     staleTime: 30_000,
   });
 }

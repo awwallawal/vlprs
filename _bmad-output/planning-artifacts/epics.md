@@ -353,7 +353,7 @@ Implementation order derived from PRD Build Sequence (14 steps). Each sprint map
 | 5 | Epic 3: Data Migration & Legacy Import | 8 | Step 6 | Epic 10 (temporal validation for post-retirement scan) | All 63 MDAs imported with temporal profiles, observations generated, trace reports available |
 | 6 | Epic 4: Executive Dashboard | 4 | Step 7 | Epic 3 (real data in system) | AG can see headline numbers — political shield active |
 | 7 | Epic 5: MDA Monthly Submission | 5 | Steps 9, 11 | Epic 2 (ledger for deduction posting) | 8-field CSV + validation operational — adoption engine live, monthly data cycle begins |
-| 8 | Epic 11: Pre-Submission & Mid-Cycle Events | 4 | Step 10 | Epic 5 (submission interface), Epic 10 (retirement data) | Checkpoint, event filing, reconciliation, bidirectional transfers live — submission experience complete |
+| 8 | Epic 11: Pre-Submission & Mid-Cycle Events | 6 (incl. Story 5.6) | Step 10 | Epic 5 (submission interface), Epic 10 (retirement data) | Checkpoint, event filing, enum extension, submission detail view, reconciliation, historical upload — submission experience complete |
 | 9 | Epic 7: Exception Management & Annotations | 3 | — | Epic 5 (submission data), Epic 4 (drill-down views) | Exception queue handles promoted observations from Epic 3 + submission variances |
 | 10 | Epic 6: Reporting & PDF Export | 4 | Step 8 | Epic 4 (dashboard data sources) | Reports now contain migration + live submissions + events + exceptions — AG hands Commissioner a living-system report |
 | 11 | Epic 8: Auto-Stop Certificate | 3 | Step 12 | Epic 2 (zero-balance detection) | Automatic deduction cessation at loan completion — guaranteed |
@@ -361,7 +361,7 @@ Implementation order derived from PRD Build Sequence (14 steps). Each sprint map
 | 13 | Epic 9: Notifications & Alerts | 3 | Step 14 | Epic 8 (completion notifications) | Operational loop complete |
 | 14 | Epic 13: Staff ID Governance | 2 | Step 15 | Epic 1 (user management foundation) | Staff ID data quality self-sufficiency achieved |
 
-**Total:** 14 sprints, 65 stories, ~28 weeks (7 months). Epic 3 reshaped from 5 to 8 stories per sprint change proposal (FR87-FR90 additions). FR83-FR86 attach to existing epics — story count impact determined during sprint planning (may add 1-2 small stories or expand existing stories).
+**Total:** 14 sprints, 67 stories, ~28 weeks (7 months). Epic 3 reshaped from 5 to 8 stories per sprint change proposal (FR87-FR90 additions). FR83-FR86 attach to existing epics — story count impact determined during sprint planning (may add 1-2 small stories or expand existing stories). Story 11.2b split from Story 11.3 Task 0 (eventFlagTypeEnum extension + ManualEntryForm event flag fields) per PM validation — keeps reconciliation engine story focused. Story 5.6 (Submission Detail View) moved from Epic 5 to Epic 11 sequence (after 11.2b, before 11.3) per PM validation 2026-03-16 — event flag enum must be extended before the detail view ships, and MDA Officers will not access the app until Epic 11 completes.
 
 **Sequencing rationale (Sprints 7-10):** Submissions (E5) before Reports (E6). MDA officers start submitting in Sprint 7 — every month delayed is one less month of live data by launch. E11 immediately after E5 completes the submission experience (officers never use submissions without the pre-submission checkpoint). E7 after E5+E11 means the exception queue has both promoted observations from Epic 3 and submission variances to work with. E6 last in this block means reports contain migration data + 2-3 months of live submissions + event reconciliation + resolved exceptions — the AG hands the Commissioner a report that shows a living system, not a migration snapshot.
 
@@ -413,7 +413,7 @@ AG opens VLPRS on her phone and instantly sees scheme-wide status — 4 headline
 **FRs covered:** FR32, FR33, FR34, FR35, FR36, FR86
 
 ### Epic 5: MDA Monthly Submission
-MDA Reporting Officers can submit monthly deduction data via 8-field CSV upload (with conditional Event Date and Cessation Reason) or manual entry, receive instant confirmation with reference number, and see neutral comparison summaries with variance detail. Atomic upload, duplicate detection, period lock, conditional field validation, neutral language enforcement. MDA Data Export enables officers to download their MDA's loan portfolio as CSV or branded PDF. MDA officer dashboard includes a Submission Heatmap (self-view) — 12-column-per-year activity grid showing their own submission history (teal/amber/gray). The adoption engine.
+MDA Reporting Officers can submit monthly deduction data via 8-field CSV upload (with conditional Event Date and Cessation Reason) or manual entry, receive instant confirmation with reference number, and see neutral comparison summaries with variance detail. Submission detail view (5.6) enables officers and admins to review any past submission's metadata, individual rows, comparison summary, and reconciliation summary — the backend already exists, this is a frontend-only story. Atomic upload, duplicate detection, period lock, conditional field validation, neutral language enforcement. MDA Data Export enables officers to download their MDA's loan portfolio as CSV or branded PDF. MDA officer dashboard includes a Submission Heatmap (self-view) — 12-column-per-year activity grid showing their own submission history (teal/amber/gray). The adoption engine.
 **FRs covered:** FR16, FR17, FR18, FR19, FR20, FR21, FR22, FR23, FR24, FR83, FR86
 
 ### Epic 6: Reporting & PDF Export
@@ -2288,6 +2288,8 @@ So that my monthly submission takes 15 minutes instead of half a day.
 **And** a re-upload zone is available on the same screen — no navigation required
 **And** "No data was processed — your previous submission is unchanged" reassurance is displayed
 
+**Note:** Story 5.6 (Submission Detail View) has been moved to the Epic 11 sequence (after 11.2b, before 11.3) — see Epic 11 section below. The event flag enum must be extended before the detail view ships.
+
 ---
 
 ## Epic 6: Reporting & PDF Export
@@ -2655,7 +2657,7 @@ So that I can investigate whether these staff have retired, received extensions,
 
 ## Epic 11: Pre-Submission Checkpoint & Mid-Cycle Events
 
-MDA Reporting Officers review a mandatory checkpoint screen before each submission. Mid-cycle employment events can be filed at any time and are reconciled against subsequent CSV submissions. MDA officers can upload historical records for cross-validation.
+MDA Reporting Officers review a mandatory checkpoint screen before each submission. Mid-cycle employment events can be filed at any time and are reconciled against subsequent CSV submissions. Manual entry event flags (11.2b) extend the CSV event flag enum and add event flag fields to the manual entry form, enabling complete reconciliation coverage. MDA officers can upload historical records for cross-validation.
 
 ### Story 11.1: Pre-Submission Checkpoint Screen
 
@@ -2712,6 +2714,52 @@ So that critical staff changes are recorded immediately rather than waiting for 
 **When** an MDA officer searches for a staff member for transfer purposes
 **Then** the search returns: staff name and Staff ID only — no financial details are visible until the transfer is confirmed by both parties (FR61 extension — scoped cross-MDA visibility)
 
+### Story 11.2b: Manual Entry Event Flags & eventFlagTypeEnum Extension
+
+As an **MDA Reporting Officer**,
+I want to specify employment event flags, event dates, and cessation reasons when entering monthly deduction data manually,
+So that manual submissions carry the same event information as CSV uploads, enabling complete reconciliation coverage.
+
+**Acceptance Criteria:**
+
+**Given** the existing `eventFlagTypeEnum` with 9 values
+**When** the Drizzle migration runs
+**Then** the enum is extended with `ABSCONDED`, `SERVICE_EXTENSION`, and `DISMISSAL`, and existing `TERMINATION` data is migrated to `DISMISSAL`. `TERMINATION` remains as a deprecated dead value in the PostgreSQL enum (cannot be dropped) but is excluded from application-level validation
+
+**Given** the `ManualEntryForm` is displayed
+**When** the user selects an Event Flag other than NONE
+**Then** a conditional Event Date picker (required) and optional Cessation Reason field (shown for DISMISSAL, ABSCONDED, DEATH) appear
+
+**Given** the user submits the manual entry form with event flag fields
+**When** processed via `POST /api/submissions/manual`
+**Then** the API receives the correct `eventFlag`, `eventDate`, and `cessationReason` values
+
+### Story 5.6: Submission Detail View (moved from Epic 5, sequenced after 11.2b)
+
+As an **MDA Reporting Officer or Department Admin**,
+I want to view the full details of any past submission — its metadata, individual rows, and analysis summaries,
+So that I can review what was submitted, verify data accuracy, and access comparison results at any time.
+
+**Acceptance Criteria:**
+
+**Given** the submission history table in SubmissionsPage or MdaDetailPage
+**When** the user clicks on a submission row
+**Then** they navigate to `/dashboard/submissions/:submissionId` showing the full detail view
+
+**Given** the detail page
+**When** it loads successfully
+**Then** it displays: reference number (copyable), submission period, date, record count, status badge, source indicator (CSV with filename or Manual Entry), and MDA name (for admin views)
+
+**Given** the detail page
+**When** the user views the rows section
+**Then** a table shows all submission rows (Staff ID, Month, Amount, Batch Ref, MDA Code, Event Flag, Event Date). Rows with non-NONE event flags have a subtle teal indicator. Event flag labels use the post-11.2b enum (12 values)
+
+**Given** the detail page for a confirmed submission
+**When** comparison data exists
+**Then** the ComparisonSummary component renders below the rows table (self-fetches via submissionId)
+
+**Prerequisite:** Story 5.4 (ComparisonSummary) + Story 11.2b (eventFlagTypeEnum extended). Story 11.3 Task 9.3 will wire ReconciliationSummary into this page after it ships.
+
 ### Story 11.3: Event Reconciliation Engine
 
 As the **system**,
@@ -2741,17 +2789,30 @@ So that my MDA's historical records can verify and triangulate the central migra
 **Acceptance Criteria:**
 
 **Given** the historical upload page
-**When** the MDA officer uploads a CSV with the standard 8-field format
-**Then** the system validates the data, timestamps all records as "historical" (not current-period), and cross-references each row against migration baseline data for the same MDA (FR70)
+**When** the MDA officer uploads a CSV with the standard 8-field format (max 100 rows, single period per upload)
+**Then** the system validates the data, timestamps all records as "historical" (not current-period), and cross-references each row against migration baseline data (`loans.monthlyDeductionAmount`) for the same MDA (FR70)
 
 **Given** the cross-validation results
 **When** displayed to the MDA officer
-**Then** a summary shows: matched records (count), variance records (count with largest variance amount)
-**And** the full reconciliation report is queued for Department Admin review
+**Then** a summary shows: matched records (count, |difference| < ₦500) and variance records (count, |difference| ≥ ₦500, with largest variance amount). MDA officer can flag individual variance rows for Department Admin review (lightweight annotation precursor to FR58). Department Admin is notified via email if variances exist
 
 **Given** the historical upload
-**When** a row references a future month or a month with an existing current-period submission
+**When** a row references a future month or a month with an existing confirmed current-period submission
 **Then** the row is rejected with a clear message: "Row X: Month YYYY-MM already has a current-period submission"
+
+**Given** an MDA officer re-uploads historical data for the same period
+**When** the new upload is processed
+**Then** it is accepted as a separate submission record (previous submissions retained for audit trail), enabling corrections of wrong figures or missing records
+
+**Given** an MDA with no migration baseline data (Epic 3 not completed)
+**When** the officer uploads historical data
+**Then** the upload succeeds (data stored) but cross-validation returns: "No migration baseline found — cross-validation will be available once migration data is imported"
+
+**Given** the MDA Self-Service Reconciliation View (FR84)
+**When** the officer navigates to the reconciliation view
+**Then** it shows per-loanee comparison of declared vs baseline values, match/variance status, aggregate match rate, and flag-for-review capability. Scoped to assigned MDA only
+
+**Note:** Backend already exists for CSV parsing — reuses `parseSubmissionCsv()`, `validateSubmissionRows()`, `validateMdaCodes()`, `validateStaffIds()` from `submissionService.ts`. Frontend-only for upload page. Cross-validation uses same ₦500 threshold as Story 5.4 comparison engine.
 
 ---
 
