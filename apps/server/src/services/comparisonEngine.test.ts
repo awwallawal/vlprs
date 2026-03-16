@@ -1,6 +1,4 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import Decimal from 'decimal.js';
-
 // Mock the DB module before importing the service
 vi.mock('../db/index', () => ({
   db: {

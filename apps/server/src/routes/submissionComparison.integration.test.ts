@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeAll, beforeEach, afterAll } from 'vitest';
 import request from 'supertest';
-import { sql, eq } from 'drizzle-orm';
+import { sql } from 'drizzle-orm';
 import app from '../app';
 import { db } from '../db/index';
 import { users, mdas, loans, mdaSubmissions, submissionRows } from '../db/schema';
