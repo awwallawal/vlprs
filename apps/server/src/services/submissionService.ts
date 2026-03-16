@@ -5,6 +5,7 @@ import { mdaSubmissions, submissionRows, mdas, loans } from '../db/schema';
 import { AppError } from '../lib/appError';
 import { withMdaScope } from '../lib/mdaScope';
 import { generateUuidv7 } from '../lib/uuidv7';
+import { compareSubmission } from './comparisonEngine';
 import { VOCABULARY, submissionRowSchema } from '@vlprs/shared';
 import type {
   SubmissionRow,
@@ -477,12 +478,41 @@ export async function processSubmissionRows(
     return refNumber;
   });
 
-  return {
-    referenceNumber,
-    recordCount: rows.length,
-    submissionDate: now.toISOString(),
-    status: 'confirmed' as SubmissionRecordStatus,
-  };
+  // Run comparison engine and persist aggregate counts.
+  // Wrapped in try/catch: if comparison fails, the submission is still valid
+  // with 0/0 counts — counts can be recomputed via GET /submissions/:id/comparison.
+  try {
+    const { summary: comparisonSummary } = await compareSubmission(submissionId, mdaScope);
+    await db.update(mdaSubmissions)
+      .set({
+        alignedCount: comparisonSummary.alignedCount,
+        varianceCount: comparisonSummary.varianceCount,
+        updatedAt: new Date(),
+      })
+      .where(eq(mdaSubmissions.id, submissionId));
+
+    return {
+      id: submissionId,
+      referenceNumber,
+      recordCount: rows.length,
+      submissionDate: now.toISOString(),
+      status: 'confirmed' as SubmissionRecordStatus,
+      alignedCount: comparisonSummary.alignedCount,
+      varianceCount: comparisonSummary.varianceCount,
+    };
+  } catch {
+    // Comparison failed — submission is valid, counts default to 0.
+    // Counts will be computed on-demand via GET /submissions/:id/comparison.
+    return {
+      id: submissionId,
+      referenceNumber,
+      recordCount: rows.length,
+      submissionDate: now.toISOString(),
+      status: 'confirmed' as SubmissionRecordStatus,
+      alignedCount: 0,
+      varianceCount: 0,
+    };
+  }
 }
 
 // ─── Process Submission — CSV entry point (delegates to shared pipeline) ─
@@ -516,6 +546,8 @@ export async function getSubmissions(
     recordCount: number;
     status: string;
     period: string;
+    alignedCount: number;
+    varianceCount: number;
   }>;
   total: number;
   page: number;
@@ -540,6 +572,8 @@ export async function getSubmissions(
       recordCount: mdaSubmissions.recordCount,
       status: mdaSubmissions.status,
       period: mdaSubmissions.period,
+      alignedCount: mdaSubmissions.alignedCount,
+      varianceCount: mdaSubmissions.varianceCount,
     })
       .from(mdaSubmissions)
       .where(whereClause)
@@ -555,8 +589,6 @@ export async function getSubmissions(
     items: items.map((item) => ({
       ...item,
       submissionDate: item.submissionDate.toISOString(),
-      alignedCount: 0, // Default until comparison engine (Story 5.4)
-      varianceCount: 0,
     })),
     total: totalResult[0].count,
     page,

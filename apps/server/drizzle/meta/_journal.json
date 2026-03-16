@@ -134,6 +134,13 @@
       "when": 1773424511374,
       "tag": "0018_broad_king_bedlam",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1773489169851,
+      "tag": "0019_solid_vargas",
+      "breakpoints": true
     }
   ]
 }

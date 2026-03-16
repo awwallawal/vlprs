@@ -33,10 +33,13 @@ export interface SubmissionRecord {
 }
 
 export interface SubmissionUploadResponse {
+  id: string;
   referenceNumber: string;
   recordCount: number;
   submissionDate: string;
   status: SubmissionRecordStatus;
+  alignedCount: number;
+  varianceCount: number;
 }
 
 export interface SubmissionDetail {
@@ -56,4 +59,30 @@ export interface SubmissionValidationError {
   row: number;
   field: string;
   message: string;
+}
+
+// Comparison types (Story 5.4)
+export type ComparisonCategory = 'aligned' | 'minor_variance' | 'variance';
+
+export interface ComparisonRow {
+  staffId: string;
+  declaredAmount: string;
+  expectedAmount: string;
+  difference: string;
+  category: ComparisonCategory;
+  explanation: string;
+}
+
+export interface ComparisonSummary {
+  alignedCount: number;
+  minorVarianceCount: number;
+  varianceCount: number;
+  totalRecords: number;
+  rows: ComparisonRow[];
+}
+
+export interface SubmissionComparisonResponse {
+  submissionId: string;
+  referenceNumber: string;
+  summary: ComparisonSummary;
 }

@@ -5,13 +5,14 @@ import { useSubmissionHistory, useSubmissionUpload } from '@/hooks/useSubmission
 import { FileUploadZone } from '@/components/shared/FileUploadZone';
 import { WelcomeGreeting } from '@/components/shared/WelcomeGreeting';
 import { SubmissionConfirmation } from './components/SubmissionConfirmation';
+import { ComparisonSummary } from './components/ComparisonSummary';
 import { ManualEntryForm } from './components/ManualEntryForm';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { formatDate, formatCount } from '@/lib/formatters';
 import { cn } from '@/lib/utils';
-import { UI_COPY, VOCABULARY } from '@vlprs/shared';
+import { VOCABULARY } from '@vlprs/shared';
 import type { SubmissionUploadResponse, SubmissionValidationError } from '@vlprs/shared';
 
 type ConfirmationData = SubmissionUploadResponse & { source: 'csv' | 'manual' };
@@ -82,8 +83,6 @@ export function SubmissionsPage() {
       ? (uploadMutation.error.details as SubmissionValidationError[]) ?? []
       : [];
 
-  const mostRecent = submissions[0] ?? null;
-
   return (
     <div className="space-y-8">
       {/* Welcome greeting + page heading */}
@@ -99,14 +98,17 @@ export function SubmissionsPage() {
 
       {/* View state: Confirmation or Upload */}
       {confirmationData !== null ? (
-        /* CONFIRMATION VIEW */
-        <SubmissionConfirmation
-          referenceNumber={confirmationData.referenceNumber}
-          recordCount={confirmationData.recordCount}
-          submissionDate={confirmationData.submissionDate}
-          source={confirmationData.source}
-          onSubmitAnother={handleSubmitAnother}
-        />
+        /* CONFIRMATION VIEW — Confirm-Then-Compare principle */
+        <>
+          <SubmissionConfirmation
+            referenceNumber={confirmationData.referenceNumber}
+            recordCount={confirmationData.recordCount}
+            submissionDate={confirmationData.submissionDate}
+            source={confirmationData.source}
+            onSubmitAnother={handleSubmitAnother}
+          />
+          <ComparisonSummary submissionId={confirmationData.id} />
+        </>
       ) : (
         /* UPLOAD VIEW */
         <>
@@ -229,38 +231,6 @@ export function SubmissionsPage() {
             </Tabs>
           </section>
         </>
-      )}
-
-      {/* Comparison summary for most recent submission */}
-      {mostRecent && mostRecent.varianceCount > 0 && (
-        <section aria-labelledby="comparison-heading">
-          <div className="rounded-lg bg-slate-50 p-4">
-            <div className="flex items-center gap-2 mb-3">
-              <Info className="h-5 w-5 text-teal" aria-hidden="true" />
-              <h2 id="comparison-heading" className="text-base font-semibold text-text-primary">
-                {UI_COPY.COMPARISON_COMPLETE}
-              </h2>
-            </div>
-
-            <div className="space-y-2 text-sm text-text-secondary">
-              <div className="flex items-center gap-2">
-                <Info className="h-4 w-4 text-teal shrink-0" aria-hidden="true" />
-                <span>
-                  {formatCount(mostRecent.varianceCount)}{' '}
-                  {mostRecent.varianceCount === 1 ? 'record' : 'records'} with variance
-                  detected in submission {mostRecent.referenceNumber}
-                </span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Info className="h-4 w-4 text-teal shrink-0" aria-hidden="true" />
-                <span>
-                  {formatCount(mostRecent.alignedCount)} of{' '}
-                  {formatCount(mostRecent.recordCount)} records aligned with prior month
-                </span>
-              </div>
-            </div>
-          </div>
-        </section>
       )}
 
       {/* Submission history table */}

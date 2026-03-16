@@ -546,6 +546,8 @@ export const mdaSubmissions = pgTable(
     filename: varchar('filename', { length: 500 }),
     fileSizeBytes: integer('file_size_bytes'),
     validationErrors: jsonb('validation_errors'),
+    alignedCount: integer('aligned_count').notNull().default(0),
+    varianceCount: integer('variance_count').notNull().default(0),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
   },

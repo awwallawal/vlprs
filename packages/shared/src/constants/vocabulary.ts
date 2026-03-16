@@ -167,6 +167,11 @@ export const VOCABULARY = {
   SUBMISSION_MANUAL_MAX_ROWS: 'Maximum of 50 rows reached',
   SUBMISSION_MANUAL_MIN_ROWS: 'At least one row is required',
   SUBMISSION_ITEMS_NEED_ATTENTION: '{count} items need your attention',
+  // Comparison (Story 5.4)
+  COMPARISON_NO_ACTION_REQUIRED: 'No action required from you. Variances are logged for reconciliation.',
+  COMPARISON_ALIGNED: 'Values match the expected repayment schedule',
+  COMPARISON_MINOR_VARIANCE: 'Small difference within tolerance (< ₦500)',
+  COMPARISON_VARIANCE: 'Difference detected — logged for reconciliation',
 } as const;
 
 export const UI_COPY = {
@@ -215,4 +220,11 @@ export const UI_COPY = {
   SUBMISSION_CONFIRMATION_SOURCE_CSV: 'Submitted via CSV upload',
   SUBMISSION_CONFIRMATION_SOURCE_MANUAL: 'Submitted via manual entry',
   SUBMISSION_SUBMIT_ANOTHER: 'Submit Another',
+  // Comparison (Story 5.4)
+  COMPARISON_SUMMARY_HEADER: 'Comparison Summary',
+  COMPARISON_ALIGNED_LABEL: 'Aligned',
+  COMPARISON_MINOR_VARIANCE_LABEL: 'Minor Variance',
+  COMPARISON_VARIANCE_LABEL: 'Variance',
+  COMPARISON_EXPAND_DETAIL: 'View variance detail',
+  COMPARISON_COLLAPSE_DETAIL: 'Hide variance detail',
 } as const;

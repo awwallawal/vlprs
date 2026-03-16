@@ -25,6 +25,10 @@ vi.mock('@/hooks/useSubmissionData', () => ({
     error: null,
     data: null,
   })),
+  useComparisonSummary: vi.fn(() => ({
+    data: null,
+    isPending: false,
+  })),
 }));
 
 vi.mock('@/stores/authStore', () => ({
@@ -39,10 +43,13 @@ vi.mock('./components/ManualEntryForm', () => ({
       data-testid="mock-manual-submit"
       onClick={() =>
         onSuccess?.({
+          id: 'sub-002',
           referenceNumber: 'BIR-2026-03-0002',
           recordCount: 5,
           submissionDate: '2026-03-14T12:00:00.000Z',
           status: 'confirmed',
+          alignedCount: 4,
+          varianceCount: 1,
         })
       }
     >
@@ -69,10 +76,13 @@ vi.mock('@/components/shared/WelcomeGreeting', () => ({
 import { SubmissionsPage } from './SubmissionsPage';
 
 const mockCsvResponse = {
+  id: 'sub-001',
   referenceNumber: 'BIR-2026-03-0001',
   recordCount: 10,
   submissionDate: '2026-03-14T10:00:00.000Z',
   status: 'confirmed' as const,
+  alignedCount: 8,
+  varianceCount: 2,
 };
 
 describe('SubmissionsPage Integration (Story 5.3)', () => {

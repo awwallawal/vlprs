@@ -161,16 +161,16 @@ development_status:
   5-1-csv-upload-atomic-validation: done
   5-2-manual-entry-form: done
   5-3-submission-confirmation-reference: done
-  5-4-comparison-summary-with-neutral-language: ready-for-dev
+  5-4-comparison-summary-with-neutral-language: done
   5-5-submission-frontend-template-download: ready-for-dev
   epic-5-retrospective: optional
 
   # Epic 11: Pre-Submission Checkpoint & Mid-Cycle Events (Sprint 8 — completes submission experience)
   epic-11: in-progress
   11-1-pre-submission-checkpoint-screen: ready-for-dev
-  11-2-mid-cycle-employment-event-filing: backlog
-  11-3-event-reconciliation-engine: backlog
-  11-4-mda-historical-data-upload: backlog
+  11-2-mid-cycle-employment-event-filing: ready-for-dev
+  11-3-event-reconciliation-engine: ready-for-dev
+  11-4-mda-historical-data-upload: ready-for-dev
   epic-11-retrospective: optional
 
   # Epic 7: Exception Management & Record Annotations (Sprint 9 — handles promoted observations + submission variances)
@@ -213,4 +213,4 @@ development_status:
   epic-13: backlog
   13-3-staff-id-management: backlog
   13-4-duplicate-staff-id-detection: backlog
-  epic-13-retrospective: optional
+  epic-13-retrospective: optional 
