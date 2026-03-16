@@ -69,3 +69,29 @@ export const manualSubmissionBodySchema = z.object({
 });
 
 export type ManualSubmissionBody = z.infer<typeof manualSubmissionBodySchema>;
+
+// Comparison schemas (Story 5.4)
+const comparisonCategorySchema = z.enum(['aligned', 'minor_variance', 'variance']);
+
+export const comparisonRowSchema = z.object({
+  staffId: z.string(),
+  declaredAmount: z.string(),
+  expectedAmount: z.string(),
+  difference: z.string(),
+  category: comparisonCategorySchema,
+  explanation: z.string(),
+});
+
+export const comparisonSummarySchema = z.object({
+  alignedCount: z.number().int().min(0),
+  minorVarianceCount: z.number().int().min(0),
+  varianceCount: z.number().int().min(0),
+  totalRecords: z.number().int().min(0),
+  rows: z.array(comparisonRowSchema),
+});
+
+export const submissionComparisonResponseSchema = z.object({
+  submissionId: z.string().uuid(),
+  referenceNumber: z.string(),
+  summary: comparisonSummarySchema,
+});

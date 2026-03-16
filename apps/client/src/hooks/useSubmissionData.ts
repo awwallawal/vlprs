@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getAuthHeaders } from '@/lib/fetchHelpers';
 import { apiClient } from '@/lib/apiClient';
-import type { SubmissionRecord, SubmissionRow, SubmissionUploadResponse } from '@vlprs/shared';
+import type { SubmissionRecord, SubmissionRow, SubmissionUploadResponse, SubmissionComparisonResponse } from '@vlprs/shared';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
 
@@ -76,6 +76,19 @@ export function useSubmissionHistory(mdaId: string, page = 1, pageSize = 20) {
     queryFn: () =>
       apiClient(`/submissions?mdaId=${mdaId}&page=${page}&pageSize=${pageSize}`),
     enabled: !!mdaId,
+    staleTime: 30_000,
+  });
+}
+
+/**
+ * Fetches comparison summary for a specific submission.
+ * @target GET /api/submissions/:id/comparison
+ */
+export function useComparisonSummary(submissionId: string) {
+  return useQuery<SubmissionComparisonResponse>({
+    queryKey: ['submissions', submissionId, 'comparison'],
+    queryFn: () => apiClient<SubmissionComparisonResponse>(`/submissions/${submissionId}/comparison`),
+    enabled: !!submissionId,
     staleTime: 30_000,
   });
 }

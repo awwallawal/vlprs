@@ -12,6 +12,7 @@ import { ROLES, submissionListQuerySchema, manualSubmissionBodySchema, VOCABULAR
 import { AppError } from '../lib/appError';
 import { param } from '../lib/params';
 import * as submissionService from '../services/submissionService';
+import { compareSubmission } from '../services/comparisonEngine';
 
 const router = Router();
 
@@ -131,6 +132,29 @@ router.get(
     res.json({
       success: true,
       data: result,
+    });
+  },
+);
+
+// GET /submissions/:id/comparison — Comparison summary for a submission
+router.get(
+  '/submissions/:id/comparison',
+  ...readAuth,
+  readLimiter,
+  auditLog,
+  async (req: Request, res: Response) => {
+    const id = param(req.params.id);
+    const mdaScope = (req as Request & { mdaScope?: string | null }).mdaScope ?? null;
+
+    const { summary, referenceNumber } = await compareSubmission(id, mdaScope);
+
+    res.json({
+      success: true,
+      data: {
+        submissionId: id,
+        referenceNumber,
+        summary,
+      },
     });
   },
 );
