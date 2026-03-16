@@ -17,7 +17,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { formatDate, formatCount } from '@/lib/formatters';
 import { cn } from '@/lib/utils';
 import { apiClient } from '@/lib/apiClient';
-import { ROLES, VOCABULARY } from '@vlprs/shared';
+import { ROLES } from '@vlprs/shared';
 import type { SubmissionUploadResponse, SubmissionValidationError } from '@vlprs/shared';
 
 type ConfirmationData = SubmissionUploadResponse & { source: 'csv' | 'manual' };
