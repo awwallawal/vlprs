@@ -77,6 +77,9 @@ export function parseSubmissionCsv(buffer: Buffer): ParsedCsvRow[] {
     }
   }
 
+  // Skip comment rows (lines starting with #)
+  dataRows = dataRows.filter((row) => !(row[0] || '').trim().startsWith('#'));
+
   if (dataRows.length === 0) {
     throw new AppError(422, 'SUBMISSION_VALIDATION_FAILED', VOCABULARY.SUBMISSION_EMPTY_FILE);
   }

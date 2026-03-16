@@ -1,2 +1,3 @@
 Staff ID,Month,Amount Deducted,Payroll Batch Reference,MDA Code,Event Flag,Event Date,Cessation Reason
 OYO/MDA/001,2026-03,15000.00,PB-2026-03-001,HLT,NONE,,
+# Notes: Event Date is required when Event Flag is not NONE. Cessation Reason is required when Amount is 0 and Event Flag is NONE. Valid Event Flags: NONE RETIREMENT DEATH SUSPENSION TRANSFER_OUT TRANSFER_IN LEAVE_WITHOUT_PAY REINSTATEMENT TERMINATION

@@ -1,5 +1,7 @@
-import { useState } from 'react';
-import { Info, AlertTriangle } from 'lucide-react';
+import { useState, useRef } from 'react';
+import { Upload, Download, Info } from 'lucide-react';
+import { format } from 'date-fns';
+import { useQuery } from '@tanstack/react-query';
 import { useAuthStore } from '@/stores/authStore';
 import { useSubmissionHistory, useSubmissionUpload } from '@/hooks/useSubmissionData';
 import { FileUploadZone } from '@/components/shared/FileUploadZone';
@@ -7,15 +9,24 @@ import { WelcomeGreeting } from '@/components/shared/WelcomeGreeting';
 import { SubmissionConfirmation } from './components/SubmissionConfirmation';
 import { ComparisonSummary } from './components/ComparisonSummary';
 import { ManualEntryForm } from './components/ManualEntryForm';
+import { ValidationErrorDisplay } from './components/ValidationErrorDisplay';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { formatDate, formatCount } from '@/lib/formatters';
 import { cn } from '@/lib/utils';
-import { VOCABULARY } from '@vlprs/shared';
+import { apiClient } from '@/lib/apiClient';
+import { ROLES, VOCABULARY } from '@vlprs/shared';
 import type { SubmissionUploadResponse, SubmissionValidationError } from '@vlprs/shared';
 
 type ConfirmationData = SubmissionUploadResponse & { source: 'csv' | 'manual' };
+
+interface MdaOption {
+  id: string;
+  name: string;
+  code: string;
+}
 
 const STATUS_BADGE_VARIANT: Record<string, 'complete' | 'info' | 'review'> = {
   confirmed: 'complete',
@@ -30,13 +41,25 @@ const CHECKPOINT_ITEMS = [
 
 export function SubmissionsPage() {
   const user = useAuthStore((s) => s.user);
+  const userRole = user?.role ?? ROLES.MDA_OFFICER;
+  const isSuperAdmin = userRole === ROLES.SUPER_ADMIN;
 
   const userMdaId = user?.mdaId ?? '';
 
-  const { data: historyData, isPending } = useSubmissionHistory(userMdaId);
+  const { data: historyData, isPending } = useSubmissionHistory(userMdaId || undefined);
   const submissions = historyData?.items ?? [];
 
   const uploadMutation = useSubmissionUpload();
+
+  // MDA name resolution
+  const { data: mdas } = useQuery<MdaOption[]>({
+    queryKey: ['mdas'],
+    queryFn: () => apiClient('/mdas'),
+    staleTime: 5 * 60_000,
+    enabled: !!userMdaId,
+  });
+  const resolvedMdaName =
+    userMdaId && mdas ? mdas.find((m) => m.id === userMdaId)?.name ?? 'Your MDA' : 'Your MDA';
 
   // Checkpoint state — lifted above Tabs to preserve across tab switches
   const [checkpointConfirmed, setCheckpointConfirmed] = useState(false);
@@ -46,6 +69,12 @@ export function SubmissionsPage() {
 
   // Active tab state for reset
   const [activeTab, setActiveTab] = useState('csv');
+
+  // Persisted validation errors — survive mutation reset during re-upload
+  const [persistedErrors, setPersistedErrors] = useState<SubmissionValidationError[]>([]);
+
+  // Ref for scrolling to upload section
+  const uploadSectionRef = useRef<HTMLElement>(null);
 
   // Derive upload status from mutation state
   const uploadStatus: 'idle' | 'uploading' | 'success' | 'error' = uploadMutation.isPending
@@ -58,12 +87,23 @@ export function SubmissionsPage() {
 
   const handleFileSelect = (file: File) => {
     uploadMutation.mutate(file, {
-      onSuccess: (data) => setConfirmationData({ ...data, source: 'csv' }),
+      onSuccess: (data) => {
+        setPersistedErrors([]);
+        setConfirmationData({ ...data, source: 'csv' });
+      },
+      onError: (error) => {
+        const errors =
+          error && 'details' in error
+            ? (error.details as SubmissionValidationError[]) ?? []
+            : [];
+        setPersistedErrors(errors);
+      },
     });
   };
 
   const handleFileRemove = () => {
     uploadMutation.reset();
+    setPersistedErrors([]);
   };
 
   const handleManualSuccess = (data: SubmissionUploadResponse) => {
@@ -74,14 +114,28 @@ export function SubmissionsPage() {
     setConfirmationData(null);
     setCheckpointConfirmed(false);
     setActiveTab('csv');
+    setPersistedErrors([]);
     uploadMutation.reset();
   };
 
-  // Extract validation errors from mutation error
-  const validationErrors: SubmissionValidationError[] =
+  const handleHeroClick = () => {
+    if (checkpointConfirmed) {
+      uploadSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+
+  // Derive validation errors: prefer fresh mutation errors, fall back to persisted
+  const mutationErrors: SubmissionValidationError[] =
     uploadMutation.error && 'details' in uploadMutation.error
       ? (uploadMutation.error.details as SubmissionValidationError[]) ?? []
       : [];
+  const displayErrors = mutationErrors.length > 0 ? mutationErrors : persistedErrors;
+
+  // Period display with grace period
+  const now = new Date();
+  const currentPeriod = format(now, 'MMMM yyyy');
+  const prevMonthDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  const prevPeriod = format(prevMonthDate, 'MMMM yyyy');
 
   return (
     <div className="space-y-8">
@@ -96,7 +150,24 @@ export function SubmissionsPage() {
         </div>
       </div>
 
-      {/* View state: Confirmation or Upload */}
+      {/* Period & MDA context */}
+      {!isSuperAdmin && (
+        <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-text-secondary">
+          <span>
+            Submitting for: <strong className="text-text-primary">{currentPeriod}</strong>
+            {' '}
+            <span className="text-text-muted">({prevPeriod} also open)</span>
+          </span>
+          <span>
+            Organisation:{' '}
+            <strong className="text-text-primary">
+              {userRole === ROLES.DEPT_ADMIN ? 'All MDAs' : resolvedMdaName}
+            </strong>
+          </span>
+        </div>
+      )}
+
+      {/* View state: Confirmation, Error, or Upload */}
       {confirmationData !== null ? (
         /* CONFIRMATION VIEW — Confirm-Then-Compare principle */
         <>
@@ -109,9 +180,50 @@ export function SubmissionsPage() {
           />
           <ComparisonSummary submissionId={confirmationData.id} />
         </>
-      ) : (
-        /* UPLOAD VIEW */
+      ) : displayErrors.length > 0 ? (
+        /* ERROR VIEW — persists during re-upload (no navigation flicker) */
         <>
+          <ValidationErrorDisplay errors={displayErrors} />
+          <section aria-labelledby="reupload-heading">
+            <h2 id="reupload-heading" className="sr-only">
+              Re-upload corrected file
+            </h2>
+            <FileUploadZone
+              accept=".csv"
+              maxSizeMb={5}
+              onFileSelect={handleFileSelect}
+              onFileRemove={handleFileRemove}
+              status={uploadMutation.isPending ? 'uploading' : 'idle'}
+              aria-label="Upload corrected CSV file. Drag and drop or click to browse."
+            />
+          </section>
+        </>
+      ) : !isSuperAdmin ? (
+        /* UPLOAD VIEW — only for MDA_OFFICER and DEPT_ADMIN */
+        <>
+          {/* "Submit Monthly Data" hero button */}
+          <div className="flex justify-center">
+            <Button
+              onClick={handleHeroClick}
+              disabled={!checkpointConfirmed}
+              aria-disabled={!checkpointConfirmed}
+              className={cn(
+                'h-12 md:h-10 min-w-[220px] min-h-[44px] text-base font-semibold',
+                'bg-[#9C1E23] hover:bg-[#9C1E23]/90 text-white',
+                'focus:ring-2 focus:ring-[#0D7377]',
+                !checkpointConfirmed && 'opacity-40',
+              )}
+              title={
+                !checkpointConfirmed
+                  ? 'Complete the pre-submission checkpoint first'
+                  : undefined
+              }
+            >
+              <Upload className="h-5 w-5" aria-hidden="true" />
+              Submit Monthly Data
+            </Button>
+          </div>
+
           {/* Pre-Submission Checkpoint */}
           <section aria-labelledby="checkpoint-heading">
             <h2 id="checkpoint-heading" className="text-lg font-semibold text-text-primary mb-3">
@@ -141,7 +253,7 @@ export function SubmissionsPage() {
           </section>
 
           {/* Submission entry — Tabs: CSV Upload / Manual Entry */}
-          <section aria-labelledby="submission-heading">
+          <section ref={uploadSectionRef} aria-labelledby="submission-heading">
             <h2 id="submission-heading" className="text-lg font-semibold text-text-primary mb-3">
               Submit Deduction Data
             </h2>
@@ -162,55 +274,37 @@ export function SubmissionsPage() {
                   aria-disabled={!checkpointConfirmed}
                 >
                   <p className="text-sm text-text-secondary mb-3">
-                    Upload your monthly 8-field CSV deduction file.{' '}
+                    Upload your monthly 8-field CSV deduction file.
+                  </p>
+
+                  {/* Template download — prominent secondary action */}
+                  <div className="mb-4">
                     <a
                       href="/templates/submission-template.csv"
-                      className="text-teal underline hover:text-teal-hover"
+                      download="submission-template.csv"
+                      className={cn(
+                        'inline-flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium',
+                        'border border-[#0D7377] text-[#0D7377] hover:bg-teal-50',
+                        'w-full justify-center md:w-auto',
+                        'focus:ring-2 focus:ring-[#0D7377]',
+                      )}
                     >
+                      <Download className="h-4 w-4" aria-hidden="true" />
                       Download CSV Template
                     </a>
-                  </p>
+                  </div>
 
                   <FileUploadZone
                     accept=".csv"
                     maxSizeMb={5}
                     onFileSelect={handleFileSelect}
                     onFileRemove={handleFileRemove}
-                    templateDownloadUrl="/templates/submission-template.csv"
                     status={uploadStatus}
                     errorMessage={
-                      uploadMutation.isError
-                        ? uploadMutation.error.message
-                        : undefined
+                      uploadMutation.isError ? uploadMutation.error.message : undefined
                     }
                   />
                 </div>
-
-                {/* Error display — row-level validation errors with non-punitive language */}
-                {uploadMutation.isError && validationErrors.length > 0 && (
-                  <section
-                    aria-labelledby="validation-errors-heading"
-                    className="mt-4 rounded-lg border border-gold/30 bg-gold-50 p-4"
-                  >
-                    <div className="flex items-center gap-2 mb-3">
-                      <AlertTriangle className="h-5 w-5 text-gold" aria-hidden="true" />
-                      <h3
-                        id="validation-errors-heading"
-                        className="text-base font-semibold text-text-primary"
-                      >
-                        {VOCABULARY.SUBMISSION_NEEDS_ATTENTION}
-                      </h3>
-                    </div>
-                    <ul className="space-y-1.5 text-sm text-text-secondary">
-                      {validationErrors.map((err, i) => (
-                        <li key={i} className="flex items-start gap-2">
-                          <span className="text-gold mt-0.5">&#8226;</span>
-                          <span>{err.message}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </section>
-                )}
               </TabsContent>
 
               {/* Manual Entry Tab — forceMount preserves form data on tab switch */}
@@ -231,9 +325,9 @@ export function SubmissionsPage() {
             </Tabs>
           </section>
         </>
-      )}
+      ) : null}
 
-      {/* Submission history table */}
+      {/* Submission history table — always visible */}
       <section aria-labelledby="history-heading">
         <h2 id="history-heading" className="text-lg font-semibold text-text-primary mb-3">
           Submission History
