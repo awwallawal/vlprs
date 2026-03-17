@@ -95,7 +95,7 @@ export const createBaselineBodySchema = z.object({
 
 // ─── Coverage Tracker Query (Story 11.0b) ────────────────────────────
 export const coverageQuerySchema = z.object({
-  extended: z.string().optional().default('false').transform(v => v === 'true'),
+  extended: z.enum(['true', 'false']).optional().default('false'),
 });
 
 // ─── Beneficiary Ledger Query (Story 3.5) ───────────────────────────

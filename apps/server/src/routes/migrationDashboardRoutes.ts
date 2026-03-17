@@ -47,7 +47,7 @@ router.get(
   validateQuery(coverageQuerySchema),
   auditLog,
   async (req: Request, res: Response) => {
-    const extended = !!req.query.extended;
+    const extended = req.query.extended === 'true';
     const data = await migrationDashboardService.getMigrationCoverage(req.mdaScope, extended);
     res.json({ success: true, data });
   },

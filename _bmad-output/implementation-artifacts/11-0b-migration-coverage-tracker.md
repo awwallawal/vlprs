@@ -115,7 +115,7 @@ This is a **net-new feature** surfaced during UAT preparation. The Department Ad
 
 - [x] [AI-Review][MEDIUM] M1: Add error state rendering when API call fails — component showed misleading "No migration data" on errors [MigrationCoverageTracker.tsx:217]
 - [x] [AI-Review][MEDIUM] M2: Add popup blocker feedback for PDF export — `window.open` returns null with no user notification [MigrationCoverageTracker.tsx:201]
-- [x] [AI-Review][MEDIUM] M3: Fix `validateQuery` middleware to assign parsed result to `req.query` (matching `validate` behavior); fix `coverageQuerySchema` to properly handle boolean query strings; simplify handler [validate.ts:31, migrationSchemas.ts:98, migrationDashboardRoutes.ts:50]
+- [x] [AI-Review][MEDIUM] M3: `validateQuery` middleware now merges parsed result into `req.query` via `Object.assign` (preserves unknown keys, unlike full replacement which stripped them). `coverageQuerySchema` changed from `z.coerce.boolean()` (treats any truthy string as `true`) to `z.enum(['true', 'false'])` (proper validation, keeps string type, handler unchanged). All 12 routes / 76 test files / 1100 tests verified green. [validate.ts:31, migrationSchemas.ts:98]
 - [x] [AI-Review][MEDIUM] M4: CSV export doesn't escape double quotes in cell values per RFC 4180 [MigrationCoverageTracker.tsx:73]
 - [x] [AI-Review][LOW] L1: Add component test for API error state — error state was untested [MigrationCoverageTracker.test.tsx]
 - [x] [AI-Review][LOW] L2: Fix `URL.revokeObjectURL` timing — called synchronously after `a.click()` could abort download; deferred with setTimeout [MigrationCoverageTracker.tsx:85]
@@ -138,15 +138,15 @@ This is a **net-new feature** surfaced during UAT preparation. The Department Ad
 
 ### Modified Files
 - `packages/shared/src/types/mda.ts` — Added CoveragePeriodData, CoverageMdaRow, CoverageMatrix types
-- `packages/shared/src/validators/migrationSchemas.ts` — Added coverageQuerySchema; fixed boolean coercion (review M3)
+- `packages/shared/src/validators/migrationSchemas.ts` — Added coverageQuerySchema; changed `z.coerce.boolean()` to `z.enum(['true', 'false'])` (review M3)
 - `packages/shared/src/index.ts` — Exported new types and schema
 - `apps/server/src/services/migrationDashboardService.ts` — Added getMigrationCoverage() function
-- `apps/server/src/routes/migrationDashboardRoutes.ts` — Added GET /api/migrations/coverage route; simplified extended param handling (review M3)
-- `apps/server/src/middleware/validate.ts` — Fixed validateQuery to assign parsed result to req.query (review M3)
+- `apps/server/src/routes/migrationDashboardRoutes.ts` — Added GET /api/migrations/coverage route
+- `apps/server/src/middleware/validate.ts` — Fixed `validateQuery` to merge parsed result into `req.query` via `Object.assign` (review M3)
 - `apps/client/src/hooks/useMigrationData.ts` — Added useMigrationCoverage() hook
 - `apps/client/src/pages/dashboard/MigrationPage.tsx` — Added Coverage Tracker tab
 
 ## Change Log
 
 - **2026-03-17:** Story 11.0b implemented — Migration Coverage Tracker with MDA x month matrix, CSV/PDF export, and role-based scoping (FR91)
-- **2026-03-17:** Code review — 4 MEDIUM + 3 LOW issues found and auto-fixed: error state, popup blocker feedback, validateQuery middleware fix, CSV escaping, error test, revokeObjectURL timing, replaceAll for role display
+- **2026-03-17:** Code review — 4 MEDIUM + 3 LOW issues found, all 7 auto-fixed: error state, popup blocker feedback, validateQuery Object.assign merge + enum schema fix, CSV escaping, error test, revokeObjectURL timing, replaceAll for role display. Full regression: 76 server files (1100 tests), 71 client files (519 tests) — all passing.
