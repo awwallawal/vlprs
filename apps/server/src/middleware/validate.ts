@@ -28,6 +28,7 @@ export function validateQuery(schema: z.ZodType<unknown>) {
       }));
       throw new AppError(400, 'VALIDATION_FAILED', VOCABULARY.VALIDATION_FAILED, details);
     }
+    req.query = result.data as typeof req.query;
     next();
   };
 }

@@ -3,7 +3,7 @@ import Decimal from 'decimal.js';
 import { db } from '../db/index';
 import { mdas, migrationUploads, migrationRecords, loans, ledgerEntries, observations, deduplicationCandidates } from '../db/schema';
 import { withMdaScope } from '../lib/mdaScope';
-import type { MigrationMdaStatus, MigrationStage, MigrationDashboardMetrics } from '@vlprs/shared';
+import type { MigrationMdaStatus, MigrationStage, MigrationDashboardMetrics, CoverageMatrix } from '@vlprs/shared';
 
 // ─── Stage Derivation ────────────────────────────────────────────────
 
@@ -253,5 +253,94 @@ export async function getDashboardMetrics(
     mdasComplete,
     baselinesEstablished: Number(baselineResult.cnt),
     pendingDuplicates: Number(pendingDupResult.cnt),
+  };
+}
+
+// ─── Coverage Tracker (Story 11.0b) ─────────────────────────────────
+
+export async function getMigrationCoverage(
+  mdaScope?: string | null,
+  extended = false,
+): Promise<CoverageMatrix> {
+  // Determine period range
+  const now = new Date();
+  const endYear = now.getFullYear();
+  const endMonth = now.getMonth() + 1; // 1-based
+  const end = `${endYear}-${String(endMonth).padStart(2, '0')}`;
+
+  let startYear: number;
+  let startMonth: number;
+  if (extended) {
+    startYear = 2017;
+    startMonth = 1;
+  } else {
+    // 60 months back
+    const d = new Date(endYear, endMonth - 1 - 59, 1);
+    startYear = d.getFullYear();
+    startMonth = d.getMonth() + 1;
+  }
+  const start = `${startYear}-${String(startMonth).padStart(2, '0')}`;
+
+  // Get all active MDAs (scoped)
+  const mdaConditions = [isNull(mdas.deletedAt), eq(mdas.isActive, true)];
+  const scopeCondition = withMdaScope(mdas.id, mdaScope);
+  if (scopeCondition) mdaConditions.push(scopeCondition);
+
+  const allMdas = await db
+    .select({ id: mdas.id, name: mdas.name, code: mdas.code })
+    .from(mdas)
+    .where(and(...mdaConditions))
+    .orderBy(mdas.name);
+
+  if (allMdas.length === 0) {
+    return { mdas: [], periodRange: { start, end } };
+  }
+
+  // Aggregate migration records by MDA + period (year/month)
+  // Filter to the requested period range and exclude null period data
+  const periodConditions = [
+    isNull(migrationRecords.deletedAt),
+    sql`${migrationRecords.periodYear} IS NOT NULL`,
+    sql`${migrationRecords.periodMonth} IS NOT NULL`,
+    sql`(${migrationRecords.periodYear} * 100 + ${migrationRecords.periodMonth}) >= ${startYear * 100 + startMonth}`,
+    sql`(${migrationRecords.periodYear} * 100 + ${migrationRecords.periodMonth}) <= ${endYear * 100 + endMonth}`,
+  ];
+
+  const recordScopeCondition = withMdaScope(migrationRecords.mdaId, mdaScope);
+  if (recordScopeCondition) periodConditions.push(recordScopeCondition);
+
+  const periodAgg = await db
+    .select({
+      mdaId: migrationRecords.mdaId,
+      periodYear: migrationRecords.periodYear,
+      periodMonth: migrationRecords.periodMonth,
+      recordCount: sql<string>`COUNT(*)`,
+      baselinedCount: sql<string>`COUNT(*) FILTER (WHERE ${migrationRecords.isBaselineCreated} = true)`,
+    })
+    .from(migrationRecords)
+    .where(and(...periodConditions))
+    .groupBy(migrationRecords.mdaId, migrationRecords.periodYear, migrationRecords.periodMonth);
+
+  // Build lookup: mdaId → { 'YYYY-MM': { recordCount, baselinedCount } }
+  const coverageMap = new Map<string, Record<string, { recordCount: number; baselinedCount: number }>>();
+  for (const row of periodAgg) {
+    if (!coverageMap.has(row.mdaId)) {
+      coverageMap.set(row.mdaId, {});
+    }
+    const key = `${row.periodYear}-${String(row.periodMonth).padStart(2, '0')}`;
+    coverageMap.get(row.mdaId)![key] = {
+      recordCount: parseInt(row.recordCount, 10),
+      baselinedCount: parseInt(row.baselinedCount, 10),
+    };
+  }
+
+  return {
+    mdas: allMdas.map((mda) => ({
+      mdaId: mda.id,
+      mdaName: mda.name,
+      mdaCode: mda.code,
+      periods: coverageMap.get(mda.id) ?? {},
+    })),
+    periodRange: { start, end },
   };
 }

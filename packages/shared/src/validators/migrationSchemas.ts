@@ -93,6 +93,11 @@ export const createBaselineBodySchema = z.object({
   confirm: z.literal(true),
 });
 
+// ─── Coverage Tracker Query (Story 11.0b) ────────────────────────────
+export const coverageQuerySchema = z.object({
+  extended: z.string().optional().default('false').transform(v => v === 'true'),
+});
+
 // ─── Beneficiary Ledger Query (Story 3.5) ───────────────────────────
 export const beneficiaryQuerySchema = z.object({
   page: z.coerce.number().int().min(1).optional(),
