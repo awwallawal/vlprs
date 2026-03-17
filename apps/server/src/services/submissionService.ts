@@ -317,7 +317,12 @@ export async function checkDuplicates(
 
 // ─── Period Lock ──────────────────────────────────────────────────────
 
-export function checkPeriodLock(period: string): SubmissionValidationError | null {
+export function checkPeriodLock(period: string, role?: string): SubmissionValidationError | null {
+  // DEPT_ADMIN and SUPER_ADMIN can submit for any historical period (Story 11.0a, AC#3)
+  if (role === 'dept_admin' || role === 'super_admin') {
+    return null;
+  }
+
   const now = new Date();
   const currentYear = now.getUTCFullYear();
   const currentMonth = now.getUTCMonth() + 1; // 1-based, UTC
@@ -368,6 +373,7 @@ export async function processSubmissionRows(
   userId: string,
   source: 'csv' | 'manual',
   fileInfo?: { filename: string; fileSizeBytes: number },
+  role?: string,
 ): Promise<SubmissionUploadResponse> {
   // Convert to indexed rows with 0-based indices
   const rows: IndexedRow[] = rawRows.map((r, idx) => ({
@@ -388,7 +394,7 @@ export async function processSubmissionRows(
   // 3. Check period lock (validate once, all rows should share the same period)
   const periods = [...new Set(rows.map((r) => r.month))];
   for (const period of periods) {
-    const periodError = checkPeriodLock(period);
+    const periodError = checkPeriodLock(period, role);
     if (periodError) {
       allErrors.push(periodError);
     }
@@ -524,6 +530,7 @@ export async function processSubmission(
   file: Express.Multer.File,
   mdaScope: string | null,
   userId: string,
+  role?: string,
 ): Promise<SubmissionUploadResponse> {
   const csvRows = parseSubmissionCsv(file.buffer);
 
@@ -533,7 +540,7 @@ export async function processSubmission(
   return processSubmissionRows(rows, mdaScope, userId, 'csv', {
     filename: file.originalname,
     fileSizeBytes: file.size,
-  });
+  }, role);
 }
 
 // ─── Get Submissions (paginated list) ────────────────────────────────

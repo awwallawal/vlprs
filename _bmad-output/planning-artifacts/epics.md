@@ -3,8 +3,12 @@ stepsCompleted: [1, 2, 3, 4]
 lastStep: 4
 status: 'complete'
 completedAt: '2026-02-14'
-lastEdited: '2026-03-04'
+lastEdited: '2026-03-17'
 editHistory:
+  - date: '2026-03-17'
+    changes: 'UAT Remediation Cascade — Story 11.0 split + FR91/FR92: Split Story 11.0 (UAT Enablement & Dashboard Remediation) into Story 11.0a (Dashboard Remediation & UAT Enablement — drill-down filtering bug fix, scheme fund config, historical period bypass, seed data, upload discoverability) and Story 11.0b (Migration Coverage Tracker — MDA x month matrix with CSV/PDF export, role-based scoping). Added FR91 (Migration Coverage Tracker) and FR92 (Scheme Fund Total Configuration) to requirements inventory and FR coverage map. Updated Epic 11 summary to include remediation scope. Updated Epic 11 FRs covered: added FR91, FR92. Updated sequence: 11.1 → 11.0a → 11.0b → 11.2 → 11.2b → 5.6 → 11.3 → 11.4. Updated sprint sequence table: Epic 11 stories 6→8. Updated total stories 67→71. Added missing edit history entries for 2026-03-16 (Story 5.6 move) and 2026-03-17 (Story 11.0 addition + split).'
+  - date: '2026-03-16'
+    changes: 'Story 5.6 (Submission Detail View) moved from Epic 5 to Epic 11 sequence (after 11.2b, before 11.3). Event flag enum must be extended before the detail view ships, and MDA Officers will not access the app until Epic 11 completes. Epic 5 stories 6→5. Epic 11 stories 5→6. Total stories unchanged.'
   - date: '2026-03-04'
     changes: 'SQ-1 Analytics Cascade — Enriched 7 story ACs across Epic 4 and Epic 6 per approved executive-dashboard-report-specs.md. Story 4.1: Added analytics hero metrics (outstanding receivables, collection potential, at-risk amount, completion rate), Loan Classification Service + Revenue Projection Service + MDA Aggregation Service as internal dependencies. Story 4.2: Added 5 analytics attention sources (overdue count, stalled count, quick-wins, dark MDAs, onboarding lag) from classification and coverage services. Story 4.3: Added MDA health score badges and loan status badges in drill-down views via Aggregation and Classification services. Story 4.4: Added health score column, coverage %, dark MDA highlighting with "Submission gap observed" label, staleness indicator via Coverage Service. Story 6.1: Added portfolio status breakdown, MDA scorecard (top 10 + bottom 5), receivables ranking, 3-tier recovery summary, coverage summary, onboarding pipeline. Story 6.2: Added overdue/stalled/over-deduction register sections with severity tiers (mild/moderate/elevated). Story 6.3: Added quick-wins section, observation activity summary, portfolio snapshot for weekly trend. Zero new stories added — all changes enrich existing ACs. Story count unchanged at 65. Sprint sequence unchanged.'
   - date: '2026-03-01'
@@ -129,6 +133,8 @@ This document provides the complete epic and story breakdown for VLPRS, decompos
 - FR88: Individual Staff Trace Report — cross-MDA loan history, cycle detection, rate analysis, balance trajectory, observations, HTML/PDF export
 - FR89: Multi-MDA File Delineation & Deduplication — intra-file MDA boundary detection, cross-file duplicates, parent/agency relationships (CDU as independent MDA with parent_mda relationship to Agriculture)
 - FR90: Intelligent Column Mapping — 298+ header variants, 4 format eras, auto-detect + confirm/override, capture non-standard extra fields as structured metadata
+- FR91: Migration Coverage Tracker — MDA x month matrix view showing migrated data/gap status per period with 60-month default + extended toggle, CSV/PDF export, role-based scoping (DEPT_ADMIN/SUPER_ADMIN see all 63 MDAs, MDA_OFFICER sees own row)
+- FR92: Scheme Fund Total Configuration — SUPER_ADMIN can set/edit total scheme fund amount via dashboard dialog; Fund Available computed as Total Fund minus Total Disbursed
 
 ### NonFunctional Requirements
 
@@ -339,6 +345,8 @@ This document provides the complete epic and story breakdown for VLPRS, decompos
 | FR88 | Epic 3 | Individual Staff Trace Report (cross-MDA loan history, HTML/PDF) |
 | FR89 | Epic 3 | Multi-MDA File Delineation & Deduplication (parent/agency relationships) |
 | FR90 | Epic 3 | Intelligent Column Mapping (298+ header variants, 4 format eras) |
+| FR91 | Epic 11 | Migration Coverage Tracker (MDA x month matrix, CSV/PDF export) |
+| FR92 | Epic 11 | Scheme Fund Total Configuration (SUPER_ADMIN dialog, Fund Available computation) |
 
 ## Sprint Sequence (Solo Developer — 2-Week Sprints)
 
@@ -353,7 +361,7 @@ Implementation order derived from PRD Build Sequence (14 steps). Each sprint map
 | 5 | Epic 3: Data Migration & Legacy Import | 8 | Step 6 | Epic 10 (temporal validation for post-retirement scan) | All 63 MDAs imported with temporal profiles, observations generated, trace reports available |
 | 6 | Epic 4: Executive Dashboard | 4 | Step 7 | Epic 3 (real data in system) | AG can see headline numbers — political shield active |
 | 7 | Epic 5: MDA Monthly Submission | 5 | Steps 9, 11 | Epic 2 (ledger for deduction posting) | 8-field CSV + validation operational — adoption engine live, monthly data cycle begins |
-| 8 | Epic 11: Pre-Submission & Mid-Cycle Events | 6 (incl. Story 5.6) | Step 10 | Epic 5 (submission interface), Epic 10 (retirement data) | Checkpoint, event filing, enum extension, submission detail view, reconciliation, historical upload — submission experience complete |
+| 8 | Epic 11: Pre-Submission & Mid-Cycle Events | 8 (incl. Story 5.6 + 11.0a/11.0b remediation) | Step 10 | Epic 5 (submission interface), Epic 10 (retirement data) | Checkpoint, event filing, enum extension, submission detail view, reconciliation, historical upload, dashboard remediation, coverage tracker — submission experience complete |
 | 9 | Epic 7: Exception Management & Annotations | 3 | — | Epic 5 (submission data), Epic 4 (drill-down views) | Exception queue handles promoted observations from Epic 3 + submission variances |
 | 10 | Epic 6: Reporting & PDF Export | 4 | Step 8 | Epic 4 (dashboard data sources) | Reports now contain migration + live submissions + events + exceptions — AG hands Commissioner a living-system report |
 | 11 | Epic 8: Auto-Stop Certificate | 3 | Step 12 | Epic 2 (zero-balance detection) | Automatic deduction cessation at loan completion — guaranteed |
@@ -361,7 +369,7 @@ Implementation order derived from PRD Build Sequence (14 steps). Each sprint map
 | 13 | Epic 9: Notifications & Alerts | 3 | Step 14 | Epic 8 (completion notifications) | Operational loop complete |
 | 14 | Epic 13: Staff ID Governance | 2 | Step 15 | Epic 1 (user management foundation) | Staff ID data quality self-sufficiency achieved |
 
-**Total:** 14 sprints, 67 stories, ~28 weeks (7 months). Epic 3 reshaped from 5 to 8 stories per sprint change proposal (FR87-FR90 additions). FR83-FR86 attach to existing epics — story count impact determined during sprint planning (may add 1-2 small stories or expand existing stories). Story 11.2b split from Story 11.3 Task 0 (eventFlagTypeEnum extension + ManualEntryForm event flag fields) per PM validation — keeps reconciliation engine story focused. Story 5.6 (Submission Detail View) moved from Epic 5 to Epic 11 sequence (after 11.2b, before 11.3) per PM validation 2026-03-16 — event flag enum must be extended before the detail view ships, and MDA Officers will not access the app until Epic 11 completes.
+**Total:** 14 sprints, 71 stories, ~28 weeks (7 months). Epic 3 reshaped from 5 to 8 stories per sprint change proposal (FR87-FR90 additions). FR83-FR86 attach to existing epics — story count impact determined during sprint planning (may add 1-2 small stories or expand existing stories). Story 11.2b split from Story 11.3 Task 0 (eventFlagTypeEnum extension + ManualEntryForm event flag fields) per PM validation — keeps reconciliation engine story focused. Story 5.6 (Submission Detail View) moved from Epic 5 to Epic 11 sequence (after 11.2b, before 11.3) per PM validation 2026-03-16 — event flag enum must be extended before the detail view ships, and MDA Officers will not access the app until Epic 11 completes. Story 11.0 (UAT Enablement) added and split into 11.0a (Dashboard Remediation) + 11.0b (Migration Coverage Tracker) per PM decision 2026-03-17 — sizing guardrail applied, FR91/FR92 added.
 
 **Sequencing rationale (Sprints 7-10):** Submissions (E5) before Reports (E6). MDA officers start submitting in Sprint 7 — every month delayed is one less month of live data by launch. E11 immediately after E5 completes the submission experience (officers never use submissions without the pre-submission checkpoint). E7 after E5+E11 means the exception queue has both promoted observations from Epic 3 and submission variances to work with. E6 last in this block means reports contain migration data + 2-3 months of live submissions + event reconciliation + resolved exceptions — the AG hands the Commissioner a report that shows a living system, not a migration snapshot.
 
@@ -437,8 +445,8 @@ System computes and maintains staff retirement dates from DOB and appointment da
 **FRs covered:** FR63, FR64, FR65, FR66, FR71
 
 ### Epic 11: Pre-Submission Checkpoint & Mid-Cycle Events
-MDA Reporting Officers review a mandatory checkpoint screen before each submission — surfacing approaching retirements, zero-deduction staff, and unconfirmed mid-cycle events. Mid-cycle events (retirement, death, suspension, transfer, etc.) can be filed at any time via a 5-field form and are reconciled against subsequent CSV submissions. Bidirectional transfer lifecycle: Transfer Out (outgoing MDA initiates, incoming confirms) and Claim Transfer In (incoming MDA initiates, outgoing confirms) with scoped cross-MDA visibility (name and Staff ID only, no financial details until confirmed). Transfer Search enables cross-MDA staff lookup for transfer resolution. MDA officers can upload historical records for cross-validation against migration baseline. Self-service reconciliation view enables MDA officers to compare their uploaded historical records against the migration baseline, seeing match/variance status per loanee and flagging discrepancies for Department Admin review.
-**FRs covered:** FR60, FR61, FR62, FR70, FR84
+MDA Reporting Officers review a mandatory checkpoint screen before each submission — surfacing approaching retirements, zero-deduction staff, and unconfirmed mid-cycle events. Mid-cycle events (retirement, death, suspension, transfer, etc.) can be filed at any time via a 5-field form and are reconciled against subsequent CSV submissions. Bidirectional transfer lifecycle: Transfer Out (outgoing MDA initiates, incoming confirms) and Claim Transfer In (incoming MDA initiates, outgoing confirms) with scoped cross-MDA visibility (name and Staff ID only, no financial details until confirmed). Transfer Search enables cross-MDA staff lookup for transfer resolution. MDA officers can upload historical records for cross-validation against migration baseline. Self-service reconciliation view enables MDA officers to compare their uploaded historical records against the migration baseline, seeing match/variance status per loanee and flagging discrepancies for Department Admin review. UAT remediation (Stories 11.0a/11.0b): dashboard drill-down metric filtering bug fix, scheme fund total configuration dialog (FR92), DEPT_ADMIN/SUPER_ADMIN historical period bypass, seed data alignment, migration upload discoverability, and migration coverage tracker matrix with CSV/PDF export (FR91).
+**FRs covered:** FR60, FR61, FR62, FR70, FR84, FR91, FR92
 
 ### Epic 12: Early Exit Processing
 Department Admin can compute a lump-sum payoff for active loans, record staff commitment and payment, and close loans through the early exit workflow. Computations expire at month-end if unpaid; expired commitments flagged as attention items. Upon confirmed payment, Auto-Stop Certificate is triggered. State machine: Computed → Committed → Paid → Closed (or → Expired).
@@ -2659,22 +2667,36 @@ So that I can investigate whether these staff have retired, received extensions,
 
 MDA Reporting Officers review a mandatory checkpoint screen before each submission. Mid-cycle employment events can be filed at any time and are reconciled against subsequent CSV submissions. Manual entry event flags (11.2b) extend the CSV event flag enum and add event flag fields to the manual entry form, enabling complete reconciliation coverage. MDA officers can upload historical records for cross-validation.
 
-Sequence: 11.1 → 11.0 → 11.2 → 11.2b → 5.6 → 11.3 → 11.4
+Sequence: 11.1 → 11.0a → 11.0b → 11.2 → 11.2b → 5.6 → 11.3 → 11.4
 
-### Story 11.0: UAT Enablement & Dashboard Remediation
+### Story 11.0a: Dashboard Remediation & UAT Enablement
 
 As a **Department Admin / AG (SUPER_ADMIN)**,
-I want the executive dashboard drill-downs to show metric-specific data, the scheme fund total to be configurable, and historical submission periods to be uploadable,
+I want the executive dashboard drill-downs to show metric-specific data, the scheme fund total to be configurable, historical submission periods to be uploadable, and the migration upload to be discoverable,
 So that I can perform end-to-end UAT across all role views and validate the system before it goes live.
 
 **Acceptance Criteria:**
 
 1. **Given** the AG clicks on different dashboard metric cards, **When** the drill-down page loads, **Then** each page shows data filtered to that specific metric.
-2. **Given** the AG views "Fund Available" showing "Awaiting Configuration", **When** they click the card, **Then** a dialog opens to input the total scheme fund amount. Only SUPER_ADMIN can set/edit.
+2. **Given** the AG views "Fund Available" showing "Awaiting Configuration", **When** they click the card, **Then** a dialog opens to input the total scheme fund amount (FR92). Only SUPER_ADMIN can set/edit.
 3. **Given** a DEPT_ADMIN or SUPER_ADMIN uploads a CSV with a historical period, **When** processed, **Then** the period lock is bypassed. MDA_OFFICER uploads remain restricted to current + previous month.
 4. **Given** the seed/demo database, **When** loaded, **Then** scheme fund config exists and sufficient data produces meaningful drill-down results.
+5. **Given** the DEPT_ADMIN views the Migration Dashboard, **When** they look for the upload action, **Then** a prominent "Upload Legacy Data" button is visible and navigates to the existing upload page.
 
-_Remediation story — addresses gaps from Epics 4 and 5 to enable end-to-end UAT. Inserted after Story 11.1 per PM decision 2026-03-17._
+_Remediation story — addresses bugs and gaps from Epics 4 and 5 to enable end-to-end UAT. Split from original Story 11.0 per PM decision 2026-03-17._
+
+### Story 11.0b: Migration Coverage Tracker
+
+As a **Department Admin / AG (SUPER_ADMIN)**,
+I want to see a matrix showing which MDAs have migrated data for which months, with the ability to export it as CSV or PDF,
+So that I can identify coverage gaps across the 63 MDAs and use the export in conversations with MDA officers about missing periods.
+
+**Acceptance Criteria:**
+
+1. **Given** the DEPT_ADMIN views the Migration Dashboard, **When** they open the "Coverage Tracker" tab, **Then** a matrix shows all 63 MDAs x months with data/gap indicators. Default 60-month window, "Extended" toggle adds 2017/2018. Downloadable as CSV and PDF (FR91).
+2. **Given** any role views the tracker, **Then** SUPER_ADMIN/DEPT_ADMIN see all MDAs; MDA_OFFICER sees only their own MDA row.
+
+_Net-new feature surfaced during UAT preparation. Split from original Story 11.0 per PM decision 2026-03-17. FR91._
 
 ### Story 11.1: Pre-Submission Checkpoint Screen
 

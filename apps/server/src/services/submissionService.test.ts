@@ -284,6 +284,42 @@ describe('checkPeriodLock', () => {
     expect(result).toBeNull();
   });
 
+  // ─── Story 11.0a: Historical period bypass by role ────────────────
+
+  it('DEPT_ADMIN bypasses period lock for historical periods', () => {
+    vi.setSystemTime(new Date('2026-03-15'));
+    const result = checkPeriodLock('2020-03', 'dept_admin');
+    expect(result).toBeNull();
+  });
+
+  it('SUPER_ADMIN bypasses period lock for historical periods', () => {
+    vi.setSystemTime(new Date('2026-03-15'));
+    const result = checkPeriodLock('2020-03', 'super_admin');
+    expect(result).toBeNull();
+  });
+
+  it('MDA_OFFICER is still rejected for historical periods', () => {
+    vi.setSystemTime(new Date('2026-03-15'));
+    const result = checkPeriodLock('2020-03', 'mda_officer');
+    expect(result).not.toBeNull();
+    expect(result!.message).toContain('not currently open');
+  });
+
+  it('no role provided: still rejected for historical periods (default behaviour)', () => {
+    vi.setSystemTime(new Date('2026-03-15'));
+    const result = checkPeriodLock('2020-03');
+    expect(result).not.toBeNull();
+  });
+
+  it('current + previous month still works for all roles', () => {
+    vi.setSystemTime(new Date('2026-03-15'));
+    expect(checkPeriodLock('2026-03', 'mda_officer')).toBeNull();
+    expect(checkPeriodLock('2026-02', 'mda_officer')).toBeNull();
+    expect(checkPeriodLock('2026-03', 'dept_admin')).toBeNull();
+    expect(checkPeriodLock('2026-02', 'dept_admin')).toBeNull();
+    expect(checkPeriodLock('2026-03', 'super_admin')).toBeNull();
+  });
+
   afterEach(() => {
     vi.useRealTimers();
   });

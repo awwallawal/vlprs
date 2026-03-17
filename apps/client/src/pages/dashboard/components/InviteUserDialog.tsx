@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { createUserSchema, getManageableRoles, ROLES, UI_COPY } from '@vlprs/shared';
@@ -35,7 +36,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Copy, Eye, EyeOff } from 'lucide-react';
 import { useCreateUser, useMdas } from '@/hooks/useUserAdmin';
 import { useAuthStore } from '@/stores/authStore';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -54,12 +55,19 @@ interface FormValues {
   mdaId?: string | null;
 }
 
+interface CreatedCredentials {
+  email: string;
+  temporaryPassword: string;
+}
+
 export function InviteUserDialog({ open, onOpenChange }: InviteUserDialogProps) {
   const user = useAuthStore((s) => s.user);
   const isMobile = useIsMobile();
   const createUser = useCreateUser();
   const { data: mdas } = useMdas();
   const manageableRoles = user ? getManageableRoles(user.role as Role) : [];
+  const [credentials, setCredentials] = useState<CreatedCredentials | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
 
   const form = useForm<FormValues, unknown, FormValues>({
     resolver: zodResolver(createUserSchema),
@@ -75,17 +83,80 @@ export function InviteUserDialog({ open, onOpenChange }: InviteUserDialogProps) 
 
   const selectedRole = form.watch('role');
 
+  const handleClose = (isOpen: boolean) => {
+    if (!isOpen) {
+      setCredentials(null);
+      setShowPassword(false);
+    }
+    onOpenChange(isOpen);
+  };
+
   const onSubmit = async (data: FormValues) => {
     try {
-      await createUser.mutateAsync(data);
-      toast.success(`${UI_COPY.INVITATION_SENT_TO} ${data.email}`);
-      form.reset();
-      onOpenChange(false);
+      const result = await createUser.mutateAsync(data);
+      if (!result.emailConfigured && result.temporaryPassword) {
+        // Show credentials on screen
+        setCredentials({ email: data.email, temporaryPassword: result.temporaryPassword });
+      } else {
+        // Email was sent
+        toast.success(`${UI_COPY.INVITATION_SENT_TO} ${data.email}`);
+        form.reset();
+        onOpenChange(false);
+      }
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : 'Failed to create user';
       toast.error(message);
     }
   };
+
+  const copyCredentials = async () => {
+    if (!credentials) return;
+    const text = `Email: ${credentials.email}\nPassword: ${credentials.temporaryPassword}`;
+    await navigator.clipboard.writeText(text);
+    toast.success('Credentials copied to clipboard');
+  };
+
+  const credentialsContent = credentials ? (
+    <div className="space-y-4">
+      <p className="text-sm text-text-secondary">
+        Account created successfully. Email is not configured — share these credentials securely.
+      </p>
+      <div className="space-y-3 rounded-lg border bg-slate-50 p-4">
+        <div>
+          <p className="text-xs text-text-secondary mb-1">Email / Username</p>
+          <p className="font-mono text-sm">{credentials.email}</p>
+        </div>
+        <div>
+          <p className="text-xs text-text-secondary mb-1">Temporary Password</p>
+          <div className="flex items-center gap-2">
+            <p className="font-mono text-sm">
+              {showPassword ? credentials.temporaryPassword : '••••••••'}
+            </p>
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="text-text-secondary hover:text-text-primary"
+              aria-label={showPassword ? 'Hide password' : 'Show password'}
+            >
+              {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            </button>
+          </div>
+        </div>
+      </div>
+      <p className="text-xs text-amber-600">
+        The user must change their password on first login.
+      </p>
+      <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 pt-2">
+        <Button variant="outline" onClick={() => { form.reset(); setCredentials(null); setShowPassword(false); handleClose(false); }}>
+          Done
+        </Button>
+        <Button onClick={copyCredentials} className="gap-2">
+          <Copy className="h-4 w-4" />
+          Copy Credentials
+        </Button>
+      </div>
+    </div>
+  ) : null;
 
   const formContent = (
     <Form {...form}>
@@ -242,30 +313,34 @@ export function InviteUserDialog({ open, onOpenChange }: InviteUserDialogProps) 
 
   if (isMobile) {
     return (
-      <Sheet open={open} onOpenChange={onOpenChange}>
+      <Sheet open={open} onOpenChange={handleClose}>
         <SheetContent side="bottom" className="h-[90vh] overflow-y-auto">
           <SheetHeader>
-            <SheetTitle>{UI_COPY.INVITE_USER}</SheetTitle>
+            <SheetTitle>{credentials ? 'Account Created' : UI_COPY.INVITE_USER}</SheetTitle>
             <SheetDescription>
-              Create a new user account and send an invitation email
+              {credentials
+                ? 'Share these credentials securely with the new user'
+                : 'Create a new user account and send an invitation email'}
             </SheetDescription>
           </SheetHeader>
-          <div className="mt-4">{formContent}</div>
+          <div className="mt-4">{credentials ? credentialsContent : formContent}</div>
         </SheetContent>
       </Sheet>
     );
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>{UI_COPY.INVITE_USER}</DialogTitle>
+          <DialogTitle>{credentials ? 'Account Created' : UI_COPY.INVITE_USER}</DialogTitle>
           <DialogDescription>
-            Create a new user account and send an invitation email
+            {credentials
+              ? 'Share these credentials securely with the new user'
+              : 'Create a new user account and send an invitation email'}
           </DialogDescription>
         </DialogHeader>
-        {formContent}
+        {credentials ? credentialsContent : formContent}
       </DialogContent>
     </Dialog>
   );

@@ -13,7 +13,8 @@
     "test": "pnpm -r run test",
     "build": "pnpm -r run build",
     "docker:dev": "docker compose -f compose.dev.yaml up --build",
-    "docker:dev:down": "docker compose -f compose.dev.yaml down"
+    "docker:dev:down": "docker compose -f compose.dev.yaml down",
+    "purge-demo-data": "tsx scripts/purge-demo-data.ts"
   },
   "type": "module",
   "devDependencies": {

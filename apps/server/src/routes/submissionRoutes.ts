@@ -62,6 +62,7 @@ router.post(
       req.file,
       (req as Request & { mdaScope?: string | null }).mdaScope ?? null,
       (req as Request & { user?: { id: string } }).user!.id,
+      req.user!.role,
     );
 
     res.status(201).json({
@@ -95,6 +96,8 @@ router.post(
       (req as Request & { mdaScope?: string | null }).mdaScope ?? null,
       (req as Request & { user?: { id: string } }).user!.id,
       'manual',
+      undefined,
+      req.user!.role,
     );
 
     res.status(201).json({

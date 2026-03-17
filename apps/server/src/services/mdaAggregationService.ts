@@ -4,7 +4,7 @@ import { loans, ledgerEntries, mdas } from '../db/schema';
 import { eq, and, sql, inArray } from 'drizzle-orm';
 import { computeBalanceFromEntries } from './computationEngine';
 import { classifyAllLoans, LoanClassification } from './loanClassificationService';
-import type { MdaBreakdownRow as SharedMdaBreakdownRow } from '@vlprs/shared';
+import type { MdaBreakdownRow as SharedMdaBreakdownRow, DrillDownMetric } from '@vlprs/shared';
 
 Decimal.set({ precision: 20, rounding: Decimal.ROUND_HALF_UP });
 
@@ -222,6 +222,7 @@ export async function getMdaBreakdown(
  */
 export async function getEnrichedMdaBreakdown(
   mdaScope?: string | null,
+  metric?: DrillDownMetric,
 ): Promise<SharedMdaBreakdownRow[]> {
   const baseResults = await getMdaBreakdown(mdaScope);
   if (baseResults.length === 0) return [];
@@ -250,7 +251,7 @@ export async function getEnrichedMdaBreakdown(
   const mdaMap = new Map(mdaRows.map((m) => [m.id, m]));
   const expectedMap = new Map(expectedRows.map((e) => [e.mdaId, e.total]));
 
-  return baseResults.map((result) => {
+  const rows = baseResults.map((result) => {
     const mda = mdaMap.get(result.mdaId);
     const expected = new Decimal(expectedMap.get(result.mdaId) ?? '0');
     const actual = new Decimal(result.monthlyRecovery);
@@ -279,4 +280,111 @@ export async function getEnrichedMdaBreakdown(
       },
     };
   });
+
+  if (!metric) return rows;
+
+  return filterAndSortByMetric(rows, metric);
+}
+
+/**
+ * Filter and sort MDA breakdown rows based on the drill-down metric.
+ * Filtering narrows the result set to only MDAs relevant to the metric.
+ * Sorting orders by the most relevant field for that metric.
+ */
+function filterAndSortByMetric(
+  rows: SharedMdaBreakdownRow[],
+  metric: DrillDownMetric,
+): SharedMdaBreakdownRow[] {
+  let filtered: SharedMdaBreakdownRow[];
+
+  switch (metric) {
+    case 'activeLoans':
+      filtered = rows.filter((r) => r.contributionCount > 0);
+      filtered.sort((a, b) => b.contributionCount - a.contributionCount);
+      break;
+
+    case 'totalExposure':
+      filtered = rows.filter((r) => new Decimal(r.contributionAmount).gt(0));
+      filtered.sort((a, b) =>
+        new Decimal(b.contributionAmount).minus(new Decimal(a.contributionAmount)).toNumber(),
+      );
+      break;
+
+    case 'fundAvailable':
+      filtered = [...rows];
+      filtered.sort((a, b) =>
+        new Decimal(b.contributionAmount).minus(new Decimal(a.contributionAmount)).toNumber(),
+      );
+      break;
+
+    case 'monthlyRecovery':
+      filtered = [...rows];
+      filtered.sort((a, b) => {
+        if (a.variancePercent === null && b.variancePercent === null) return 0;
+        if (a.variancePercent === null) return 1;
+        if (b.variancePercent === null) return -1;
+        return a.variancePercent - b.variancePercent;
+      });
+      break;
+
+    case 'loansInWindow': {
+      const inWindowCount = (r: SharedMdaBreakdownRow) => {
+        const d = r.statusDistribution;
+        return d.completed + d.onTrack + d.overdue + d.stalled + d.overDeducted;
+      };
+      filtered = rows.filter((r) => inWindowCount(r) > 0);
+      filtered.sort((a, b) => inWindowCount(b) - inWindowCount(a));
+      break;
+    }
+
+    case 'outstandingReceivables': {
+      // Filter to MDAs with receivable loans (any non-completed classified loans)
+      filtered = rows.filter((r) => {
+        const d = r.statusDistribution;
+        return d.onTrack + d.overdue + d.stalled + d.overDeducted > 0;
+      });
+      filtered.sort((a, b) =>
+        new Decimal(b.contributionAmount).minus(new Decimal(a.contributionAmount)).toNumber(),
+      );
+      break;
+    }
+
+    case 'collectionPotential':
+      filtered = rows.filter((r) => r.contributionCount > 0);
+      filtered.sort((a, b) =>
+        new Decimal(b.expectedMonthlyDeduction).minus(new Decimal(a.expectedMonthlyDeduction)).toNumber(),
+      );
+      break;
+
+    case 'atRisk':
+      filtered = rows.filter(
+        (r) => r.statusDistribution.overdue + r.statusDistribution.stalled > 0,
+      );
+      // Sort by at-risk loan count descending (overdue + stalled), not total exposure
+      filtered.sort((a, b) => {
+        const aRisk = a.statusDistribution.overdue + a.statusDistribution.stalled;
+        const bRisk = b.statusDistribution.overdue + b.statusDistribution.stalled;
+        if (bRisk !== aRisk) return bRisk - aRisk;
+        // Tie-break by exposure descending
+        return new Decimal(b.contributionAmount).minus(new Decimal(a.contributionAmount)).toNumber();
+      });
+      break;
+
+    case 'completionRate':
+    case 'completionRateLifetime': {
+      const completionRate = (r: SharedMdaBreakdownRow) => {
+        const d = r.statusDistribution;
+        const total = d.completed + d.onTrack + d.overdue + d.stalled + d.overDeducted;
+        return total > 0 ? (d.completed / total) * 100 : 0;
+      };
+      filtered = [...rows];
+      filtered.sort((a, b) => completionRate(a) - completionRate(b));
+      break;
+    }
+
+    default:
+      filtered = [...rows];
+  }
+
+  return filtered;
 }

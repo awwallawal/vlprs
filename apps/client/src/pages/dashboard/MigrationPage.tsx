@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router';
+import { Upload } from 'lucide-react';
 import { useMigrationStatus, useMigrationDashboardMetrics } from '@/hooks/useMigrationData';
+import { useAuthStore } from '@/stores/authStore';
 import { MigrationProgressCard } from '@/components/shared/MigrationProgressCard';
 import { HeroMetricCard } from '@/components/shared/HeroMetricCard';
 import { WelcomeGreeting } from '@/components/shared/WelcomeGreeting';
@@ -8,10 +10,11 @@ import { MigrationProgressBar } from './components/MigrationProgressBar';
 import { MasterBeneficiaryLedger } from './components/MasterBeneficiaryLedger';
 import { ObservationsList } from './components/ObservationsList';
 import { DuplicateResolutionTable } from './components/DuplicateResolutionTable';
+import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { usePageMeta } from '@/hooks/usePageMeta';
-import { VOCABULARY } from '@vlprs/shared';
+import { ROLES, VOCABULARY } from '@vlprs/shared';
 
 type Tab = 'mda-progress' | 'beneficiary-ledger' | 'observations' | 'duplicates';
 
@@ -19,6 +22,8 @@ export function MigrationPage() {
   usePageMeta({ title: VOCABULARY.MIGRATION_DASHBOARD_TITLE, description: 'Migration progress and beneficiary ledger' });
 
   const navigate = useNavigate();
+  const user = useAuthStore((s) => s.user);
+  const canUpload = user?.role === ROLES.DEPT_ADMIN || user?.role === ROLES.SUPER_ADMIN;
   const [activeTab, setActiveTab] = useState<Tab>('mda-progress');
   const [mdaFilter, setMdaFilter] = useState('');
 
@@ -35,7 +40,18 @@ export function MigrationPage() {
 
   return (
     <div className="space-y-6">
-      <WelcomeGreeting subtitle={VOCABULARY.MIGRATION_DASHBOARD_TITLE} />
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <WelcomeGreeting subtitle={VOCABULARY.MIGRATION_DASHBOARD_TITLE} />
+        {canUpload && (
+          <Button
+            onClick={() => navigate('/dashboard/migration/upload')}
+            className="gap-2 shrink-0"
+          >
+            <Upload className="h-4 w-4" />
+            Upload Legacy Data
+          </Button>
+        )}
+      </div>
 
       {/* Hero Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-4">

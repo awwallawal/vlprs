@@ -50,8 +50,18 @@ router.post(
   validate(createUserSchema),
   auditLog,
   async (req: Request, res: Response) => {
-    const user = await userAdminService.createUser(req.user!, req.body);
-    res.status(201).json({ success: true, data: user, message: VOCABULARY.INVITATION_SENT });
+    const result = await userAdminService.createUser(req.user!, req.body);
+    res.status(201).json({
+      success: true,
+      data: {
+        ...result.user,
+        emailConfigured: result.emailConfigured,
+        ...(result.temporaryPassword ? { temporaryPassword: result.temporaryPassword } : {}),
+      },
+      message: result.emailConfigured
+        ? VOCABULARY.INVITATION_SENT
+        : 'Account created — email not configured, credentials shown on screen',
+    });
   },
 );
 
@@ -108,8 +118,14 @@ router.post(
   ...adminAuth,
   auditLog,
   async (req: Request, res: Response) => {
-    await userAdminService.resetPassword(req.user!, param(req.params.id));
-    res.json({ success: true, data: null, message: VOCABULARY.PASSWORD_RESET_SENT });
+    const result = await userAdminService.resetPassword(req.user!, param(req.params.id));
+    res.json({
+      success: true,
+      data: result.temporaryPassword ? { temporaryPassword: result.temporaryPassword, emailConfigured: result.emailConfigured } : null,
+      message: result.emailConfigured
+        ? VOCABULARY.PASSWORD_RESET_SENT
+        : 'Password reset — email not configured, credentials shown on screen',
+    });
   },
 );
 
