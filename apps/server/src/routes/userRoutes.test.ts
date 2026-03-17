@@ -12,6 +12,7 @@ import { resetDb } from '../test/resetDb';
 vi.mock('../lib/email', () => ({
   sendWelcomeEmail: vi.fn(),
   sendPasswordResetEmail: vi.fn(),
+  isEmailConfigured: vi.fn(() => false),
 }));
 
 let testMdaId: string;
@@ -337,6 +338,32 @@ describe('POST /api/users', () => {
     expect(res.status).toBe(422);
     expect(res.body.success).toBe(false);
     expect(res.body.error.code).toBe('MDA_NOT_FOUND');
+  });
+
+  // ─── Story 11.0a: No-Email User Creation Fallback ───────────────────
+
+  it('returns temporaryPassword and emailConfigured: false when Resend is not configured', async () => {
+    const admin = await createTestUser({ email: 'admin@test.com', role: 'super_admin' });
+    const token = tokenFor(admin.id, admin.email, 'super_admin');
+
+    const res = await request(app)
+      .post('/api/users')
+      .set('Authorization', `Bearer ${token}`)
+      .send({
+        email: 'noemail-test@test.com',
+        firstName: 'NoEmail',
+        lastName: 'Test',
+        role: 'mda_officer',
+        mdaId: testMdaId,
+      });
+
+    expect(res.status).toBe(201);
+    expect(res.body.success).toBe(true);
+    // In test environment, RESEND_API_KEY is not set → emailConfigured should be false
+    expect(res.body.data.emailConfigured).toBe(false);
+    expect(typeof res.body.data.temporaryPassword).toBe('string');
+    expect(res.body.data.temporaryPassword.length).toBeGreaterThan(0);
+    expect(res.body.data.mustChangePassword).toBe(true);
   });
 });
 

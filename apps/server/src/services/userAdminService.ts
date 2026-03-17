@@ -4,7 +4,7 @@ import { users, mdas } from '../db/schema';
 import { hashPassword, generateTemporaryPassword } from '../lib/password';
 import { generateUuidv7 } from '../lib/uuidv7';
 import { AppError } from '../lib/appError';
-import { sendWelcomeEmail, sendPasswordResetEmail } from '../lib/email';
+import { sendWelcomeEmail, sendPasswordResetEmail, isEmailConfigured } from '../lib/email';
 import { sanitiseUser, revokeAllUserTokens, changePassword } from './authService';
 import { env } from '../config/env';
 import {
@@ -82,7 +82,13 @@ function assertCanManage(actingRole: Role, targetRole: Role): void {
 
 // ─── Service Functions ───────────────────────────────────────────────
 
-export async function createUser(actingUser: ActingUser, data: CreateUserData): Promise<User> {
+interface CreateUserResult {
+  user: User;
+  emailConfigured: boolean;
+  temporaryPassword?: string;
+}
+
+export async function createUser(actingUser: ActingUser, data: CreateUserData): Promise<CreateUserResult> {
   // Reject creating super_admin via API
   if ((data.role as string) === ROLES.SUPER_ADMIN) {
     throw new AppError(403, 'SUPER_ADMIN_CLI_ONLY', VOCABULARY.SUPER_ADMIN_CLI_ONLY);
@@ -141,17 +147,31 @@ export async function createUser(actingUser: ActingUser, data: CreateUserData): 
     })
     .returning();
 
-  // Send welcome email (fire-and-forget)
-  void sendWelcomeEmail({
-    to: data.email,
-    firstName: data.firstName,
-    temporaryPassword,
-    role: data.role,
-    mdaName,
-    loginUrl: `${env.APP_URL}/login`,
-  });
+  const emailEnabled = isEmailConfigured();
 
-  return sanitiseUser(newUser);
+  // Send welcome email (fire-and-forget) — only if email is configured
+  if (emailEnabled) {
+    void sendWelcomeEmail({
+      to: data.email,
+      firstName: data.firstName,
+      temporaryPassword,
+      role: data.role,
+      mdaName,
+      loginUrl: `${env.APP_URL}/login`,
+    });
+  }
+
+  const result: CreateUserResult = {
+    user: sanitiseUser(newUser),
+    emailConfigured: emailEnabled,
+  };
+
+  // When email is NOT configured, return temp password for on-screen display
+  if (!emailEnabled) {
+    result.temporaryPassword = temporaryPassword;
+  }
+
+  return result;
 }
 
 export async function listUsers(
@@ -356,10 +376,15 @@ export async function reassignMda(
   return sanitiseUser(updated);
 }
 
+interface ResetPasswordResult {
+  emailConfigured: boolean;
+  temporaryPassword?: string;
+}
+
 export async function resetPassword(
   actingUser: ActingUser,
   targetId: string,
-): Promise<void> {
+): Promise<ResetPasswordResult> {
   assertNotSelf(actingUser, targetId);
 
   const target = await getTargetUser(targetId);
@@ -376,11 +401,21 @@ export async function resetPassword(
     .set({ mustChangePassword: true, updatedAt: new Date() })
     .where(eq(users.id, targetId));
 
-  // Send password reset email (fire-and-forget)
-  void sendPasswordResetEmail({
-    to: target.email,
-    firstName: target.firstName,
-    temporaryPassword,
-    loginUrl: `${env.APP_URL}/login`,
-  });
+  const emailEnabled = isEmailConfigured();
+
+  // Send password reset email (fire-and-forget) — only if email is configured
+  if (emailEnabled) {
+    void sendPasswordResetEmail({
+      to: target.email,
+      firstName: target.firstName,
+      temporaryPassword,
+      loginUrl: `${env.APP_URL}/login`,
+    });
+  }
+
+  const result: ResetPasswordResult = { emailConfigured: emailEnabled };
+  if (!emailEnabled) {
+    result.temporaryPassword = temporaryPassword;
+  }
+  return result;
 }

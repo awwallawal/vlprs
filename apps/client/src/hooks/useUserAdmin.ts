@@ -61,6 +61,11 @@ export function useMdas() {
  * Creates a new user and sends invitation email.
  * @target POST /api/users
  */
+export interface CreateUserResult extends User {
+  emailConfigured: boolean;
+  temporaryPassword?: string;
+}
+
 export function useCreateUser() {
   const queryClient = useQueryClient();
   return useMutation({
@@ -70,7 +75,7 @@ export function useCreateUser() {
       lastName: string;
       role: string;
       mdaId?: string | null;
-    }) => apiClient<User>('/users', { method: 'POST', body: JSON.stringify(data) }),
+    }) => apiClient<CreateUserResult>('/users', { method: 'POST', body: JSON.stringify(data) }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['users'] });
     },

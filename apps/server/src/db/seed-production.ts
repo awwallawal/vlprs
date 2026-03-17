@@ -5,24 +5,21 @@ import { hashPassword } from '../lib/password';
 import { generateUuidv7 } from '../lib/uuidv7';
 import { env } from '../config/env';
 
-async function seedProduction() {
-  const email = env.SUPER_ADMIN_EMAIL;
-  const password = env.SUPER_ADMIN_PASSWORD;
-
-  if (!email || !password) {
-    console.error('SUPER_ADMIN_EMAIL and SUPER_ADMIN_PASSWORD environment variables are required.');
-    process.exit(1);
-  }
-
-  // Idempotent: skip if super admin already exists
+async function seedAccount(
+  email: string,
+  password: string,
+  firstName: string,
+  lastName: string,
+  role: 'super_admin' | 'dept_admin',
+): Promise<boolean> {
   const [existing] = await db
     .select({ id: users.id })
     .from(users)
     .where(sql`LOWER(${users.email}) = LOWER(${email})`);
 
   if (existing) {
-    console.log(`Super admin already exists: ${email}. Skipping.`);
-    process.exit(0);
+    console.log(`${role} already exists: ${email}. Skipping.`);
+    return false;
   }
 
   const hashedPassword = await hashPassword(password);
@@ -30,14 +27,44 @@ async function seedProduction() {
   await db.insert(users).values({
     id: generateUuidv7(),
     email,
-    hashedPassword: hashedPassword,
-    firstName: env.SUPER_ADMIN_FIRST_NAME,
-    lastName: env.SUPER_ADMIN_LAST_NAME,
-    role: 'super_admin',
+    hashedPassword,
+    firstName,
+    lastName,
+    role,
     mdaId: null,
   });
 
-  console.log(`Super admin created: ${email}`);
+  console.log(`${role} created: ${email}`);
+  return true;
+}
+
+async function seedProduction() {
+  // Seed Super Admin (AG)
+  if (env.SUPER_ADMIN_EMAIL && env.SUPER_ADMIN_PASSWORD) {
+    await seedAccount(
+      env.SUPER_ADMIN_EMAIL,
+      env.SUPER_ADMIN_PASSWORD,
+      env.SUPER_ADMIN_FIRST_NAME,
+      env.SUPER_ADMIN_LAST_NAME,
+      'super_admin',
+    );
+  } else {
+    console.log('SUPER_ADMIN_EMAIL/PASSWORD not set. Skipping super admin seed.');
+  }
+
+  // Seed Department Admin
+  if (env.DEPT_ADMIN_EMAIL && env.DEPT_ADMIN_PASSWORD) {
+    await seedAccount(
+      env.DEPT_ADMIN_EMAIL,
+      env.DEPT_ADMIN_PASSWORD,
+      env.DEPT_ADMIN_FIRST_NAME,
+      env.DEPT_ADMIN_LAST_NAME,
+      'dept_admin',
+    );
+  } else {
+    console.log('DEPT_ADMIN_EMAIL/PASSWORD not set. Skipping dept admin seed.');
+  }
+
   process.exit(0);
 }
 

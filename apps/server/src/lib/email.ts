@@ -88,6 +88,16 @@ async function getResendClient() {
   return resendClient;
 }
 
+// ─── Email Configuration Check (Story 11.0a) ────────────────────────
+
+/**
+ * Check if email sending is configured (Resend API key present).
+ * Used to determine whether to show credentials on screen vs. email them.
+ */
+export function isEmailConfigured(): boolean {
+  return !!env.RESEND_API_KEY;
+}
+
 // ─── Send Functions ──────────────────────────────────────────────────
 
 /**

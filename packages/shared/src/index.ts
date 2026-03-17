@@ -12,7 +12,7 @@ export { observationQuerySchema, reviewObservationSchema, resolveObservationSche
 export { serviceStatusVerificationQuerySchema } from './validators/reportSchemas.js';
 export { submissionRowSchema, submissionUploadQuerySchema, submissionListQuerySchema, manualSubmissionBodySchema, comparisonRowSchema, comparisonSummarySchema, submissionComparisonResponseSchema, type ManualSubmissionBody } from './validators/submissionSchemas.js';
 export { preSubmissionCheckpointSchema, retirementItemSchema, zeroDeductionItemSchema, pendingEventItemSchema, checkpointConfirmationSchema } from './validators/preSubmissionSchemas.js';
-export { dashboardMetricsSchema, attentionItemSchema, attentionItemsResponseSchema, drillDownMetricSchema, breakdownQuerySchema, complianceResponseSchema, type DashboardMetricsResponse, type AttentionItemsResponse, type BreakdownQuery, type ComplianceResponse } from './validators/dashboardSchemas.js';
+export { dashboardMetricsSchema, attentionItemSchema, attentionItemsResponseSchema, drillDownMetricSchema, breakdownQuerySchema, complianceResponseSchema, schemeFundBodySchema, type DashboardMetricsResponse, type AttentionItemsResponse, type BreakdownQuery, type ComplianceResponse, type SchemeFundBody } from './validators/dashboardSchemas.js';
 
 // Types
 export type { ApiResponse, ApiError, ApiResult } from './types/api.js';

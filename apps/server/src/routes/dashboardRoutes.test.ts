@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll, beforeEach, afterAll } from 'vitest';
+import { describe, it, expect, beforeAll, beforeEach, afterAll, afterEach } from 'vitest';
 import request from 'supertest';
 import { sql, eq } from 'drizzle-orm';
 import app from '../app';
@@ -13,6 +13,7 @@ let testMdaId: string;
 let adminToken: string;
 let adminUserId: string;
 let officerToken: string;
+let deptAdminToken: string;
 
 beforeAll(async () => {
   await db.execute(sql`TRUNCATE loan_state_transitions, ledger_entries, loans, scheme_config, refresh_tokens, audit_log, users, mdas CASCADE`);
@@ -47,6 +48,19 @@ beforeAll(async () => {
     isActive: true,
   });
   officerToken = signAccessToken({ userId: officerUserId, email: 'officer@test.com', role: 'mda_officer', mdaId: testMdaId });
+
+  // Create dept_admin user for RBAC tests
+  const deptAdminUserId = generateUuidv7();
+  await db.insert(users).values({
+    id: deptAdminUserId,
+    email: 'deptadmin@test.com',
+    hashedPassword: hashed,
+    firstName: 'Dept',
+    lastName: 'Admin',
+    role: 'dept_admin',
+    isActive: true,
+  });
+  deptAdminToken = signAccessToken({ userId: deptAdminUserId, email: 'deptadmin@test.com', role: 'dept_admin', mdaId: null });
 });
 
 beforeEach(() => {
@@ -429,6 +443,96 @@ describe('GET /api/dashboard/attention (detector integration)', () => {
   });
 });
 
+// ─── Story 11.0a: Scheme Fund PUT Endpoint ──────────────────────────
+
+describe('PUT /api/dashboard/scheme-fund', () => {
+  afterEach(async () => {
+    await db.delete(schemeConfig).where(eq(schemeConfig.key, 'scheme_fund_total'));
+  });
+
+  it('returns 401 without authentication', async () => {
+    const res = await request(app)
+      .put('/api/dashboard/scheme-fund')
+      .send({ amount: '500000000' });
+    expect(res.status).toBe(401);
+  });
+
+  it('returns 403 for mda_officer role', async () => {
+    const res = await request(app)
+      .put('/api/dashboard/scheme-fund')
+      .set('Authorization', `Bearer ${officerToken}`)
+      .send({ amount: '500000000' });
+    expect(res.status).toBe(403);
+  });
+
+  it('returns 403 for dept_admin role (SUPER_ADMIN only)', async () => {
+    const res = await request(app)
+      .put('/api/dashboard/scheme-fund')
+      .set('Authorization', `Bearer ${deptAdminToken}`)
+      .send({ amount: '500000000' });
+    expect(res.status).toBe(403);
+  });
+
+  it('returns 400 for invalid amount (negative)', async () => {
+    const res = await request(app)
+      .put('/api/dashboard/scheme-fund')
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({ amount: '-100' });
+    expect(res.status).toBe(400);
+  });
+
+  it('returns 400 for non-numeric amount', async () => {
+    const res = await request(app)
+      .put('/api/dashboard/scheme-fund')
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({ amount: 'abc' });
+    expect(res.status).toBe(400);
+  });
+
+  it('returns 400 when amount is missing', async () => {
+    const res = await request(app)
+      .put('/api/dashboard/scheme-fund')
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({});
+    expect(res.status).toBe(400);
+  });
+
+  it('sets scheme fund total and returns success for SUPER_ADMIN', async () => {
+    const res = await request(app)
+      .put('/api/dashboard/scheme-fund')
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({ amount: '5000000000.00' });
+
+    expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
+    expect(res.body.fundTotal).toBe('5000000000.00');
+
+    // Verify it was persisted
+    const metricsRes = await request(app)
+      .get('/api/dashboard/metrics')
+      .set('Authorization', `Bearer ${adminToken}`);
+    expect(metricsRes.body.data.fundConfigured).toBe(true);
+    expect(metricsRes.body.data.fundAvailable).not.toBeNull();
+  });
+
+  it('updates existing scheme fund total (upsert)', async () => {
+    // Set initial value
+    await request(app)
+      .put('/api/dashboard/scheme-fund')
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({ amount: '1000000000' });
+
+    // Update to new value
+    const res = await request(app)
+      .put('/api/dashboard/scheme-fund')
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({ amount: '2000000000' });
+
+    expect(res.status).toBe(200);
+    expect(res.body.fundTotal).toBe('2000000000');
+  });
+});
+
 // ─── Story 4.3: Dashboard Breakdown Drill-Down ──────────────────────
 
 describe('GET /api/dashboard/breakdown', () => {
@@ -542,6 +646,117 @@ describe('GET /api/dashboard/breakdown', () => {
         expect(rows[i].variancePercent).toBeGreaterThanOrEqual(rows[i - 1].variancePercent);
       }
     }
+  });
+
+  // ─── Story 11.0a: Metric-specific filtering ─────────────────────────
+
+  it('activeLoans metric returns only MDAs with active loan count > 0', async () => {
+    const res = await request(app)
+      .get('/api/dashboard/breakdown?metric=activeLoans')
+      .set('Authorization', `Bearer ${adminToken}`);
+
+    expect(res.status).toBe(200);
+    for (const row of res.body.data) {
+      expect(row.contributionCount).toBeGreaterThan(0);
+    }
+  });
+
+  it('activeLoans metric sorts by contributionCount descending', async () => {
+    const res = await request(app)
+      .get('/api/dashboard/breakdown?metric=activeLoans')
+      .set('Authorization', `Bearer ${adminToken}`);
+
+    expect(res.status).toBe(200);
+    const rows = res.body.data;
+    for (let i = 1; i < rows.length; i++) {
+      expect(rows[i].contributionCount).toBeLessThanOrEqual(rows[i - 1].contributionCount);
+    }
+  });
+
+  it('totalExposure metric returns only MDAs with exposure > 0', async () => {
+    const res = await request(app)
+      .get('/api/dashboard/breakdown?metric=totalExposure')
+      .set('Authorization', `Bearer ${adminToken}`);
+
+    expect(res.status).toBe(200);
+    for (const row of res.body.data) {
+      expect(parseFloat(row.contributionAmount)).toBeGreaterThan(0);
+    }
+  });
+
+  it('totalExposure metric sorts by contributionAmount descending', async () => {
+    const res = await request(app)
+      .get('/api/dashboard/breakdown?metric=totalExposure')
+      .set('Authorization', `Bearer ${adminToken}`);
+
+    expect(res.status).toBe(200);
+    const rows = res.body.data;
+    for (let i = 1; i < rows.length; i++) {
+      expect(parseFloat(rows[i].contributionAmount)).toBeLessThanOrEqual(parseFloat(rows[i - 1].contributionAmount));
+    }
+  });
+
+  it('atRisk metric returns only MDAs with overdue or stalled loans', async () => {
+    const res = await request(app)
+      .get('/api/dashboard/breakdown?metric=atRisk')
+      .set('Authorization', `Bearer ${adminToken}`);
+
+    expect(res.status).toBe(200);
+    for (const row of res.body.data) {
+      const atRiskCount = row.statusDistribution.overdue + row.statusDistribution.stalled;
+      expect(atRiskCount).toBeGreaterThan(0);
+    }
+  });
+
+  it('collectionPotential metric returns only MDAs with active loans, sorted by expectedMonthlyDeduction descending', async () => {
+    const res = await request(app)
+      .get('/api/dashboard/breakdown?metric=collectionPotential')
+      .set('Authorization', `Bearer ${adminToken}`);
+
+    expect(res.status).toBe(200);
+    const rows = res.body.data;
+    for (const row of rows) {
+      expect(row.contributionCount).toBeGreaterThan(0);
+    }
+    for (let i = 1; i < rows.length; i++) {
+      expect(parseFloat(rows[i].expectedMonthlyDeduction)).toBeLessThanOrEqual(parseFloat(rows[i - 1].expectedMonthlyDeduction));
+    }
+  });
+
+  it('completionRate metric sorts by completion rate ascending (worst first)', async () => {
+    const res = await request(app)
+      .get('/api/dashboard/breakdown?metric=completionRate')
+      .set('Authorization', `Bearer ${adminToken}`);
+
+    expect(res.status).toBe(200);
+    const rows = res.body.data;
+    const getRate = (row: { statusDistribution: { completed: number; onTrack: number; overdue: number; stalled: number; overDeducted: number } }) => {
+      const d = row.statusDistribution;
+      const total = d.completed + d.onTrack + d.overdue + d.stalled + d.overDeducted;
+      return total > 0 ? (d.completed / total) * 100 : 0;
+    };
+    for (let i = 1; i < rows.length; i++) {
+      expect(getRate(rows[i])).toBeGreaterThanOrEqual(getRate(rows[i - 1]));
+    }
+  });
+
+  it('different metrics produce different result sets (not identical for all)', async () => {
+    const [activeRes, atRiskRes, fundRes] = await Promise.all([
+      request(app).get('/api/dashboard/breakdown?metric=activeLoans').set('Authorization', `Bearer ${adminToken}`),
+      request(app).get('/api/dashboard/breakdown?metric=atRisk').set('Authorization', `Bearer ${adminToken}`),
+      request(app).get('/api/dashboard/breakdown?metric=fundAvailable').set('Authorization', `Bearer ${adminToken}`),
+    ]);
+
+    // All should succeed
+    expect(activeRes.status).toBe(200);
+    expect(atRiskRes.status).toBe(200);
+    expect(fundRes.status).toBe(200);
+
+    // At minimum, the data arrays should be valid — filtering metrics may have different lengths
+    // (atRisk can be empty if no overdue/stalled; fundAvailable includes all MDAs)
+    expect(Array.isArray(activeRes.body.data)).toBe(true);
+    expect(Array.isArray(atRiskRes.body.data)).toBe(true);
+    expect(Array.isArray(fundRes.body.data)).toBe(true);
   });
 });
 

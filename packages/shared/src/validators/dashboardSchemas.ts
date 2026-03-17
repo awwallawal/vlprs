@@ -86,6 +86,20 @@ export const breakdownQuerySchema = z.object({
 
 export type BreakdownQuery = z.infer<typeof breakdownQuerySchema>;
 
+// ─── Scheme Fund Schema (Story 11.0a) ────────────────────────────────
+
+export const schemeFundBodySchema = z.object({
+  amount: z.string().refine(
+    (val) => {
+      const num = Number(val);
+      return !isNaN(num) && num > 0;
+    },
+    { message: 'Amount must be a positive number' },
+  ),
+});
+
+export type SchemeFundBody = z.infer<typeof schemeFundBodySchema>;
+
 // ─── Compliance Schemas (Story 4.4) ─────────────────────────────────
 
 const complianceRowSchema = z.object({

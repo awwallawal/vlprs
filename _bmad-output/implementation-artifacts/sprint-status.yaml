@@ -171,7 +171,7 @@ development_status:
   # Note: Story 11.0 split into 11.0a (dashboard remediation) + 11.0b (coverage tracker) per PM decision 2026-03-17. FR91+FR92 added.
   epic-11: in-progress
   11-1-pre-submission-checkpoint-screen: done
-  11-0a-dashboard-remediation: ready-for-dev  # remediation: Epic 4.3 drill-down bug + scheme fund input (FR92) + historical period bypass + seed data + upload discoverability
+  11-0a-dashboard-remediation: done  # remediation: Epic 4.3 drill-down bug + scheme fund input (FR92) + historical period bypass + seed data + upload discoverability
   11-0b-migration-coverage-tracker: ready-for-dev  # new feature: MDA x month matrix with CSV/PDF export (FR91)
   11-2-mid-cycle-employment-event-filing: ready-for-dev
   11-2b-manual-entry-event-flags: ready-for-dev

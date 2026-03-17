@@ -6,7 +6,7 @@ import { authorise } from '../middleware/authorise';
 import { scopeToMda } from '../middleware/scopeToMda';
 import { readLimiter } from '../middleware/rateLimiter';
 import { auditLog } from '../middleware/auditLog';
-import { ROLES, breakdownQuerySchema, type MdaComplianceRow } from '@vlprs/shared';
+import { ROLES, breakdownQuerySchema, schemeFundBodySchema, type MdaComplianceRow } from '@vlprs/shared';
 import { db } from '../db';
 import { loans, ledgerEntries } from '../db/schema';
 import { eq, and, sql, count, inArray } from 'drizzle-orm';
@@ -220,6 +220,27 @@ router.get(
   },
 );
 
+// PUT /api/dashboard/scheme-fund — Set/update scheme fund total (Story 11.0a, AC#2)
+router.put(
+  '/dashboard/scheme-fund',
+  authenticate,
+  requirePasswordChange,
+  authorise(ROLES.SUPER_ADMIN),
+  auditLog,
+  async (req: Request, res: Response) => {
+    const parsed = schemeFundBodySchema.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ success: false, error: 'Amount must be a positive number' });
+      return;
+    }
+
+    const userId = req.user!.userId;
+    await schemeConfigService.setSchemeConfig('scheme_fund_total', parsed.data.amount, userId);
+
+    res.json({ success: true, fundTotal: parsed.data.amount });
+  },
+);
+
 // Breakdown + attention middleware — all three roles (MDA_OFFICER scoped via scopeToMda)
 const drillDownAuth = [
   authenticate,
@@ -242,25 +263,8 @@ router.get(
     }
 
     const mdaScope = req.mdaScope;
-    const breakdown = await mdaAggregationService.getEnrichedMdaBreakdown(mdaScope);
-
     const metric = parsed.data.metric;
-
-    // Sort: monthlyRecovery by variancePercent ascending (worst first), others by contributionAmount descending
-    if (metric === 'monthlyRecovery') {
-      breakdown.sort((a, b) => {
-        if (a.variancePercent === null && b.variancePercent === null) return 0;
-        if (a.variancePercent === null) return 1;
-        if (b.variancePercent === null) return -1;
-        return a.variancePercent - b.variancePercent;
-      });
-    } else {
-      breakdown.sort((a, b) => {
-        const aVal = new Decimal(a.contributionAmount);
-        const bVal = new Decimal(b.contributionAmount);
-        return bVal.minus(aVal).toNumber();
-      });
-    }
+    const breakdown = await mdaAggregationService.getEnrichedMdaBreakdown(mdaScope, metric);
 
     res.json({ success: true, data: breakdown });
   },

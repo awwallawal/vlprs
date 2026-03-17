@@ -1,6 +1,6 @@
 import { eq } from 'drizzle-orm';
 import { db } from './index';
-import { mdas, mdaAliases, users, loans } from './schema';
+import { mdas, mdaAliases, users, loans, schemeConfig } from './schema';
 import { hashPassword } from '../lib/password';
 import { generateUuidv7 } from '../lib/uuidv7';
 
@@ -345,6 +345,19 @@ export async function runDemoSeed(): Promise<{ userCount: number; mdaCount: numb
         .onConflictDoNothing({ target: loans.loanReference })
         .returning();
       if (record) loanCount++;
+    }
+
+    // 6. Seed scheme fund total for development (₦500,000,000)
+    const agUser = await tx.select({ id: users.id }).from(users).where(eq(users.email, 'ag@vlprs.oyo.gov.ng'));
+    const agUserId = agUser[0]?.id;
+    if (agUserId) {
+      await tx
+        .insert(schemeConfig)
+        .values({ key: 'scheme_fund_total', value: '500000000.00', updatedBy: agUserId })
+        .onConflictDoUpdate({
+          target: schemeConfig.key,
+          set: { value: '500000000.00', updatedBy: agUserId },
+        });
     }
   });
 

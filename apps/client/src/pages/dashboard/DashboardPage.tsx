@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { FileText, Info, CheckCircle2, Clock, Flag } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -12,6 +12,9 @@ import { ComplianceProgressHeader } from '@/components/shared/ComplianceProgress
 import { HealthScoreBadge } from '@/components/shared/HealthScoreBadge';
 import { SubmissionHeatmap } from '@/components/shared/SubmissionHeatmap';
 import { AttentionItemCard, AttentionEmptyState } from '@/components/shared/AttentionItemCard';
+import { useAuthStore } from '@/stores/authStore';
+import { ROLES } from '@vlprs/shared';
+import { SchemeFundDialog } from './components/SchemeFundDialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -38,6 +41,9 @@ function sortComplianceRows(rows: MdaComplianceRow[]): MdaComplianceRow[] {
 
 export function DashboardPage() {
   const navigate = useNavigate();
+  const user = useAuthStore((s) => s.user);
+  const isSuperAdmin = user?.role === ROLES.SUPER_ADMIN;
+  const [schemeFundOpen, setSchemeFundOpen] = useState(false);
   const metrics = useDashboardMetrics();
   const compliance = useMdaComplianceGrid();
   const attention = useAttentionItems();
@@ -104,8 +110,20 @@ export function DashboardPage() {
               <Tooltip>
                 <TooltipTrigger asChild>
                   <div
-                    className="rounded-lg border bg-white p-6 cursor-default"
+                    className={cn(
+                      'rounded-lg border bg-white p-6',
+                      isSuperAdmin ? 'cursor-pointer hover:bg-slate-50 transition-colors' : 'cursor-default',
+                    )}
                     aria-label="Fund Available: Awaiting Configuration"
+                    role={isSuperAdmin ? 'button' : undefined}
+                    tabIndex={isSuperAdmin ? 0 : undefined}
+                    onClick={isSuperAdmin ? () => setSchemeFundOpen(true) : undefined}
+                    onKeyDown={isSuperAdmin ? (e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        setSchemeFundOpen(true);
+                      }
+                    } : undefined}
                   >
                     <p className="text-sm text-text-secondary mb-1">Fund Available</p>
                     <div className="mb-1 flex items-center gap-2">
@@ -115,7 +133,7 @@ export function DashboardPage() {
                   </div>
                 </TooltipTrigger>
                 <TooltipContent>
-                  <p>Enter your scheme fund total in Settings when confirmed by the committee</p>
+                  <p>{isSuperAdmin ? 'Click to enter scheme fund total' : 'Scheme fund total has not been configured yet'}</p>
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
@@ -453,6 +471,11 @@ export function DashboardPage() {
           </Collapsible>
         ) : null}
       </section>
+
+      {/* Scheme Fund Dialog — SUPER_ADMIN only */}
+      {isSuperAdmin && (
+        <SchemeFundDialog open={schemeFundOpen} onOpenChange={setSchemeFundOpen} />
+      )}
     </div>
   );
 }
