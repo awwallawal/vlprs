@@ -172,6 +172,9 @@ export const VOCABULARY = {
   COMPARISON_ALIGNED: 'Values match the expected repayment schedule',
   COMPARISON_MINOR_VARIANCE: 'Small difference within tolerance (< ₦500)',
   COMPARISON_VARIANCE: 'Difference detected — logged for reconciliation',
+  // Pre-Submission Checkpoint (Story 11.1)
+  CHECKPOINT_LOAD_FAILED: 'Unable to load checkpoint data. Please try again.',
+  CHECKPOINT_MDA_NOT_FOUND: 'The requested MDA could not be found for checkpoint review.',
 } as const;
 
 export const UI_COPY = {
@@ -231,4 +234,11 @@ export const UI_COPY = {
   SUBMISSION_NO_DATA_PROCESSED:
     'No data was processed — your previous submission is unchanged',
   SUBMISSION_FIX_AND_REUPLOAD: 'Fix the items above in your CSV and re-upload',
+  // Pre-Submission Checkpoint (Story 11.1)
+  CHECKPOINT_HEADING: 'Pre-Submission Checkpoint',
+  CHECKPOINT_RETIREMENT_HEADING: 'Approaching Retirement',
+  CHECKPOINT_ZERO_DEDUCTION_HEADING: 'Zero Deduction Review',
+  CHECKPOINT_PENDING_EVENTS_HEADING: 'Pending Events',
+  CHECKPOINT_EMPTY_SECTION: 'No items require attention',
+  CHECKPOINT_CONFIRMATION_LABEL: 'I have reviewed the above items',
 } as const;

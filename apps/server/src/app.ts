@@ -19,6 +19,7 @@ import traceReportRoutes from './routes/traceReportRoutes';
 import delineationRoutes from './routes/delineationRoutes';
 import dashboardRoutes from './routes/dashboardRoutes';
 import submissionRoutes from './routes/submissionRoutes';
+import preSubmissionRoutes from './routes/preSubmissionRoutes';
 import { AppError } from './lib/appError';
 import { VOCABULARY } from '@vlprs/shared';
 import { requestLogger } from './middleware/requestLogger';
@@ -65,6 +66,7 @@ app.use('/api', traceReportRoutes);
 app.use('/api', delineationRoutes);
 app.use('/api', migrationRoutes);
 app.use('/api', submissionRoutes);
+app.use('/api', preSubmissionRoutes);
 
 // 404 handler
 app.use((_req: Request, res: Response) => {

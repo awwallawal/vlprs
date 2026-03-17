@@ -1,15 +1,17 @@
 import { useState, useRef } from 'react';
-import { Upload, Download, Info } from 'lucide-react';
+import { Upload, Download } from 'lucide-react';
 import { format } from 'date-fns';
 import { useQuery } from '@tanstack/react-query';
 import { useAuthStore } from '@/stores/authStore';
 import { useSubmissionHistory, useSubmissionUpload } from '@/hooks/useSubmissionData';
+import { usePreSubmissionCheckpoint } from '@/hooks/usePreSubmissionCheckpoint';
 import { FileUploadZone } from '@/components/shared/FileUploadZone';
 import { WelcomeGreeting } from '@/components/shared/WelcomeGreeting';
 import { SubmissionConfirmation } from './components/SubmissionConfirmation';
 import { ComparisonSummary } from './components/ComparisonSummary';
 import { ManualEntryForm } from './components/ManualEntryForm';
 import { ValidationErrorDisplay } from './components/ValidationErrorDisplay';
+import { PreSubmissionCheckpoint } from './components/PreSubmissionCheckpoint';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -34,11 +36,6 @@ const STATUS_BADGE_VARIANT: Record<string, 'complete' | 'info' | 'review'> = {
   rejected: 'review',
 };
 
-const CHECKPOINT_ITEMS = [
-  '2 staff approaching retirement within 12 months',
-  '1 staff with zero deduction last month and no event filed',
-];
-
 export function SubmissionsPage() {
   const user = useAuthStore((s) => s.user);
   const userRole = user?.role ?? ROLES.MDA_OFFICER;
@@ -60,6 +57,10 @@ export function SubmissionsPage() {
   });
   const resolvedMdaName =
     userMdaId && mdas ? mdas.find((m) => m.id === userMdaId)?.name ?? 'Your MDA' : 'Your MDA';
+
+  // Pre-submission checkpoint data
+  const { data: checkpointData, isPending: checkpointLoading, isError: checkpointError } =
+    usePreSubmissionCheckpoint(userMdaId || undefined);
 
   // Checkpoint state — lifted above Tabs to preserve across tab switches
   const [checkpointConfirmed, setCheckpointConfirmed] = useState(false);
@@ -225,32 +226,13 @@ export function SubmissionsPage() {
           </div>
 
           {/* Pre-Submission Checkpoint */}
-          <section aria-labelledby="checkpoint-heading">
-            <h2 id="checkpoint-heading" className="text-lg font-semibold text-text-primary mb-3">
-              Pre-Submission Checkpoint
-            </h2>
-
-            <div className="rounded-lg bg-teal-50 p-4 space-y-3">
-              {CHECKPOINT_ITEMS.map((item) => (
-                <div key={item} className="flex items-start gap-3">
-                  <Info className="h-5 w-5 shrink-0 text-teal mt-0.5" aria-hidden="true" />
-                  <p className="text-sm text-text-primary">{item}</p>
-                </div>
-              ))}
-            </div>
-
-            <label className="mt-4 flex items-center gap-3 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={checkpointConfirmed}
-                onChange={(e) => setCheckpointConfirmed(e.target.checked)}
-                className="h-4 w-4 rounded border-border text-teal accent-teal focus:ring-teal"
-              />
-              <span className="text-sm text-text-primary">
-                I have reviewed the above items and confirm I am ready to submit
-              </span>
-            </label>
-          </section>
+          <PreSubmissionCheckpoint
+            data={checkpointData}
+            isLoading={checkpointLoading}
+            isError={checkpointError}
+            onConfirm={setCheckpointConfirmed}
+            confirmed={checkpointConfirmed}
+          />
 
           {/* Submission entry — Tabs: CSV Upload / Manual Entry */}
           <section ref={uploadSectionRef} aria-labelledby="submission-heading">

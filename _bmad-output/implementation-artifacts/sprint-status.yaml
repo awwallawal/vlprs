@@ -5,7 +5,7 @@
 # story_location: _bmad-output/implementation-artifacts
 # sprint_sequence: 1→E1, 2→E14, 3→E2, 4→E10, 5→E3, 6→E4, 7→E5, 8→E11, 9→E7, 10→E6, 11→E8, 12→E12, 13→E9, 14→E13
 # total_epics: 14
-# total_stories: 69 (Epic 1: 12, Epic 14: 3, Epic 2: 8 incl. 2.0, Epic 3: 10 incl. 3.0a+3.0b prep from E10 retro, Epic 5: 5 (5.6 moved to E11), Epic 11: 6 incl. 11.2b split + 5.6 moved here, Epic 13: 2 — FR72/FR73 moved from Epic 13 to Epic 1, Story 2.0 added from Epic 1+14 retro, Epic 3 reshaped per PM alignment cascade 2026-03-01, Stories 3.0a+3.0b added per Epic 10 retro 2026-03-05, Story 5.6 moved from E5 to E11 sequence per PM validation 2026-03-16)
+# total_stories: 71 (Epic 1: 12, Epic 14: 3, Epic 2: 8 incl. 2.0, Epic 3: 10 incl. 3.0a+3.0b prep from E10 retro, Epic 5: 5 (5.6 moved to E11), Epic 11: 8 incl. 11.0a+11.0b UAT remediation split + 11.2b split + 5.6 moved here, Epic 13: 2 — FR72/FR73 moved from Epic 13 to Epic 1, Story 2.0 added from Epic 1+14 retro, Epic 3 reshaped per PM alignment cascade 2026-03-01, Stories 3.0a+3.0b added per Epic 10 retro 2026-03-05, Story 5.6 moved from E5 to E11 sequence per PM validation 2026-03-16, Story 11.0 added then split into 11.0a+11.0b per PM decision 2026-03-17, FR91+FR92 added)
 
 # STATUS DEFINITIONS:
 # ==================
@@ -167,9 +167,12 @@ development_status:
   epic-5-retrospective: optional
 
   # Epic 11: Pre-Submission Checkpoint & Mid-Cycle Events (Sprint 8 — completes submission experience)
-  # Sequence: 11.1 → 11.2 → 11.2b → 5.6 → 11.3 → 11.4
+  # Sequence: 11.1 → 11.0a → 11.0b → 11.2 → 11.2b → 5.6 → 11.3 → 11.4
+  # Note: Story 11.0 split into 11.0a (dashboard remediation) + 11.0b (coverage tracker) per PM decision 2026-03-17. FR91+FR92 added.
   epic-11: in-progress
-  11-1-pre-submission-checkpoint-screen: ready-for-dev
+  11-1-pre-submission-checkpoint-screen: done
+  11-0a-dashboard-remediation: ready-for-dev  # remediation: Epic 4.3 drill-down bug + scheme fund input (FR92) + historical period bypass + seed data + upload discoverability
+  11-0b-migration-coverage-tracker: ready-for-dev  # new feature: MDA x month matrix with CSV/PDF export (FR91)
   11-2-mid-cycle-employment-event-filing: ready-for-dev
   11-2b-manual-entry-event-flags: ready-for-dev
   5-6-submission-detail-view: ready-for-dev  # moved from Epic 5 — requires 11.2b (extended event flag enum)

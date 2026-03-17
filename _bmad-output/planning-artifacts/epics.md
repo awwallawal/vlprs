@@ -2659,6 +2659,23 @@ So that I can investigate whether these staff have retired, received extensions,
 
 MDA Reporting Officers review a mandatory checkpoint screen before each submission. Mid-cycle employment events can be filed at any time and are reconciled against subsequent CSV submissions. Manual entry event flags (11.2b) extend the CSV event flag enum and add event flag fields to the manual entry form, enabling complete reconciliation coverage. MDA officers can upload historical records for cross-validation.
 
+Sequence: 11.1 → 11.0 → 11.2 → 11.2b → 5.6 → 11.3 → 11.4
+
+### Story 11.0: UAT Enablement & Dashboard Remediation
+
+As a **Department Admin / AG (SUPER_ADMIN)**,
+I want the executive dashboard drill-downs to show metric-specific data, the scheme fund total to be configurable, and historical submission periods to be uploadable,
+So that I can perform end-to-end UAT across all role views and validate the system before it goes live.
+
+**Acceptance Criteria:**
+
+1. **Given** the AG clicks on different dashboard metric cards, **When** the drill-down page loads, **Then** each page shows data filtered to that specific metric.
+2. **Given** the AG views "Fund Available" showing "Awaiting Configuration", **When** they click the card, **Then** a dialog opens to input the total scheme fund amount. Only SUPER_ADMIN can set/edit.
+3. **Given** a DEPT_ADMIN or SUPER_ADMIN uploads a CSV with a historical period, **When** processed, **Then** the period lock is bypassed. MDA_OFFICER uploads remain restricted to current + previous month.
+4. **Given** the seed/demo database, **When** loaded, **Then** scheme fund config exists and sufficient data produces meaningful drill-down results.
+
+_Remediation story — addresses gaps from Epics 4 and 5 to enable end-to-end UAT. Inserted after Story 11.1 per PM decision 2026-03-17._
+
 ### Story 11.1: Pre-Submission Checkpoint Screen
 
 As an **MDA Reporting Officer**,

@@ -1,4 +1,5 @@
 import { render, screen, fireEvent, act } from '@testing-library/react';
+import { MemoryRouter } from 'react-router';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
@@ -76,6 +77,20 @@ vi.mock('@/components/shared/WelcomeGreeting', () => ({
   WelcomeGreeting: () => <div data-testid="welcome-greeting" />,
 }));
 
+vi.mock('@/hooks/usePreSubmissionCheckpoint', () => ({
+  usePreSubmissionCheckpoint: () => ({
+    data: {
+      approachingRetirement: [],
+      zeroDeduction: [],
+      pendingEvents: [],
+      lastSubmissionDate: null,
+      submissionPeriod: '2026-03',
+    },
+    isPending: false,
+    isError: false,
+  }),
+}));
+
 vi.mock('@/lib/apiClient', () => ({
   apiClient: vi.fn().mockResolvedValue([{ id: 'mda-1', name: 'Ministry of Health', code: 'HLT' }]),
 }));
@@ -88,7 +103,9 @@ function renderWithProviders(ui: React.ReactElement) {
   });
   return render(
     <QueryClientProvider client={queryClient}>
-      {ui}
+      <MemoryRouter>
+        {ui}
+      </MemoryRouter>
     </QueryClientProvider>,
   );
 }
