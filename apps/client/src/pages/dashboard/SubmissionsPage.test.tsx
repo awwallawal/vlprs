@@ -71,6 +71,25 @@ vi.mock('@/hooks/useSubmissionData', () => ({
   }),
 }));
 
+vi.mock('@/hooks/usePreSubmissionCheckpoint', () => ({
+  usePreSubmissionCheckpoint: () => ({
+    data: {
+      approachingRetirement: [
+        { staffName: 'John Doe', staffId: 'OYO-001', retirementDate: '2026-09-15', daysUntilRetirement: 182 },
+        { staffName: 'Jane Smith', staffId: 'OYO-002', retirementDate: '2027-01-10', daysUntilRetirement: 299 },
+      ],
+      zeroDeduction: [
+        { staffName: 'Bob Wilson', staffId: 'OYO-003', lastDeductionDate: '2026-02-28', daysSinceLastDeduction: 17 },
+      ],
+      pendingEvents: [],
+      lastSubmissionDate: '2026-02-28',
+      submissionPeriod: '2026-03',
+    },
+    isPending: false,
+    isError: false,
+  }),
+}));
+
 vi.mock('@/lib/apiClient', () => ({
   apiClient: vi.fn().mockResolvedValue([{ id: 'mda-003', name: 'Ministry of Health', code: 'HLT' }]),
 }));
@@ -139,19 +158,16 @@ describe('SubmissionsPage', () => {
     expect(
       screen.getByRole('heading', { level: 2, name: 'Pre-Submission Checkpoint' }),
     ).toBeInTheDocument();
-    expect(
-      screen.getByText('2 staff approaching retirement within 12 months'),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByText('1 staff with zero deduction last month and no event filed'),
-    ).toBeInTheDocument();
+    expect(screen.getByText('Approaching Retirement')).toBeInTheDocument();
+    expect(screen.getByText('Zero Deduction Review')).toBeInTheDocument();
+    expect(screen.getByText('Pending Events')).toBeInTheDocument();
   });
 
   it('renders confirmation checkbox', () => {
     renderPage();
     expect(screen.getByRole('checkbox')).toBeInTheDocument();
     expect(
-      screen.getByText(/I have reviewed the above items and confirm I am ready to submit/),
+      screen.getByText(/I have reviewed the above items/),
     ).toBeInTheDocument();
   });
 
