@@ -98,6 +98,25 @@ export interface MigrationDashboardMetrics {
   pendingDuplicates: number;
 }
 
+// ─── Coverage Tracker (Story 11.0b) ──────────────────────────────────
+
+export interface CoveragePeriodData {
+  recordCount: number;
+  baselinedCount: number;
+}
+
+export interface CoverageMdaRow {
+  mdaId: string;
+  mdaName: string;
+  mdaCode: string;
+  periods: Record<string, CoveragePeriodData>; // key: 'YYYY-MM'
+}
+
+export interface CoverageMatrix {
+  mdas: CoverageMdaRow[];
+  periodRange: { start: string; end: string };
+}
+
 export interface BeneficiaryListItem {
   staffName: string;
   staffId: string;

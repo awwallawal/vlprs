@@ -28,6 +28,7 @@ export function validateQuery(schema: z.ZodType<unknown>) {
       }));
       throw new AppError(400, 'VALIDATION_FAILED', VOCABULARY.VALIDATION_FAILED, details);
     }
+    Object.assign(req.query, result.data as Record<string, unknown>);
     next();
   };
 }

@@ -5,7 +5,7 @@ import { authorise } from '../middleware/authorise';
 import { scopeToMda } from '../middleware/scopeToMda';
 import { validateQuery } from '../middleware/validate';
 import { auditLog } from '../middleware/auditLog';
-import { ROLES, beneficiaryQuerySchema } from '@vlprs/shared';
+import { ROLES, beneficiaryQuerySchema, coverageQuerySchema } from '@vlprs/shared';
 import * as migrationDashboardService from '../services/migrationDashboardService';
 import * as beneficiaryLedgerService from '../services/beneficiaryLedgerService';
 
@@ -36,6 +36,19 @@ router.get(
   auditLog,
   async (req: Request, res: Response) => {
     const data = await migrationDashboardService.getDashboardMetrics(req.mdaScope);
+    res.json({ success: true, data });
+  },
+);
+
+// GET /api/migrations/coverage — Coverage tracker matrix (Story 11.0b)
+router.get(
+  '/migrations/coverage',
+  ...dashboardAuth,
+  validateQuery(coverageQuerySchema),
+  auditLog,
+  async (req: Request, res: Response) => {
+    const extended = req.query.extended === 'true';
+    const data = await migrationDashboardService.getMigrationCoverage(req.mdaScope, extended);
     res.json({ success: true, data });
   },
 );

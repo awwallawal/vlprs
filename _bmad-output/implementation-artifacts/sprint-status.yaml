@@ -172,7 +172,7 @@ development_status:
   epic-11: in-progress
   11-1-pre-submission-checkpoint-screen: done
   11-0a-dashboard-remediation: done  # remediation: Epic 4.3 drill-down bug + scheme fund input (FR92) + historical period bypass + seed data + upload discoverability
-  11-0b-migration-coverage-tracker: ready-for-dev  # new feature: MDA x month matrix with CSV/PDF export (FR91)
+  11-0b-migration-coverage-tracker: done  # new feature: MDA x month matrix with CSV/PDF export (FR91)
   11-2-mid-cycle-employment-event-filing: ready-for-dev
   11-2b-manual-entry-event-flags: ready-for-dev
   5-6-submission-detail-view: ready-for-dev  # moved from Epic 5 — requires 11.2b (extended event flag enum)
