@@ -6,6 +6,8 @@ import { AppError } from '../lib/appError';
 import { withMdaScope } from '../lib/mdaScope';
 import { generateUuidv7 } from '../lib/uuidv7';
 import { compareSubmission } from './comparisonEngine';
+import { reconcileSubmission } from './reconciliationEngine';
+import { sendReconciliationAlertEmail } from '../lib/email';
 import { VOCABULARY, submissionRowSchema } from '@vlprs/shared';
 import type {
   SubmissionRow,
@@ -434,7 +436,7 @@ export async function processSubmissionRows(
   const submissionId = generateUuidv7();
   const now = new Date();
 
-  const referenceNumber = await db.transaction(async (tx) => {
+  const { refNumber, reconciliationResult } = await db.transaction(async (tx) => {
     // Generate reference number INSIDE transaction to prevent race conditions
     const refResult = await tx.select({ referenceNumber: mdaSubmissions.referenceNumber })
       .from(mdaSubmissions)
@@ -484,8 +486,36 @@ export async function processSubmissionRows(
 
     await tx.insert(submissionRows).values(rowValues);
 
-    return refNumber;
+    // Story 11.3: Reconcile mid-cycle employment events INSIDE transaction (AC 6)
+    const reconciliationResult = await reconcileSubmission(submissionId, mdaId, tx);
+
+    // Store reconciliation summary counts as JSONB on the submission record
+    await tx.update(mdaSubmissions)
+      .set({ reconciliationSummary: reconciliationResult.counts, updatedAt: now })
+      .where(eq(mdaSubmissions.id, submissionId));
+
+    return { refNumber, reconciliationResult };
   });
+
+  const referenceNumber = refNumber;
+
+  // Story 11.3: Fire-and-forget email if discrepancies found (OUTSIDE transaction)
+  const { counts: reconCounts } = reconciliationResult;
+  if (reconCounts.dateDiscrepancy > 0 || reconCounts.unconfirmed > 0) {
+    // M1 fix: Resolve MDA name for email content
+    db.select({ name: mdas.name }).from(mdas).where(eq(mdas.id, mdaId)).limit(1)
+      .then((rows) => {
+        const mdaName = rows[0]?.name ?? 'Unknown MDA';
+        return sendReconciliationAlertEmail({
+          mdaName,
+          referenceNumber,
+          period,
+          dateDiscrepancyCount: reconCounts.dateDiscrepancy,
+          unconfirmedCount: reconCounts.unconfirmed,
+        });
+      })
+      .catch(() => { /* fire-and-forget */ });
+  }
 
   // Run comparison engine and persist aggregate counts.
   // Wrapped in try/catch: if comparison fails, the submission is still valid

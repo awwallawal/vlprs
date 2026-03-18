@@ -2,7 +2,7 @@ import { useState, useRef } from 'react';
 import { Link, useNavigate } from 'react-router';
 import { Upload, Download } from 'lucide-react';
 import { format } from 'date-fns';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuthStore } from '@/stores/authStore';
 import { useSubmissionHistory, useSubmissionUpload } from '@/hooks/useSubmissionData';
 import { usePreSubmissionCheckpoint } from '@/hooks/usePreSubmissionCheckpoint';
@@ -10,6 +10,7 @@ import { FileUploadZone } from '@/components/shared/FileUploadZone';
 import { WelcomeGreeting } from '@/components/shared/WelcomeGreeting';
 import { SubmissionConfirmation } from './components/SubmissionConfirmation';
 import { ComparisonSummary } from './components/ComparisonSummary';
+import { ReconciliationSummary } from './components/ReconciliationSummary';
 import { ManualEntryForm } from './components/ManualEntryForm';
 import { ValidationErrorDisplay } from './components/ValidationErrorDisplay';
 import { PreSubmissionCheckpoint } from './components/PreSubmissionCheckpoint';
@@ -39,6 +40,7 @@ const STATUS_BADGE_VARIANT: Record<string, 'complete' | 'info' | 'review'> = {
 
 export function SubmissionsPage() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const user = useAuthStore((s) => s.user);
   const userRole = user?.role ?? ROLES.MDA_OFFICER;
   const isSuperAdmin = userRole === ROLES.SUPER_ADMIN;
@@ -93,6 +95,10 @@ export function SubmissionsPage() {
       onSuccess: (data) => {
         setPersistedErrors([]);
         setConfirmationData({ ...data, source: 'csv' });
+        // M2 fix: Invalidate checkpoint after submission reconciliation (Task 9.4)
+        if (userMdaId) {
+          queryClient.invalidateQueries({ queryKey: ['preSubmission', 'checkpoint', userMdaId] });
+        }
       },
       onError: (error) => {
         const errors =
@@ -111,6 +117,10 @@ export function SubmissionsPage() {
 
   const handleManualSuccess = (data: SubmissionUploadResponse) => {
     setConfirmationData({ ...data, source: 'manual' });
+    // M2 fix: Invalidate checkpoint after submission reconciliation (Task 9.4)
+    if (userMdaId) {
+      queryClient.invalidateQueries({ queryKey: ['preSubmission', 'checkpoint', userMdaId] });
+    }
   };
 
   const handleSubmitAnother = () => {
@@ -182,6 +192,11 @@ export function SubmissionsPage() {
             onSubmitAnother={handleSubmitAnother}
           />
           <ComparisonSummary submissionId={confirmationData.id} />
+          <ReconciliationSummary
+            submissionId={confirmationData.id}
+            userRole={userRole}
+            mdaId={userMdaId}
+          />
         </>
       ) : displayErrors.length > 0 ? (
         /* ERROR VIEW — persists during re-upload (no navigation flicker) */

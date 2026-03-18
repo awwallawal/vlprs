@@ -277,3 +277,69 @@ export async function sendTransferNotification(params: TransferNotificationParam
     logger.error({ err, to: params.to }, 'Failed to send transfer notification email');
   }
 }
+
+// ─── Reconciliation Alert (Story 11.3) ──────────────────────────────
+
+interface ReconciliationAlertParams {
+  mdaName: string;
+  referenceNumber: string;
+  period: string;
+  dateDiscrepancyCount: number;
+  unconfirmedCount: number;
+}
+
+/**
+ * Send reconciliation alert email to Department Admin.
+ * Fire-and-forget: logs errors, never throws.
+ * Non-punitive tone: "Items require your review" not "Errors detected".
+ */
+export async function sendReconciliationAlertEmail(params: ReconciliationAlertParams): Promise<void> {
+  const html = `<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; margin: 0; padding: 20px; background: #f5f5f5;">
+  <div style="max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 8px; padding: 40px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+    <h1 style="color: #1a1a1a; font-size: 24px; margin-bottom: 16px;">Reconciliation Summary — VLPRS</h1>
+    <p style="color: #333; font-size: 16px; line-height: 1.5;">Hello,</p>
+    <p style="color: #333; font-size: 16px; line-height: 1.5;">A monthly submission for <strong>${params.mdaName}</strong> has been processed and some items require your review.</p>
+    <div style="background: #f0f4f8; border-radius: 6px; padding: 20px; margin: 24px 0;">
+      <p style="margin: 0 0 8px 0;"><strong>MDA:</strong> ${params.mdaName}</p>
+      <p style="margin: 0 0 8px 0;"><strong>Submission Reference:</strong> ${params.referenceNumber}</p>
+      <p style="margin: 0 0 8px 0;"><strong>Period:</strong> ${params.period}</p>
+      ${params.dateDiscrepancyCount > 0 ? `<p style="margin: 0 0 8px 0;"><strong>Employment events with date differences:</strong> ${params.dateDiscrepancyCount}</p>` : ''}
+      ${params.unconfirmedCount > 0 ? `<p style="margin: 0;"><strong>Events pending submission confirmation:</strong> ${params.unconfirmedCount}</p>` : ''}
+    </div>
+    <p style="color: #333; font-size: 16px; line-height: 1.5;">Please log in to VLPRS to review the reconciliation summary.</p>
+    <p style="color: #999; font-size: 12px; margin-top: 32px;">This is an automated notification from VLPRS.</p>
+  </div>
+</body>
+</html>`;
+
+  if (!env.RESEND_API_KEY) {
+    logger.info(
+      { mdaName: params.mdaName, referenceNumber: params.referenceNumber, period: params.period, dateDiscrepancyCount: params.dateDiscrepancyCount, unconfirmedCount: params.unconfirmedCount },
+      '[DEV EMAIL] Reconciliation alert — %s, ref %s, period %s, %d date discrepancies, %d unconfirmed',
+      params.mdaName,
+      params.referenceNumber,
+      params.period,
+      params.dateDiscrepancyCount,
+      params.unconfirmedCount,
+    );
+    return;
+  }
+
+  try {
+    const resend = await getResendClient();
+    // NOTE: In production, resolve Dept Admin email from MDA users table.
+    // For now, sends to system admin address as a fallback.
+    await resend!.emails.send({
+      from: env.EMAIL_FROM,
+      to: env.EMAIL_FROM,
+      subject: `Reconciliation Review Required — ${params.mdaName} — VLPRS`,
+      html,
+    });
+    logger.info({ referenceNumber: params.referenceNumber, mdaName: params.mdaName }, 'Reconciliation alert email sent');
+  } catch (err) {
+    logger.error({ err, referenceNumber: params.referenceNumber }, 'Failed to send reconciliation alert email');
+  }
+}

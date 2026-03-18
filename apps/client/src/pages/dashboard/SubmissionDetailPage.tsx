@@ -5,6 +5,9 @@ import { parse, format } from 'date-fns';
 import { useSubmissionDetail } from '@/hooks/useSubmissionData';
 import { useCopyToClipboard } from '@/hooks/useCopyToClipboard';
 import { ComparisonSummary } from './components/ComparisonSummary';
+import { ReconciliationSummary } from './components/ReconciliationSummary';
+import { useAuthStore } from '@/stores/authStore';
+import { ROLES } from '@vlprs/shared';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -48,6 +51,8 @@ export function SubmissionDetailPage() {
   const navigate = useNavigate();
   const { data, isPending, isError, error, refetch } = useSubmissionDetail(submissionId ?? '');
   const { copied, copyToClipboard } = useCopyToClipboard();
+  const user = useAuthStore((s) => s.user);
+  const userRole = user?.role ?? ROLES.MDA_OFFICER;
 
   // Set document title
   useEffect(() => {
@@ -274,7 +279,14 @@ export function SubmissionDetailPage() {
         <ComparisonSummary submissionId={data.id} />
       )}
 
-      {/* Future: ReconciliationSummary will be wired here by Story 11.3 Task 9.3 */}
+      {/* Reconciliation Summary — Story 11.3 */}
+      {data.status === 'confirmed' && (
+        <ReconciliationSummary
+          submissionId={data.id}
+          userRole={userRole}
+          mdaId={data.mdaId}
+        />
+      )}
     </div>
   );
 }

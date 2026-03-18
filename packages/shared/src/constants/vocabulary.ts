@@ -191,6 +191,14 @@ export const VOCABULARY = {
   TRANSFER_SIDE_ALREADY_CONFIRMED: 'This side of the transfer has already been confirmed.',
   TRANSFER_WRONG_MDA: 'You can only confirm your own MDA side of the transfer.',
   TRANSFER_STAFF_NOT_FOUND: 'No active loan found for this staff member at another MDA.',
+  // Reconciliation (Story 11.3)
+  EVENT_MATCH_CONFIRMED: 'Event confirmed by submission.',
+  EVENT_DATE_DISCREPANCY: 'Dates differ — requires review.',
+  EVENT_UNCONFIRMED: 'Pending submission confirmation.',
+  EVENT_NEW_CSV: 'New event in submission.',
+  RECONCILIATION_COMPLETE: 'Reconciliation complete.',
+  RECONCILIATION_NO_EVENTS: 'No employment events to reconcile.',
+  DISCREPANCY_RESOLVED: 'Resolution recorded.',
 } as const;
 
 export const UI_COPY = {
@@ -303,4 +311,13 @@ export const UI_COPY = {
     SERVICE_EXTENSION: 'Service Extension',
     DISMISSAL: 'Dismissal',
   } as Record<string, string>,
+  // Reconciliation UI (Story 11.3)
+  RECONCILIATION_SUMMARY_HEADER: 'Event Reconciliation',
+  EVENT_RECONCILIATION_MATCHED: 'Event confirmed by submission',
+  EVENT_RECONCILIATION_DATE_DISCREPANCY: 'Dates differ \u2014 requires review',
+  EVENT_RECONCILIATION_UNCONFIRMED: 'Pending submission confirmation',
+  EVENT_RECONCILIATION_NEW: 'New event in submission',
+  RECONCILIATION_CONFIRM_DESPITE_VARIANCE: 'Confirm Despite Date Variance',
+  RECONCILIATION_REJECT_MATCH: 'Reject Match',
+  RECONCILIATION_RESOLUTION_RECORDED: 'Resolution recorded',
 } as const;

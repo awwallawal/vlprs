@@ -1,0 +1,2 @@
+ALTER TABLE "mda_submissions" ADD COLUMN "reconciliation_summary" jsonb;--> statement-breakpoint
+CREATE INDEX "idx_employment_events_staff_id_event_type" ON "employment_events" USING btree ("staff_id","event_type");
