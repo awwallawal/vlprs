@@ -3,7 +3,7 @@ import { db } from '../db/index';
 import { employmentEvents, transfers, loans, mdas, users } from '../db/schema';
 import { withMdaScope } from '../lib/mdaScope';
 import { AppError } from '../lib/appError';
-import { VOCABULARY, TERMINAL_STATUSES } from '@vlprs/shared';
+import { VOCABULARY } from '@vlprs/shared';
 import type { LoanStatus, EmploymentEventType, CreateEmploymentEventResponse, EmploymentEventListItem, TransferSearchResult } from '@vlprs/shared';
 import { transitionLoan, type TxHandle } from './loanTransitionService';
 import { sendEmploymentEventConfirmation, sendTransferNotification } from '../lib/email';

@@ -60,7 +60,7 @@ vi.mock('../db/index', () => ({
     select: () => chain(),
     insert: () => chain(),
     update: () => chain(),
-    transaction: vi.fn(async (fn: Function) => fn({
+    transaction: vi.fn(async (fn: (...args: unknown[]) => unknown) => fn({
       select: () => chain(),
       insert: () => chain(),
       update: () => chain(),

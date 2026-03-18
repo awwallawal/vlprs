@@ -11,7 +11,6 @@ const mockStaffLookupData = {
   loanStatus: 'ACTIVE',
 };
 
-const mockCreateEvent = vi.fn();
 const mockMutateAsync = vi.fn();
 
 vi.mock('@/hooks/useEmploymentEvent', () => ({
