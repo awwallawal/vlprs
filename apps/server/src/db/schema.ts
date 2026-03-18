@@ -569,6 +569,7 @@ export const mdaSubmissions = pgTable(
     validationErrors: jsonb('validation_errors'),
     alignedCount: integer('aligned_count').notNull().default(0),
     varianceCount: integer('variance_count').notNull().default(0),
+    reconciliationSummary: jsonb('reconciliation_summary'), // Story 11.3: { matched, dateDiscrepancy, unconfirmed, newCsvEvent }
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
   },
@@ -642,6 +643,7 @@ export const employmentEvents = pgTable(
     index('idx_employment_events_mda_id').on(table.mdaId),
     index('idx_employment_events_reconciliation_status').on(table.reconciliationStatus),
     index('idx_employment_events_created_at').on(table.createdAt),
+    index('idx_employment_events_staff_id_event_type').on(table.staffId, table.eventType), // Story 11.3: composite index for reconciliation matching
   ],
 );
 

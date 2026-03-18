@@ -14,6 +14,7 @@ export { submissionRowSchema, submissionUploadQuerySchema, submissionListQuerySc
 export { preSubmissionCheckpointSchema, retirementItemSchema, zeroDeductionItemSchema, pendingEventItemSchema, checkpointConfirmationSchema } from './validators/preSubmissionSchemas.js';
 export { dashboardMetricsSchema, attentionItemSchema, attentionItemsResponseSchema, drillDownMetricSchema, breakdownQuerySchema, complianceResponseSchema, schemeFundBodySchema, type DashboardMetricsResponse, type AttentionItemsResponse, type BreakdownQuery, type ComplianceResponse, type SchemeFundBody } from './validators/dashboardSchemas.js';
 export { createEmploymentEventSchema, staffLookupQuerySchema, transferSearchQuerySchema, confirmTransferSchema, claimTransferSchema, employmentEventListQuerySchema } from './validators/employmentEventSchemas.js';
+export { reconciliationCountsSchema, reconciliationDetailSchema, reconciliationSummarySchema, resolveDiscrepancySchema } from './validators/reconciliationSchemas.js';
 
 // Types
 export type { ApiResponse, ApiError, ApiResult } from './types/api.js';
@@ -27,6 +28,7 @@ export type { SubmissionRecord, SubmissionRow, SubmissionUploadResponse, Submiss
 export type { PreSubmissionCheckpoint, RetirementItem, ZeroDeductionItem, PendingEventItem } from './types/preSubmission.js';
 export { EMPLOYMENT_EVENT_TYPES, RECONCILIATION_STATUSES, TRANSFER_STATUSES, REFERENCE_REQUIRED_TYPES, FUTURE_DATE_ALLOWED_TYPES } from './types/employmentEvent.js';
 export type { EmploymentEventType, ReconciliationStatus, TransferStatus, EmploymentEvent, TransferRecord, StaffLookupResult, TransferSearchResult, CreateEmploymentEventRequest, CreateEmploymentEventResponse, ConfirmTransferRequest, ConfirmTransferResponse, ClaimTransferRequest, EmploymentEventListItem } from './types/employmentEvent.js';
+export type { ReconciliationOutcome, ReconciliationDetail, ReconciliationCounts, ReconciliationSummary, EventTypeMapping, ResolveDiscrepancyRequest } from './types/reconciliation.js';
 export type { ExceptionPriority, ExceptionCategory, ExceptionItem } from './types/exception.js';
 export type { ObservationType, ObservationStatus, ObservationContext, SourceReference, Observation, ObservationListItem, ObservationCounts, PaginatedObservations, ExceptionRecord } from './types/observation.js';
 export type { LedgerEntryType, LedgerEntry } from './types/ledger.js';
@@ -41,3 +43,4 @@ export { VOCABULARY, UI_COPY } from './constants/vocabulary.js';
 export { PERMISSION_MATRIX, hasPermission } from './constants/permissions.js';
 export { LOAN_TIERS, getTierForGradeLevel, type LoanTierConfig } from './constants/tiers.js';
 export { VALID_TRANSITIONS, TERMINAL_STATUSES, isValidTransition } from './constants/loanTransitions.js';
+export { EVENT_FLAG_TO_EMPLOYMENT_EVENT_MAP } from './constants/eventTypeMapping.js';

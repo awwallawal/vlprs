@@ -21,6 +21,7 @@ import dashboardRoutes from './routes/dashboardRoutes';
 import submissionRoutes from './routes/submissionRoutes';
 import preSubmissionRoutes from './routes/preSubmissionRoutes';
 import employmentEventRoutes from './routes/employmentEventRoutes';
+import reconciliationRoutes from './routes/reconciliationRoutes';
 import { AppError } from './lib/appError';
 import { VOCABULARY } from '@vlprs/shared';
 import { requestLogger } from './middleware/requestLogger';
@@ -69,6 +70,7 @@ app.use('/api', migrationRoutes);
 app.use('/api', submissionRoutes);
 app.use('/api', preSubmissionRoutes);
 app.use('/api', employmentEventRoutes);
+app.use('/api', reconciliationRoutes);
 
 // 404 handler
 app.use((_req: Request, res: Response) => {

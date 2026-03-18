@@ -155,6 +155,13 @@
       "when": 1773823455062,
       "tag": "0021_superb_puff_adder",
       "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1773848751173,
+      "tag": "0022_next_phalanx",
+      "breakpoints": true
     }
   ]
 }
