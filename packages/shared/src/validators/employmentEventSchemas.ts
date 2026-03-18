@@ -3,7 +3,7 @@ import {
   EMPLOYMENT_EVENT_TYPES,
   REFERENCE_REQUIRED_TYPES,
   FUTURE_DATE_ALLOWED_TYPES,
-} from '../types/employmentEvent';
+} from '../types/employmentEvent.js';
 
 const ISO_DATE_REGEX = /^\d{4}-\d{2}-\d{2}$/;
 

@@ -149,6 +149,35 @@ describe('submissionRowSchema', () => {
     );
     expect(result.success).toBe(true);
   });
+
+  // Story 11.2b — extended event flag values
+  it('accepts new event flag DISMISSAL with Event Date (Story 11.2b)', () => {
+    const result = submissionRowSchema.safeParse(
+      validRow({ eventFlag: 'DISMISSAL', eventDate: '2026-03-15' }),
+    );
+    expect(result.success).toBe(true);
+  });
+
+  it('accepts new event flag ABSCONDED with Event Date (Story 11.2b)', () => {
+    const result = submissionRowSchema.safeParse(
+      validRow({ eventFlag: 'ABSCONDED', eventDate: '2026-03-10' }),
+    );
+    expect(result.success).toBe(true);
+  });
+
+  it('accepts new event flag SERVICE_EXTENSION with Event Date (Story 11.2b)', () => {
+    const result = submissionRowSchema.safeParse(
+      validRow({ eventFlag: 'SERVICE_EXTENSION', eventDate: '2026-04-01' }),
+    );
+    expect(result.success).toBe(true);
+  });
+
+  it('rejects deprecated TERMINATION event flag (Story 11.2b)', () => {
+    const result = submissionRowSchema.safeParse(
+      validRow({ eventFlag: 'TERMINATION', eventDate: '2026-03-15' }),
+    );
+    expect(result.success).toBe(false);
+  });
 });
 
 describe('submissionListQuerySchema', () => {
