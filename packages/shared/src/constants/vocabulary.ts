@@ -199,6 +199,17 @@ export const VOCABULARY = {
   RECONCILIATION_COMPLETE: 'Reconciliation complete.',
   RECONCILIATION_NO_EVENTS: 'No employment events to reconcile.',
   DISCREPANCY_RESOLVED: 'Resolution recorded.',
+  // Historical Upload (Story 11.4)
+  HISTORICAL_UPLOAD_CONFIRMED: 'Historical records uploaded and cross-validated successfully.',
+  HISTORICAL_PERIOD_FUTURE: "Row {row}: Month {month} is a future period \u2014 historical uploads must reference past months.",
+  HISTORICAL_PERIOD_IS_CURRENT: "Row {row}: Month {month} is the current period \u2014 historical uploads must reference past months.",
+  HISTORICAL_PERIOD_CURRENT_EXISTS: "Row {row}: Month {month} already has a current-period submission.",
+  HISTORICAL_BASELINE_NOT_FOUND: 'No migration baseline found for your MDA \u2014 cross-validation will be available once migration data is imported.',
+  HISTORICAL_DUPLICATE_PERIOD: "Row {row}: Month {month} does not match the upload period {period}.",
+  HISTORICAL_RECONCILIATION_COMPLETE: 'Historical reconciliation complete.',
+  HISTORICAL_ROW_LIMIT_EXCEEDED: 'Historical uploads are limited to 100 rows per file. Please split your data into smaller files.',
+  HISTORICAL_DISCREPANCY_FLAGGED: 'Discrepancy flagged for review.',
+  HISTORICAL_NO_BASELINE: 'Your historical data has been stored. Cross-validation will be available once migration data is imported.',
 } as const;
 
 export const UI_COPY = {
@@ -320,4 +331,13 @@ export const UI_COPY = {
   RECONCILIATION_CONFIRM_DESPITE_VARIANCE: 'Confirm Despite Date Variance',
   RECONCILIATION_REJECT_MATCH: 'Reject Match',
   RECONCILIATION_RESOLUTION_RECORDED: 'Resolution recorded',
+  // Historical Upload UI (Story 11.4)
+  HISTORICAL_UPLOAD_HEADER: 'Upload Historical Deduction Records',
+  HISTORICAL_RECONCILIATION_HEADER: 'Historical Reconciliation \u2014 Compare Your Records',
+  HISTORICAL_MATCH_RATE: '{rate}% match rate',
+  HISTORICAL_ALL_CLEAR: 'All historical records align with migration baseline \u2014 no items requiring attention',
+  HISTORICAL_VARIANCE_LABEL: 'Variance Observed',
+  HISTORICAL_MATCHED_LABEL: 'Matched',
+  HISTORICAL_FLAG_FOR_REVIEW: 'Flag for Review',
+  HISTORICAL_NO_BASELINE_MESSAGE: 'No migration baseline available for your MDA. Your historical data has been stored and will be cross-validated when migration data is imported.',
 } as const;

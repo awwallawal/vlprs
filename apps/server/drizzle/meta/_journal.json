@@ -162,6 +162,13 @@
       "when": 1773848751173,
       "tag": "0022_next_phalanx",
       "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1773862694605,
+      "tag": "0023_typical_the_initiative",
+      "breakpoints": true
     }
   ]
 }

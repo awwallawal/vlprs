@@ -6,7 +6,7 @@ import { AppError } from '../lib/appError';
 import { withMdaScope } from '../lib/mdaScope';
 import type { ComparisonSummary, ComparisonRow, ComparisonCategory } from '@vlprs/shared';
 
-const MINOR_VARIANCE_THRESHOLD = new Decimal('500');
+export const MINOR_VARIANCE_THRESHOLD = new Decimal('500');
 
 /**
  * Format a numeric string as Naira display for explanation text.

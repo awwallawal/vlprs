@@ -343,3 +343,116 @@ export async function sendReconciliationAlertEmail(params: ReconciliationAlertPa
     logger.error({ err, referenceNumber: params.referenceNumber }, 'Failed to send reconciliation alert email');
   }
 }
+
+// ─── Historical Upload Confirmation (Story 11.4) ─────────────────────
+
+interface HistoricalUploadConfirmationParams {
+  referenceNumber: string;
+  period: string;
+  recordCount: number;
+  matchRate: number;
+}
+
+export async function sendHistoricalUploadConfirmation(params: HistoricalUploadConfirmationParams): Promise<void> {
+  const html = `<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; margin: 0; padding: 20px; background: #f5f5f5;">
+  <div style="max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 8px; padding: 40px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+    <h1 style="color: #1a1a1a; font-size: 24px; margin-bottom: 16px;">Historical Upload Confirmed — VLPRS</h1>
+    <p style="color: #333; font-size: 16px; line-height: 1.5;">Your historical deduction records have been uploaded and cross-validated.</p>
+    <div style="background: #f0f4f8; border-radius: 6px; padding: 20px; margin: 24px 0;">
+      <p style="margin: 0 0 8px 0;"><strong>Reference:</strong> ${params.referenceNumber}</p>
+      <p style="margin: 0 0 8px 0;"><strong>Period:</strong> ${params.period}</p>
+      <p style="margin: 0 0 8px 0;"><strong>Records:</strong> ${params.recordCount}</p>
+      <p style="margin: 0;"><strong>Match Rate:</strong> ${params.matchRate}%</p>
+    </div>
+    <p style="color: #333; font-size: 16px; line-height: 1.5;">Log in to VLPRS to review the reconciliation details.</p>
+    <p style="color: #999; font-size: 12px; margin-top: 32px;">This is an automated notification from VLPRS.</p>
+  </div>
+</body>
+</html>`;
+
+  if (!env.RESEND_API_KEY) {
+    logger.info(
+      { referenceNumber: params.referenceNumber, period: params.period, recordCount: params.recordCount, matchRate: params.matchRate },
+      '[DEV EMAIL] Historical upload confirmation — ref %s, period %s, %d records, %s%% match rate',
+      params.referenceNumber,
+      params.period,
+      params.recordCount,
+      params.matchRate,
+    );
+    return;
+  }
+
+  try {
+    const resend = await getResendClient();
+    await resend!.emails.send({
+      from: env.EMAIL_FROM,
+      to: env.EMAIL_FROM,
+      subject: `Historical Upload Confirmed — ${params.referenceNumber} — VLPRS`,
+      html,
+    });
+    logger.info({ referenceNumber: params.referenceNumber }, 'Historical upload confirmation email sent');
+  } catch (err) {
+    logger.error({ err, referenceNumber: params.referenceNumber }, 'Failed to send historical upload confirmation email');
+  }
+}
+
+// ─── Historical Variance Alert (Story 11.4) ──────────────────────────
+
+interface HistoricalVarianceAlertParams {
+  mdaName: string;
+  referenceNumber: string;
+  period: string;
+  varianceCount: number;
+  largestVarianceAmount: string;
+}
+
+export async function sendHistoricalVarianceAlert(params: HistoricalVarianceAlertParams): Promise<void> {
+  const html = `<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; margin: 0; padding: 20px; background: #f5f5f5;">
+  <div style="max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 8px; padding: 40px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+    <h1 style="color: #1a1a1a; font-size: 24px; margin-bottom: 16px;">Historical Upload — Review Required — VLPRS</h1>
+    <p style="color: #333; font-size: 16px; line-height: 1.5;">A historical upload for <strong>${params.mdaName}</strong> has variances that require your review.</p>
+    <div style="background: #f0f4f8; border-radius: 6px; padding: 20px; margin: 24px 0;">
+      <p style="margin: 0 0 8px 0;"><strong>MDA:</strong> ${params.mdaName}</p>
+      <p style="margin: 0 0 8px 0;"><strong>Reference:</strong> ${params.referenceNumber}</p>
+      <p style="margin: 0 0 8px 0;"><strong>Period:</strong> ${params.period}</p>
+      <p style="margin: 0 0 8px 0;"><strong>Variances observed:</strong> ${params.varianceCount}</p>
+      <p style="margin: 0;"><strong>Largest variance:</strong> \u20A6${Number(params.largestVarianceAmount).toLocaleString('en-NG', { minimumFractionDigits: 2 })}</p>
+    </div>
+    <p style="color: #333; font-size: 16px; line-height: 1.5;">Please log in to VLPRS to review the reconciliation details.</p>
+    <p style="color: #999; font-size: 12px; margin-top: 32px;">This is an automated notification from VLPRS.</p>
+  </div>
+</body>
+</html>`;
+
+  if (!env.RESEND_API_KEY) {
+    logger.info(
+      { mdaName: params.mdaName, referenceNumber: params.referenceNumber, period: params.period, varianceCount: params.varianceCount, largestVarianceAmount: params.largestVarianceAmount },
+      '[DEV EMAIL] Historical variance alert — %s, ref %s, period %s, %d variances, largest %s',
+      params.mdaName,
+      params.referenceNumber,
+      params.period,
+      params.varianceCount,
+      params.largestVarianceAmount,
+    );
+    return;
+  }
+
+  try {
+    const resend = await getResendClient();
+    await resend!.emails.send({
+      from: env.EMAIL_FROM,
+      to: env.EMAIL_FROM,
+      subject: `Historical Upload Review — ${params.mdaName} — VLPRS`,
+      html,
+    });
+    logger.info({ referenceNumber: params.referenceNumber, mdaName: params.mdaName }, 'Historical variance alert email sent');
+  } catch (err) {
+    logger.error({ err, referenceNumber: params.referenceNumber }, 'Failed to send historical variance alert email');
+  }
+}

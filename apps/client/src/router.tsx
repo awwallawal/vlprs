@@ -247,6 +247,13 @@ export const router = createBrowserRouter([
               })),
           },
           {
+            path: 'historical-upload',
+            lazy: () =>
+              import('@/pages/dashboard/HistoricalUploadPage').then((m) => ({
+                Component: m.HistoricalUploadPage,
+              })),
+          },
+          {
             path: 'employment-events',
             lazy: () =>
               import('@/pages/dashboard/EmploymentEventsPage').then((m) => ({
