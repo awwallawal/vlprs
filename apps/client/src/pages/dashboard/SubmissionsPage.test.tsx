@@ -280,6 +280,13 @@ describe('SubmissionsPage', () => {
     });
   });
 
+  // Story 5.6 — Navigation to detail page (Task 6.1)
+  it('submission history rows link to detail page', () => {
+    renderPage();
+    const link = screen.getByRole('link', { name: 'MOH-2026-02-0001' });
+    expect(link).toHaveAttribute('href', '/dashboard/submissions/sub-001');
+  });
+
   // Upload flow state machine tests
   describe('upload flow state machine', () => {
     it('shows validation error display with re-upload zone on upload error', () => {

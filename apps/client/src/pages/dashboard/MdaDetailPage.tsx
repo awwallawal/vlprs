@@ -1,4 +1,4 @@
-import { useParams, useNavigate } from 'react-router';
+import { useParams, useNavigate, Link } from 'react-router';
 import { ArrowLeft } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { formatDate, formatCount } from '@/lib/formatters';
@@ -187,9 +187,26 @@ export function MdaDetailPage() {
                 : submissions.data?.items?.map((record) => {
                     const badge = SUBMISSION_STATUS_MAP[record.status];
                     return (
-                      <tr key={record.id} className="border-b">
+                      <tr
+                        key={record.id}
+                        className="border-b hover:bg-muted/50 cursor-pointer"
+                        role="link"
+                        tabIndex={0}
+                        onClick={() => navigate(`/dashboard/submissions/${record.id}`)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            navigate(`/dashboard/submissions/${record.id}`);
+                          }
+                        }}
+                      >
                         <td className="px-4 py-3 font-medium text-text-primary font-mono">
-                          {record.referenceNumber}
+                          <Link
+                            to={`/dashboard/submissions/${record.id}`}
+                            className="hover:underline"
+                          >
+                            {record.referenceNumber}
+                          </Link>
                         </td>
                         <td className="px-4 py-3 text-text-secondary">
                           {formatDate(record.submissionDate)}

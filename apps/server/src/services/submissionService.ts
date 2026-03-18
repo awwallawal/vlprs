@@ -631,13 +631,22 @@ export async function getSubmissionById(
     .orderBy(submissionRows.rowNumber);
 
   const sub = submission[0];
+
+  // Resolve MDA name for admin views (AC 2)
+  const mda = await db.select({ name: mdas.name })
+    .from(mdas)
+    .where(eq(mdas.id, sub.mdaId))
+    .limit(1);
+
   return {
     id: sub.id,
     mdaId: sub.mdaId,
+    mdaName: mda[0]?.name ?? 'Unknown MDA',
     period: sub.period,
     referenceNumber: sub.referenceNumber,
     status: sub.status,
     recordCount: sub.recordCount,
+    source: sub.source as 'csv' | 'manual',
     filename: sub.filename,
     fileSizeBytes: sub.fileSizeBytes,
     createdAt: sub.createdAt.toISOString(),
