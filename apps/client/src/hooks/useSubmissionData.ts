@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getAuthHeaders } from '@/lib/fetchHelpers';
 import { apiClient } from '@/lib/apiClient';
-import type { SubmissionRecord, SubmissionRow, SubmissionUploadResponse, SubmissionComparisonResponse } from '@vlprs/shared';
+import type { SubmissionRecord, SubmissionRow, SubmissionUploadResponse, SubmissionComparisonResponse, SubmissionDetail } from '@vlprs/shared';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
 
@@ -77,6 +77,19 @@ export function useSubmissionHistory(mdaId?: string, page = 1, pageSize = 20) {
     queryKey: ['submissions', mdaId ?? 'all', { page, pageSize }],
     queryFn: () => apiClient(`/submissions?${params.toString()}`),
     staleTime: 30_000,
+  });
+}
+
+/**
+ * Fetches full submission detail (metadata + rows).
+ * @target GET /api/submissions/:id
+ */
+export function useSubmissionDetail(submissionId: string) {
+  return useQuery<SubmissionDetail>({
+    queryKey: ['submissions', submissionId, 'detail'],
+    queryFn: () => apiClient<SubmissionDetail>(`/submissions/${submissionId}`),
+    enabled: !!submissionId,
+    staleTime: 60_000,
   });
 }
 

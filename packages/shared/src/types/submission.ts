@@ -47,10 +47,12 @@ export interface SubmissionUploadResponse {
 export interface SubmissionDetail {
   id: string;
   mdaId: string;
+  mdaName: string;
   period: string;
   referenceNumber: string;
   status: SubmissionRecordStatus;
   recordCount: number;
+  source: 'csv' | 'manual';
   filename: string | null;
   fileSizeBytes: number | null;
   createdAt: string;

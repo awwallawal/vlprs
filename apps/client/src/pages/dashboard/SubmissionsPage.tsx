@@ -1,4 +1,5 @@
 import { useState, useRef } from 'react';
+import { Link, useNavigate } from 'react-router';
 import { Upload, Download } from 'lucide-react';
 import { format } from 'date-fns';
 import { useQuery } from '@tanstack/react-query';
@@ -37,6 +38,7 @@ const STATUS_BADGE_VARIANT: Record<string, 'complete' | 'info' | 'review'> = {
 };
 
 export function SubmissionsPage() {
+  const navigate = useNavigate();
   const user = useAuthStore((s) => s.user);
   const userRole = user?.role ?? ROLES.MDA_OFFICER;
   const isSuperAdmin = userRole === ROLES.SUPER_ADMIN;
@@ -344,9 +346,26 @@ export function SubmissionsPage() {
               </thead>
               <tbody>
                 {submissions.map((sub) => (
-                  <tr key={sub.id} className="border-b last:border-b-0 hover:bg-surface">
+                  <tr
+                    key={sub.id}
+                    className="border-b last:border-b-0 hover:bg-muted/50 cursor-pointer"
+                    role="link"
+                    tabIndex={0}
+                    onClick={() => navigate(`/dashboard/submissions/${sub.id}`)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        navigate(`/dashboard/submissions/${sub.id}`);
+                      }
+                    }}
+                  >
                     <td className="px-4 py-3 font-mono text-text-primary">
-                      {sub.referenceNumber}
+                      <Link
+                        to={`/dashboard/submissions/${sub.id}`}
+                        className="hover:underline"
+                      >
+                        {sub.referenceNumber}
+                      </Link>
                     </td>
                     <td className="px-4 py-3 text-text-secondary">
                       {formatDate(sub.submissionDate)}

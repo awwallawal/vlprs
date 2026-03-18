@@ -233,6 +233,13 @@ export const router = createBrowserRouter([
               })),
           },
           {
+            path: 'submissions/:submissionId',
+            lazy: () =>
+              import('@/pages/dashboard/SubmissionDetailPage').then((m) => ({
+                Component: m.SubmissionDetailPage,
+              })),
+          },
+          {
             path: 'submissions',
             lazy: () =>
               import('@/pages/dashboard/SubmissionsPage').then((m) => ({
