@@ -24,7 +24,24 @@ function createQueryClient() {
   });
 }
 
-const baseData = {
+const baseData: {
+  matchedCount: number;
+  varianceCount: number;
+  largestVarianceAmount: string;
+  matchRate: number;
+  noBaseline: boolean;
+  flaggedRows: never[];
+  details: Array<{
+    staffId: string;
+    staffName: string;
+    declaredAmount: string;
+    baselineAmount: string;
+    variance: string;
+    matchStatus: 'matched' | 'variance';
+    flagged: boolean;
+    flagReason: string | null;
+  }>;
+} = {
   matchedCount: 3,
   varianceCount: 2,
   largestVarianceAmount: '1500.00',
