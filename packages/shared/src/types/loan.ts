@@ -1,7 +1,7 @@
 import type { BalanceResult } from './balance';
 import type { RepaymentSchedule } from './computation';
 
-export type LoanStatus = 'APPLIED' | 'APPROVED' | 'ACTIVE' | 'COMPLETED' | 'TRANSFERRED' | 'WRITTEN_OFF';
+export type LoanStatus = 'APPLIED' | 'APPROVED' | 'ACTIVE' | 'COMPLETED' | 'TRANSFERRED' | 'WRITTEN_OFF' | 'RETIRED' | 'DECEASED' | 'SUSPENDED' | 'LWOP' | 'TRANSFER_PENDING';
 
 export interface Loan {
   id: string;

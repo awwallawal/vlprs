@@ -76,6 +76,24 @@ function passwordResetEmailHtml(params: PasswordResetEmailParams): string {
 </html>`;
 }
 
+interface EmploymentEventConfirmationParams {
+  to: string;
+  firstName: string;
+  eventType: string;
+  staffName: string;
+  staffId: string;
+  effectiveDate: string;
+  referenceNumber?: string;
+}
+
+interface TransferNotificationParams {
+  to: string;
+  firstName: string;
+  staffName: string;
+  staffId: string;
+  direction: 'incoming_claim' | 'outgoing_confirm';
+}
+
 // ─── Resend Client (lazy singleton) ─────────────────────────────────
 
 let resendClient: { emails: { send: (opts: { from: string; to: string; subject: string; html: string }) => Promise<unknown> } } | null = null;
@@ -157,5 +175,105 @@ export async function sendPasswordResetEmail(params: PasswordResetEmailParams): 
     logger.info({ to: params.to }, 'Password reset email sent');
   } catch (err) {
     logger.error({ err, to: params.to }, 'Failed to send password reset email');
+  }
+}
+
+/**
+ * Send employment event confirmation email.
+ * Fire-and-forget: logs errors, never throws.
+ */
+export async function sendEmploymentEventConfirmation(params: EmploymentEventConfirmationParams): Promise<void> {
+  const html = `<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; margin: 0; padding: 20px; background: #f5f5f5;">
+  <div style="max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 8px; padding: 40px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+    <h1 style="color: #1a1a1a; font-size: 24px; margin-bottom: 16px;">Employment Event Recorded</h1>
+    <p style="color: #333; font-size: 16px; line-height: 1.5;">Hello ${params.firstName},</p>
+    <p style="color: #333; font-size: 16px; line-height: 1.5;">An employment event has been recorded successfully.</p>
+    <div style="background: #f0f4f8; border-radius: 6px; padding: 20px; margin: 24px 0;">
+      <p style="margin: 0 0 8px 0;"><strong>Event Type:</strong> ${params.eventType}</p>
+      <p style="margin: 0 0 8px 0;"><strong>Staff Name:</strong> ${params.staffName}</p>
+      <p style="margin: 0 0 8px 0;"><strong>Staff ID:</strong> ${params.staffId}</p>
+      <p style="margin: 0 0 8px 0;"><strong>Effective Date:</strong> ${params.effectiveDate}</p>
+      ${params.referenceNumber ? `<p style="margin: 0;"><strong>Reference:</strong> ${params.referenceNumber}</p>` : ''}
+    </div>
+    <p style="color: #999; font-size: 12px; margin-top: 32px;">This is an automated confirmation from VLPRS.</p>
+  </div>
+</body>
+</html>`;
+
+  if (!env.RESEND_API_KEY) {
+    logger.info(
+      { to: params.to, eventType: params.eventType, staffId: params.staffId },
+      '[DEV EMAIL] Employment event confirmation — %s for %s',
+      params.eventType,
+      params.staffName,
+    );
+    return;
+  }
+
+  try {
+    const resend = await getResendClient();
+    await resend!.emails.send({
+      from: env.EMAIL_FROM,
+      to: params.to,
+      subject: 'Employment Event Recorded — VLPRS',
+      html,
+    });
+    logger.info({ to: params.to }, 'Employment event confirmation email sent');
+  } catch (err) {
+    logger.error({ err, to: params.to }, 'Failed to send employment event confirmation email');
+  }
+}
+
+/**
+ * Send transfer notification email.
+ * Fire-and-forget: logs errors, never throws.
+ */
+export async function sendTransferNotification(params: TransferNotificationParams): Promise<void> {
+  const directionText = params.direction === 'incoming_claim'
+    ? 'A transfer claim has been filed for a staff member at your MDA.'
+    : 'A transfer has been confirmed for a staff member.';
+
+  const html = `<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; margin: 0; padding: 20px; background: #f5f5f5;">
+  <div style="max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 8px; padding: 40px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+    <h1 style="color: #1a1a1a; font-size: 24px; margin-bottom: 16px;">Transfer Notification — VLPRS</h1>
+    <p style="color: #333; font-size: 16px; line-height: 1.5;">Hello ${params.firstName},</p>
+    <p style="color: #333; font-size: 16px; line-height: 1.5;">${directionText}</p>
+    <div style="background: #f0f4f8; border-radius: 6px; padding: 20px; margin: 24px 0;">
+      <p style="margin: 0 0 8px 0;"><strong>Staff Name:</strong> ${params.staffName}</p>
+      <p style="margin: 0;"><strong>Staff ID:</strong> ${params.staffId}</p>
+    </div>
+    <p style="color: #333; font-size: 16px; line-height: 1.5;">Please log in to VLPRS to review and take action.</p>
+    <p style="color: #999; font-size: 12px; margin-top: 32px;">This is an automated notification from VLPRS.</p>
+  </div>
+</body>
+</html>`;
+
+  if (!env.RESEND_API_KEY) {
+    logger.info(
+      { to: params.to, staffId: params.staffId, direction: params.direction },
+      '[DEV EMAIL] Transfer notification — %s for %s',
+      params.direction,
+      params.staffName,
+    );
+    return;
+  }
+
+  try {
+    const resend = await getResendClient();
+    await resend!.emails.send({
+      from: env.EMAIL_FROM,
+      to: params.to,
+      subject: 'Transfer Notification — VLPRS',
+      html,
+    });
+    logger.info({ to: params.to }, 'Transfer notification email sent');
+  } catch (err) {
+    logger.error({ err, to: params.to }, 'Failed to send transfer notification email');
   }
 }

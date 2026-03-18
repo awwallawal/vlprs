@@ -8,14 +8,17 @@ import type { LoanStatus, LoanStateTransition } from '@vlprs/shared';
 
 // ─── transitionLoan ────────────────────────────────────────────────
 
-export async function transitionLoan(
+/** Transaction handle type — for passing existing transactions to transitionLoan. */
+export type TxHandle = Parameters<Parameters<typeof db.transaction>[0]>[0];
+
+async function executeTransition(
+  tx: TxHandle,
   userId: string,
   loanId: string,
   toStatus: LoanStatus,
   reason: string,
   mdaScope: string | null | undefined,
 ): Promise<LoanStateTransition> {
-  return db.transaction(async (tx) => {
     // 1. Read current loan (with row lock) and acting user name concurrently
     const conditions = [eq(loans.id, loanId)];
     const scopeCondition = withMdaScope(loans.mdaId, mdaScope);
@@ -77,7 +80,25 @@ export async function transitionLoan(
       reason: record.reason,
       createdAt: record.createdAt.toISOString(),
     };
-  });
+}
+
+/**
+ * Transition a loan to a new status with row-level locking and audit trail.
+ * When existingTx is provided, participates in the caller's transaction
+ * instead of opening its own — prevents deadlocks and ensures atomicity.
+ */
+export async function transitionLoan(
+  userId: string,
+  loanId: string,
+  toStatus: LoanStatus,
+  reason: string,
+  mdaScope: string | null | undefined,
+  existingTx?: TxHandle,
+): Promise<LoanStateTransition> {
+  if (existingTx) {
+    return executeTransition(existingTx, userId, loanId, toStatus, reason, mdaScope);
+  }
+  return db.transaction((tx) => executeTransition(tx, userId, loanId, toStatus, reason, mdaScope));
 }
 
 // ─── getTransitionHistory ──────────────────────────────────────────

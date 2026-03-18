@@ -8,6 +8,7 @@ import {
   Clock,
   Database,
   Users,
+  UserCog,
 } from 'lucide-react';
 import type { ComponentType } from 'react';
 
@@ -23,6 +24,7 @@ export const NAV_ITEMS: NavItem[] = [
   { label: 'Operations', path: '/dashboard/operations', icon: Settings, roles: [ROLES.DEPT_ADMIN] },
   { label: 'Submit', path: '/dashboard/submissions', icon: Upload, roles: [ROLES.MDA_OFFICER] },
   { label: 'History', path: '/dashboard/submissions', icon: Clock, roles: [ROLES.MDA_OFFICER] },
+  { label: 'Employment Events', path: '/dashboard/employment-events', icon: UserCog, roles: [ROLES.SUPER_ADMIN, ROLES.DEPT_ADMIN, ROLES.MDA_OFFICER] },
   { label: 'Migration', path: '/dashboard/migration', icon: Database, roles: [ROLES.DEPT_ADMIN] },
   { label: 'Reports', path: '/dashboard/reports', icon: FileText, roles: [ROLES.SUPER_ADMIN, ROLES.DEPT_ADMIN] },
   { label: 'Exceptions', path: '/dashboard/exceptions', icon: AlertCircle, roles: [ROLES.SUPER_ADMIN, ROLES.DEPT_ADMIN] },

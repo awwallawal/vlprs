@@ -84,6 +84,24 @@ export const matchStatusEnum = pgEnum('match_status', [
 // ─── Loan Status Enum ───────────────────────────────────────────────
 export const loanStatusEnum = pgEnum('loan_status', [
   'APPLIED', 'APPROVED', 'ACTIVE', 'COMPLETED', 'TRANSFERRED', 'WRITTEN_OFF',
+  'RETIRED', 'DECEASED', 'SUSPENDED', 'LWOP', 'TRANSFER_PENDING',
+]);
+
+// ─── Employment Event Type Enum (Story 11.2) ────────────────────────
+export const employmentEventTypeEnum = pgEnum('employment_event_type', [
+  'RETIRED', 'DECEASED', 'SUSPENDED', 'ABSCONDED', 'TRANSFERRED_OUT',
+  'TRANSFERRED_IN', 'DISMISSED', 'LWOP_START', 'LWOP_END', 'REINSTATED',
+  'SERVICE_EXTENSION',
+]);
+
+// ─── Reconciliation Status Enum (Story 11.2) ────────────────────────
+export const reconciliationStatusEnum = pgEnum('reconciliation_status', [
+  'UNCONFIRMED', 'MATCHED', 'DATE_DISCREPANCY',
+]);
+
+// ─── Transfer Status Enum (Story 11.2) ──────────────────────────────
+export const transferStatusEnum = pgEnum('transfer_status', [
+  'PENDING', 'COMPLETED',
 ]);
 
 // ─── Loans ──────────────────────────────────────────────────────────
@@ -596,6 +614,56 @@ export const schemeConfig = pgTable(
     updatedBy: uuid('updated_by').references(() => users.id),
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
   },
+);
+
+// ─── Employment Events (Story 11.2) ─────────────────────────────────
+export const employmentEvents = pgTable(
+  'employment_events',
+  {
+    id: uuid('id').primaryKey().$defaultFn(generateUuidv7),
+    staffId: varchar('staff_id', { length: 50 }).notNull(),
+    loanId: uuid('loan_id').references(() => loans.id),
+    mdaId: uuid('mda_id').notNull().references(() => mdas.id),
+    eventType: employmentEventTypeEnum('event_type').notNull(),
+    effectiveDate: date('effective_date', { mode: 'date' }).notNull(),
+    referenceNumber: varchar('reference_number', { length: 255 }),
+    notes: text('notes'),
+    newRetirementDate: date('new_retirement_date', { mode: 'date' }),
+    reconciliationStatus: reconciliationStatusEnum('reconciliation_status').notNull().default('UNCONFIRMED'),
+    filedBy: uuid('filed_by').notNull().references(() => users.id),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    index('idx_employment_events_staff_id').on(table.staffId),
+    index('idx_employment_events_mda_id').on(table.mdaId),
+    index('idx_employment_events_reconciliation_status').on(table.reconciliationStatus),
+    index('idx_employment_events_created_at').on(table.createdAt),
+  ],
+);
+
+// ─── Transfers (Story 11.2) ─────────────────────────────────────────
+export const transfers = pgTable(
+  'transfers',
+  {
+    id: uuid('id').primaryKey().$defaultFn(generateUuidv7),
+    staffId: varchar('staff_id', { length: 50 }).notNull(),
+    loanId: uuid('loan_id').notNull().references(() => loans.id),
+    outgoingMdaId: uuid('outgoing_mda_id').notNull().references(() => mdas.id),
+    incomingMdaId: uuid('incoming_mda_id').references(() => mdas.id),
+    outgoingEventId: uuid('outgoing_event_id').references(() => employmentEvents.id),
+    incomingEventId: uuid('incoming_event_id').references(() => employmentEvents.id),
+    outgoingConfirmed: boolean('outgoing_confirmed').notNull().default(false),
+    incomingConfirmed: boolean('incoming_confirmed').notNull().default(false),
+    confirmedBy: uuid('confirmed_by').references(() => users.id),
+    status: transferStatusEnum('status').notNull().default('PENDING'),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    index('idx_transfers_staff_id').on(table.staffId),
+    index('idx_transfers_status').on(table.status),
+  ],
 );
 
 // ─── Audit Log (Story 1.5) ─────────────────────────────────────────

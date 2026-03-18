@@ -240,6 +240,13 @@ export const router = createBrowserRouter([
               })),
           },
           {
+            path: 'employment-events',
+            lazy: () =>
+              import('@/pages/dashboard/EmploymentEventsPage').then((m) => ({
+                Component: m.EmploymentEventsPage,
+              })),
+          },
+          {
             path: 'operations',
             lazy: () =>
               import('@/pages/dashboard/OperationsHubPage').then((m) => ({
