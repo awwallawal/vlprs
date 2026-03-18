@@ -1,0 +1,2 @@
+ALTER TABLE "mda_submissions" ADD COLUMN "historical_reconciliation" jsonb;--> statement-breakpoint
+CREATE INDEX "idx_submission_rows_staff_month" ON "submission_rows" USING btree ("staff_id","month");

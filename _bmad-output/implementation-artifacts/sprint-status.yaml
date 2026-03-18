@@ -177,7 +177,7 @@ development_status:
   11-2b-manual-entry-event-flags: done
   5-6-submission-detail-view: done  # moved from Epic 5 — requires 11.2b (extended event flag enum)
   11-3-event-reconciliation-engine: done
-  11-4-mda-historical-data-upload: ready-for-dev
+  11-4-mda-historical-data-upload: done
   epic-11-retrospective: optional
 
   # Epic 7: Exception Management & Record Annotations (Sprint 9 — handles promoted observations + submission variances)

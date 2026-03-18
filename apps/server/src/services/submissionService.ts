@@ -373,7 +373,7 @@ export async function processSubmissionRows(
   }>,
   mdaScope: string | null,
   userId: string,
-  source: 'csv' | 'manual',
+  source: 'csv' | 'manual' | 'historical',
   fileInfo?: { filename: string; fileSizeBytes: number },
   role?: string,
 ): Promise<SubmissionUploadResponse> {
@@ -487,7 +487,10 @@ export async function processSubmissionRows(
     await tx.insert(submissionRows).values(rowValues);
 
     // Story 11.3: Reconcile mid-cycle employment events INSIDE transaction (AC 6)
-    const reconciliationResult = await reconcileSubmission(submissionId, mdaId, tx);
+    // Story 11.4: Defensive guard — historical uploads use their own pipeline, never trigger reconciliation
+    const reconciliationResult = source !== 'historical'
+      ? await reconcileSubmission(submissionId, mdaId, tx)
+      : { counts: { matched: 0, dateDiscrepancy: 0, unconfirmed: 0, newCsvEvent: 0 } };
 
     // Store reconciliation summary counts as JSONB on the submission record
     await tx.update(mdaSubmissions)
@@ -520,6 +523,18 @@ export async function processSubmissionRows(
   // Run comparison engine and persist aggregate counts.
   // Wrapped in try/catch: if comparison fails, the submission is still valid
   // with 0/0 counts — counts can be recomputed via GET /submissions/:id/comparison.
+  // Story 11.4: Defensive guard — historical uploads skip comparison (different purpose)
+  if (source === 'historical') {
+    return {
+      id: submissionId,
+      referenceNumber,
+      recordCount: rows.length,
+      submissionDate: now.toISOString(),
+      status: 'confirmed' as SubmissionRecordStatus,
+      alignedCount: 0,
+      varianceCount: 0,
+    };
+  }
   try {
     const { summary: comparisonSummary } = await compareSubmission(submissionId, mdaScope);
     await db.update(mdaSubmissions)

@@ -6,6 +6,7 @@ import { useSubmissionDetail } from '@/hooks/useSubmissionData';
 import { useCopyToClipboard } from '@/hooks/useCopyToClipboard';
 import { ComparisonSummary } from './components/ComparisonSummary';
 import { ReconciliationSummary } from './components/ReconciliationSummary';
+import { HistoricalReconciliation } from './components/HistoricalReconciliation';
 import { useAuthStore } from '@/stores/authStore';
 import { ROLES } from '@vlprs/shared';
 import { Badge } from '@/components/ui/badge';
@@ -197,7 +198,17 @@ export function SubmissionDetailPage() {
 
         {/* Source indicator */}
         <div className="flex items-center gap-2 text-sm text-text-secondary">
-          {data.source === 'csv' ? (
+          {data.source === 'historical' ? (
+            <>
+              <FileSpreadsheet className="h-4 w-4 shrink-0" aria-hidden="true" />
+              <span>
+                Historical Upload
+                {data.filename && (
+                  <> — {data.filename}{data.fileSizeBytes != null && ` (${formatFileSize(data.fileSizeBytes)})`}</>
+                )}
+              </span>
+            </>
+          ) : data.source === 'csv' ? (
             <>
               <FileSpreadsheet className="h-4 w-4 shrink-0" aria-hidden="true" />
               <span>
@@ -274,13 +285,16 @@ export function SubmissionDetailPage() {
         </div>
       </section>
 
-      {/* Comparison Summary — only for confirmed submissions */}
-      {data.status === 'confirmed' && (
-        <ComparisonSummary submissionId={data.id} />
+      {/* Historical submissions: show HistoricalReconciliation */}
+      {data.status === 'confirmed' && data.source === 'historical' && (
+        <HistoricalReconciliation submissionId={data.id} />
       )}
 
-      {/* Reconciliation Summary — Story 11.3 */}
-      {data.status === 'confirmed' && (
+      {/* Non-historical: Comparison Summary + Reconciliation Summary */}
+      {data.status === 'confirmed' && data.source !== 'historical' && (
+        <ComparisonSummary submissionId={data.id} />
+      )}
+      {data.status === 'confirmed' && data.source !== 'historical' && (
         <ReconciliationSummary
           submissionId={data.id}
           userRole={userRole}

@@ -52,7 +52,7 @@ export interface SubmissionDetail {
   referenceNumber: string;
   status: SubmissionRecordStatus;
   recordCount: number;
-  source: 'csv' | 'manual';
+  source: 'csv' | 'manual' | 'historical';
   filename: string | null;
   fileSizeBytes: number | null;
   createdAt: string;

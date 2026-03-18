@@ -570,6 +570,7 @@ export const mdaSubmissions = pgTable(
     alignedCount: integer('aligned_count').notNull().default(0),
     varianceCount: integer('variance_count').notNull().default(0),
     reconciliationSummary: jsonb('reconciliation_summary'), // Story 11.3: { matched, dateDiscrepancy, unconfirmed, newCsvEvent }
+    historicalReconciliation: jsonb('historical_reconciliation'), // Story 11.4: { matchedCount, varianceCount, largestVarianceAmount, matchRate, noBaseline, flaggedRows }
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
   },
@@ -602,6 +603,7 @@ export const submissionRows = pgTable(
     index('idx_submission_rows_submission_id').on(table.submissionId),
     index('idx_submission_rows_staff_id').on(table.staffId),
     index('idx_submission_rows_month').on(table.month),
+    index('idx_submission_rows_staff_month').on(table.staffId, table.month), // Story 11.4: efficient duplicate detection
   ],
 );
 
