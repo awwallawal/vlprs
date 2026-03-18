@@ -108,7 +108,7 @@ router.post(
     const data = await employmentEventService.createEmploymentEvent(
       req.body,
       req.mdaScope,
-      req.user!.id,
+      req.user!.userId,
       req.user!.role,
     );
 
@@ -132,7 +132,7 @@ router.post(
     const data = await employmentEventService.claimTransferIn(
       staffId,
       req.user!.mdaId!,
-      req.user!.id,
+      req.user!.userId,
     );
 
     res.status(201).json({ success: true, data });
@@ -154,7 +154,7 @@ router.post(
 
     const data = await employmentEventService.confirmTransfer(
       transferId,
-      req.user!.id,
+      req.user!.userId,
       req.user!.role,
       req.user!.mdaId ?? null,
       side,
