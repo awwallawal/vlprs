@@ -21,6 +21,11 @@ const LOAN_STATUS_MAP: Record<LoanStatus, { variant: 'complete' | 'pending' | 'r
   APPROVED: { variant: 'pending', label: 'Approved' },
   TRANSFERRED: { variant: 'review', label: 'Transferred' },
   WRITTEN_OFF: { variant: 'review', label: 'Written Off' },
+  RETIRED: { variant: 'complete', label: 'Retired' },
+  DECEASED: { variant: 'complete', label: 'Deceased' },
+  SUSPENDED: { variant: 'review', label: 'Suspended' },
+  LWOP: { variant: 'review', label: 'Leave Without Pay' },
+  TRANSFER_PENDING: { variant: 'pending', label: 'Transfer Pending' },
 };
 
 export function LoanDetailPage() {

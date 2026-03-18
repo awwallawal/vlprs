@@ -141,6 +141,13 @@
       "when": 1773489169851,
       "tag": "0019_solid_vargas",
       "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1773783060198,
+      "tag": "0020_curly_trish_tilby",
+      "breakpoints": true
     }
   ]
 }

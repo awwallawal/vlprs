@@ -2,7 +2,10 @@ import { describe, it, expect } from 'vitest';
 import { VALID_TRANSITIONS, TERMINAL_STATUSES, isValidTransition } from './loanTransitions';
 import type { LoanStatus } from '../types/loan';
 
-const ALL_STATUSES: LoanStatus[] = ['APPLIED', 'APPROVED', 'ACTIVE', 'COMPLETED', 'TRANSFERRED', 'WRITTEN_OFF'];
+const ALL_STATUSES: LoanStatus[] = [
+  'APPLIED', 'APPROVED', 'ACTIVE', 'COMPLETED', 'TRANSFERRED', 'WRITTEN_OFF',
+  'RETIRED', 'DECEASED', 'SUSPENDED', 'LWOP', 'TRANSFER_PENDING',
+];
 
 describe('VALID_TRANSITIONS', () => {
   it('defines transitions for every LoanStatus', () => {
@@ -20,8 +23,23 @@ describe('VALID_TRANSITIONS', () => {
     expect(VALID_TRANSITIONS.APPROVED).toEqual(['ACTIVE']);
   });
 
-  it('ACTIVE can transition to COMPLETED, TRANSFERRED, or WRITTEN_OFF', () => {
-    expect(VALID_TRANSITIONS.ACTIVE).toEqual(['COMPLETED', 'TRANSFERRED', 'WRITTEN_OFF']);
+  it('ACTIVE can transition to COMPLETED, TRANSFERRED, WRITTEN_OFF, TRANSFER_PENDING, RETIRED, DECEASED, SUSPENDED, or LWOP', () => {
+    expect(VALID_TRANSITIONS.ACTIVE).toEqual([
+      'COMPLETED', 'TRANSFERRED', 'WRITTEN_OFF', 'TRANSFER_PENDING',
+      'RETIRED', 'DECEASED', 'SUSPENDED', 'LWOP',
+    ]);
+  });
+
+  it('TRANSFER_PENDING can only transition to ACTIVE', () => {
+    expect(VALID_TRANSITIONS.TRANSFER_PENDING).toEqual(['ACTIVE']);
+  });
+
+  it('SUSPENDED can transition to ACTIVE, WRITTEN_OFF, or RETIRED', () => {
+    expect(VALID_TRANSITIONS.SUSPENDED).toEqual(['ACTIVE', 'WRITTEN_OFF', 'RETIRED']);
+  });
+
+  it('LWOP can only transition to ACTIVE', () => {
+    expect(VALID_TRANSITIONS.LWOP).toEqual(['ACTIVE']);
   });
 
   it('COMPLETED has no outgoing transitions', () => {
@@ -35,27 +53,40 @@ describe('VALID_TRANSITIONS', () => {
   it('WRITTEN_OFF has no outgoing transitions', () => {
     expect(VALID_TRANSITIONS.WRITTEN_OFF).toEqual([]);
   });
+
+  it('RETIRED has no outgoing transitions', () => {
+    expect(VALID_TRANSITIONS.RETIRED).toEqual([]);
+  });
+
+  it('DECEASED has no outgoing transitions', () => {
+    expect(VALID_TRANSITIONS.DECEASED).toEqual([]);
+  });
 });
 
 describe('TERMINAL_STATUSES', () => {
-  it('contains COMPLETED, TRANSFERRED, WRITTEN_OFF', () => {
+  it('contains COMPLETED, TRANSFERRED, WRITTEN_OFF, RETIRED, DECEASED', () => {
     expect(TERMINAL_STATUSES.has('COMPLETED')).toBe(true);
     expect(TERMINAL_STATUSES.has('TRANSFERRED')).toBe(true);
     expect(TERMINAL_STATUSES.has('WRITTEN_OFF')).toBe(true);
+    expect(TERMINAL_STATUSES.has('RETIRED')).toBe(true);
+    expect(TERMINAL_STATUSES.has('DECEASED')).toBe(true);
   });
 
   it('does not contain non-terminal statuses', () => {
     expect(TERMINAL_STATUSES.has('APPLIED')).toBe(false);
     expect(TERMINAL_STATUSES.has('APPROVED')).toBe(false);
     expect(TERMINAL_STATUSES.has('ACTIVE')).toBe(false);
+    expect(TERMINAL_STATUSES.has('SUSPENDED')).toBe(false);
+    expect(TERMINAL_STATUSES.has('LWOP')).toBe(false);
+    expect(TERMINAL_STATUSES.has('TRANSFER_PENDING')).toBe(false);
   });
 
-  it('has exactly 3 entries', () => {
-    expect(TERMINAL_STATUSES.size).toBe(3);
+  it('has exactly 5 entries', () => {
+    expect(TERMINAL_STATUSES.size).toBe(5);
   });
 });
 
-describe('isValidTransition — exhaustive 36-pair matrix', () => {
+describe('isValidTransition — exhaustive matrix', () => {
   // Valid transitions (should return true)
   const validPairs: [LoanStatus, LoanStatus][] = [
     ['APPLIED', 'APPROVED'],
@@ -63,6 +94,16 @@ describe('isValidTransition — exhaustive 36-pair matrix', () => {
     ['ACTIVE', 'COMPLETED'],
     ['ACTIVE', 'TRANSFERRED'],
     ['ACTIVE', 'WRITTEN_OFF'],
+    ['ACTIVE', 'TRANSFER_PENDING'],
+    ['ACTIVE', 'RETIRED'],
+    ['ACTIVE', 'DECEASED'],
+    ['ACTIVE', 'SUSPENDED'],
+    ['ACTIVE', 'LWOP'],
+    ['TRANSFER_PENDING', 'ACTIVE'],
+    ['SUSPENDED', 'ACTIVE'],
+    ['SUSPENDED', 'WRITTEN_OFF'],
+    ['SUSPENDED', 'RETIRED'],
+    ['LWOP', 'ACTIVE'],
   ];
 
   for (const [from, to] of validPairs) {
@@ -71,7 +112,7 @@ describe('isValidTransition — exhaustive 36-pair matrix', () => {
     });
   }
 
-  // All invalid pairs (31 remaining from 36 total minus 5 valid)
+  // All invalid pairs
   const invalidPairs: [LoanStatus, LoanStatus][] = [];
   for (const from of ALL_STATUSES) {
     for (const to of ALL_STATUSES) {
@@ -82,9 +123,9 @@ describe('isValidTransition — exhaustive 36-pair matrix', () => {
     }
   }
 
-  // Verify we have exactly 31 invalid pairs (36 total - 5 valid)
-  it('has exactly 31 invalid pairs', () => {
-    expect(invalidPairs).toHaveLength(31);
+  // 11*11 = 121 total - 15 valid = 106 invalid
+  it(`has exactly ${121 - validPairs.length} invalid pairs`, () => {
+    expect(invalidPairs).toHaveLength(121 - validPairs.length);
   });
 
   for (const [from, to] of invalidPairs) {
@@ -103,7 +144,7 @@ describe('isValidTransition — self-transitions', () => {
 });
 
 describe('isValidTransition — terminal statuses have zero outgoing transitions', () => {
-  const terminalStatuses: LoanStatus[] = ['COMPLETED', 'TRANSFERRED', 'WRITTEN_OFF'];
+  const terminalStatuses: LoanStatus[] = ['COMPLETED', 'TRANSFERRED', 'WRITTEN_OFF', 'RETIRED', 'DECEASED'];
 
   for (const terminal of terminalStatuses) {
     for (const target of ALL_STATUSES) {
@@ -112,4 +153,46 @@ describe('isValidTransition — terminal statuses have zero outgoing transitions
       });
     }
   }
+});
+
+describe('isValidTransition — Story 11.2 employment event transitions', () => {
+  it('ACTIVE → RETIRED (retirement event)', () => {
+    expect(isValidTransition('ACTIVE', 'RETIRED')).toBe(true);
+  });
+
+  it('ACTIVE → DECEASED (death event)', () => {
+    expect(isValidTransition('ACTIVE', 'DECEASED')).toBe(true);
+  });
+
+  it('ACTIVE → SUSPENDED (suspension event)', () => {
+    expect(isValidTransition('ACTIVE', 'SUSPENDED')).toBe(true);
+  });
+
+  it('ACTIVE → LWOP (LWOP Start event)', () => {
+    expect(isValidTransition('ACTIVE', 'LWOP')).toBe(true);
+  });
+
+  it('ACTIVE → TRANSFER_PENDING (Transfer Out event)', () => {
+    expect(isValidTransition('ACTIVE', 'TRANSFER_PENDING')).toBe(true);
+  });
+
+  it('TRANSFER_PENDING → ACTIVE (transfer completed — loan moves MDA)', () => {
+    expect(isValidTransition('TRANSFER_PENDING', 'ACTIVE')).toBe(true);
+  });
+
+  it('SUSPENDED → ACTIVE (reinstated after disciplinary clearance)', () => {
+    expect(isValidTransition('SUSPENDED', 'ACTIVE')).toBe(true);
+  });
+
+  it('SUSPENDED → WRITTEN_OFF (dismissed after disciplinary)', () => {
+    expect(isValidTransition('SUSPENDED', 'WRITTEN_OFF')).toBe(true);
+  });
+
+  it('SUSPENDED → RETIRED (retirement while suspended)', () => {
+    expect(isValidTransition('SUSPENDED', 'RETIRED')).toBe(true);
+  });
+
+  it('LWOP → ACTIVE (LWOP End — return from voluntary leave)', () => {
+    expect(isValidTransition('LWOP', 'ACTIVE')).toBe(true);
+  });
 });
