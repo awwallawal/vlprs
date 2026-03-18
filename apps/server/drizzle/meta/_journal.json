@@ -148,6 +148,13 @@
       "when": 1773783060198,
       "tag": "0020_curly_trish_tilby",
       "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1773823455062,
+      "tag": "0021_superb_puff_adder",
+      "breakpoints": true
     }
   ]
 }

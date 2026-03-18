@@ -22,12 +22,10 @@ import { Calendar } from '@/components/ui/calendar';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
-import type { ManualSubmissionBody } from '@vlprs/shared';
+import { EVENT_FLAG_VALUES, UI_COPY, type ManualSubmissionBody } from '@vlprs/shared';
 
-const EVENT_FLAG_OPTIONS = [
-  'NONE', 'RETIREMENT', 'DEATH', 'SUSPENSION', 'TRANSFER_OUT',
-  'TRANSFER_IN', 'LEAVE_WITHOUT_PAY', 'REINSTATEMENT', 'TERMINATION',
-] as const;
+/** Event flags that trigger the Cessation Reason field */
+const CESSATION_FLAGS = ['DISMISSAL', 'ABSCONDED', 'DEATH'] as const;
 
 interface ManualEntryRowProps {
   index: number;
@@ -49,16 +47,25 @@ export const ManualEntryRow = React.memo(function ManualEntryRow({
   const cleanedAmount = (amountStr || '').replace(/,/g, '').trim();
   const amountIsZero = cleanedAmount !== '' && Number(cleanedAmount) === 0;
 
-  const showEventDate = eventFlag !== 'NONE' && eventFlag !== undefined;
-  const showCessationReason = amountIsZero && (eventFlag === 'NONE' || !eventFlag);
+  const showEventDate = eventFlag != null && eventFlag !== 'NONE';
+  const cessationRequired = amountIsZero && (eventFlag === 'NONE' || !eventFlag);
+  const showCessationReason =
+    CESSATION_FLAGS.includes(eventFlag as typeof CESSATION_FLAGS[number]) ||
+    cessationRequired;
 
   // Clear hidden field values to prevent stale data
   useEffect(() => {
-    if (!showEventDate) form.setValue(`rows.${index}.eventDate`, null);
+    if (!showEventDate) {
+      const current = form.getValues(`rows.${index}.eventDate`);
+      if (current != null) form.setValue(`rows.${index}.eventDate`, null);
+    }
   }, [showEventDate, form, index]);
 
   useEffect(() => {
-    if (!showCessationReason) form.setValue(`rows.${index}.cessationReason`, null);
+    if (!showCessationReason) {
+      const current = form.getValues(`rows.${index}.cessationReason`);
+      if (current != null) form.setValue(`rows.${index}.cessationReason`, null);
+    }
   }, [showCessationReason, form, index]);
 
   return (
@@ -176,9 +183,9 @@ export const ManualEntryRow = React.memo(function ManualEntryRow({
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  {EVENT_FLAG_OPTIONS.map((flag) => (
+                  {EVENT_FLAG_VALUES.map((flag) => (
                     <SelectItem key={flag} value={flag}>
-                      {flag.replace(/_/g, ' ')}
+                      {(UI_COPY.EVENT_FLAG_LABELS as Record<string, string>)[flag] ?? flag}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -235,7 +242,7 @@ export const ManualEntryRow = React.memo(function ManualEntryRow({
             name={`rows.${index}.cessationReason`}
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Cessation Reason <span className="text-destructive">*</span></FormLabel>
+                <FormLabel>Cessation Reason {cessationRequired && <span className="text-destructive">*</span>}</FormLabel>
                 <FormControl>
                   <Input {...field} value={field.value ?? ''} placeholder="Reason for zero deduction" />
                 </FormControl>

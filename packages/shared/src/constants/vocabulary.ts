@@ -288,4 +288,19 @@ export const UI_COPY = {
   TRANSFER_PENDING_HEADING: 'Pending Transfers',
   EVENT_HISTORY_HEADING: 'Event History',
   EVENT_HISTORY_EMPTY: 'No employment events recorded',
+
+  // Event Flag Labels — human-readable labels for submission event flags (Story 11.2b)
+  EVENT_FLAG_LABELS: {
+    NONE: 'None',
+    RETIREMENT: 'Retirement',
+    DEATH: 'Death',
+    SUSPENSION: 'Suspension',
+    TRANSFER_OUT: 'Transfer Out',
+    TRANSFER_IN: 'Transfer In',
+    LEAVE_WITHOUT_PAY: 'Leave Without Pay',
+    REINSTATEMENT: 'Reinstatement',
+    ABSCONDED: 'Absconded',
+    SERVICE_EXTENSION: 'Service Extension',
+    DISMISSAL: 'Dismissal',
+  } as Record<string, string>,
 } as const;

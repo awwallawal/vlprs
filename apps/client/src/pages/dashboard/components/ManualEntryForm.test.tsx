@@ -383,3 +383,261 @@ describe('ManualEntryForm — keyboard navigation (9.11)', () => {
     expect(screen.getByLabelText(/Payroll Batch Ref/)).toHaveFocus();
   });
 });
+
+describe('ManualEntryForm — Event Flag extension (Story 11.2b)', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockUser = {
+      mdaId: 'mda-003', firstName: 'Health', lastName: 'Officer',
+      role: 'mda_officer', email: 'test@test.com',
+    };
+    mockMutationState = { isPending: false, isSuccess: false, isError: false, data: null, error: null };
+  });
+
+  it('5.1: Event Flag dropdown renders all EventFlagType values with human-readable labels', async () => {
+    renderForm();
+    const user = userEvent.setup();
+
+    // Open the Event Flag select
+    const trigger = screen.getByRole('combobox');
+    await user.click(trigger);
+
+    // Should have 11 options (NONE + 10 event types — TERMINATION removed, 3 new added)
+    const options = await screen.findAllByRole('option');
+    expect(options).toHaveLength(11);
+
+    // Verify human-readable labels for key options including new values
+    expect(screen.getByRole('option', { name: 'None' })).toBeInTheDocument();
+    expect(screen.getByRole('option', { name: 'Retirement' })).toBeInTheDocument();
+    expect(screen.getByRole('option', { name: 'Dismissal' })).toBeInTheDocument();
+    expect(screen.getByRole('option', { name: 'Absconded' })).toBeInTheDocument();
+    expect(screen.getByRole('option', { name: 'Service Extension' })).toBeInTheDocument();
+    expect(screen.getByRole('option', { name: 'Leave Without Pay' })).toBeInTheDocument();
+
+    // Verify TERMINATION is NOT in the list (deprecated, removed from app-level)
+    expect(screen.queryByRole('option', { name: /Termination/i })).not.toBeInTheDocument();
+  });
+
+  it('5.2: Event Date picker appears and is required when Event Flag is not NONE', async () => {
+    renderForm();
+    const user = userEvent.setup();
+
+    // Initially no Event Date
+    expect(screen.queryByLabelText(/Event Date/)).not.toBeInTheDocument();
+
+    // Select DISMISSAL
+    const trigger = screen.getByRole('combobox');
+    await user.click(trigger);
+    const option = await screen.findByRole('option', { name: 'Dismissal' });
+    await user.click(option);
+
+    // Event Date should appear with required marker
+    await waitFor(() => {
+      const eventDateLabel = screen.getByLabelText(/Event Date/);
+      expect(eventDateLabel).toBeInTheDocument();
+    });
+  });
+
+  it('5.3: Event Date picker is hidden and not required when Event Flag is NONE', () => {
+    renderForm();
+    // Default Event Flag is NONE
+    expect(screen.queryByLabelText(/Event Date/)).not.toBeInTheDocument();
+  });
+
+  it('5.4: Cessation Reason input appears for DISMISSAL, ABSCONDED, and DEATH event flags', async () => {
+    renderForm();
+    const user = userEvent.setup();
+
+    // Select DISMISSAL
+    const trigger = screen.getByRole('combobox');
+    await user.click(trigger);
+    const dismissalOption = await screen.findByRole('option', { name: 'Dismissal' });
+    await user.click(dismissalOption);
+
+    await waitFor(() => {
+      expect(screen.getByLabelText(/Cessation Reason/)).toBeInTheDocument();
+    });
+  });
+
+  it('5.4b: Cessation Reason input appears for ABSCONDED event flag', async () => {
+    renderForm();
+    const user = userEvent.setup();
+
+    const trigger = screen.getByRole('combobox');
+    await user.click(trigger);
+    const option = await screen.findByRole('option', { name: 'Absconded' });
+    await user.click(option);
+
+    await waitFor(() => {
+      expect(screen.getByLabelText(/Cessation Reason/)).toBeInTheDocument();
+    });
+  });
+
+  it('5.4c: Cessation Reason input appears for DEATH event flag', async () => {
+    renderForm();
+    const user = userEvent.setup();
+
+    const trigger = screen.getByRole('combobox');
+    await user.click(trigger);
+    const option = await screen.findByRole('option', { name: 'Death' });
+    await user.click(option);
+
+    await waitFor(() => {
+      expect(screen.getByLabelText(/Cessation Reason/)).toBeInTheDocument();
+    });
+  });
+
+  it('5.4d: Cessation Reason does NOT show required marker for cessation flags (optional per spec)', async () => {
+    renderForm();
+    const user = userEvent.setup();
+
+    // Select DISMISSAL — shows cessation field but it's OPTIONAL
+    const trigger = screen.getByRole('combobox');
+    await user.click(trigger);
+    await user.click(await screen.findByRole('option', { name: 'Dismissal' }));
+
+    await waitFor(() => {
+      const label = screen.getByText('Cessation Reason');
+      // The required marker (*) should NOT be present for cessation flag triggers
+      const asterisk = label.parentElement?.querySelector('.text-destructive');
+      expect(asterisk).not.toBeInTheDocument();
+    });
+  });
+
+  it('5.4e: Cessation Reason SHOWS required marker when Amount=0 and Event Flag=NONE', async () => {
+    renderForm();
+    const user = userEvent.setup();
+
+    // Type "0" to trigger amount-based cessation
+    await user.type(screen.getByLabelText(/Amount Deducted/), '0');
+
+    await waitFor(() => {
+      const label = screen.getByText('Cessation Reason');
+      const asterisk = label.parentElement?.querySelector('.text-destructive');
+      expect(asterisk).toBeInTheDocument();
+    });
+  });
+
+  it('5.5: Cessation Reason input is hidden for non-cessation event flags', async () => {
+    renderForm();
+    const user = userEvent.setup();
+
+    // Select RETIREMENT (not a cessation flag)
+    const trigger = screen.getByRole('combobox');
+    await user.click(trigger);
+    const retirementOption = await screen.findByRole('option', { name: /Retirement/i });
+    await user.click(retirementOption);
+
+    await waitFor(() => {
+      // Event Date appears (non-NONE), but Cessation Reason does NOT
+      expect(screen.getByLabelText(/Event Date/)).toBeInTheDocument();
+      expect(screen.queryByLabelText(/Cessation Reason/)).not.toBeInTheDocument();
+    });
+  });
+
+  it('5.6: Changing Event Flag to NONE clears Event Date and Cessation Reason values', async () => {
+    renderForm();
+    const user = userEvent.setup();
+
+    // Select DEATH (shows both Event Date and Cessation Reason)
+    const trigger = screen.getByRole('combobox');
+    await user.click(trigger);
+    const deathOption = await screen.findByRole('option', { name: 'Death' });
+    await user.click(deathOption);
+
+    await waitFor(() => {
+      expect(screen.getByLabelText(/Event Date/)).toBeInTheDocument();
+      expect(screen.getByLabelText(/Cessation Reason/)).toBeInTheDocument();
+    });
+
+    // Change back to NONE
+    const trigger2 = screen.getByRole('combobox');
+    await user.click(trigger2);
+    const noneOption = await screen.findByRole('option', { name: 'None' });
+    await user.click(noneOption);
+
+    // Both fields should disappear
+    await waitFor(() => {
+      expect(screen.queryByLabelText(/Event Date/)).not.toBeInTheDocument();
+      expect(screen.queryByLabelText(/Cessation Reason/)).not.toBeInTheDocument();
+    });
+  });
+
+  it('5.7: Form submission includes eventFlag, eventDate, and cessationReason fields', async () => {
+    mockMutateAsync.mockResolvedValueOnce({
+      referenceNumber: 'BIR-2026-03-0002',
+      recordCount: 1,
+      submissionDate: '2026-03-18T10:00:00Z',
+      status: 'confirmed',
+    });
+
+    renderForm();
+    const user = userEvent.setup();
+
+    // Fill required fields (eventFlag defaults to NONE, eventDate/cessationReason = null)
+    await user.type(screen.getByLabelText(/Staff ID/), 'OYO-002');
+    await user.type(screen.getByLabelText(/Payroll Batch Ref/), 'BATCH-002');
+    await user.type(screen.getByLabelText(/Amount Deducted/), '5000');
+
+    await waitFor(() => {
+      expect((screen.getByLabelText(/MDA Code/) as HTMLInputElement).value).toBe('MOH');
+    });
+
+    // Submit with default NONE event flag
+    await user.click(screen.getByRole('button', { name: /Submit All/i }));
+
+    await waitFor(() => {
+      expect(mockMutateAsync).toHaveBeenCalledTimes(1);
+    });
+
+    // Verify the row data includes event flag fields
+    const callArgs = mockMutateAsync.mock.calls[0][0];
+    expect(callArgs).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          staffId: 'OYO-002',
+          eventFlag: 'NONE',
+          eventDate: null,
+          cessationReason: null,
+        }),
+      ]),
+    );
+  });
+
+  it('5.7b: Zod validation blocks submission when Event Flag is non-NONE but Event Date is missing', async () => {
+    renderForm();
+    const user = userEvent.setup();
+
+    await user.type(screen.getByLabelText(/Staff ID/), 'OYO-003');
+    await user.type(screen.getByLabelText(/Payroll Batch Ref/), 'BATCH-003');
+    await user.type(screen.getByLabelText(/Amount Deducted/), '5000');
+
+    await waitFor(() => {
+      expect((screen.getByLabelText(/MDA Code/) as HTMLInputElement).value).toBe('MOH');
+    });
+
+    // Select RETIREMENT (requires Event Date)
+    const trigger = screen.getByRole('combobox');
+    await user.click(trigger);
+    await user.click(await screen.findByRole('option', { name: /Retirement/i }));
+
+    await waitFor(() => {
+      expect(screen.getByLabelText(/Event Date/)).toBeInTheDocument();
+    });
+
+    // Submit WITHOUT filling Event Date
+    await user.click(screen.getByRole('button', { name: /Submit All/i }));
+
+    // Validation should prevent mutateAsync from being called
+    await waitFor(() => {
+      expect(mockMutateAsync).not.toHaveBeenCalled();
+    });
+  });
+
+  // NOTE: 5.7c (positive non-NONE submission with eventDate) requires Radix Popover calendar
+  // interaction which is unreliable in jsdom. Coverage is provided by:
+  // - 5.7: NONE pathway submits correctly with event fields in payload
+  // - 5.7b: non-NONE pathway correctly blocks without eventDate (Zod validation)
+  // - 5.2/5.6: Event Date field renders and clears correctly
+  // Full end-to-end non-NONE submission verified via manual/E2E testing.
+});

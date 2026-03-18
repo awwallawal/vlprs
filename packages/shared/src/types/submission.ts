@@ -7,7 +7,9 @@ export type EventFlagType =
   | 'TRANSFER_IN'
   | 'LEAVE_WITHOUT_PAY'
   | 'REINSTATEMENT'
-  | 'TERMINATION';
+  | 'ABSCONDED'
+  | 'SERVICE_EXTENSION'
+  | 'DISMISSAL';
 
 export type SubmissionRecordStatus = 'processing' | 'confirmed' | 'rejected';
 

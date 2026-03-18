@@ -542,10 +542,13 @@ export const submissionRecordStatusEnum = pgEnum('submission_record_status', [
   'processing', 'confirmed', 'rejected',
 ]);
 
-// ─── Event Flag Type Enum (Story 5.1) ────────────────────────────
+// ─── Event Flag Type Enum (Story 5.1, extended Story 11.2b) ──────
 export const eventFlagTypeEnum = pgEnum('event_flag_type', [
   'NONE', 'RETIREMENT', 'DEATH', 'SUSPENSION', 'TRANSFER_OUT',
-  'TRANSFER_IN', 'LEAVE_WITHOUT_PAY', 'REINSTATEMENT', 'TERMINATION',
+  'TRANSFER_IN', 'LEAVE_WITHOUT_PAY', 'REINSTATEMENT',
+  // TERMINATION: deprecated — migrated to DISMISSAL, retained for pg_enum compatibility
+  'TERMINATION',
+  'ABSCONDED', 'SERVICE_EXTENSION', 'DISMISSAL',
 ]);
 
 // ─── MDA Submissions (Story 5.1, extended Story 5.2) ─────────────
