@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 // Hoisted mock state — accessible inside vi.mock factories
 const {
-  selectCallIdx, selectResults, _mockTxInsert, mockTxSelect, _mockTxUpdate, mockTransaction, mockQueryChain,
+  selectCallIdx, selectResults, mockTxSelect, mockTransaction, mockQueryChain,
 } = vi.hoisted(() => {
   const state = { selectCallIdx: 0 };
   const selectResults: unknown[][] = [];
@@ -36,7 +36,7 @@ const {
     });
   });
 
-  return { selectCallIdx: state, selectResults, _mockTxInsert: mockTxInsert, mockTxSelect, _mockTxUpdate: mockTxUpdate, mockTransaction, mockQueryChain };
+  return { selectCallIdx: state, selectResults, mockTxSelect, mockTransaction, mockQueryChain };
 });
 
 vi.mock('../db/index', () => ({
