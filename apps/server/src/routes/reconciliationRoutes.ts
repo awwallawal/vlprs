@@ -12,6 +12,7 @@ import { validate } from '../middleware/validate';
 import { auditLog } from '../middleware/auditLog';
 import { writeLimiter, readLimiter } from '../middleware/rateLimiter';
 import { ROLES, resolveDiscrepancySchema } from '@vlprs/shared';
+import { param } from '../lib/params';
 import * as reconciliationEngine from '../services/reconciliationEngine';
 
 const router = Router();
@@ -28,7 +29,7 @@ router.get(
   auditLog,
   async (req: Request, res: Response) => {
     req.auditAction = 'RECONCILIATION_VIEWED';
-    const { submissionId } = req.params;
+    const submissionId = param(req.params.submissionId);
     const mdaScope = (req as unknown as { mdaScope: string | null }).mdaScope;
     const data = await reconciliationEngine.getReconciliationSummary(submissionId, mdaScope);
     res.json({ success: true, data });
@@ -47,7 +48,7 @@ router.patch(
   auditLog,
   async (req: Request, res: Response) => {
     req.auditAction = 'RECONCILIATION_DISCREPANCY_RESOLVED';
-    const { id } = req.params;
+    const id = param(req.params.id);
     const { status, reason } = req.body;
     const userId = (req as unknown as { user: { userId: string } }).user.userId;
     const data = await reconciliationEngine.resolveDiscrepancy(id, status, reason, userId);
