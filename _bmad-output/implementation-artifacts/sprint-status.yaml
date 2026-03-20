@@ -5,7 +5,7 @@
 # story_location: _bmad-output/implementation-artifacts
 # sprint_sequence: 1→E1, 2→E14, 3→E2, 4→E10, 5→E3, 6→E4, 7→E5, 8→E11, 9→E7, 10→E6, 11→E8, 12→E12, 13→E9, 14→E13
 # total_epics: 14
-# total_stories: 71 (Epic 1: 12, Epic 14: 3, Epic 2: 8 incl. 2.0, Epic 3: 10 incl. 3.0a+3.0b prep from E10 retro, Epic 5: 5 (5.6 moved to E11), Epic 11: 8 incl. 11.0a+11.0b UAT remediation split + 11.2b split + 5.6 moved here, Epic 13: 2 — FR72/FR73 moved from Epic 13 to Epic 1, Story 2.0 added from Epic 1+14 retro, Epic 3 reshaped per PM alignment cascade 2026-03-01, Stories 3.0a+3.0b added per Epic 10 retro 2026-03-05, Story 5.6 moved from E5 to E11 sequence per PM validation 2026-03-16, Story 11.0 added then split into 11.0a+11.0b per PM decision 2026-03-17, FR91+FR92 added)
+# total_stories: 83 (Epic 1: 12, Epic 14: 3, Epic 2: 8 incl. 2.0, Epic 3: 10 incl. 3.0a+3.0b prep from E10 retro, Epic 5: 5 (5.6 moved to E11), Epic 11: 8 incl. 11.0a+11.0b UAT remediation split + 11.2b split + 5.6 moved here, Epic 7: 10 incl. 7.0a-7.0g prep from E3-E11 mega-retro, Epic 13: 2 — FR72/FR73 moved from Epic 13 to Epic 1, Story 2.0 added from Epic 1+14 retro, Epic 3 reshaped per PM alignment cascade 2026-03-01, Stories 3.0a+3.0b added per Epic 10 retro 2026-03-05, Story 5.6 moved from E5 to E11 sequence per PM validation 2026-03-16, Story 11.0 added then split into 11.0a+11.0b per PM decision 2026-03-17, FR91+FR92 added, Stories 7.0a-7.0g added per E3-E11 mega-retro 2026-03-20)
 
 # STATUS DEFINITIONS:
 # ==================
@@ -135,7 +135,7 @@ development_status:
   #   - System health monitoring dashboard — backlog item for post-Epic 5
 
   # Epic 3: Data Migration & Legacy Import (Sprint 5 — reshaped from 5 to 8 stories per sprint change proposal 2026-02-28)
-  epic-3: in-progress
+  epic-3: done
   3-0a-regression-fixture-suite: done
   3-0b-cdu-parent-agency-relationship: done
   3-1-legacy-upload-intelligent-column-mapping: done
@@ -146,30 +146,30 @@ development_status:
   3-6-observation-engine-review-workflow: done
   3-7-individual-trace-report-generation: done
   3-8-multi-mda-file-delineation-deduplication: done
-  epic-3-retrospective: optional
+  epic-3-retrospective: done  # combined mega-retro 2026-03-20 (E3+E4+E5+E11)
 
   # Epic 4: Executive Dashboard & Scheme Visibility (Sprint 6 — first live analytics)
-  epic-4: in-progress
+  epic-4: done
   4-1-dashboard-hero-metrics-api-display: done
   4-2-attention-items-status-indicators: done
   4-3-progressive-drill-down-dashboard-mda-loan: done
   4-4-mda-compliance-status-view: done
-  epic-4-retrospective: optional
+  epic-4-retrospective: done  # combined mega-retro 2026-03-20 (E3+E4+E5+E11)
 
   # Epic 5: MDA Monthly Submission (Sprint 7 — adoption engine, moved before Reports)
-  epic-5: in-progress
+  epic-5: done
   5-1-csv-upload-atomic-validation: done
   5-2-manual-entry-form: done
   5-3-submission-confirmation-reference: done
   5-4-comparison-summary-with-neutral-language: done
   5-5-submission-frontend-template-download: done
   # Note: Story 5.6 moved to Epic 11 sequence (after 11.2b, before 11.3) per PM validation 2026-03-16
-  epic-5-retrospective: optional
+  epic-5-retrospective: done  # combined mega-retro 2026-03-20 (E3+E4+E5+E11)
 
   # Epic 11: Pre-Submission Checkpoint & Mid-Cycle Events (Sprint 8 — completes submission experience)
   # Sequence: 11.1 → 11.0a → 11.0b → 11.2 → 11.2b → 5.6 → 11.3 → 11.4
   # Note: Story 11.0 split into 11.0a (dashboard remediation) + 11.0b (coverage tracker) per PM decision 2026-03-17. FR91+FR92 added.
-  epic-11: in-progress
+  epic-11: done
   11-1-pre-submission-checkpoint-screen: done
   11-0a-dashboard-remediation: done  # remediation: Epic 4.3 drill-down bug + scheme fund input (FR92) + historical period bypass + seed data + upload discoverability
   11-0b-migration-coverage-tracker: done  # new feature: MDA x month matrix with CSV/PDF export (FR91)
@@ -178,10 +178,39 @@ development_status:
   5-6-submission-detail-view: done  # moved from Epic 5 — requires 11.2b (extended event flag enum)
   11-3-event-reconciliation-engine: done
   11-4-mda-historical-data-upload: done
-  epic-11-retrospective: optional
+  epic-11-retrospective: done  # combined mega-retro 2026-03-20 (E3+E4+E5+E11)
 
   # Epic 7: Exception Management & Record Annotations (Sprint 9 — handles promoted observations + submission variances)
-  epic-7: backlog
+  # Prep Stories 7.0a-7.0g added per E3-E11 mega-retro 2026-03-20 — zero-debt-forward principle
+  # Sequence: 7.0a → 7.0b → 7.0c → 7.0d → 7.0e + 7.0f (parallel) → 7.0g → 7.0h → 7.0i → 7.1 → 7.2 → 7.3
+  #
+  # PREP STORY MANDATE (mega-retro decision):
+  #   - All 7 prep stories must complete before Story 7.1 starts
+  #   - Each prep story follows full workflow: create-story, implement, code review, done
+  #   - No shortcuts because they're "just cleanup"
+  #
+  # TEAM AGREEMENTS (E3-E11 mega-retro 2026-03-20):
+  #   - Role-based UAT walkthrough before marking story done (test as each role)
+  #   - File list verification as code review checklist item (not honor system)
+  #   - Zero-debt-forward: deferred items become prep stories for next epic
+  #   - Red-green review check: reviewer verifies tests fail when implementation removed
+  #   - Transaction scope documentation: dev notes must state tx boundaries for DB-write stories
+  #   - N+1 query budget: endpoints exceeding 10 queries flagged in review
+  #
+  # UAT CHECKPOINTS:
+  #   - After 7.0d: Awwal re-uploads BIR file — validates column mapping fix + summary sheet filtering + accelerated rate labeling
+  #   - After 7.0g: Awwal tests upload supersede workflow with overlapping period files
+  #   - After 7.3: Full role-based walkthrough — exception queue + annotation + event correction
+  epic-7: in-progress
+  7-0a-financial-precision-hardening: done  # decimal.js everywhere: parseFinancialNumber, formatNaira, quick-win sort, limitedComputation
+  7-0b-type-safety-schema-contracts: ready-for-dev  # LOAN_STATUS_VALUES, Zod response validation, withTransaction helper, param() retrofit, enum exhaustiveness, TERMINATION guard, redundant columns
+  7-0c-test-suite-integrity: ready-for-dev  # terminal-status redundancy, test mismatch fix, mock db.select replacement, file list process, query counter middleware, fixture timeouts, architecture docs
+  7-0d-observation-engine-completion: ready-for-dev  # Approval Match detector, CDU alias, detectMdaFromExtraFields, period overlap warning+observation, OUTSTANDING BAL. column mapping, summary sheet filtering, accelerated rate labeling, tier-vs-grade validation, non-standard rates investigation
+  7-0e-ux-polish-frontend-completeness: ready-for-dev  # SUPER_ADMIN sidebar fix, column sorting, prefetchQuery, template tracking, useCopyToClipboard refactor, PDF hardening, MDA color palette, Textarea component
+  7-0f-system-health-monitoring-foundation: ready-for-dev  # 15 metrics (Infrastructure/API/Data Integrity/Business Health), dedicated sidebar page, Pino-based, role-scoped, auto-refresh 30s
+  7-0g-upload-supersede-record-resolution: ready-for-dev  # cascading supersede workflow — superseded_by state, record status updates, baseline recalculation, observation re-run, audit trail. Depends on 7.0d
+  7-0h-payroll-extract-upload-mda-delineation: ready-for-dev  # AG uploads consolidated payroll file, auto-split by MDA, source='payroll', SUPER_ADMIN only. Reuses 3.8 delineation + DeductionRecord[] interface
+  7-0i-three-way-reconciliation-engine: backlog  # expected vs declared vs actual (payroll). Three-way summary, match rate metrics, payroll variance attention items, MDA-scoped views, exception auto-promotion. Depends on 7.0h
   7-1-exception-flagging-queue: backlog
   7-2-automatic-inactive-loan-detection: backlog
   7-3-record-annotations-event-flag-corrections: backlog

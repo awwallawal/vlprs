@@ -248,6 +248,48 @@ describe('loanService.searchLoans', () => {
     expect(applied.data).toHaveLength(1);
   });
 
+  it('sorts by outstandingBalance using computed balance, not principalAmount', async () => {
+    // Loan A: high principal (500k), many payments → lower outstanding
+    const loanA = await loanService.createLoan(actingUser, validLoanData);
+    await seedEntries(loanA.id, 'OY/TST/0001', testMdaId, 30);
+
+    // Loan B: lower principal (100k), no payments → moderate outstanding
+    await loanService.createLoan(actingUser, {
+      ...validLoanData,
+      staffId: 'OY/TST/0002',
+      staffName: 'User B',
+      principalAmount: '100000.00',
+      interestRate: '6.000',
+      monthlyDeductionAmount: '3056.00',
+    });
+
+    // Loan C: low principal (200k), few payments → low outstanding
+    const loanC = await loanService.createLoan(actingUser, {
+      ...validLoanData,
+      staffId: 'OY/TST/0003',
+      staffName: 'User C',
+      principalAmount: '200000.00',
+      interestRate: '6.000',
+      monthlyDeductionAmount: '6111.00',
+    });
+    await seedEntries(loanC.id, 'OY/TST/0003', testMdaId, 35);
+
+    const result = await loanService.searchLoans(null, {
+      sortBy: 'outstandingBalance',
+      sortOrder: 'asc',
+    });
+
+    expect(result.data.length).toBe(3);
+    // Verify ascending outstanding balance order
+    const balances = result.data.map((d) => parseFloat(d.outstandingBalance));
+    expect(balances[0]).toBeLessThanOrEqual(balances[1]);
+    expect(balances[1]).toBeLessThanOrEqual(balances[2]);
+
+    // If sorted by principalAmount asc, order would be B(100k), C(200k), A(500k)
+    // By outstandingBalance asc, order differs since C has 35 payments, A has 30
+    // This verifies the sort is using computed balance, not principal
+  });
+
   it('uses string for outstandingBalance (2 decimal places)', async () => {
     const loan = await loanService.createLoan(actingUser, validLoanData);
     await seedEntries(loan.id, 'OY/TST/0001', testMdaId, 1);

@@ -16,6 +16,7 @@ import { ObservationCard } from './ObservationCard';
 import { VOCABULARY } from '@vlprs/shared';
 import type { ValidatedMigrationRecord } from '@vlprs/shared';
 import { FileText } from 'lucide-react';
+import { formatNairaOrDash } from '@/lib/formatters';
 
 interface PersonMatchDisplay {
   id: string;
@@ -26,13 +27,6 @@ interface PersonMatchDisplay {
   matchType: string;
   confidence: string;
   status: string;
-}
-
-function formatNaira(value: string | null): string {
-  if (!value) return '—';
-  const num = Number(value);
-  if (isNaN(num)) return '—';
-  return `₦${num.toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
 interface StaffProfilePanelProps {
@@ -187,19 +181,19 @@ export function StaffProfilePanel({ personKey, onBack }: StaffProfilePanelProps)
                       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs mb-2">
                         <div>
                           <p className="text-text-muted">Principal</p>
-                          <p className="font-medium">{formatNaira(record.principal)}</p>
+                          <p className="font-medium">{formatNairaOrDash(record.principal)}</p>
                         </div>
                         <div>
                           <p className="text-text-muted">Total Loan</p>
-                          <p className="font-medium">{formatNaira(record.totalLoan)}</p>
+                          <p className="font-medium">{formatNairaOrDash(record.totalLoan)}</p>
                         </div>
                         <div>
                           <p className="text-text-muted">Monthly Deduction</p>
-                          <p className="font-medium">{formatNaira(record.monthlyDeduction)}</p>
+                          <p className="font-medium">{formatNairaOrDash(record.monthlyDeduction)}</p>
                         </div>
                         <div>
                           <p className="text-text-muted">Outstanding</p>
-                          <p className="font-medium">{formatNaira(record.outstandingBalance)}</p>
+                          <p className="font-medium">{formatNairaOrDash(record.outstandingBalance)}</p>
                         </div>
                       </div>
                       <ComputationTransparencyAccordion record={record} />

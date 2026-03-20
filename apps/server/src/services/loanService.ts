@@ -6,7 +6,7 @@ import { generateUuidv7 } from '../lib/uuidv7';
 import { AppError } from '../lib/appError';
 import { withMdaScope } from '../lib/mdaScope';
 import { ledgerDb } from '../db/immutable';
-import { computeBalanceFromEntries, computeRepaymentSchedule, computeRetirementDate } from './computationEngine';
+import { computeBalanceFromEntries, computeBalanceForLoan, computeRepaymentSchedule, computeRetirementDate } from './computationEngine';
 import { buildTemporalProfile, getExtensionDataForLoan } from './temporalProfileService';
 import * as gratuityProjectionService from './gratuityProjectionService';
 import { VOCABULARY } from '@vlprs/shared';
@@ -184,7 +184,7 @@ interface SearchLoansFilters {
   pageSize?: number;
   status?: LoanStatus;
   mdaId?: string;
-  sortBy?: 'createdAt' | 'staffName' | 'loanReference' | 'status' | 'principalAmount';
+  sortBy?: 'createdAt' | 'staffName' | 'loanReference' | 'status' | 'principalAmount' | 'outstandingBalance';
   sortOrder?: 'asc' | 'desc';
   classification?: SharedLoanClassification;
   filter?: 'zero-deduction' | 'post-retirement' | 'missing-staff-id';
@@ -297,10 +297,9 @@ export async function searchLoans(
 
   const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
 
-  // Sort direction
-  const sortCol = SORT_COLUMNS[filters.sortBy ?? 'createdAt'];
-  const sortDirection = filters.sortOrder ?? 'desc';
-  const orderExpr = sortDirection === 'asc' ? asc(sortCol) : desc(sortCol);
+  // outstandingBalance is a computed field — requires application-level sort (all rows fetched, sorted in memory).
+  // Performance is bounded: largest MDA has ~200 loans; with quick-win filter, typically <50.
+  const isAppLevelSort = filters.sortBy === 'outstandingBalance';
 
   // Count query
   const [{ value: totalItems }] = await db
@@ -309,8 +308,8 @@ export async function searchLoans(
     .innerJoin(mdas, eq(loans.mdaId, mdas.id))
     .where(whereClause);
 
-  // Data query
-  const rows = await db
+  // Data query — skip SQL ORDER BY/LIMIT/OFFSET for application-level sort
+  const baseQuery = db
     .select({
       id: loans.id,
       mdaId: loans.mdaId,
@@ -323,13 +322,24 @@ export async function searchLoans(
       principalAmount: loans.principalAmount,
       interestRate: loans.interestRate,
       tenureMonths: loans.tenureMonths,
+      limitedComputation: loans.limitedComputation,
     })
     .from(loans)
     .innerJoin(mdas, eq(loans.mdaId, mdas.id))
-    .where(whereClause)
-    .orderBy(orderExpr)
-    .limit(pageSize)
-    .offset(offset);
+    .where(whereClause);
+
+  let rows;
+  if (isAppLevelSort) {
+    // Fetch all matching rows — pagination applied after sort
+    rows = await baseQuery;
+  } else {
+    const effectiveSortBy = filters.sortBy && filters.sortBy in SORT_COLUMNS ? filters.sortBy : 'createdAt';
+    const sortKey = effectiveSortBy as keyof typeof SORT_COLUMNS;
+    const sortCol = SORT_COLUMNS[sortKey];
+    const sortDirection = filters.sortOrder ?? 'desc';
+    const orderExpr = sortDirection === 'asc' ? asc(sortCol) : desc(sortCol);
+    rows = await baseQuery.orderBy(orderExpr).limit(pageSize).offset(offset);
+  }
 
   // Batch balance computation: single aggregation for all loans in page
   const loanIds = rows.map((r) => r.id);
@@ -393,13 +403,15 @@ export async function searchLoans(
   }
 
   // Map to LoanSearchResult with computed balances
-  const data: LoanSearchResult[] = rows.map((row) => {
+  let data: LoanSearchResult[] = rows.map((row) => {
     const ledgerAgg = balanceMap.get(row.id);
-    const totalPaid = new Decimal(ledgerAgg?.totalPaid ?? '0.00');
-    const principal = new Decimal(row.principalAmount);
-    const totalInterest = principal.mul(new Decimal(row.interestRate)).div(100);
-    const totalLoan = principal.plus(totalInterest);
-    const outstandingBalance = Decimal.max(new Decimal('0'), totalLoan.minus(totalPaid));
+    const balResult = computeBalanceForLoan({
+      limitedComputation: row.limitedComputation,
+      principalAmount: row.principalAmount,
+      interestRate: row.interestRate,
+      tenureMonths: row.tenureMonths,
+      totalPaid: ledgerAgg?.totalPaid ?? '0.00',
+    });
     const installmentsPaid = ledgerAgg?.installments ?? 0;
 
     return {
@@ -409,7 +421,7 @@ export async function searchLoans(
       staffId: row.staffId,
       mdaName: row.mdaName,
       loanReference: row.loanReference,
-      outstandingBalance: outstandingBalance.toFixed(2),
+      outstandingBalance: balResult.computedBalance,
       status: row.status,
       installmentsPaid,
       installmentsRemaining: Math.max(0, row.tenureMonths - installmentsPaid),
@@ -420,6 +432,16 @@ export async function searchLoans(
       computedRetirementDate: retirementMap.get(row.id),
     };
   });
+
+  // Application-level sort by computed outstanding balance
+  if (isAppLevelSort) {
+    const sortDirection = filters.sortOrder ?? 'asc';
+    data.sort((a, b) => {
+      const cmp = new Decimal(a.outstandingBalance).cmp(new Decimal(b.outstandingBalance));
+      return sortDirection === 'asc' ? cmp : -cmp;
+    });
+    data = data.slice(offset, offset + pageSize);
+  }
 
   return {
     data,

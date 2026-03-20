@@ -249,6 +249,95 @@ export function computeBalanceFromEntries(
   };
 }
 
+// ─── Balance Wrapper for limitedComputation Loans (Story 7.0a) ──────
+
+/**
+ * Unified balance computation that handles limitedComputation loans (zero-principal).
+ *
+ * Accepts either individual entries OR a pre-aggregated totalPaid string.
+ * - entries: full computation with principal/interest split (balanceService, attentionItemService)
+ * - totalPaid: aggregated path for batch computations (beneficiaryLedgerService, migrationDashboardService)
+ */
+export function computeBalanceForLoan(params: {
+  limitedComputation: boolean;
+  principalAmount: string;
+  interestRate: string;
+  tenureMonths: number;
+  asOfDate: string | null;
+  entries: LedgerEntryForBalance[];
+}): BalanceResult;
+export function computeBalanceForLoan(params: {
+  limitedComputation: boolean;
+  principalAmount: string;
+  interestRate: string;
+  tenureMonths: number;
+  totalPaid: string;
+}): BalanceResult;
+export function computeBalanceForLoan(params: {
+  limitedComputation: boolean;
+  principalAmount: string;
+  interestRate: string;
+  tenureMonths: number;
+  asOfDate?: string | null;
+  entries?: LedgerEntryForBalance[];
+  totalPaid?: string;
+}): BalanceResult {
+  const { limitedComputation, principalAmount, interestRate, tenureMonths } = params;
+
+  // Normal loans with entries: delegate to full computation
+  if (!limitedComputation && params.entries) {
+    return computeBalanceFromEntries(principalAmount, interestRate, tenureMonths, params.entries, params.asOfDate ?? null);
+  }
+
+  // limitedComputation OR aggregated-total path: manual Decimal arithmetic
+  const principal = new Decimal(principalAmount);
+  const rate = new Decimal(interestRate);
+  const totalInterest = principal.mul(rate).div(100);
+  const totalLoanAmount = principal.plus(totalInterest);
+
+  let totalAmountPaid: Decimal;
+  let payrollCount = 0;
+  let entryCount = 0;
+
+  if (params.entries) {
+    totalAmountPaid = new Decimal('0');
+    for (const entry of params.entries) {
+      totalAmountPaid = totalAmountPaid.plus(new Decimal(entry.amount));
+      if (entry.entryType === 'PAYROLL') payrollCount++;
+    }
+    entryCount = params.entries.length;
+  } else {
+    totalAmountPaid = new Decimal(params.totalPaid ?? '0');
+  }
+
+  const computedBalance = Decimal.max(new Decimal('0'), totalLoanAmount.minus(totalAmountPaid));
+
+  // Note: principal/interest split fields are '0.00' for both limitedComputation loans
+  // (where split is genuinely unknown) AND the aggregated totalPaid path (where the caller
+  // only has a summed total, not per-entry components). Callers using this path only
+  // consume computedBalance, so the zero split values are safe.
+  return {
+    computedBalance: computedBalance.toFixed(2),
+    totalPrincipalPaid: '0.00',
+    totalInterestPaid: '0.00',
+    totalAmountPaid: totalAmountPaid.toFixed(2),
+    principalRemaining: '0.00',
+    interestRemaining: computedBalance.toFixed(2),
+    installmentsCompleted: payrollCount,
+    installmentsRemaining: Math.max(0, tenureMonths - payrollCount),
+    entryCount,
+    asOfDate: params.asOfDate ?? null,
+    derivation: {
+      formula: limitedComputation
+        ? 'MAX(0, totalLoan - sum(entries)) [limited-computation]'
+        : 'MAX(0, totalLoan - totalPaid) [aggregated]',
+      totalLoan: totalLoanAmount.toFixed(2),
+      entriesSum: totalAmountPaid.toFixed(2),
+      isAnomaly: false,
+    },
+  };
+}
+
 // ─── Gratuity Projection Computation (Story 10.3) ──────────────────
 
 /**

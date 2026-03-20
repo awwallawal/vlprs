@@ -1,5 +1,6 @@
 import { UI_COPY } from '@vlprs/shared';
 import type { ValidationResultRecord, VarianceCategory } from '@vlprs/shared';
+import { formatNaira, formatNairaOrDash } from '@/lib/formatters';
 
 interface RecordComparisonRowProps {
   record: ValidationResultRecord;
@@ -16,13 +17,6 @@ const BADGE_STYLES: Record<VarianceCategory, string> = {
   anomalous: 'bg-gray-100 text-gray-500 border-gray-200',
 };
 
-function formatCurrency(value: string | null): string {
-  if (!value) return '\u2014';
-  const num = Number(value);
-  if (isNaN(num)) return value;
-  return `\u20A6${num.toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-}
-
 export function RecordComparisonRow({ record, onBaseline, isBaselineLoading, isBaselineCreated }: RecordComparisonRowProps) {
   const label = UI_COPY.VARIANCE_CATEGORY_LABELS[record.varianceCategory] ?? record.varianceCategory;
 
@@ -35,19 +29,19 @@ export function RecordComparisonRow({ record, onBaseline, isBaselineLoading, isB
         </span>
       </td>
       <td className="py-2 px-3 text-sm text-text-secondary text-right">
-        {record.varianceAmount ? formatCurrency(record.varianceAmount) : '\u2014'}
+        {record.varianceAmount ? formatNaira(record.varianceAmount) : '\u2014'}
       </td>
       <td className="py-2 px-3 text-sm text-text-secondary text-right">
-        {formatCurrency(record.declaredValues.totalLoan)}
+        {formatNairaOrDash(record.declaredValues.totalLoan)}
       </td>
       <td className="py-2 px-3 text-sm text-text-secondary text-right">
-        {formatCurrency(record.computedValues.totalLoan)}
+        {formatNairaOrDash(record.computedValues.totalLoan)}
       </td>
       <td className="py-2 px-3 text-sm text-text-secondary text-right">
-        {formatCurrency(record.declaredValues.monthlyDeduction)}
+        {formatNairaOrDash(record.declaredValues.monthlyDeduction)}
       </td>
       <td className="py-2 px-3 text-sm text-text-secondary text-right">
-        {formatCurrency(record.computedValues.monthlyDeduction)}
+        {formatNairaOrDash(record.computedValues.monthlyDeduction)}
       </td>
       <td className="py-2 px-3 text-sm text-text-secondary text-right">
         {record.computedRate ? `${record.computedRate}%` : '\u2014'}
