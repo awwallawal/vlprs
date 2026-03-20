@@ -11,7 +11,7 @@ export const searchLoansQuerySchema = z.object({
   pageSize: z.coerce.number().int().min(1).max(100).optional(),
   status: z.enum(LOAN_STATUS_VALUES).optional(),
   mdaId: z.uuid().optional(),
-  sortBy: z.enum(['createdAt', 'staffName', 'loanReference', 'status', 'principalAmount']).optional(),
+  sortBy: z.enum(['createdAt', 'staffName', 'loanReference', 'status', 'principalAmount', 'outstandingBalance']).optional(),
   sortOrder: z.enum(['asc', 'desc']).optional(),
   classification: z.enum(LOAN_CLASSIFICATION_VALUES).optional(),
   filter: z.enum(LOAN_FILTER_VALUES).optional(),

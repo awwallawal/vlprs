@@ -89,6 +89,9 @@ importers:
       date-fns:
         specifier: ^4.1.0
         version: 4.1.0
+      decimal.js:
+        specifier: ^10.6.0
+        version: 10.6.0
       lucide-react:
         specifier: ^0.575.0
         version: 0.575.0(react@18.3.1)
@@ -196,7 +199,7 @@ importers:
         specifier: ^4.1.0
         version: 4.1.0
       decimal.js:
-        specifier: ^10.5.0
+        specifier: ^10.6.0
         version: 10.6.0
       dotenv:
         specifier: ^16.5.0

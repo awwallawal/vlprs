@@ -2,6 +2,7 @@ import { eq, and, isNull, sql, count } from 'drizzle-orm';
 import Decimal from 'decimal.js';
 import { db } from '../db/index';
 import { mdas, migrationUploads, migrationRecords, loans, ledgerEntries, observations, deduplicationCandidates } from '../db/schema';
+import { computeBalanceForLoan } from './computationEngine';
 import { withMdaScope } from '../lib/mdaScope';
 import type { MigrationMdaStatus, MigrationStage, MigrationDashboardMetrics, CoverageMatrix } from '@vlprs/shared';
 
@@ -174,16 +175,14 @@ export async function getDashboardMetrics(
 
   const totalStaffMigrated = parseInt(staffResult.cnt, 10);
 
-  // Total exposure: sum of (totalLoan - totalPaid) for migration loans
-  // Use batch aggregation: get all migration loan IDs and their principal/rate
-  // Note: limitedComputation flag is NOT needed here — negative MIGRATION_BASELINE
-  // ledger entries make the standard (totalLoan - totalPaid) formula self-consistent
-  // for all loans, including those where principalAmount is "0.00".
+  // Total exposure: sum of (totalLoan - totalPaid) for migration loans via unified wrapper
   const migrationLoans = await db
     .select({
       id: loans.id,
       principalAmount: loans.principalAmount,
       interestRate: loans.interestRate,
+      tenureMonths: loans.tenureMonths,
+      limitedComputation: loans.limitedComputation,
     })
     .from(loans)
     .where(migrationLoanWhere);
@@ -206,14 +205,14 @@ export async function getDashboardMetrics(
     const paidMap = new Map(sums.map((s) => [s.loanId, s.totalPaid]));
 
     for (const loan of migrationLoans) {
-      const totalPaid = new Decimal(paidMap.get(loan.id) ?? '0.00');
-      // For limitedComputation loans, we can't compute balance from principal
-      // but the baseline entry already accounts for the declared balance
-      const principal = new Decimal(loan.principalAmount);
-      const totalInterest = principal.mul(new Decimal(loan.interestRate)).div(100);
-      const totalLoan = principal.plus(totalInterest);
-      const balance = Decimal.max(new Decimal('0'), totalLoan.minus(totalPaid));
-      totalExposure = totalExposure.plus(balance);
+      const result = computeBalanceForLoan({
+        limitedComputation: loan.limitedComputation,
+        principalAmount: loan.principalAmount,
+        interestRate: loan.interestRate,
+        tenureMonths: loan.tenureMonths,
+        totalPaid: paidMap.get(loan.id) ?? '0.00',
+      });
+      totalExposure = totalExposure.plus(new Decimal(result.computedBalance));
     }
   }
 

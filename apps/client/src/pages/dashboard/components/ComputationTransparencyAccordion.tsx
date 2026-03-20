@@ -7,6 +7,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { UI_COPY } from '@vlprs/shared';
 import type { ValidatedMigrationRecord } from '@vlprs/shared';
+import { formatNairaOrDash } from '@/lib/formatters';
 
 const CATEGORY_STYLES: Record<string, string> = {
   clean: 'bg-teal/10 text-teal border-teal/20',
@@ -15,13 +16,6 @@ const CATEGORY_STYLES: Record<string, string> = {
   structural_error: 'bg-amber-50 text-amber-700 border-amber-200',
   anomalous: 'bg-gray-100 text-gray-600 border-gray-200',
 };
-
-function formatNaira(value: string | null): string {
-  if (!value) return '—';
-  const num = Number(value);
-  if (isNaN(num)) return '—';
-  return `₦${num.toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-}
 
 interface ComputationTransparencyAccordionProps {
   record: ValidatedMigrationRecord;
@@ -54,7 +48,7 @@ export function ComputationTransparencyAccordion({ record }: ComputationTranspar
             </Badge>
             {record.varianceAmount && Number(record.varianceAmount) > 0 && (
               <span className="text-text-muted">
-                {formatNaira(record.varianceAmount)} variance
+                {formatNairaOrDash(record.varianceAmount)} variance
               </span>
             )}
           </div>
@@ -86,18 +80,18 @@ export function ComputationTransparencyAccordion({ record }: ComputationTranspar
               <tbody className="text-text-secondary">
                 <tr>
                   <td className="py-1 pr-3">Total Loan</td>
-                  <td className="py-1 pr-3 text-right">{formatNaira(record.totalLoan)}</td>
-                  <td className="py-1 text-right">{formatNaira(record.computedTotalLoan)}</td>
+                  <td className="py-1 pr-3 text-right">{formatNairaOrDash(record.totalLoan)}</td>
+                  <td className="py-1 text-right">{formatNairaOrDash(record.computedTotalLoan)}</td>
                 </tr>
                 <tr>
                   <td className="py-1 pr-3">Monthly Deduction</td>
-                  <td className="py-1 pr-3 text-right">{formatNaira(record.monthlyDeduction)}</td>
-                  <td className="py-1 text-right">{formatNaira(record.computedMonthlyDeduction)}</td>
+                  <td className="py-1 pr-3 text-right">{formatNairaOrDash(record.monthlyDeduction)}</td>
+                  <td className="py-1 text-right">{formatNairaOrDash(record.computedMonthlyDeduction)}</td>
                 </tr>
                 <tr>
                   <td className="py-1 pr-3">Outstanding Balance</td>
-                  <td className="py-1 pr-3 text-right">{formatNaira(record.outstandingBalance)}</td>
-                  <td className="py-1 text-right">{formatNaira(record.computedOutstandingBalance)}</td>
+                  <td className="py-1 pr-3 text-right">{formatNairaOrDash(record.outstandingBalance)}</td>
+                  <td className="py-1 text-right">{formatNairaOrDash(record.computedOutstandingBalance)}</td>
                 </tr>
               </tbody>
             </table>

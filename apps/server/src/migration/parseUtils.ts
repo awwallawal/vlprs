@@ -5,19 +5,26 @@
  * Returns string-based values for financial precision (no floating-point).
  */
 
-export function parseFinancialNumber(raw: unknown): string | null {
+import Decimal from 'decimal.js';
+
+interface ParsedFinancial {
+  cleanedString: string;
+  decimal: Decimal;
+}
+
+function parseFinancialRaw(raw: unknown): ParsedFinancial | null {
   if (raw === null || raw === undefined) return null;
 
   if (typeof raw === 'number') {
     if (!isFinite(raw)) return null;
-    return raw.toString();
+    return { cleanedString: raw.toString(), decimal: new Decimal(raw) };
   }
 
   if (typeof raw !== 'string') return null;
 
   let s = raw.trim();
   if (s === '' || s === '-' || s === '–' || s === '—' || s === 'N/A' || s === 'NIL') {
-    return '0';
+    return { cleanedString: '0', decimal: new Decimal(0) };
   }
 
   let negative = false;
@@ -29,15 +36,27 @@ export function parseFinancialNumber(raw: unknown): string | null {
   s = s.replace(/[₦$,]|NGN/g, '').trim();
   s = s.replace(/\s/g, '');
 
-  if (!/^-?\d+(\.\d+)?$/.test(s)) {
+  // Reject scientific notation — legacy Excel data should never contain it
+  if (/[eE]/.test(s)) return null;
+
+  try {
+    const d = new Decimal(s);
+    const finalDecimal = negative ? d.neg() : d;
+    const finalString = negative ? '-' + s : s;
+    return { cleanedString: finalString, decimal: finalDecimal };
+  } catch {
     return null;
   }
+}
 
-  if (negative) {
-    s = '-' + s;
-  }
+export function parseFinancialNumberToDecimal(raw: unknown): Decimal | null {
+  const result = parseFinancialRaw(raw);
+  return result ? result.decimal : null;
+}
 
-  return s;
+export function parseFinancialNumber(raw: unknown): string | null {
+  const result = parseFinancialRaw(raw);
+  return result ? result.cleanedString : null;
 }
 
 export function isSummaryRowMarker(value: unknown): boolean {

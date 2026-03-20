@@ -4,7 +4,7 @@ import { loans, ledgerEntries, mdas } from '../db/schema';
 import { eq, and, sql, inArray } from 'drizzle-orm';
 import { withMdaScope } from '../lib/mdaScope';
 import { generateUuidv7 } from '../lib/uuidv7';
-import { computeBalanceFromEntries } from './computationEngine';
+import { computeBalanceForLoan } from './computationEngine';
 import * as loanClassificationService from './loanClassificationService';
 import { LoanClassification } from './loanClassificationService';
 import type { AttentionItem } from '@vlprs/shared';
@@ -258,6 +258,7 @@ async function detectQuickWinLoans(
       interestRate: loans.interestRate,
       tenureMonths: loans.tenureMonths,
       monthlyDeductionAmount: loans.monthlyDeductionAmount,
+      limitedComputation: loans.limitedComputation,
     })
     .from(loans)
     .where(and(...conditions));
@@ -289,13 +290,14 @@ async function detectQuickWinLoans(
 
   for (const loan of activeLoanRows) {
     const entries = entriesMap.get(loan.id) ?? [];
-    const balance = computeBalanceFromEntries(
-      loan.principalAmount,
-      loan.interestRate,
-      loan.tenureMonths,
+    const balance = computeBalanceForLoan({
+      limitedComputation: loan.limitedComputation,
+      principalAmount: loan.principalAmount,
+      interestRate: loan.interestRate,
+      tenureMonths: loan.tenureMonths,
       entries,
-      null,
-    );
+      asOfDate: null,
+    });
     const outstandingBalance = new Decimal(balance.computedBalance);
     const monthlyDeduction = new Decimal(loan.monthlyDeductionAmount);
 
@@ -432,6 +434,7 @@ export async function computeBalanceSumForIds(loanIds: string[]): Promise<string
       principalAmount: loans.principalAmount,
       interestRate: loans.interestRate,
       tenureMonths: loans.tenureMonths,
+      limitedComputation: loans.limitedComputation,
     })
     .from(loans)
     .where(inArray(loans.id, loanIds));
@@ -457,13 +460,14 @@ export async function computeBalanceSumForIds(loanIds: string[]): Promise<string
   let total = new Decimal('0');
   for (const loan of loanRows) {
     const entries = entriesMap.get(loan.id) ?? [];
-    const balance = computeBalanceFromEntries(
-      loan.principalAmount,
-      loan.interestRate,
-      loan.tenureMonths,
+    const balance = computeBalanceForLoan({
+      limitedComputation: loan.limitedComputation,
+      principalAmount: loan.principalAmount,
+      interestRate: loan.interestRate,
+      tenureMonths: loan.tenureMonths,
       entries,
-      null,
-    );
+      asOfDate: null,
+    });
     const bal = new Decimal(balance.computedBalance);
     if (bal.gt(0)) total = total.plus(bal);
   }

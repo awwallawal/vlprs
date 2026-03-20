@@ -1,19 +1,41 @@
-import * as loanService from './loanService';
+import { db } from '../db';
+import { loans } from '../db/schema';
+import { eq, and } from 'drizzle-orm';
+import { withMdaScope } from '../lib/mdaScope';
+import { AppError } from '../lib/appError';
+import { VOCABULARY } from '@vlprs/shared';
 import { ledgerDb } from '../db/immutable';
-import { computeBalanceFromEntries } from './computationEngine';
+import { computeBalanceForLoan } from './computationEngine';
 
 export async function getOutstandingBalance(loanId: string, asOf?: Date, mdaScope?: string | null) {
-  const loan = await loanService.getLoanById(loanId, mdaScope);
+  const conditions = [eq(loans.id, loanId)];
+  const scopeCondition = withMdaScope(loans.mdaId, mdaScope);
+  if (scopeCondition) conditions.push(scopeCondition);
+
+  const [loan] = await db
+    .select({
+      principalAmount: loans.principalAmount,
+      interestRate: loans.interestRate,
+      tenureMonths: loans.tenureMonths,
+      limitedComputation: loans.limitedComputation,
+    })
+    .from(loans)
+    .where(and(...conditions));
+
+  if (!loan) {
+    throw new AppError(404, 'LOAN_NOT_FOUND', VOCABULARY.LOAN_NOT_FOUND);
+  }
 
   const entries = asOf
     ? await ledgerDb.selectByLoanAsOf(loanId, asOf)
     : await ledgerDb.selectByLoan(loanId);
 
-  return computeBalanceFromEntries(
-    loan.principalAmount,
-    loan.interestRate,
-    loan.tenureMonths,
+  return computeBalanceForLoan({
+    limitedComputation: loan.limitedComputation,
+    principalAmount: loan.principalAmount,
+    interestRate: loan.interestRate,
+    tenureMonths: loan.tenureMonths,
     entries,
-    asOf ? asOf.toISOString().split('T')[0] : null,
-  );
+    asOfDate: asOf ? asOf.toISOString().split('T')[0] : null,
+  });
 }

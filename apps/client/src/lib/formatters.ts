@@ -1,4 +1,7 @@
 import { format, parseISO } from 'date-fns';
+import Decimal from 'decimal.js';
+
+Decimal.set({ precision: 20, rounding: Decimal.ROUND_HALF_UP });
 
 /**
  * Formats a string amount as Nigerian Naira with thousands separators and 2 decimal places.
@@ -9,19 +12,28 @@ export function formatNaira(amount: string | null | undefined): string {
     return '₦0.00';
   }
 
-  const num = parseFloat(amount);
-  if (isNaN(num)) {
+  let d: Decimal;
+  try {
+    d = new Decimal(amount);
+  } catch {
     return '₦0.00';
   }
 
-  const isNegative = num < 0;
-  const abs = Math.abs(num);
-  const formatted = abs.toLocaleString('en-US', {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  });
+  const isNegative = d.lt(0);
+  const abs = d.abs();
+  const [whole, frac = '00'] = abs.toFixed(2).split('.');
+  const formatted = whole.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
 
-  return isNegative ? `-₦${formatted}` : `₦${formatted}`;
+  return isNegative ? `-₦${formatted}.${frac}` : `₦${formatted}.${frac}`;
+}
+
+/**
+ * Formats a financial amount as Naira, returning '—' for null/undefined/empty.
+ * Use in UI contexts where null means "no data available" (not "zero").
+ */
+export function formatNairaOrDash(amount: string | null | undefined): string {
+  if (amount === null || amount === undefined || amount === '') return '—';
+  return formatNaira(amount);
 }
 
 /**
@@ -31,23 +43,30 @@ export function formatNaira(amount: string | null | undefined): string {
 export function formatCompactNaira(amount: string): string {
   if (!amount) return '₦0';
 
-  const num = parseFloat(amount);
-  if (isNaN(num)) return '₦0';
-
-  const abs = Math.abs(num);
-  const sign = num < 0 ? '-' : '';
-
-  if (abs >= 1_000_000_000) {
-    const val = abs / 1_000_000_000;
-    return `${sign}₦${val % 1 === 0 ? val.toFixed(0) : val.toFixed(2).replace(/0+$/, '')}B`;
+  let d: Decimal;
+  try {
+    d = new Decimal(amount);
+  } catch {
+    return '₦0';
   }
-  if (abs >= 1_000_000) {
-    const val = abs / 1_000_000;
-    return `${sign}₦${val % 1 === 0 ? val.toFixed(0) : val.toFixed(1).replace(/\.0$/, '')}M`;
+
+  const abs = d.abs();
+  const sign = d.lt(0) ? '-' : '';
+  const billion = new Decimal('1000000000');
+  const million = new Decimal('1000000');
+  const thousand = new Decimal('1000');
+
+  if (abs.gte(billion)) {
+    const val = abs.div(billion);
+    return `${sign}₦${val.mod(1).eq(0) ? val.toFixed(0) : val.toFixed(2).replace(/0+$/, '')}B`;
   }
-  if (abs >= 1_000) {
-    const val = abs / 1_000;
-    return `${sign}₦${val % 1 === 0 ? val.toFixed(0) : val.toFixed(1).replace(/\.0$/, '')}K`;
+  if (abs.gte(million)) {
+    const val = abs.div(million);
+    return `${sign}₦${val.mod(1).eq(0) ? val.toFixed(0) : val.toFixed(1).replace(/\.0$/, '')}M`;
+  }
+  if (abs.gte(thousand)) {
+    const val = abs.div(thousand);
+    return `${sign}₦${val.mod(1).eq(0) ? val.toFixed(0) : val.toFixed(1).replace(/\.0$/, '')}K`;
   }
 
   return `${sign}₦${abs.toFixed(0)}`;

@@ -2,6 +2,7 @@ import { eq, and, sql, ilike, or } from 'drizzle-orm';
 import Decimal from 'decimal.js';
 import { db } from '../db/index';
 import { loans, mdas, ledgerEntries, personMatches, migrationRecords } from '../db/schema';
+import { computeBalanceForLoan } from './computationEngine';
 import { withMdaScope } from '../lib/mdaScope';
 import { getUnreviewedCount, getObservationCountsByStaffNames } from './observationService';
 import type { BeneficiaryListItem, BeneficiaryListMetrics, PaginatedBeneficiaries } from '@vlprs/shared';
@@ -127,9 +128,7 @@ export async function listBeneficiaries(
 
   // Batch balance computation for all loans in this page
   const allLoanIds: string[] = [];
-  // Note: limitedComputation flag is NOT needed — negative MIGRATION_BASELINE
-  // ledger entries make the standard (totalLoan - totalPaid) formula self-consistent.
-  const loanInfoMap = new Map<string, { principalAmount: string; interestRate: string }>();
+  const loanInfoMap = new Map<string, { principalAmount: string; interestRate: string; tenureMonths: number; limitedComputation: boolean }>();
 
   if (rows.length > 0) {
     // Collect all loan IDs from the aggregated groups
@@ -146,6 +145,8 @@ export async function listBeneficiaries(
           id: loans.id,
           principalAmount: loans.principalAmount,
           interestRate: loans.interestRate,
+          tenureMonths: loans.tenureMonths,
+          limitedComputation: loans.limitedComputation,
         })
         .from(loans)
         .where(sql`${loans.id} IN (${sql.join(groupLoanIds.map((id: string) => sql`${id}`), sql`, `)})`);
@@ -155,6 +156,8 @@ export async function listBeneficiaries(
         loanInfoMap.set(l.id, {
           principalAmount: l.principalAmount,
           interestRate: l.interestRate,
+          tenureMonths: l.tenureMonths,
+          limitedComputation: l.limitedComputation,
         });
       }
     }
@@ -215,12 +218,14 @@ export async function listBeneficiaries(
       const info = loanInfoMap.get(loanId);
       if (!info) continue;
 
-      const totalPaid = new Decimal(paidMap.get(loanId) ?? '0.00');
-      const principal = new Decimal(info.principalAmount);
-      const totalInterest = principal.mul(new Decimal(info.interestRate)).div(100);
-      const totalLoan = principal.plus(totalInterest);
-      const balance = Decimal.max(new Decimal('0'), totalLoan.minus(totalPaid));
-      totalExposure = totalExposure.plus(balance);
+      const result = computeBalanceForLoan({
+        limitedComputation: info.limitedComputation,
+        principalAmount: info.principalAmount,
+        interestRate: info.interestRate,
+        tenureMonths: info.tenureMonths,
+        totalPaid: paidMap.get(loanId) ?? '0.00',
+      });
+      totalExposure = totalExposure.plus(new Decimal(result.computedBalance));
     }
 
     return {
@@ -281,6 +286,8 @@ export async function getBeneficiaryMetrics(
       id: loans.id,
       principalAmount: loans.principalAmount,
       interestRate: loans.interestRate,
+      tenureMonths: loans.tenureMonths,
+      limitedComputation: loans.limitedComputation,
     })
     .from(loans)
     .where(whereClause);
@@ -301,12 +308,14 @@ export async function getBeneficiaryMetrics(
     const paidMap = new Map(sums.map((s) => [s.loanId, s.totalPaid]));
 
     for (const loan of migrationLoans) {
-      const totalPaid = new Decimal(paidMap.get(loan.id) ?? '0.00');
-      const principal = new Decimal(loan.principalAmount);
-      const totalInterest = principal.mul(new Decimal(loan.interestRate)).div(100);
-      const totalLoan = principal.plus(totalInterest);
-      const balance = Decimal.max(new Decimal('0'), totalLoan.minus(totalPaid));
-      totalExposure = totalExposure.plus(balance);
+      const result = computeBalanceForLoan({
+        limitedComputation: loan.limitedComputation,
+        principalAmount: loan.principalAmount,
+        interestRate: loan.interestRate,
+        tenureMonths: loan.tenureMonths,
+        totalPaid: paidMap.get(loan.id) ?? '0.00',
+      });
+      totalExposure = totalExposure.plus(new Decimal(result.computedBalance));
     }
   }
 
@@ -359,6 +368,7 @@ export async function exportBeneficiariesCsv(
       tenureMonths: loans.tenureMonths,
       monthlyDeductionAmount: loans.monthlyDeductionAmount,
       id: loans.id,
+      limitedComputation: loans.limitedComputation,
       createdAt: loans.createdAt,
       varianceCategory: migrationRecords.varianceCategory,
     })
@@ -431,11 +441,13 @@ export async function exportBeneficiariesCsv(
   const csvRows = [headers.join(',')];
 
   for (const row of loanRows) {
-    const totalPaid = new Decimal(paidMap.get(row.id) ?? '0.00');
-    const principal = new Decimal(row.principalAmount);
-    const totalInterest = principal.mul(new Decimal(row.interestRate)).div(100);
-    const totalLoan = principal.plus(totalInterest);
-    const balance = Decimal.max(new Decimal('0'), totalLoan.minus(totalPaid));
+    const balResult = computeBalanceForLoan({
+      limitedComputation: row.limitedComputation,
+      principalAmount: row.principalAmount,
+      interestRate: row.interestRate,
+      tenureMonths: row.tenureMonths,
+      totalPaid: paidMap.get(row.id) ?? '0.00',
+    });
 
     csvRows.push([
       escapeCsv(row.staffName),
@@ -446,7 +458,7 @@ export async function exportBeneficiariesCsv(
       row.interestRate,
       String(row.tenureMonths),
       row.monthlyDeductionAmount,
-      balance.toFixed(2),
+      balResult.computedBalance,
       row.varianceCategory ?? '',
       multiMdaSet.has(row.staffName) ? 'Yes' : 'No',
       String(obsCountMap.get(row.staffName) ?? 0),

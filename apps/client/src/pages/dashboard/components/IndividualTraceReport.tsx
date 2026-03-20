@@ -10,15 +10,9 @@ import type {
   RateAnalysis,
   BalanceEntry,
 } from '@vlprs/shared';
+import { formatNaira } from '@/lib/formatters';
 
 // ─── Helpers ───────────────────────────────────────────────────────
-
-function formatNaira(value: string | null | undefined): string {
-  if (!value || value === 'N/A') return '—';
-  const num = Number(value);
-  if (isNaN(num)) return value;
-  return `₦${num.toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-}
 
 function statusColor(status: string): string {
   switch (status) {

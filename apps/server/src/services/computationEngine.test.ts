@@ -2,7 +2,7 @@ import { describe, it, expect, beforeAll } from 'vitest';
 import Decimal from 'decimal.js';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { computeRepaymentSchedule, autoSplitDeduction, computeBalanceFromEntries, computeRetirementDate, computeRemainingServiceMonths, computeGratuityProjection } from './computationEngine';
+import { computeRepaymentSchedule, autoSplitDeduction, computeBalanceFromEntries, computeBalanceForLoan, computeRetirementDate, computeRemainingServiceMonths, computeGratuityProjection } from './computationEngine';
 import type { ComputationParams } from '@vlprs/shared';
 
 // ─── Task 4: Unit tests with hand-verified calculations ─────────────────────
@@ -1109,6 +1109,66 @@ describe('computeBalanceFromEntries (Story 2.5)', () => {
   it('does not flag isAnomaly for normal balance', () => {
     const result = computeBalanceFromEntries('250000.00', '13.330', 60, [], null);
     expect(result.derivation.isAnomaly).toBe(false);
+  });
+});
+
+// ─── Story 7.0a: computeBalanceForLoan wrapper ─────────────────────────────────
+
+describe('computeBalanceForLoan (Story 7.0a)', () => {
+  function payrollEntry(amount: string, principal: string, interest: string) {
+    return { amount, principalComponent: principal, interestComponent: interest, entryType: 'PAYROLL' };
+  }
+
+  function baselineEntry(amount: string) {
+    return { amount, principalComponent: '0.00', interestComponent: '0.00', entryType: 'MIGRATION_BASELINE' };
+  }
+
+  it('delegates to computeBalanceFromEntries for normal loans', () => {
+    const entries = [payrollEntry('15278.00', '13611.12', '1666.88')];
+    const result = computeBalanceForLoan({
+      limitedComputation: false,
+      principalAmount: '500000.00',
+      interestRate: '6.000',
+      tenureMonths: 36,
+      entries,
+      asOfDate: null,
+    });
+
+    // 500000 + 6% = 530000, minus 15278 paid = 514722
+    expect(result.computedBalance).toBe('514722.00');
+    expect(result.totalPrincipalPaid).toBe('13611.12');
+    expect(result.totalInterestPaid).toBe('1666.88');
+    expect(result.installmentsCompleted).toBe(1);
+  });
+
+  it('handles limitedComputation=true with zero principal and negative baseline', () => {
+    // Zero principal, negative MIGRATION_BASELINE of -20000 (the trick for zero-principal loans)
+    const entries = [baselineEntry('-20000.00')];
+    const result = computeBalanceForLoan({
+      limitedComputation: true,
+      principalAmount: '0.00',
+      interestRate: '13.330',
+      tenureMonths: 36,
+      entries,
+      asOfDate: null,
+    });
+
+    // totalLoan = 0 + 0 = 0, totalPaid = -20000, balance = MAX(0, 0 - (-20000)) = 20000
+    expect(result.computedBalance).toBe('20000.00');
+    expect(result.derivation.formula).toContain('limited-computation');
+  });
+
+  it('handles aggregated totalPaid path', () => {
+    const result = computeBalanceForLoan({
+      limitedComputation: false,
+      principalAmount: '500000.00',
+      interestRate: '6.000',
+      tenureMonths: 36,
+      totalPaid: '152780.00',
+    });
+
+    // 530000 - 152780 = 377220
+    expect(result.computedBalance).toBe('377220.00');
   });
 });
 

@@ -28,7 +28,7 @@ export function useFilteredLoans(
   if (mdaId) params.set('mdaId', mdaId);
   if (classification) params.set('classification', classification);
   if (sort === 'outstanding-asc') {
-    params.set('sortBy', 'principalAmount');
+    params.set('sortBy', 'outstandingBalance');
     params.set('sortOrder', 'asc');
   }
   params.set('page', String(page));

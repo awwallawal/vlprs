@@ -5,6 +5,7 @@
  */
 
 import { renderToBuffer, Document, Page, Text, View, StyleSheet } from '@react-pdf/renderer';
+import Decimal from 'decimal.js';
 import type { TraceReportData } from '@vlprs/shared';
 
 // ─── Styles ────────────────────────────────────────────────────────
@@ -282,9 +283,19 @@ const styles = StyleSheet.create({
 // ─── Helper Components ─────────────────────────────────────────────
 
 function formatNaira(value: string): string {
-  const num = Number(value);
-  if (isNaN(num)) return value;
-  return `₦${num.toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  let d: Decimal;
+  try {
+    d = new Decimal(value);
+  } catch {
+    return value;
+  }
+
+  const isNegative = d.lt(0);
+  const abs = d.abs();
+  const [whole, frac = '00'] = abs.toFixed(2).split('.');
+  const formatted = whole.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+
+  return isNegative ? `-₦${formatted}.${frac}` : `₦${formatted}.${frac}`;
 }
 
 function getLoanHeaderStyle(status: string) {
