@@ -185,7 +185,7 @@ export const ManualEntryRow = React.memo(function ManualEntryRow({
                 <SelectContent>
                   {EVENT_FLAG_VALUES.map((flag) => (
                     <SelectItem key={flag} value={flag}>
-                      {(UI_COPY.EVENT_FLAG_LABELS as Record<string, string>)[flag] ?? flag}
+                      {UI_COPY.EVENT_FLAG_LABELS[flag] ?? flag}
                     </SelectItem>
                   ))}
                 </SelectContent>

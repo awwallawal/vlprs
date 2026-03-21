@@ -410,7 +410,6 @@ export async function confirmBoundaries(
     .update(migrationUploads)
     .set({
       delineationResult: updatedResult,
-      hasMultiMda: true,
       updatedAt: new Date(),
     })
     .where(eq(migrationUploads.id, uploadId));
@@ -462,16 +461,6 @@ async function saveDelineationResult(
     .update(migrationUploads)
     .set({
       delineationResult: result,
-      hasMultiMda: result.delineated,
-      multiMdaBoundaries: result.delineated
-        ? result.sections.map((s) => ({
-            startRow: s.startRow,
-            endRow: s.endRow,
-            detectedMda: s.resolvedMdaName ?? s.mdaName,
-            recordCount: s.recordCount,
-            confidence: s.confidence,
-          }))
-        : null,
       updatedAt: new Date(),
     })
     .where(eq(migrationUploads.id, uploadId));

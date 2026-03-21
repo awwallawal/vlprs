@@ -505,7 +505,7 @@ describe('PUT /api/dashboard/scheme-fund', () => {
 
     expect(res.status).toBe(200);
     expect(res.body.success).toBe(true);
-    expect(res.body.fundTotal).toBe('5000000000.00');
+    expect(res.body.data.fundTotal).toBe('5000000000.00');
 
     // Verify it was persisted
     const metricsRes = await request(app)
@@ -529,7 +529,7 @@ describe('PUT /api/dashboard/scheme-fund', () => {
       .send({ amount: '2000000000' });
 
     expect(res.status).toBe(200);
-    expect(res.body.fundTotal).toBe('2000000000');
+    expect(res.body.data.fundTotal).toBe('2000000000');
   });
 });
 

@@ -3,6 +3,7 @@ import { db } from '../db/index';
 import { employmentEvents, transfers, loans, mdas, users } from '../db/schema';
 import { withMdaScope } from '../lib/mdaScope';
 import { AppError } from '../lib/appError';
+import { withTransaction } from '../lib/transaction';
 import { VOCABULARY } from '@vlprs/shared';
 import type { LoanStatus, EmploymentEventType, CreateEmploymentEventResponse, EmploymentEventListItem, TransferSearchResult } from '@vlprs/shared';
 import { transitionLoan, type TxHandle } from './loanTransitionService';
@@ -105,7 +106,7 @@ export async function createEmploymentEvent(
   const targetStatus = EVENT_TO_STATUS_MAP[data.eventType];
   const effectiveDateObj = new Date(data.effectiveDate);
 
-  const result = await db.transaction(async (tx) => {
+  const result = await withTransaction(async (tx) => {
     // Insert employment event
     const [event] = await tx
       .insert(employmentEvents)
@@ -293,7 +294,7 @@ export async function claimTransferIn(
     throw new AppError(404, 'TRANSFER_STAFF_NOT_FOUND', VOCABULARY.TRANSFER_STAFF_NOT_FOUND);
   }
 
-  const result = await db.transaction(async (tx) => {
+  const result = await withTransaction(async (tx) => {
     // Insert TRANSFERRED_IN event for audit trail
     const [event] = await tx
       .insert(employmentEvents)
@@ -390,7 +391,7 @@ export async function confirmTransfer(
   confirmingUserMdaId: string | null,
   side: 'outgoing' | 'incoming',
 ): Promise<{ outgoingConfirmed: boolean; incomingConfirmed: boolean; status: string; loanStatus?: string }> {
-  return db.transaction(async (tx) => {
+  return withTransaction(async (tx) => {
     const [transfer] = await tx
       .select()
       .from(transfers)

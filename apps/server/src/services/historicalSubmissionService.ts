@@ -3,6 +3,7 @@ import { eq, and, inArray, sql, desc, ne } from 'drizzle-orm';
 import { db } from '../db/index';
 import { mdaSubmissions, submissionRows, loans, mdas } from '../db/schema';
 import { AppError } from '../lib/appError';
+import { withTransaction } from '../lib/transaction';
 import { generateUuidv7 } from '../lib/uuidv7';
 import { parseSubmissionCsv, validateSubmissionRows, validateMdaCodes, validateStaffIds } from './submissionService';
 import { sendHistoricalUploadConfirmation, sendHistoricalVarianceAlert } from '../lib/email';
@@ -278,7 +279,7 @@ export async function processHistoricalUpload(
   const submissionId = generateUuidv7();
   const now = new Date();
 
-  const referenceNumber = await db.transaction(async (tx) => {
+  const referenceNumber = await withTransaction(async (tx) => {
     // Generate reference number INSIDE transaction
     const refResult = await tx.select({ referenceNumber: mdaSubmissions.referenceNumber })
       .from(mdaSubmissions)
@@ -524,7 +525,7 @@ export async function flagDiscrepancy(
   }
 
   // Wrap read-modify-write in transaction to prevent race conditions (M3)
-  await db.transaction(async (tx) => {
+  await withTransaction(async (tx) => {
     const conditions = [eq(mdaSubmissions.id, submissionId)];
     if (mdaScope !== null) {
       conditions.push(eq(mdaSubmissions.mdaId, mdaScope));

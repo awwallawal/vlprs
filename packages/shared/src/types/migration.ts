@@ -178,6 +178,12 @@ export interface ValidationResultRecord {
 export interface ValidationResult {
   summary: ValidationSummary;
   records: ValidationResultRecord[];
+  /**
+   * Multi-MDA state for this upload. The `hasMultiMda` and `boundaries` fields
+   * are computed from `delineationResult` (JSONB) at query time for backward
+   * compatibility — the legacy `has_multi_mda` and `multi_mda_boundaries` DB
+   * columns were dropped in migration 0024 (Story 7.0b).
+   */
   multiMda: {
     hasMultiMda: boolean;
     boundaries: MdaBoundary[];

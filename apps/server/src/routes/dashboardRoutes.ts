@@ -6,7 +6,9 @@ import { authorise } from '../middleware/authorise';
 import { scopeToMda } from '../middleware/scopeToMda';
 import { readLimiter } from '../middleware/rateLimiter';
 import { auditLog } from '../middleware/auditLog';
-import { ROLES, breakdownQuerySchema, schemeFundBodySchema, type MdaComplianceRow } from '@vlprs/shared';
+import { ROLES, breakdownQuerySchema, schemeFundBodySchema, apiResponseSchema, dashboardMetricsSchema, attentionItemsResponseSchema, complianceResponseSchema, mdaBreakdownRowSchema, schemeFundDataSchema, type MdaComplianceRow } from '@vlprs/shared';
+import { z } from 'zod/v4';
+import { validateResponse } from '../middleware/validateResponse';
 import { db } from '../db';
 import { loans, ledgerEntries } from '../db/schema';
 import { eq, and, sql, count, inArray } from 'drizzle-orm';
@@ -37,6 +39,7 @@ const dashboardAuth = [
 router.get(
   '/dashboard/metrics',
   ...dashboardAuth,
+  validateResponse(apiResponseSchema(dashboardMetricsSchema)),
   async (req: Request, res: Response) => {
     const mdaScope = req.mdaScope;
     const scopeCondition = withMdaScope(loans.mdaId, mdaScope);
@@ -227,6 +230,7 @@ router.put(
   requirePasswordChange,
   authorise(ROLES.SUPER_ADMIN),
   auditLog,
+  validateResponse(apiResponseSchema(schemeFundDataSchema)),
   async (req: Request, res: Response) => {
     const parsed = schemeFundBodySchema.safeParse(req.body);
     if (!parsed.success) {
@@ -237,7 +241,7 @@ router.put(
     const userId = req.user!.userId;
     await schemeConfigService.setSchemeConfig('scheme_fund_total', parsed.data.amount, userId);
 
-    res.json({ success: true, fundTotal: parsed.data.amount });
+    res.json({ success: true, data: { fundTotal: parsed.data.amount } });
   },
 );
 
@@ -255,6 +259,7 @@ const drillDownAuth = [
 router.get(
   '/dashboard/breakdown',
   ...drillDownAuth,
+  validateResponse(apiResponseSchema(z.array(mdaBreakdownRowSchema))),
   async (req: Request, res: Response) => {
     const parsed = breakdownQuerySchema.safeParse(req.query);
     if (!parsed.success) {
@@ -277,6 +282,7 @@ const attentionAuth = drillDownAuth;
 router.get(
   '/dashboard/attention',
   ...attentionAuth,
+  validateResponse(apiResponseSchema(attentionItemsResponseSchema)),
   async (req: Request, res: Response) => {
     const mdaScope = req.mdaScope ?? null;
     const items = await attentionItemService.getAttentionItems(mdaScope);
@@ -293,6 +299,7 @@ router.get(
 router.get(
   '/dashboard/compliance',
   ...drillDownAuth,
+  validateResponse(apiResponseSchema(complianceResponseSchema)),
   async (req: Request, res: Response) => {
     const mdaScope = req.mdaScope ?? null;
 

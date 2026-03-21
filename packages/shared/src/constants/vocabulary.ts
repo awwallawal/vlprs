@@ -1,3 +1,5 @@
+import type { ActiveEventFlagType } from '../types/submission';
+
 /**
  * Non-punitive vocabulary constants.
  * VLPRS uses neutral, non-punitive language throughout the system.
@@ -321,7 +323,7 @@ export const UI_COPY = {
     ABSCONDED: 'Absconded',
     SERVICE_EXTENSION: 'Service Extension',
     DISMISSAL: 'Dismissal',
-  } as Record<string, string>,
+  } satisfies Record<ActiveEventFlagType, string>,
   // Reconciliation UI (Story 11.3)
   RECONCILIATION_SUMMARY_HEADER: 'Event Reconciliation',
   EVENT_RECONCILIATION_MATCHED: 'Event confirmed by submission',

@@ -82,6 +82,7 @@ export const matchStatusEnum = pgEnum('match_status', [
 ]);
 
 // ─── Loan Status Enum ───────────────────────────────────────────────
+// Canonical values: packages/shared/src/constants/loanStatuses.ts
 export const loanStatusEnum = pgEnum('loan_status', [
   'APPLIED', 'APPROVED', 'ACTIVE', 'COMPLETED', 'TRANSFERRED', 'WRITTEN_OFF',
   'RETIRED', 'DECEASED', 'SUSPENDED', 'LWOP', 'TRANSFER_PENDING',
@@ -298,8 +299,6 @@ export const migrationUploads = pgTable(
     status: migrationUploadStatusEnum('status').notNull().default('uploaded'),
     eraDetected: integer('era_detected'),
     metadata: jsonb('metadata'),
-    hasMultiMda: boolean('has_multi_mda').notNull().default(false),
-    multiMdaBoundaries: jsonb('multi_mda_boundaries'),
     delineationResult: jsonb('delineation_result'),
     validationSummary: jsonb('validation_summary'),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
@@ -546,7 +545,8 @@ export const submissionRecordStatusEnum = pgEnum('submission_record_status', [
 export const eventFlagTypeEnum = pgEnum('event_flag_type', [
   'NONE', 'RETIREMENT', 'DEATH', 'SUSPENSION', 'TRANSFER_OUT',
   'TRANSFER_IN', 'LEAVE_WITHOUT_PAY', 'REINSTATEMENT',
-  // TERMINATION: deprecated — migrated to DISMISSAL, retained for pg_enum compatibility
+  // DEPRECATED: Retained for PostgreSQL enum compatibility only. Application-level exclusion in EVENT_FLAG_VALUES.
+  // Migrated to DISMISSAL in Story 11.2b. DO NOT use in business logic.
   'TERMINATION',
   'ABSCONDED', 'SERVICE_EXTENSION', 'DISMISSAL',
 ]);

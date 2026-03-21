@@ -13,6 +13,7 @@ import {
   promoteObservationSchema,
   generateObservationsSchema,
 } from '@vlprs/shared';
+import { param } from '../lib/params';
 import * as observationService from '../services/observationService';
 import * as observationEngine from '../services/observationEngine';
 
@@ -76,7 +77,7 @@ router.patch(
   auditLog,
   async (req: Request, res: Response) => {
     await observationService.markAsReviewed(
-      req.params.id as string,
+      param(req.params.id),
       req.user!.userId,
       req.body.note,
     );
@@ -92,7 +93,7 @@ router.patch(
   auditLog,
   async (req: Request, res: Response) => {
     await observationService.markAsResolved(
-      req.params.id as string,
+      param(req.params.id),
       req.user!.userId,
       req.body.resolutionNote,
     );
@@ -108,7 +109,7 @@ router.post(
   auditLog,
   async (req: Request, res: Response) => {
     const result = await observationService.promoteToException(
-      req.params.id as string,
+      param(req.params.id),
       req.user!.userId,
       req.body.priority,
     );

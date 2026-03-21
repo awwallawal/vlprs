@@ -335,13 +335,30 @@ export async function validateUpload(
     }
 
     // Update upload with validation results
+    // Write multi-MDA state into delineationResult (consolidated from legacy hasMultiMda + multiMdaBoundaries)
+    const preliminaryDelineation = multiMdaResult.hasMultiMda ? {
+      uploadId,
+      targetMdaId: upload.mdaId,
+      targetMdaName: '',
+      delineated: true,
+      sections: multiMdaResult.boundaries.map((b) => ({
+        startRow: b.startRow,
+        endRow: b.endRow,
+        mdaName: b.detectedMda,
+        resolvedMdaId: null,
+        resolvedMdaName: null,
+        recordCount: b.recordCount,
+        confidence: b.confidence,
+      })),
+      totalRecords: records.length,
+    } : null;
+
     await tx
       .update(migrationUploads)
       .set({
         status: 'validated',
         validationSummary: summary,
-        hasMultiMda: multiMdaResult.hasMultiMda,
-        multiMdaBoundaries: multiMdaResult.boundaries.length > 0 ? multiMdaResult.boundaries : null,
+        delineationResult: preliminaryDelineation,
         updatedAt: new Date(),
       })
       .where(eq(migrationUploads.id, uploadId));
@@ -444,10 +461,19 @@ export async function getValidationResults(
   return {
     summary,
     records,
-    multiMda: {
-      hasMultiMda: upload.hasMultiMda,
-      boundaries: (upload.multiMdaBoundaries as Array<Record<string, unknown>>) ?? [],
-    },
+    multiMda: (() => {
+      const dr = upload.delineationResult as { delineated?: boolean; sections?: Array<{ startRow: number; endRow: number; mdaName: string; resolvedMdaName?: string | null; recordCount: number; confidence: string }> } | null;
+      return {
+        hasMultiMda: !!dr?.delineated,
+        boundaries: (dr?.sections ?? []).map((s) => ({
+          startRow: s.startRow,
+          endRow: s.endRow,
+          detectedMda: s.resolvedMdaName ?? s.mdaName,
+          recordCount: s.recordCount,
+          confidence: s.confidence,
+        })),
+      };
+    })(),
     pagination: {
       page: params.page,
       limit: params.limit,

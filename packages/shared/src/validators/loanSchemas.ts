@@ -1,6 +1,5 @@
 import { z } from 'zod/v4';
-
-const LOAN_STATUS_VALUES = ['APPLIED', 'APPROVED', 'ACTIVE', 'COMPLETED', 'TRANSFERRED', 'WRITTEN_OFF'] as const;
+import { LOAN_STATUS_VALUES } from '../constants/loanStatuses';
 
 const LOAN_CLASSIFICATION_VALUES = ['COMPLETED', 'ON_TRACK', 'OVERDUE', 'STALLED', 'OVER_DEDUCTED'] as const;
 const LOAN_FILTER_VALUES = ['zero-deduction', 'post-retirement', 'missing-staff-id'] as const;

@@ -96,3 +96,59 @@ export const submissionComparisonResponseSchema = z.object({
   referenceNumber: z.string(),
   summary: comparisonSummarySchema,
 });
+
+// ─── Response Schemas (Story 7.0b) ──────────────────────────────────
+
+const submissionRecordStatusSchema = z.enum(['processing', 'confirmed', 'rejected']);
+
+export const submissionUploadResponseSchema = z.object({
+  id: z.string(),
+  referenceNumber: z.string(),
+  recordCount: z.number().int().min(0),
+  submissionDate: z.string(),
+  status: submissionRecordStatusSchema,
+  alignedCount: z.number().int().min(0),
+  varianceCount: z.number().int().min(0),
+});
+
+export const submissionListResponseSchema = z.object({
+  items: z.array(z.object({
+    id: z.string(),
+    referenceNumber: z.string(),
+    submissionDate: z.string(),
+    recordCount: z.number().int().min(0),
+    status: z.string(),
+    period: z.string(),
+    alignedCount: z.number().int().min(0),
+    varianceCount: z.number().int().min(0),
+  })),
+  total: z.number().int().min(0),
+  page: z.number().int().min(1),
+  pageSize: z.number().int().min(1),
+});
+
+const submissionRowResponseSchema = z.object({
+  staffId: z.string(),
+  month: z.string(),
+  amountDeducted: z.string(),
+  payrollBatchReference: z.string(),
+  mdaCode: z.string(),
+  eventFlag: z.enum(EVENT_FLAG_VALUES),
+  eventDate: z.string().nullable(),
+  cessationReason: z.string().nullable(),
+});
+
+export const submissionDetailResponseSchema = z.object({
+  id: z.string(),
+  mdaId: z.string(),
+  mdaName: z.string(),
+  period: z.string(),
+  referenceNumber: z.string(),
+  status: submissionRecordStatusSchema,
+  recordCount: z.number().int().min(0),
+  source: z.enum(['csv', 'manual', 'historical']),
+  filename: z.string().nullable(),
+  fileSizeBytes: z.number().nullable(),
+  createdAt: z.string(),
+  rows: z.array(submissionRowResponseSchema),
+});

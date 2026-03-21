@@ -15,9 +15,9 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { formatDate, formatDateTime, formatNaira, formatCount } from '@/lib/formatters';
 import { cn } from '@/lib/utils';
 import { UI_COPY } from '@vlprs/shared';
-import type { EventFlagType } from '@vlprs/shared';
 
-const EVENT_FLAG_LABELS = UI_COPY.EVENT_FLAG_LABELS as Record<string, string>;
+
+const EVENT_FLAG_LABELS = UI_COPY.EVENT_FLAG_LABELS;
 
 const STATUS_BADGE_VARIANT: Record<string, 'complete' | 'info' | 'review'> = {
   confirmed: 'complete',
@@ -268,7 +268,7 @@ export function SubmissionDetailPage() {
                     <td className="px-4 py-3">
                       {hasEventFlag ? (
                         <Badge variant="info">
-                          {EVENT_FLAG_LABELS[row.eventFlag as EventFlagType] ?? row.eventFlag}
+                          {EVENT_FLAG_LABELS[row.eventFlag] ?? row.eventFlag}
                         </Badge>
                       ) : (
                         <span className="text-text-muted">—</span>
