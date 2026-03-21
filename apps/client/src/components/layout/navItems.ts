@@ -9,6 +9,7 @@ import {
   Database,
   Users,
   UserCog,
+  Activity,
 } from 'lucide-react';
 import type { ComponentType } from 'react';
 
@@ -30,6 +31,7 @@ export const NAV_ITEMS: NavItem[] = [
   { label: 'Reports', path: '/dashboard/reports', icon: FileText, roles: [ROLES.SUPER_ADMIN, ROLES.DEPT_ADMIN] },
   { label: 'Exceptions', path: '/dashboard/exceptions', icon: AlertCircle, roles: [ROLES.SUPER_ADMIN, ROLES.DEPT_ADMIN] },
   { label: 'User Management', path: '/dashboard/admin', icon: Users, roles: [ROLES.SUPER_ADMIN, ROLES.DEPT_ADMIN] },
+  { label: 'System Health', path: '/dashboard/system-health', icon: Activity, roles: [ROLES.SUPER_ADMIN, ROLES.DEPT_ADMIN] },
 ];
 
 export const ROLE_LABELS: Record<Role, string> = {
