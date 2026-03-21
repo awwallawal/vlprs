@@ -3,6 +3,7 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
 
 interface ReviewDialogProps {
   open: boolean;
@@ -28,11 +29,10 @@ export function ReviewDialog({ open, onClose, onConfirm, isPending }: ReviewDial
             Confirm that you have reviewed this observation. You may optionally add a note.
           </DialogDescription>
         </DialogHeader>
-        <textarea
+        <Textarea
           value={note}
           onChange={(e) => setNote(e.target.value)}
           placeholder="Optional note..."
-          className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring min-h-[80px]"
         />
         <DialogFooter>
           <Button variant="secondary" onClick={onClose} disabled={isPending}>

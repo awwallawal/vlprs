@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Textarea } from '@/components/ui/textarea';
 import { NairaDisplay } from '@/components/shared/NairaDisplay';
 import { useHistoricalReconciliation, useFlagDiscrepancy } from '@/hooks/useHistoricalSubmission';
 import { UI_COPY } from '@vlprs/shared';
@@ -147,12 +148,11 @@ export function HistoricalReconciliation({ submissionId, className }: Historical
             <p className="text-sm text-text-secondary">
               Flag Staff ID <strong>{flagDialog.staffId}</strong> for Department Admin review.
             </p>
-            <textarea
+            <Textarea
               value={reason}
               onChange={(e) => setReason(e.target.value)}
               placeholder="Enter reason for flagging (at least 10 characters)..."
               rows={3}
-              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             />
             <p className="text-xs text-text-muted">{reason.length}/10 characters minimum</p>
           </div>

@@ -1,4 +1,5 @@
 import { useState, useMemo, useCallback } from 'react';
+import { toast } from 'sonner';
 import { useMigrationCoverage } from '@/hooks/useMigrationData';
 import { useAuthStore } from '@/stores/authStore';
 import { Button } from '@/components/ui/button';
@@ -203,7 +204,17 @@ export function MigrationCoverageTracker() {
       win.document.write(html);
       win.document.close();
     } else {
-      alert('Your browser blocked the PDF popup. Please allow popups for this site and try again.');
+      // Popup blocked — fall back to Blob download
+      const blob = new Blob([html], { type: 'text/html' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'migration-coverage-report.html';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(url), 10_000);
+      toast.success('PDF generated — check your downloads folder');
     }
   }, [data, months, mdaSummaries, user]);
 

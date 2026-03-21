@@ -18,6 +18,7 @@ import {
 } from '@/components/ui/select';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
+import { Textarea } from '@/components/ui/textarea';
 
 import {
   createEmploymentEventSchema,
@@ -222,12 +223,11 @@ export function EmploymentEventForm() {
           {/* Notes */}
           <div className="space-y-2">
             <Label htmlFor="notes">Notes</Label>
-            <textarea
+            <Textarea
               id="notes"
               {...form.register('notes')}
               placeholder="Optional notes"
               rows={3}
-              className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
             />
           </div>
 

@@ -1,10 +1,14 @@
+import { useCallback, useRef } from 'react';
 import { useSearchParams, useNavigate } from 'react-router';
+import { useQueryClient } from '@tanstack/react-query';
 import { useFilteredLoans } from '@/hooks/useFilteredLoans';
+import { apiClient } from '@/lib/apiClient';
 import { NairaDisplay } from '@/components/shared/NairaDisplay';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 import { formatDate } from '@/lib/formatters';
+import { ArrowUp, ArrowDown, ArrowUpDown } from 'lucide-react';
 import type { LoanClassification } from '@vlprs/shared';
 
 const FILTER_LABELS: Record<string, string> = {
@@ -41,12 +45,14 @@ const CLASSIFICATION_FILTERS: Record<string, LoanClassification> = {
 const ATTENTION_FILTERS = new Set(['zero-deduction', 'post-retirement', 'missing-staff-id']);
 
 export function FilteredLoanListPage() {
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   const filter = searchParams.get('filter') ?? '';
   const mdaId = searchParams.get('mda') ?? undefined;
-  const sort = searchParams.get('sort') ?? undefined;
+  const sortBy = searchParams.get('sortBy') ?? undefined;
+  const sortOrder = searchParams.get('sortOrder') ?? undefined;
 
   // Determine if this is a classification-based filter or attention item filter
   const classification = CLASSIFICATION_FILTERS[filter];
@@ -55,9 +61,48 @@ export function FilteredLoanListPage() {
   const { data: result, isPending } = useFilteredLoans(
     attentionFilter,
     mdaId,
-    sort,
+    sortBy,
+    sortOrder,
     classification,
   );
+
+  function handleSort(column: string) {
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      if (next.get('sortBy') === column) {
+        next.set('sortOrder', next.get('sortOrder') === 'asc' ? 'desc' : 'asc');
+      } else {
+        next.set('sortBy', column);
+        next.set('sortOrder', 'asc');
+      }
+      return next;
+    });
+  }
+
+  function renderSortIcon(columnKey: string) {
+    if (sortBy !== columnKey) {
+      return <ArrowUpDown className="ml-1 inline h-3.5 w-3.5 text-text-secondary/50" />;
+    }
+    return sortOrder === 'asc'
+      ? <ArrowUp className="ml-1 inline h-3.5 w-3.5 text-text-primary" />
+      : <ArrowDown className="ml-1 inline h-3.5 w-3.5 text-text-primary" />;
+  }
+
+  // Prefetch loan detail on hover (100ms debounce)
+  const prefetchTimeout = useRef<ReturnType<typeof setTimeout>>();
+  const handleLoanPrefetchEnter = useCallback((loanId: string) => {
+    clearTimeout(prefetchTimeout.current);
+    prefetchTimeout.current = setTimeout(() => {
+      queryClient.prefetchQuery({
+        queryKey: ['loan', loanId],
+        queryFn: () => apiClient(`/loans/${loanId}`),
+        staleTime: 30_000,
+      });
+    }, 100);
+  }, [queryClient]);
+  const handlePrefetchLeave = useCallback(() => {
+    clearTimeout(prefetchTimeout.current);
+  }, []);
 
   const loans = result?.data ?? [];
   const label = FILTER_LABELS[filter] ?? filter;
@@ -70,13 +115,38 @@ export function FilteredLoanListPage() {
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b bg-slate-50">
-              <th className="px-4 py-3 text-left font-medium text-text-secondary">Staff Name</th>
+              <th
+                className="cursor-pointer select-none px-4 py-3 text-left font-medium text-text-secondary hover:text-text-primary"
+                onClick={() => handleSort('staffName')}
+              >
+                Staff Name{renderSortIcon('staffName')}
+              </th>
               <th className="px-4 py-3 text-left font-medium text-text-secondary">Staff ID</th>
               <th className="px-4 py-3 text-left font-medium text-text-secondary">MDA</th>
-              <th className="px-4 py-3 text-left font-medium text-text-secondary">Loan Ref</th>
-              <th className="px-4 py-3 text-right font-medium text-text-secondary">Outstanding</th>
-              <th className="px-4 py-3 text-center font-medium text-text-secondary">Classification</th>
-              <th className="px-4 py-3 text-left font-medium text-text-secondary">Last Deduction</th>
+              <th
+                className="cursor-pointer select-none px-4 py-3 text-left font-medium text-text-secondary hover:text-text-primary"
+                onClick={() => handleSort('loanReference')}
+              >
+                Loan Ref{renderSortIcon('loanReference')}
+              </th>
+              <th
+                className="cursor-pointer select-none px-4 py-3 text-right font-medium text-text-secondary hover:text-text-primary"
+                onClick={() => handleSort('outstandingBalance')}
+              >
+                Outstanding{renderSortIcon('outstandingBalance')}
+              </th>
+              <th
+                className="cursor-pointer select-none px-4 py-3 text-center font-medium text-text-secondary hover:text-text-primary"
+                onClick={() => handleSort('status')}
+              >
+                Classification{renderSortIcon('status')}
+              </th>
+              <th
+                className="cursor-pointer select-none px-4 py-3 text-left font-medium text-text-secondary hover:text-text-primary"
+                onClick={() => handleSort('createdAt')}
+              >
+                Last Deduction{renderSortIcon('createdAt')}
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -105,6 +175,8 @@ export function FilteredLoanListPage() {
                       )}
                       role="link"
                       tabIndex={0}
+                      onMouseEnter={() => handleLoanPrefetchEnter(loan.loanId)}
+                      onMouseLeave={handlePrefetchLeave}
                       onClick={() => navigate(
                         loan.mdaId
                           ? `/dashboard/mda/${loan.mdaId}/loan/${loan.loanId}`

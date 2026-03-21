@@ -1,8 +1,8 @@
-import { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Download, Printer, Link as LinkIcon, Check } from 'lucide-react';
+import { useCopyToClipboard } from '@/hooks/useCopyToClipboard';
 import { UI_COPY } from '@vlprs/shared';
 import type {
   TraceReportData,
@@ -215,14 +215,8 @@ interface ActionBarProps {
 }
 
 function ActionBar({ onDownloadPdf, isPdfLoading, isPdfSuccess }: ActionBarProps) {
-  const [copied, setCopied] = useState(false);
+  const { copied, copyToClipboard } = useCopyToClipboard(2000, 'Link copied to clipboard');
   const handlePrint = () => window.print();
-  const handleCopyLink = () => {
-    navigator.clipboard.writeText(window.location.href).then(() => {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    });
-  };
 
   return (
     <div className="flex items-center gap-2 no-print">
@@ -238,7 +232,7 @@ function ActionBar({ onDownloadPdf, isPdfLoading, isPdfSuccess }: ActionBarProps
         <Printer className="h-4 w-4 mr-1" />
         Print
       </Button>
-      <Button variant="outline" onClick={handleCopyLink}>
+      <Button variant="outline" onClick={() => copyToClipboard(window.location.href)}>
         {copied ? (
           <Check className="h-4 w-4 mr-1 text-green-600" />
         ) : (

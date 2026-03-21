@@ -41,6 +41,8 @@ interface AttentionItemCardProps {
   drillDownUrl?: string;
   isNew?: boolean;
   className?: string;
+  onMouseEnter?: () => void;
+  onMouseLeave?: () => void;
 }
 
 export function AttentionItemCard({
@@ -54,6 +56,8 @@ export function AttentionItemCard({
   drillDownUrl,
   isNew,
   className,
+  onMouseEnter,
+  onMouseLeave,
 }: AttentionItemCardProps) {
   const navigate = useNavigate();
   const Icon = (type && ICON_MAP[type]) || Info;
@@ -76,6 +80,8 @@ export function AttentionItemCard({
       tabIndex={isNavigable ? 0 : undefined}
       aria-label={isNavigable ? `${mdaName}: ${description}` : undefined}
       onClick={handleClick}
+      onMouseEnter={onMouseEnter}
+      onMouseLeave={onMouseLeave}
       onKeyDown={(e) => {
         if (handleClick && (e.key === 'Enter' || e.key === ' ')) {
           e.preventDefault();

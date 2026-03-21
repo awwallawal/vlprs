@@ -276,7 +276,7 @@ export function SubmissionsPage() {
                     Upload your monthly 8-field CSV deduction file.
                   </p>
 
-                  {/* Template download — prominent secondary action */}
+                  {/* Template download — prominent secondary action + audit tracking */}
                   <div className="mb-4">
                     <a
                       href="/templates/submission-template.csv"
@@ -287,6 +287,9 @@ export function SubmissionsPage() {
                         'w-full justify-center md:w-auto',
                         'focus:ring-2 focus:ring-[#0D7377]',
                       )}
+                      onClick={() => {
+                        apiClient('/submissions/template-download-track', { method: 'POST' }).catch(() => {});
+                      }}
                     >
                       <Download className="h-4 w-4" aria-hidden="true" />
                       Download CSV Template

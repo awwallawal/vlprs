@@ -281,4 +281,46 @@ describe('MigrationCoverageTracker', () => {
 
     vi.restoreAllMocks();
   });
+
+  it('PDF export falls back to Blob download when popup blocked', async () => {
+    const user = userEvent.setup();
+    renderComponent();
+
+    // window.open returns null = popup blocked
+    const mockOpen = vi.fn(() => null);
+    vi.stubGlobal('open', mockOpen);
+
+    const mockBlobUrl = 'blob:test-pdf-url';
+    const createObjectURL = vi.fn((_blob: Blob) => mockBlobUrl);
+    const revokeObjectURL = vi.fn();
+    vi.stubGlobal('URL', { ...URL, createObjectURL, revokeObjectURL });
+
+    const mockClick = vi.fn();
+    const mockAnchor = { href: '', download: '', click: mockClick } as unknown as HTMLAnchorElement;
+    const origCreateElement = document.createElement.bind(document);
+    vi.spyOn(document, 'createElement').mockImplementation((tag: string) => {
+      if (tag === 'a') return mockAnchor;
+      return origCreateElement(tag);
+    });
+    vi.spyOn(document.body, 'appendChild').mockImplementation(() => document.body);
+    vi.spyOn(document.body, 'removeChild').mockImplementation(() => document.body);
+
+    await user.click(screen.getByRole('button', { name: /Download PDF/i }));
+
+    expect(mockOpen).toHaveBeenCalledWith('', '_blank');
+    expect(createObjectURL).toHaveBeenCalled();
+    // Verify Blob was created with text/html content
+    const blobArg = createObjectURL.mock.calls[0][0];
+    expect(blobArg).toBeInstanceOf(Blob);
+    expect(blobArg.type).toBe('text/html');
+    // Verify <a> was clicked with correct download filename
+    expect(mockAnchor.download).toBe('migration-coverage-report.html');
+    expect(mockAnchor.href).toBe(mockBlobUrl);
+    expect(mockClick).toHaveBeenCalled();
+    expect(document.body.appendChild).toHaveBeenCalled();
+    expect(document.body.removeChild).toHaveBeenCalled();
+    // Toast shown (sonner auto-renders, just verify no errors thrown)
+
+    vi.restoreAllMocks();
+  });
 });
