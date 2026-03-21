@@ -3,6 +3,7 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
 
 interface ResolveDialogProps {
   open: boolean;
@@ -35,14 +36,13 @@ export function ResolveDialog({ open, onClose, onConfirm, isPending }: ResolveDi
           </DialogDescription>
         </DialogHeader>
         <div>
-          <textarea
+          <Textarea
             value={resolutionNote}
             onChange={(e) => {
               setResolutionNote(e.target.value);
               if (error) setError('');
             }}
             placeholder="Resolution note (required)..."
-            className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring min-h-[80px]"
           />
           {error && <p className="text-xs text-amber-600 mt-1">{error}</p>}
         </div>

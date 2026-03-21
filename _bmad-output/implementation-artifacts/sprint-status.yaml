@@ -206,7 +206,7 @@ development_status:
   7-0b-type-safety-schema-contracts: done  # LOAN_STATUS_VALUES, Zod response validation, withTransaction helper, param() retrofit, enum exhaustiveness, TERMINATION guard, redundant columns
   7-0c-test-suite-integrity: done  # terminal-status redundancy, test mismatch fix, mock db.select replacement, file list process, query counter middleware, fixture timeouts, architecture docs
   7-0d-observation-engine-completion: done  # Approval Match detector, CDU alias, detectMdaFromExtraFields, period overlap warning+observation, OUTSTANDING BAL. column mapping, summary sheet filtering, accelerated rate labeling, tier-vs-grade validation, non-standard rates investigation
-  7-0e-ux-polish-frontend-completeness: ready-for-dev  # SUPER_ADMIN sidebar fix, column sorting, prefetchQuery, template tracking, useCopyToClipboard refactor, PDF hardening, MDA color palette, Textarea component
+  7-0e-ux-polish-frontend-completeness: done  # SUPER_ADMIN sidebar fix, column sorting, prefetchQuery, template tracking, useCopyToClipboard refactor, PDF hardening, MDA color palette, Textarea component
   7-0f-system-health-monitoring-foundation: ready-for-dev  # 15 metrics (Infrastructure/API/Data Integrity/Business Health), dedicated sidebar page, Pino-based, role-scoped, auto-refresh 30s
   7-0g-upload-supersede-record-resolution: ready-for-dev  # cascading supersede workflow — superseded_by state, record status updates, baseline recalculation, observation re-run, audit trail. Depends on 7.0d
   7-0h-payroll-extract-upload-mda-delineation: ready-for-dev  # AG uploads consolidated payroll file, auto-split by MDA, source='payroll', SUPER_ADMIN only. Reuses 3.8 delineation + DeductionRecord[] interface

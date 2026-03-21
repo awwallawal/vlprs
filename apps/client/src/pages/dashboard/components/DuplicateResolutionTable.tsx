@@ -7,6 +7,7 @@
 import { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Textarea } from '@/components/ui/textarea';
 import { useDuplicateList, useResolveDuplicate, useTriggerDeduplication } from '@/hooks/useDeduplication';
 import { UI_COPY } from '@vlprs/shared';
 import type { DuplicateResolution } from '@vlprs/shared';
@@ -222,11 +223,11 @@ export function DuplicateResolutionTable() {
             <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
               <div className="bg-white rounded-lg border border-border p-6 w-full max-w-md">
                 <h4 className="text-sm font-semibold text-text-primary mb-3">Flag for Investigation</h4>
-                <textarea
+                <Textarea
                   value={noteText}
                   onChange={(e) => setNoteText(e.target.value)}
                   placeholder="Add a note about why this needs investigation..."
-                  className="w-full border border-border rounded-lg p-3 text-sm h-24 resize-none"
+                  className="h-24 resize-none"
                 />
                 <div className="flex justify-end gap-2 mt-4">
                   <button

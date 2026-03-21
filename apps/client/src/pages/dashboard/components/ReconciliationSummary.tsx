@@ -11,6 +11,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
 import { UI_COPY } from '@vlprs/shared';
 import { useReconciliationSummary, useResolveDiscrepancy } from '@/hooks/useReconciliation';
@@ -199,12 +200,11 @@ export function ReconciliationSummary({
               Please provide a reason for this resolution (minimum 10 characters).
             </DialogDescription>
           </DialogHeader>
-          <textarea
+          <Textarea
             value={reason}
-            onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setReason(e.target.value)}
+            onChange={(e) => setReason(e.target.value)}
             placeholder="Enter reason for resolution..."
             rows={3}
-            className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           />
           <DialogFooter>
             <Button

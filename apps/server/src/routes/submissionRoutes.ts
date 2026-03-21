@@ -47,6 +47,17 @@ const readAuth = [
   scopeToMda,
 ];
 
+// POST /submissions/template-download-track — Lightweight audit event for template downloads
+router.post(
+  '/submissions/template-download-track',
+  authenticate,
+  auditLog,
+  (req: Request, res: Response) => {
+    req.auditAction = 'TEMPLATE_DOWNLOADED';
+    res.status(204).end();
+  },
+);
+
 // POST /submissions/upload — Upload CSV and process atomically
 router.post(
   '/submissions/upload',

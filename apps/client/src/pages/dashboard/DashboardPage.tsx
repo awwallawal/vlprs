@@ -1,7 +1,9 @@
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router';
+import { useQueryClient } from '@tanstack/react-query';
 import { FileText, Info, CheckCircle2, Clock, Flag } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { apiClient } from '@/lib/apiClient';
 import { formatDate, formatCount } from '@/lib/formatters';
 import { useDashboardMetrics } from '@/hooks/useDashboardData';
 import { useMdaComplianceGrid } from '@/hooks/useMdaData';
@@ -41,6 +43,7 @@ function sortComplianceRows(rows: MdaComplianceRow[]): MdaComplianceRow[] {
 
 export function DashboardPage() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const user = useAuthStore((s) => s.user);
   const isSuperAdmin = user?.role === ROLES.SUPER_ADMIN;
   const [schemeFundOpen, setSchemeFundOpen] = useState(false);
@@ -52,6 +55,61 @@ export function DashboardPage() {
     () => compliance.data ? sortComplianceRows(compliance.data.rows) : [],
     [compliance.data],
   );
+
+  // Prefetch on hover (100ms debounce)
+  const prefetchTimeout = useRef<ReturnType<typeof setTimeout>>();
+  const handleMdaPrefetchEnter = useCallback((mdaId: string) => {
+    clearTimeout(prefetchTimeout.current);
+    prefetchTimeout.current = setTimeout(() => {
+      queryClient.prefetchQuery({
+        queryKey: ['mda', mdaId],
+        queryFn: () => apiClient(`/mdas/${mdaId}/summary`),
+        staleTime: 30_000,
+      });
+    }, 100);
+  }, [queryClient]);
+  const handleDrillDownPrefetchEnter = useCallback((drillDownUrl: string) => {
+    clearTimeout(prefetchTimeout.current);
+    prefetchTimeout.current = setTimeout(() => {
+      const url = new URL(drillDownUrl, window.location.origin);
+      const filter = url.searchParams.get('filter');
+      const mdaParam = url.searchParams.get('mda');
+      if (url.pathname === '/dashboard/loans' && filter) {
+        // Must replicate FilteredLoanListPage's filter-splitting logic so
+        // the prefetch queryKey matches useFilteredLoans exactly.
+        const CLASSIFICATION_MAP: Record<string, string> = {
+          overdue: 'OVERDUE', stalled: 'STALLED', 'quick-win': 'ON_TRACK',
+          onTrack: 'ON_TRACK', completed: 'COMPLETED', overDeducted: 'OVER_DEDUCTED',
+        };
+        const ATTENTION_SET = new Set(['zero-deduction', 'post-retirement', 'missing-staff-id']);
+        const classification = CLASSIFICATION_MAP[filter] as string | undefined;
+        const attentionFilter = ATTENTION_SET.has(filter) ? filter : undefined;
+        const params = new URLSearchParams();
+        if (attentionFilter) params.set('filter', attentionFilter);
+        if (mdaParam) params.set('mdaId', mdaParam);
+        if (classification) params.set('classification', classification);
+        params.set('page', '1');
+        params.set('pageSize', '25');
+        queryClient.prefetchQuery({
+          queryKey: ['loans', 'filtered', attentionFilter, mdaParam ?? undefined, classification, undefined, undefined, 1],
+          queryFn: () => apiClient(`/loans?${params.toString()}`),
+          staleTime: 30_000,
+        });
+      } else if (url.pathname.startsWith('/dashboard/mda/')) {
+        const mdaId = url.pathname.split('/').pop();
+        if (mdaId) {
+          queryClient.prefetchQuery({
+            queryKey: ['mda', mdaId],
+            queryFn: () => apiClient(`/mdas/${mdaId}/summary`),
+            staleTime: 30_000,
+          });
+        }
+      }
+    }, 100);
+  }, [queryClient]);
+  const handlePrefetchLeave = useCallback(() => {
+    clearTimeout(prefetchTimeout.current);
+  }, []);
 
   return (
     <div className="space-y-8">
@@ -252,6 +310,8 @@ export function DashboardPage() {
                 count={item.count}
                 amount={item.amount}
                 drillDownUrl={item.drillDownUrl}
+                onMouseEnter={item.drillDownUrl ? () => handleDrillDownPrefetchEnter(item.drillDownUrl!) : undefined}
+                onMouseLeave={handlePrefetchLeave}
               />
             ))}
             {attention.data.totalCount > 10 && (
@@ -319,6 +379,8 @@ export function DashboardPage() {
                                 key={row.mdaId}
                                 className="flex w-full items-center justify-between rounded-lg border p-3 text-left transition-colors hover:bg-slate-50 min-h-[44px]"
                                 onClick={() => navigate(`/dashboard/mda/${row.mdaId}`)}
+                                onMouseEnter={() => handleMdaPrefetchEnter(row.mdaId)}
+                                onMouseLeave={handlePrefetchLeave}
                               >
                                 <span className="text-sm font-medium text-text-primary truncate mr-2">
                                   {row.mdaName}
@@ -395,6 +457,8 @@ export function DashboardPage() {
                         role="link"
                         tabIndex={0}
                         onClick={() => navigate(`/dashboard/mda/${row.mdaId}`)}
+                        onMouseEnter={() => handleMdaPrefetchEnter(row.mdaId)}
+                        onMouseLeave={handlePrefetchLeave}
                         onKeyDown={(e) => {
                           if (e.key === 'Enter' || e.key === ' ') {
                             e.preventDefault();

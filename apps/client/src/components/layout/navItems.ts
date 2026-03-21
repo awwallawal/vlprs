@@ -26,7 +26,7 @@ export const NAV_ITEMS: NavItem[] = [
   { label: 'History', path: '/dashboard/submissions', icon: Clock, roles: [ROLES.MDA_OFFICER] },
   { label: 'Historical Upload', path: '/dashboard/historical-upload', icon: FileText, roles: [ROLES.MDA_OFFICER, ROLES.DEPT_ADMIN] },
   { label: 'Employment Events', path: '/dashboard/employment-events', icon: UserCog, roles: [ROLES.SUPER_ADMIN, ROLES.DEPT_ADMIN, ROLES.MDA_OFFICER] },
-  { label: 'Migration', path: '/dashboard/migration', icon: Database, roles: [ROLES.DEPT_ADMIN] },
+  { label: 'Migration', path: '/dashboard/migration', icon: Database, roles: [ROLES.SUPER_ADMIN, ROLES.DEPT_ADMIN] },
   { label: 'Reports', path: '/dashboard/reports', icon: FileText, roles: [ROLES.SUPER_ADMIN, ROLES.DEPT_ADMIN] },
   { label: 'Exceptions', path: '/dashboard/exceptions', icon: AlertCircle, roles: [ROLES.SUPER_ADMIN, ROLES.DEPT_ADMIN] },
   { label: 'User Management', path: '/dashboard/admin', icon: Users, roles: [ROLES.SUPER_ADMIN, ROLES.DEPT_ADMIN] },
