@@ -1,4 +1,4 @@
-import type { LoanStatus } from '../types/loan';
+import type { LoanStatus } from '../types/loan.js';
 
 /**
  * Valid state transition map for loan lifecycle.
