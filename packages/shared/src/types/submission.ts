@@ -11,6 +11,18 @@ export type EventFlagType =
   | 'SERVICE_EXTENSION'
   | 'DISMISSAL';
 
+/**
+ * Active event flag types — semantically excludes deprecated TERMINATION.
+ * Use this type in all business logic signatures.
+ *
+ * NOTE: Currently equivalent to EventFlagType because the TypeScript union
+ * intentionally omits TERMINATION (it only exists in the PostgreSQL enum for
+ * backward compatibility — see schema.ts eventFlagTypeEnum). The Exclude<>
+ * is retained as semantic documentation so that if EventFlagType is ever
+ * derived from the DB enum, TERMINATION is automatically excluded here.
+ */
+export type ActiveEventFlagType = Exclude<EventFlagType, 'TERMINATION'>;
+
 export type SubmissionRecordStatus = 'processing' | 'confirmed' | 'rejected';
 
 export interface SubmissionRow {

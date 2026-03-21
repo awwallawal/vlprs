@@ -14,7 +14,7 @@ import {
 } from '@/components/ui/accordion';
 import type { LoanStatus } from '@vlprs/shared';
 
-const LOAN_STATUS_MAP: Record<LoanStatus, { variant: 'complete' | 'pending' | 'review' | 'info'; label: string }> = {
+const LOAN_STATUS_MAP = {
   ACTIVE: { variant: 'info', label: 'Active' },
   COMPLETED: { variant: 'complete', label: 'Completed' },
   APPLIED: { variant: 'pending', label: 'Applied' },
@@ -26,7 +26,7 @@ const LOAN_STATUS_MAP: Record<LoanStatus, { variant: 'complete' | 'pending' | 'r
   SUSPENDED: { variant: 'review', label: 'Suspended' },
   LWOP: { variant: 'review', label: 'Leave Without Pay' },
   TRANSFER_PENDING: { variant: 'pending', label: 'Transfer Pending' },
-};
+} satisfies Record<LoanStatus, { variant: 'complete' | 'pending' | 'review' | 'info'; label: string }>;
 
 export function LoanDetailPage() {
   const { mdaId, loanId } = useParams<{ mdaId: string; loanId: string }>();

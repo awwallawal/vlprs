@@ -1,11 +1,9 @@
 import { describe, it, expect } from 'vitest';
 import { VALID_TRANSITIONS, TERMINAL_STATUSES, isValidTransition } from './loanTransitions';
+import { LOAN_STATUS_VALUES } from './loanStatuses';
 import type { LoanStatus } from '../types/loan';
 
-const ALL_STATUSES: LoanStatus[] = [
-  'APPLIED', 'APPROVED', 'ACTIVE', 'COMPLETED', 'TRANSFERRED', 'WRITTEN_OFF',
-  'RETIRED', 'DECEASED', 'SUSPENDED', 'LWOP', 'TRANSFER_PENDING',
-];
+const ALL_STATUSES: LoanStatus[] = [...LOAN_STATUS_VALUES];
 
 describe('VALID_TRANSITIONS', () => {
   it('defines transitions for every LoanStatus', () => {

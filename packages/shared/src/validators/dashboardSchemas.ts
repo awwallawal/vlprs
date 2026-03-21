@@ -149,3 +149,34 @@ export const complianceResponseSchema = z.object({
 });
 
 export type ComplianceResponse = z.infer<typeof complianceResponseSchema>;
+
+// ─── Breakdown Response Schema (Story 7.0b) ──────────────────────────
+
+const statusDistributionSchema = z.object({
+  completed: z.number().int().min(0),
+  onTrack: z.number().int().min(0),
+  overdue: z.number().int().min(0),
+  stalled: z.number().int().min(0),
+  overDeducted: z.number().int().min(0),
+});
+
+export const mdaBreakdownRowSchema = z.object({
+  mdaId: z.string(),
+  mdaName: z.string(),
+  mdaCode: z.string(),
+  contributionCount: z.number().int().min(0),
+  contributionAmount: z.string(),
+  expectedMonthlyDeduction: z.string(),
+  actualMonthlyRecovery: z.string(),
+  variancePercent: z.number().nullable(),
+  submissionStatus: z.string().nullable(),
+  healthScore: z.number().min(0).max(100),
+  healthBand: z.enum(['healthy', 'attention', 'for-review']),
+  statusDistribution: statusDistributionSchema,
+});
+
+// ─── Scheme Fund Data Schema (Story 7.0b) ─────────────────────────────
+
+export const schemeFundDataSchema = z.object({
+  fundTotal: z.string(),
+});

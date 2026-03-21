@@ -36,3 +36,9 @@ export const resolveDiscrepancySchema = z.object({
   status: z.enum(['MATCHED', 'UNCONFIRMED']),
   reason: z.string().min(10, 'Reason must be at least 10 characters'),
 });
+
+/** Zod schema for the PATCH resolve discrepancy response data (Story 7.0b). */
+export const resolveDiscrepancyResponseSchema = z.object({
+  id: z.string(),
+  reconciliationStatus: z.string(),
+});

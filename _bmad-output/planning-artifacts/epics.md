@@ -2391,6 +2391,261 @@ So that reports are suitable for official circulation to the Commissioner, Gover
 
 Admin can flag loan records as exceptions, investigate via a priority-sorted queue with filters, resolve with notes and audit trail. Department Admin can annotate records for institutional memory and correct event flags through a tracked workflow.
 
+Sequence: 7.0a → 7.0b → 7.0c → 7.0d → 7.0e + 7.0f (parallel) → 7.0g → 7.1 → 7.2 → 7.3
+
+### Story 7.0a: Financial Precision Hardening (Prep — Mega-Retro)
+
+As a **development team**,
+I want all financial calculations and display functions to use decimal.js exclusively,
+So that sub-kobo precision is guaranteed across every number in VLPRS with zero floating-point risk.
+
+**Items (from E3-E11 mega-retro tech debt inventory):**
+- #4: `parseFinancialNumber` — replace regex approach with decimal.js-first parsing (Origin: 3.1)
+- #6: `formatNaira` — switch frontend display functions from `Number()` to `decimal.js` (Origin: 3.7)
+- #12: Quick-win sort — compute actual outstanding balance instead of `principalAmount` approximation (Origin: 4.3)
+- #24: `limitedComputation` flag for zero-principal loans — ensure loans with principal "0.00" handled correctly (Origin: 3.4)
+
+**Source:** E3-E11 mega-retrospective 2026-03-20. Theme: Every number in VLPRS flows through decimal.js, no exceptions.
+
+### Story 7.0b: Type Safety & Schema Contracts (Prep — Mega-Retro)
+
+As a **development team**,
+I want all API surfaces validated at both ends with compile-time type safety enforced,
+So that type drift between layers is caught at build time rather than in code review.
+
+**Items:**
+- #2: `LOAN_STATUS_VALUES` hardcoded duplicate — single source of truth in shared package (Origin: 2.7 LOW, carried 3 epics)
+- #9: Server-side Zod response validation — establish pattern, apply to existing endpoints (Origin: 4.4)
+- #15: `TERMINATION` dead enum value — document exclusion + add Zod/TS guard (Origin: 11.2b)
+- #18: Unsafe `as Record<string,string>` cast on `EVENT_FLAG_LABELS` — type-safe lookup with compile-time exhaustiveness (Origin: 11.2b)
+- #21: Redundant `hasMultiMda` + `multiMdaBoundaries` columns alongside `delineationResult` JSONB — consolidate (Origin: 3.8)
+- `withTransaction` helper — structural enforcement of transaction scope (Origin: cross-epic pattern, 5 tx bugs across E3-E11)
+- Express 5 `param()` helper retrofit to all pre-11.3 endpoints (Origin: recurring Express 5 typing friction)
+- Exhaustiveness check on event enum ↔ mapping alignment — TypeScript compile-time guard (Origin: 11.3 dual-enum risk)
+
+**Source:** E3-E11 mega-retrospective 2026-03-20. Theme: Types are contracts. Every API surface validated at both ends.
+
+### Story 7.0c: Test Suite Integrity (Prep — Mega-Retro)
+
+As a **development team**,
+I want every test in the suite to verify real production behavior,
+So that green means green and the team can trust test results completely.
+
+**Items:**
+- #1: Test redundancy in terminal-status describe block (Origin: 2.7 LOW, carried 3 epics)
+- #8: Fix pre-existing test mismatch 849/850 (Origin: 3.7)
+- #17: Replace mock `db.select` with proper integration test patterns in pre-submission checkpoint (Origin: 11.1)
+- #19: File list verification — add to code review checklist template as mandatory check (Origin: process debt, 12/27 stories)
+- #22: Fix 4 pre-existing EDUCATION fixture test timeouts (Origin: 3.2)
+- #25: Update architecture diagram to match codebase on reconciliation/comparison ordering (Origin: 11.3)
+- Query counter middleware for test mode — warn when any endpoint exceeds 10 queries (N+1 detection) (Origin: cross-epic pattern)
+
+**Source:** E3-E11 mega-retrospective 2026-03-20. Theme: Green means green. Every test tests something real.
+
+### Story 7.0d: Observation Engine Completion (Prep — Mega-Retro)
+
+As a **development team**,
+I want all planned observation detectors operational and column mapping gaps fixed,
+So that the Epic 7 exception queue receives complete, accurate observation data from migration uploads.
+
+**Items:**
+- #5: CDU alias — make reachable or remove dead entry from `mda_aliases` (Origin: 3.0b)
+- #7: Approval Match observation detector — enable using beneficiary list data from live submissions (Origin: 3.6)
+- #20: `detectMdaFromExtraFields` always returns false — implement actual detection logic (Origin: 3.8)
+- #27: Upload-time period overlap warning — guard check before processing, user confirmation dialog (Origin: mega-retro UAT)
+- #28: Period Overlap observation type (Type 7) — auto-generated when upload overlaps existing period+MDA, includes record count comparison (Origin: mega-retro UAT)
+- #30: `OUTSTANDING BAL.` abbreviation not matched by column mapper — add `BAL`/`BAL.` variants to regex (Origin: mega-retro UAT, BIR file)
+- #31: Summary sheet filtering — sheets with fewer than 4 mapped columns flagged as likely summary, not processed as data (Origin: mega-retro UAT, BIR file Sheet2 double-counting)
+- #32: Accelerated rate labeling — known-tier rates (11.11%, 8.89%, 6.67%) labeled as "Accelerated Repayment Detected — X-month tenure" not "Rate Variance" (Origin: mega-retro UAT)
+- #33: Grade-level vs loan-tier cross-validation — new observation type: "Staff at GL X has principal ₦Y, max eligible ₦Z" (Origin: mega-retro, Awwal domain knowledge)
+- #34: Non-standard rates (5.56%, 4.44%, 3.70%) — investigate whether valid rare tenures or data errors (Origin: mega-retro UAT, BIR file)
+
+**Source:** E3-E11 mega-retrospective 2026-03-20. Theme: All observation detectors operational before E7 exception queue.
+
+### Story 7.0e: UX Polish & Frontend Completeness (Prep — Mega-Retro)
+
+As a **development team**,
+I want every user-facing interaction polished and consistent,
+So that UAT reveals zero navigation gaps, missing components, or visual inconsistencies.
+
+**Items:**
+- #29: SUPER_ADMIN missing from Migration sidebar — add `ROLES.SUPER_ADMIN` to `navItems.ts` line 29 (Origin: mega-retro UAT bug)
+- #10: Column sorting in `FilteredLoanListPage` (Origin: 4.3)
+- #11: `prefetchQuery` on hover for drill-down navigation (Origin: 4.3)
+- #13: Template download tracking / analytics (Origin: 5.5)
+- #14: `IndividualTraceReport` refactor to `useCopyToClipboard` hook (Origin: 5.3)
+- #16: PDF export — harden print-window approach with graceful degradation + popup blocker detection (Origin: 11.0b)
+- #23: Hardcoded 16-color MDA palette — expand to cover all 32+ active MDAs (Origin: 3.3)
+- #26: Missing shadcn/ui `Textarea` component — add to component library, replace native textareas in 11.2/11.3 (Origin: 11.2)
+
+**Source:** E3-E11 mega-retrospective 2026-03-20. Theme: Every user-facing interaction polished and consistent.
+
+### Story 7.0f: System Health Monitoring Foundation (Prep — Mega-Retro)
+
+As a **Department Admin / AG (SUPER_ADMIN)**,
+I want a dedicated System Health page showing 15 operational metrics across 4 groups,
+So that I can assess system health at a glance without external monitoring tools.
+
+**Acceptance Criteria:**
+
+**Given** the sidebar navigation
+**When** a SUPER_ADMIN or DEPT_ADMIN views the dashboard
+**Then** a "System Health" item is visible, navigating to `/dashboard/system-health`
+
+**Given** the System Health page
+**When** a SUPER_ADMIN views it
+**Then** all 15 metrics are displayed across 4 groups:
+- **Infrastructure (5):** API Uptime, Database Connectivity, Memory Usage, CPU Load, Disk Usage
+- **API Performance (4):** Average Response Time, Error Rate (5xx), Slow Endpoint Detection, Request Volume
+- **Data Integrity (3):** Ledger Immutability Check, Migration Record Integrity, Pending Observations
+- **Business Health (3):** MDA Submission Coverage, Unresolved Exceptions, Stale Data Detection
+
+**Given** the System Health page
+**When** a DEPT_ADMIN views it
+**Then** 8 metrics are displayed: Business Health (3) + API Performance summary (2: response time, error rate) + Data Integrity (3)
+
+**Given** the metrics
+**When** displayed
+**Then** each metric shows: value, status indicator (green/amber/grey), configurable threshold, auto-refresh on 30s interval
+
+**Implementation constraints:**
+- Pino middleware enhancement for request metrics collection
+- In-memory rolling window (no new tables, no external dependencies)
+- Periodic background integrity checks (~15min interval, cached)
+- No Grafana, no Prometheus, no external APM — Pino + existing DB only
+- Scope guardrail: No trend charts, no alerting, no historical comparison. Foundation only.
+
+**Source:** E3-E11 mega-retrospective 2026-03-20 + Awwal's prior project experience with 15-metric health pages. Theme: Operational visibility using the tools already in the stack.
+
+### Story 7.0g: Upload Supersede & Record Resolution (Prep — Mega-Retro)
+
+As a **Department Admin**,
+I want to mark a previous upload as superseded by a newer, more complete upload for the same period and MDA,
+So that the system reflects the most accurate data without manual record-by-record cleanup.
+
+**Acceptance Criteria:**
+
+**Given** a Period Overlap observation (from Story 7.0d, Type 7)
+**When** the Department Admin reviews it and clicks "Supersede Previous Upload"
+**Then** the earlier upload is marked with `superseded_by` pointing to the newer upload
+
+**Given** a superseded upload
+**When** the system processes the state change
+**Then:** records from superseded upload have status changed to `superseded`, baseline entries from superseded records are annotated (not deleted), observation engine re-runs for the surviving upload, migration dashboard counts exclude superseded records, full audit trail records who superseded what, when, and why
+
+**Given** the Department Admin views a superseded upload
+**When** displayed
+**Then** it shows "Superseded by Upload #X on [date]" with link to the replacement upload
+
+**Prerequisite:** Story 7.0d (Period Overlap observation type must exist to trigger supersede workflow).
+
+**Source:** E3-E11 mega-retrospective 2026-03-20. Awwal's question about Jan 2023 with 56 vs 200 records in different files.
+
+### Story 7.0h: Payroll Extract Upload & MDA Delineation (Prep — Mega-Retro)
+
+As a **SUPER_ADMIN (AG / Deputy AG)**,
+I want to upload consolidated monthly payroll deduction extracts that are automatically split by MDA,
+So that the system has an authoritative "what was actually deducted" data source to compare against MDA self-reported submissions.
+
+**Context:** The AG directed that she will collect Monthly Car Loan Deductions from the State Payroll and push them into VLPRS to serve as a verification criterion. PRD anticipated this under "Forward Integration (Data Ingestion — State Payroll Database)" — the `DeductionRecord[]` interface is data-source agnostic by design.
+
+**Acceptance Criteria:**
+
+**Given** the sidebar navigation
+**When** a SUPER_ADMIN views the dashboard
+**Then** a "Payroll Upload" item is visible (or nested under an appropriate admin section)
+
+**Given** the payroll upload page
+**When** the AG uploads a consolidated payroll extract (.xlsx or .csv, up to 10MB)
+**Then** the system parses the file, identifies records for each MDA by MDA Code column, and presents a delineation summary: MDA name, record count per MDA, total deduction amount per MDA, any unmatched MDA codes
+
+**Given** the delineation summary
+**When** the AG confirms the upload
+**Then** records are stored in `submission_rows` with `source = 'payroll'`, each record attributed to its correct MDA, and a payroll upload record is created with reference number (format: "PAY-2026-03-0001"), timestamp, total record count, MDA count
+
+**Given** the payroll upload uses the same 8-column format as MDA submissions
+**When** validated
+**Then** the same validation rules apply: Staff ID required, Month in YYYY-MM format, Amount Deducted as valid number, MDA Code must map to known MDA. Event Flag, Event Date, Cessation Reason are optional in payroll uploads
+
+**Given** a payroll upload for a period where some MDAs have already submitted
+**When** the upload is processed
+**Then** the system does NOT overwrite MDA submissions — both coexist as independent records (declared vs actual). Three-way reconciliation (Story 7.0i) compares them
+
+**Given** a payroll upload for a period where no MDA submissions exist yet
+**When** processed
+**Then** the payroll data is stored and reconciliation runs automatically when MDA submissions arrive later
+
+**Given** a DEPT_ADMIN or MDA_OFFICER
+**When** they attempt to access the payroll upload
+**Then** the feature is not visible and the API returns 403
+
+**Implementation notes:**
+- Reuse Story 3.8's MDA delineation pattern for splitting consolidated file by MDA Code
+- Reuse `parseSubmissionCsv()` / xlsx parser for file parsing into `DeductionRecord[]`
+- New `source` value: `'payroll'` alongside existing `'csv'`, `'manual'`, `'historical'`
+- SUPER_ADMIN only — no `scopeToMda` filtering on upload (AG sees all MDAs)
+- File format: Excel (.xlsx) or CSV — both accepted (reuse migration's xlsx parser)
+
+**Source:** E3-E11 mega-retrospective 2026-03-20. AG directive to push payroll deduction data into VLPRS. PRD reference: Forward Integration — `DeductionRecord[]` data-source-agnostic interface.
+
+### Story 7.0i: Three-Way Reconciliation Engine (Prep — Mega-Retro)
+
+As a **SUPER_ADMIN / DEPT_ADMIN / MDA_OFFICER**,
+I want to see how expected deductions, MDA-declared deductions, and payroll-actual deductions compare for each staff member,
+So that discrepancies between any two sources are surfaced for investigation and the system provides the complete truth about what should happen, what the MDA says happened, and what actually happened.
+
+**Context:** With payroll data uploaded by the AG (Story 7.0h), the system has three independent data sources per staff per month. The three-way reconciliation surfaces discrepancies that no single two-way comparison can detect.
+
+**Acceptance Criteria:**
+
+**Given** a month where both MDA submission and payroll upload exist for an MDA
+**When** the reconciliation engine runs (triggered automatically when the second source arrives)
+**Then** for each Staff ID appearing in either source, the system computes:
+- Expected amount (VLPRS computation from loan schedule)
+- Declared amount (MDA submission)
+- Actual amount (payroll extract)
+- Match status: Full Match (all three agree within ₦1), Partial Match (two of three agree), Full Variance (all three disagree)
+- Variance details for each mismatched pair with amounts and percentages
+
+**Given** the reconciliation results
+**When** a SUPER_ADMIN views the AG dashboard
+**Then** new metrics are displayed: overall three-way match rate across all MDAs, count of full variances, top 5 MDAs by variance count. New attention items: "Payroll Variance — X staff across Y MDAs show declared ≠ actual"
+
+**Given** the reconciliation results
+**When** a DEPT_ADMIN or MDA_OFFICER views their reconciliation page
+**Then** they see only their own MDA's three-way comparison (enforced by `scopeToMda`), with per-staff breakdown showing all three values side by side
+
+**Given** specific variance types detected
+**When** the reconciliation runs
+**Then** the following are surfaced as distinct attention categories:
+- **Ghost Deduction:** MDA declared a deduction but payroll shows ₦0 for that staff — "MDA reported ₦X deducted, payroll shows no deduction"
+- **Unreported Deduction:** Payroll shows deduction but MDA declared ₦0 or didn't include the staff — "Payroll deducted ₦X, MDA did not report this staff"
+- **Amount Mismatch:** Both sources report a deduction but amounts differ — "MDA declared ₦X, payroll deducted ₦Y, difference ₦Z"
+- **Staff Not in Payroll:** MDA submitted a staff not found in payroll extract — possible Staff ID mismatch or staff not on payroll
+
+**Given** a Declared ≠ Actual variance with absolute difference ≥ ₦500
+**When** detected
+**Then** it is auto-promoted to the exception queue (Epic 7.1) with all three values attached: expected, declared, actual, plus the variance category
+
+**Given** the reconciliation summary for an MDA
+**When** displayed
+**Then** it shows: total staff compared, full match count + %, partial match count, full variance count, aggregate declared total vs aggregate actual total, and a "Reconciliation Health" score (percentage of full matches)
+
+**Given** a month where payroll upload exists but MDA has not submitted
+**When** viewed
+**Then** the system shows: "Payroll data received for [period]. MDA submission pending. Reconciliation will run automatically upon submission."
+
+**Prerequisite:** Story 7.0h (payroll upload must exist to provide the 'actual' data source).
+
+**Implementation notes:**
+- Extend existing comparison engine (Story 5.4) with third data source
+- Reuse `scopeToMda` for MDA-scoped views
+- New attention item detectors for 4.2's `attentionItemService`
+- Exception auto-promotion feeds into 7.1's exception queue
+- `DeductionRecord[]` interface ensures payroll, CSV, and manual sources are interchangeable
+
+**Source:** E3-E11 mega-retrospective 2026-03-20. AG directive to use payroll data as verification criterion. PRD reference: "Payroll cross-verification data feed enables real-time variance detection instead of monthly batch comparison."
+
 ### Story 7.1: Exception Flagging & Queue
 
 As a **Department Admin**,

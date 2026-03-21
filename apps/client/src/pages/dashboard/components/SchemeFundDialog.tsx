@@ -32,9 +32,9 @@ export function SchemeFundDialog({ open, onOpenChange }: SchemeFundDialogProps) 
     }
   }, [open]);
 
-  const mutation = useMutation<{ success: boolean; fundTotal: string }, Error & { status?: number }>({
+  const mutation = useMutation<{ fundTotal: string }, Error & { status?: number }>({
     mutationFn: async () => {
-      return apiClient<{ success: boolean; fundTotal: string }>('/dashboard/scheme-fund', {
+      return apiClient<{ fundTotal: string }>('/dashboard/scheme-fund', {
         method: 'PUT',
         body: JSON.stringify({ amount }),
       });

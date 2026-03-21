@@ -3,6 +3,7 @@ import { eq, and, inArray, sql, desc, count } from 'drizzle-orm';
 import { db } from '../db/index';
 import { mdaSubmissions, submissionRows, mdas, loans } from '../db/schema';
 import { AppError } from '../lib/appError';
+import { withTransaction } from '../lib/transaction';
 import { withMdaScope } from '../lib/mdaScope';
 import { generateUuidv7 } from '../lib/uuidv7';
 import { compareSubmission } from './comparisonEngine';
@@ -436,7 +437,7 @@ export async function processSubmissionRows(
   const submissionId = generateUuidv7();
   const now = new Date();
 
-  const { refNumber, reconciliationResult } = await db.transaction(async (tx) => {
+  const { refNumber, reconciliationResult } = await withTransaction(async (tx) => {
     // Generate reference number INSIDE transaction to prevent race conditions
     const refResult = await tx.select({ referenceNumber: mdaSubmissions.referenceNumber })
       .from(mdaSubmissions)

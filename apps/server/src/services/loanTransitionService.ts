@@ -3,13 +3,14 @@ import { db } from '../db/index';
 import { loans, loanStateTransitions, users } from '../db/schema';
 import { withMdaScope } from '../lib/mdaScope';
 import { AppError } from '../lib/appError';
+import { withTransaction, type TxHandle } from '../lib/transaction';
 import { VOCABULARY, isValidTransition, VALID_TRANSITIONS } from '@vlprs/shared';
 import type { LoanStatus, LoanStateTransition } from '@vlprs/shared';
 
-// ─── transitionLoan ────────────────────────────────────────────────
+// Re-export TxHandle for backward compatibility
+export type { TxHandle } from '../lib/transaction';
 
-/** Transaction handle type — for passing existing transactions to transitionLoan. */
-export type TxHandle = Parameters<Parameters<typeof db.transaction>[0]>[0];
+// ─── transitionLoan ────────────────────────────────────────────────
 
 async function executeTransition(
   tx: TxHandle,
@@ -95,10 +96,10 @@ export async function transitionLoan(
   mdaScope: string | null | undefined,
   existingTx?: TxHandle,
 ): Promise<LoanStateTransition> {
-  if (existingTx) {
-    return executeTransition(existingTx, userId, loanId, toStatus, reason, mdaScope);
-  }
-  return db.transaction((tx) => executeTransition(tx, userId, loanId, toStatus, reason, mdaScope));
+  return withTransaction(
+    (tx) => executeTransition(tx, userId, loanId, toStatus, reason, mdaScope),
+    existingTx,
+  );
 }
 
 // ─── getTransitionHistory ──────────────────────────────────────────

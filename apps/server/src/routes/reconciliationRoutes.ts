@@ -11,7 +11,8 @@ import { scopeToMda } from '../middleware/scopeToMda';
 import { validate } from '../middleware/validate';
 import { auditLog } from '../middleware/auditLog';
 import { writeLimiter, readLimiter } from '../middleware/rateLimiter';
-import { ROLES, resolveDiscrepancySchema } from '@vlprs/shared';
+import { ROLES, resolveDiscrepancySchema, resolveDiscrepancyResponseSchema, apiResponseSchema, reconciliationSummarySchema } from '@vlprs/shared';
+import { validateResponse } from '../middleware/validateResponse';
 import { param } from '../lib/params';
 import * as reconciliationEngine from '../services/reconciliationEngine';
 
@@ -27,6 +28,7 @@ router.get(
   scopeToMda,
   readLimiter,
   auditLog,
+  validateResponse(apiResponseSchema(reconciliationSummarySchema)),
   async (req: Request, res: Response) => {
     req.auditAction = 'RECONCILIATION_VIEWED';
     const submissionId = param(req.params.submissionId);
@@ -46,6 +48,7 @@ router.patch(
   writeLimiter,
   validate(resolveDiscrepancySchema),
   auditLog,
+  validateResponse(apiResponseSchema(resolveDiscrepancyResponseSchema)),
   async (req: Request, res: Response) => {
     req.auditAction = 'RECONCILIATION_DISCREPANCY_RESOLVED';
     const id = param(req.params.id);

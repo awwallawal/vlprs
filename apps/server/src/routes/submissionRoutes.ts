@@ -8,7 +8,8 @@ import { scopeToMda } from '../middleware/scopeToMda';
 import { validate, validateQuery } from '../middleware/validate';
 import { auditLog } from '../middleware/auditLog';
 import { writeLimiter, readLimiter } from '../middleware/rateLimiter';
-import { ROLES, submissionListQuerySchema, manualSubmissionBodySchema, VOCABULARY } from '@vlprs/shared';
+import { ROLES, submissionListQuerySchema, manualSubmissionBodySchema, VOCABULARY, apiResponseSchema, submissionUploadResponseSchema, submissionListResponseSchema, submissionDetailResponseSchema, submissionComparisonResponseSchema } from '@vlprs/shared';
+import { validateResponse } from '../middleware/validateResponse';
 import { AppError } from '../lib/appError';
 import { param } from '../lib/params';
 import * as submissionService from '../services/submissionService';
@@ -53,6 +54,7 @@ router.post(
   writeLimiter,
   csvUpload.single('file'),
   auditLog,
+  validateResponse(apiResponseSchema(submissionUploadResponseSchema)),
   async (req: Request, res: Response) => {
     if (!req.file) {
       throw new AppError(400, 'MISSING_FILE', 'No file uploaded');
@@ -79,6 +81,7 @@ router.post(
   writeLimiter,
   validate(manualSubmissionBodySchema),
   auditLog,
+  validateResponse(apiResponseSchema(submissionUploadResponseSchema)),
   async (req: Request, res: Response) => {
     const { rows } = req.body as { rows: Array<{
       staffId: string;
@@ -114,6 +117,7 @@ router.get(
   readLimiter,
   auditLog,
   validateQuery(submissionListQuerySchema),
+  validateResponse(apiResponseSchema(submissionListResponseSchema)),
   async (req: Request, res: Response) => {
     const { page, pageSize, period, mdaId } = req.query as {
       page?: string;
@@ -145,6 +149,7 @@ router.get(
   ...readAuth,
   readLimiter,
   auditLog,
+  validateResponse(apiResponseSchema(submissionComparisonResponseSchema)),
   async (req: Request, res: Response) => {
     const id = param(req.params.id);
     const mdaScope = (req as Request & { mdaScope?: string | null }).mdaScope ?? null;
@@ -168,6 +173,7 @@ router.get(
   ...readAuth,
   readLimiter,
   auditLog,
+  validateResponse(apiResponseSchema(submissionDetailResponseSchema)),
   async (req: Request, res: Response) => {
     const id = param(req.params.id);
 
