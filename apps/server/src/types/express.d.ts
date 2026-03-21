@@ -17,6 +17,8 @@ declare global {
       mdaScope?: string | null;
       /** Can be set by route handlers to override action derivation in auditLog middleware */
       auditAction?: string;
+      /** Set by queryCounter middleware — total DB queries executed during this request */
+      queryCount?: number;
     }
   }
 }

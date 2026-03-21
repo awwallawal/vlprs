@@ -26,17 +26,31 @@
     <action>Check if git repository detected in current directory</action>
     <check if="git repository exists">
       <action>Run `git status --porcelain` to find uncommitted changes</action>
-      <action>Run `git diff --name-only` to see modified files</action>
+      <action>Run `git diff --name-only` to see modified files (unstaged)</action>
       <action>Run `git diff --cached --name-only` to see staged files</action>
-      <action>Compile list of actually changed files from git output</action>
+      <action>Run `git log --oneline` to identify which commits belong to THIS story (by commit message convention: "feat: Story X.Y" or "fix:" referencing this story)</action>
+      <action>Run `git diff --name-only &lt;pre-story-commit&gt;..HEAD` to get the full list of files changed by this story's commits. The pre-story-commit is the last commit BEFORE the story's first change — identify it from git log</action>
+      <action>Compile story-scoped file list: combine uncommitted changes + files from story-specific commits. EXCLUDE files changed only by unrelated commits (hotfixes, prior-story patches, CI fixes) that landed between stories</action>
     </check>
 
-    <!-- Cross-reference story File List vs git reality -->
-    <action>Compare story's Dev Agent Record → File List with actual git changes</action>
-    <action>Note discrepancies:
-      - Files in git but not in story File List
-      - Files in story File List but no git changes
-      - Missing documentation of what was actually changed
+    <!-- Cross-reference story File List vs git reality — BLOCKING GATE -->
+    <critical>File List reconciliation is a BLOCKING gate — review CANNOT pass if story File List doesn't match story-scoped git changes</critical>
+    <action>Compare story's Dev Agent Record → File List against the story-scoped file list compiled above</action>
+    <action>Produce structured reconciliation verdict:
+
+      **File List Reconciliation:**
+      - Story-scoped base commit: `&lt;hash&gt; &lt;message&gt;`
+      - Story commits identified: [list of commit hashes and messages]
+      - Files changed by this story but NOT in story File List: [list or "None"]
+      - Files in story File List but NOT changed by this story: [list or "None"]
+      - Unrelated commits excluded from comparison: [list or "None"]
+      - **Verdict: PASS** (all story files match) or **Verdict: FAIL** (mismatch detected)
+
+      If Verdict is FAIL → review outcome MUST be "Changes Requested" regardless of other findings.
+      The dev agent must update the File List before the review can pass.
+
+      Note: Files changed by hotfix/patch commits between stories are NOT part of this story's scope
+      and should not cause a FAIL verdict. Document them under "Unrelated commits excluded."
     </action>
 
     <invoke-protocol name="discover_inputs" />

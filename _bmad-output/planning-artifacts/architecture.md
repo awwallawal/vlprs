@@ -1266,24 +1266,25 @@ MDA Officer navigates to Submissions
     │   all-or-nothing: any row fails → entire submission rejected with per-row error
     │   referencing field names and row numbers)
     ▼
-[3] submissionService.ts → BEGIN TRANSACTION
+[3] submissionService.ts → BEGIN TRANSACTION [INSIDE tx]
     │  → INSERT submission record (status: PROCESSING)
-    │  → INSERT each row as ledger_entry (immutable)
-    │  → UPDATE submission status → SUBMITTED
+    │  → INSERT each row as submission_rows (immutable)
+    │  → reconcileSubmission() — reconcile mid-cycle events against CSV rows [INSIDE tx]
+    │     • matched events (same staff + event type + dates within 7 days) confirmed
+    │     • date discrepancies flagged for Dept Admin reconciliation
+    │     • unconfirmed mid-cycle events flagged as "Unconfirmed Event"
+    │  → UPDATE submission with reconciliation summary
     │  → COMMIT
     ▼
-[4] comparisonEngine.ts → compare MDA declared vs system computed
+[4] comparisonEngine.ts → compare MDA declared vs system computed [OUTSIDE tx]
     │  → categorise: CLEAN, MINOR_VARIANCE, FLAGGED, ALERT, INFO
+    │  → wrapped in try/catch: failure does not invalidate submission
     ▼
-[5] employmentEventService.ts → reconcile mid-cycle events against CSV rows
-    │  → matched events (same staff + event type + dates within 7 days) confirmed
-    │  → date discrepancies flagged for Dept Admin reconciliation
-    │  → unconfirmed mid-cycle events flagged as "Unconfirmed Event"
-    ▼
-[6] exceptionService.ts → auto-flag rows exceeding thresholds
+[5] exceptionService.ts → auto-flag rows exceeding thresholds [OUTSIDE tx]
     │  → assign priority (HIGH, MEDIUM, LOW) → INSERT exception records
     ▼
-[7] emailService.ts → submission confirmation to MDA officer
+[6] emailService.ts → submission confirmation to MDA officer (fire-and-forget)
+    │  → reconciliation alert to Dept Admin (if discrepancies found)
     │  → exception alerts to Dept Admin (if HIGH priority)
     ▼
 [8] Dashboard hero metrics auto-updated on next TanStack Query refetch

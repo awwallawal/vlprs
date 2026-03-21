@@ -9,7 +9,7 @@
 - [ ] Tech stack detected and documented
 - [ ] MCP doc search performed (or web fallback) and references captured
 - [ ] Acceptance Criteria cross-checked against implementation
-- [ ] File List reviewed and validated for completeness
+- [ ] **[BLOCKING]** File List matches story-scoped git changes — reconcile story File List against files changed by this story's commits (exclude unrelated hotfix/prior-story commits)
 - [ ] Tests identified and mapped to ACs; gaps noted
 - [ ] Code quality review performed on changed files
 - [ ] Security review performed on changed files and dependencies

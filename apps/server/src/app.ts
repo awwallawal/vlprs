@@ -26,6 +26,8 @@ import historicalSubmissionRoutes from './routes/historicalSubmissionRoutes';
 import { AppError } from './lib/appError';
 import { VOCABULARY } from '@vlprs/shared';
 import { requestLogger } from './middleware/requestLogger';
+import { queryCounter } from './middleware/queryCounter';
+import { env } from './config/env';
 
 const app = express();
 
@@ -50,6 +52,11 @@ app.use(express.urlencoded({ extended: true, limit: '1mb' }));
 
 // Structured request logging (global — logs all requests)
 app.use(requestLogger);
+
+// N+1 query detection (dev/test only — zero overhead in production)
+if (env.NODE_ENV !== 'production') {
+  app.use(queryCounter);
+}
 
 // Routes
 app.use('/api', healthRoutes);
