@@ -142,15 +142,12 @@ describe('isValidTransition — self-transitions', () => {
 });
 
 describe('isValidTransition — terminal statuses have zero outgoing transitions', () => {
-  const terminalStatuses: LoanStatus[] = ['COMPLETED', 'TRANSFERRED', 'WRITTEN_OFF', 'RETIRED', 'DECEASED'];
-
-  for (const terminal of terminalStatuses) {
-    for (const target of ALL_STATUSES) {
-      it(`${terminal} → ${target} is invalid (terminal status)`, () => {
-        expect(isValidTransition(terminal, target)).toBe(false);
-      });
+  it('terminal statuses have zero outgoing transitions in VALID_TRANSITIONS', () => {
+    for (const terminal of TERMINAL_STATUSES) {
+      const transitions = VALID_TRANSITIONS[terminal];
+      expect(transitions ?? [], `${terminal} should have no valid transitions`).toHaveLength(0);
     }
-  }
+  });
 });
 
 describe('isValidTransition — Story 11.2 employment event transitions', () => {
