@@ -262,6 +262,51 @@ export function useCreateBatchBaseline(uploadId: string) {
   });
 }
 
+// ─── Period Overlap Check (Story 7.0d) ───────────────────────────────
+
+export function useCheckOverlap() {
+  return useMutation<
+    { overlap: boolean; existingUploadId?: string; existingRecordCount?: number; newRecordCount?: number; period?: string; mdaName?: string },
+    Error,
+    { uploadId: string; periodYear?: number; periodMonth?: number }
+  >({
+    mutationFn: async ({ uploadId, periodYear, periodMonth }) => {
+      const params = new URLSearchParams();
+      if (periodYear !== undefined) params.set('periodYear', String(periodYear));
+      if (periodMonth !== undefined) params.set('periodMonth', String(periodMonth));
+
+      const res = await fetch(`${API_BASE}/migrations/${uploadId}/check-overlap?${params}`, {
+        headers: { ...getAuthHeaders() },
+        credentials: 'include',
+      });
+
+      const body = await res.json();
+      if (!res.ok || !body.success) {
+        throw new Error(body.error?.message || 'Overlap check failed');
+      }
+      return body.data;
+    },
+  });
+}
+
+export function useConfirmOverlap() {
+  return useMutation<{ confirmed: boolean }, Error, { uploadId: string }>({
+    mutationFn: async ({ uploadId }) => {
+      const res = await fetch(`${API_BASE}/migrations/${uploadId}/confirm-overlap`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+        credentials: 'include',
+      });
+
+      const body = await res.json();
+      if (!res.ok || !body.success) {
+        throw new Error(body.error?.message || 'Overlap confirmation failed');
+      }
+      return body.data;
+    },
+  });
+}
+
 export function useBaselineSummary(uploadId: string) {
   return useQuery<BaselineSummary>({
     queryKey: ['baseline-summary', uploadId],

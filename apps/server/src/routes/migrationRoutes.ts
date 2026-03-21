@@ -92,6 +92,31 @@ router.post(
   },
 );
 
+// POST /api/migrations/:id/confirm-overlap — Explicitly confirm proceeding despite period overlap
+router.post(
+  '/migrations/:id/confirm-overlap',
+  ...adminAuth,
+  auditLog,
+  async (req: Request, res: Response) => {
+    const uploadId = param(req.params.id);
+    const result = await migrationService.confirmOverlap(uploadId);
+    res.json({ success: true, data: result });
+  },
+);
+
+// GET /api/migrations/:id/check-overlap — Check if upload overlaps existing period+MDA data
+router.get(
+  '/migrations/:id/check-overlap',
+  ...adminAuth,
+  async (req: Request, res: Response) => {
+    const uploadId = param(req.params.id);
+    const periodYear = req.query.periodYear ? Number(req.query.periodYear) : undefined;
+    const periodMonth = req.query.periodMonth ? Number(req.query.periodMonth) : undefined;
+    const result = await migrationService.checkPeriodOverlap(uploadId, periodYear, periodMonth);
+    res.json({ success: true, data: result });
+  },
+);
+
 // GET /api/migrations — List uploads for MDA with pagination
 router.get(
   '/migrations',

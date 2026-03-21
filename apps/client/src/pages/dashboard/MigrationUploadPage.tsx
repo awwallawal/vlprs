@@ -5,7 +5,7 @@ import { MigrationUploadResult } from './components/MigrationUploadResult';
 import { ValidationSummaryCard } from './components/ValidationSummaryCard';
 import { RecordComparisonRow } from './components/RecordComparisonRow';
 import { StaffProfilePanel } from './components/StaffProfilePanel';
-import { useUploadMigration, useConfirmMapping, useValidateUpload, useValidationResults, useMdaList, useCreateBaseline, useCreateBatchBaseline, useBaselineSummary } from '@/hooks/useMigration';
+import { useUploadMigration, useConfirmMapping, useValidateUpload, useValidationResults, useMdaList, useCreateBaseline, useCreateBatchBaseline, useBaselineSummary, useCheckOverlap, useConfirmOverlap } from '@/hooks/useMigration';
 import { BaselineConfirmationDialog } from './components/BaselineConfirmationDialog';
 import { BaselineResultSummary } from './components/BaselineResultSummary';
 import { usePersonList, useMatchPersons } from '@/hooks/useStaffProfile';
@@ -42,10 +42,20 @@ export function MigrationUploadPage() {
   const [baselinedRecordIds, setBaselinedRecordIds] = useState<Set<string>>(new Set());
   const [baselineInProgressId, setBaselineInProgressId] = useState<string | null>(null);
   const [delineationResult, setDelineationResult] = useState<DelineationResult | null>(null);
+  const [overlapWarning, setOverlapWarning] = useState<{
+    existingUploadId?: string;
+    existingRecordCount?: number;
+    newRecordCount?: number;
+    period?: string;
+    mdaName?: string;
+  } | null>(null);
+  const [pendingMappings, setPendingMappings] = useState<Array<{ sheetName: string; mappings: Array<{ sourceIndex: number; canonicalField: string | null }> }> | null>(null);
 
   const uploadMutation = useUploadMigration();
   const confirmMutation = useConfirmMapping();
   const validateMutation = useValidateUpload();
+  const checkOverlapMutation = useCheckOverlap();
+  const confirmOverlapMutation = useConfirmOverlap();
 
   const validationResults = useValidationResults(
     preview?.uploadId ?? '',
@@ -79,7 +89,7 @@ export function MigrationUploadPage() {
     }
   }, [selectedMdaId, uploadMutation]);
 
-  const handleConfirmMapping = useCallback(async (
+  const proceedWithConfirm = useCallback(async (
     mappings: Array<{ sheetName: string; mappings: Array<{ sourceIndex: number; canonicalField: string | null }> }>,
   ) => {
     if (!preview || !selectedFile) return;
@@ -109,6 +119,50 @@ export function MigrationUploadPage() {
       setStep('review');
     }
   }, [preview, selectedFile, selectedMdaId, confirmMutation, delineationMutation]);
+
+  const handleConfirmMapping = useCallback(async (
+    mappings: Array<{ sheetName: string; mappings: Array<{ sourceIndex: number; canonicalField: string | null }> }>,
+  ) => {
+    if (!preview || !selectedFile) return;
+
+    // Check for period overlap before confirming
+    const firstSheet = preview.sheets[0];
+    const period = firstSheet?.period;
+    try {
+      const overlapResult = await checkOverlapMutation.mutateAsync({
+        uploadId: preview.uploadId,
+        periodYear: period?.year,
+        periodMonth: period?.month,
+      });
+
+      if (overlapResult.overlap) {
+        setOverlapWarning(overlapResult);
+        setPendingMappings(mappings);
+        return; // Show dialog instead of proceeding
+      }
+    } catch {
+      // If overlap check fails, proceed anyway (non-blocking)
+    }
+
+    await proceedWithConfirm(mappings);
+  }, [preview, selectedFile, checkOverlapMutation, proceedWithConfirm]);
+
+  const handleOverlapConfirm = useCallback(async () => {
+    if (!preview || !pendingMappings) return;
+    try {
+      await confirmOverlapMutation.mutateAsync({ uploadId: preview.uploadId });
+      setOverlapWarning(null);
+      await proceedWithConfirm(pendingMappings);
+      setPendingMappings(null);
+    } catch {
+      // Error handled by mutation state
+    }
+  }, [preview, pendingMappings, confirmOverlapMutation, proceedWithConfirm]);
+
+  const handleOverlapCancel = useCallback(() => {
+    setOverlapWarning(null);
+    setPendingMappings(null);
+  }, []);
 
   const handleValidate = useCallback(async () => {
     if (!preview) return;
@@ -163,6 +217,8 @@ export function MigrationUploadPage() {
     setBaselinedRecordIds(new Set());
     setBaselineInProgressId(null);
     setDelineationResult(null);
+    setOverlapWarning(null);
+    setPendingMappings(null);
   }, []);
 
   const handleConfirmDelineation = useCallback(async (
@@ -431,6 +487,43 @@ export function MigrationUploadPage() {
             status={uploadMutation.isPending ? 'uploading' : uploadMutation.isError ? 'error' : 'idle'}
             errorMessage={uploadMutation.error?.message}
           />
+        </div>
+      )}
+
+      {/* Period Overlap Warning Dialog */}
+      {overlapWarning && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg border border-border shadow-xl max-w-md w-full mx-4 p-6 space-y-4">
+            <h3 className="text-sm font-semibold text-text-primary">Existing Upload Found</h3>
+            <p className="text-sm text-text-secondary">
+              An existing upload was found for <span className="font-medium">{overlapWarning.period}</span> at{' '}
+              <span className="font-medium">{overlapWarning.mdaName}</span> with{' '}
+              <span className="font-medium">{overlapWarning.existingRecordCount}</span> records.
+              {overlapWarning.newRecordCount ? (
+                <> This upload contains <span className="font-medium">{overlapWarning.newRecordCount}</span> records.</>
+              ) : null}
+            </p>
+            <p className="text-xs text-text-muted">
+              You may proceed — both uploads will be preserved for comparison. You can later designate which upload should be the canonical source.
+            </p>
+            <div className="flex justify-end gap-3 pt-2">
+              <button
+                type="button"
+                onClick={handleOverlapCancel}
+                className="px-4 py-2 text-sm border border-border rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleOverlapConfirm}
+                disabled={confirmOverlapMutation.isPending}
+                className="px-4 py-2 text-sm bg-teal text-white rounded-lg hover:bg-teal-hover transition-colors disabled:opacity-50"
+              >
+                {confirmOverlapMutation.isPending ? 'Confirming...' : 'Proceed Anyway'}
+              </button>
+            </div>
+          </div>
         </div>
       )}
 

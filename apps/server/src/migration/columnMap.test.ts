@@ -57,6 +57,19 @@ describe('mapColumns', () => {
     expect(mapping.fieldToIndex.get('dateOfFirstAppointment')).toBe(3);
   });
 
+  it('maps OUTSTANDING BAL. and BAL. variants to outstandingBalance', () => {
+    const cases: Array<[string, string]> = [
+      ['OUTSTANDING BAL.', 'outstandingBalance'],
+      ['OUTSTANDING BAL', 'outstandingBalance'],
+      ['BAL.', 'outstandingBalance'],
+      ['BAL', 'outstandingBalance'],
+    ];
+    for (const [header, expected] of cases) {
+      const mapping = mapColumns(['S/N', 'NAME', header]);
+      expect(mapping.fieldToIndex.get(expected as 'outstandingBalance'), `"${header}" should map to ${expected}`).toBe(2);
+    }
+  });
+
   it('first match wins for duplicate column names', () => {
     const headers = ['S/N', 'NAME', 'PRINCIPAL', 'PRINCIPAL'];
     const mapping = mapColumns(headers);

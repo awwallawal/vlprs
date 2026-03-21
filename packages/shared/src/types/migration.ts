@@ -30,7 +30,8 @@ export type CanonicalField =
   | 'totalLoanPaid' | 'outstandingBalance'
   | 'remarks' | 'startDate' | 'endDate'
   | 'employeeNo' | 'refId' | 'commencementDate' | 'station'
-  | 'dateOfBirth' | 'dateOfFirstAppointment';
+  | 'dateOfBirth' | 'dateOfFirstAppointment'
+  | 'gradeLevel';
 
 export interface ColumnMappingSuggestion {
   sourceIndex: number;
@@ -49,11 +50,17 @@ export interface SheetPreview {
   unmappedColumns: Array<{ index: number; name: string }>;
 }
 
+export interface SkippedSheet {
+  name: string;
+  reason: string;
+}
+
 export interface MigrationUploadPreview {
   uploadId: string;
   filename: string;
   sheets: SheetPreview[];
   detectedMda: string | null;
+  skippedSheets: SkippedSheet[];
 }
 
 export interface MigrationUpload {

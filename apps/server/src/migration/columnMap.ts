@@ -43,12 +43,19 @@ const COLUMN_RULES: Array<[RegExp, CanonicalField]> = [
   [/^(first\s*)?app(ointmen)?t\.?\s*date$/i, 'dateOfFirstAppointment'],
   [/^date\s*of\s*1st\s*appt?\.?$/i, 'dateOfFirstAppointment'],
 
+  // Grade Level (note: bare "level" may match non-grade columns — first-match-wins mitigates)
+  [/^grade\s*level$/i, 'gradeLevel'],
+  [/^gl$/i, 'gradeLevel'],
+  [/^level$/i, 'gradeLevel'],
+
   // Station
   [/^station$/i, 'station'],
 
   // Outstanding balance — specific patterns first
   [/^out\s*s?t?a?n?d?i?n?g?\s*balance$/i, 'outstandingBalance'],
-  [/^outsd\.?\s*balance$/i, 'outstandingBalance'],
+  [/^outstanding\s+bal\.?$/i, 'outstandingBalance'],
+  [/^outsd\.?\s*bal(ance)?\.?$/i, 'outstandingBalance'],
+  [/^bal\.?$/i, 'outstandingBalance'],
   [/^outstanding$/i, 'outstandingBalance'],
 
   // Total loan paid

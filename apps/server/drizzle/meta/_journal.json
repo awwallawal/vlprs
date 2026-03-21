@@ -176,6 +176,13 @@
       "when": 1774073119529,
       "tag": "0024_robust_darkhawk",
       "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1774108590517,
+      "tag": "0025_brown_paibok",
+      "breakpoints": true
     }
   ]
 }
