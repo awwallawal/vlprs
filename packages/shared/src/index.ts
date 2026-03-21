@@ -39,6 +39,7 @@ export type { ComputationParams, ScheduleRow, RepaymentSchedule, AutoSplitResult
 export type { BalanceResult, LedgerEntryForBalance } from './types/balance.js';
 export type { ServiceStatusVerificationRow, ServiceStatusVerificationSummary, ServiceStatusVerificationReport } from './types/report.js';
 export type { TraceReportData, TraceLoanCycle, BalanceEntry, RateAnalysis, TraceReportMetadata, TraceReportSummary, DataCompletenessScore } from './types/traceReport.js';
+export type { SystemHealthResponse, HealthMetric, HealthGroup, HealthGroupName, MetricStatus } from './types/systemHealth.js';
 
 // Constants
 export { ROLES, ALL_ROLES, ROLE_HIERARCHY, getManageableRoles, canManageRole, type Role } from './constants/roles.js';

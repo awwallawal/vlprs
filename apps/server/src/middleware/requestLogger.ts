@@ -1,6 +1,7 @@
 import type { Request, Response, NextFunction } from 'express';
 import { randomUUID } from 'node:crypto';
 import { logger } from '../lib/logger';
+import { metricsCollector } from '../services/metricsCollector.js';
 
 /**
  * Structured request/response logging with pino.
@@ -34,6 +35,8 @@ export function requestLogger(req: Request, res: Response, next: NextFunction): 
     } else {
       logger.info(logData, 'Request completed');
     }
+
+    metricsCollector.recordRequest(durationMs, res.statusCode, req.method, req.originalUrl);
   });
 
   next();

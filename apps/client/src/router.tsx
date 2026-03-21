@@ -314,6 +314,13 @@ export const router = createBrowserRouter([
             lazy: () => import('@/pages/dashboard/AdminPage'),
           },
           {
+            path: 'system-health',
+            lazy: () =>
+              import('@/pages/dashboard/SystemHealthPage').then((m) => ({
+                Component: m.SystemHealthPage,
+              })),
+          },
+          {
             path: 'profile',
             lazy: () => import('@/pages/dashboard/ProfilePage'),
           },
