@@ -4,7 +4,9 @@ export type ObservationType =
   | 'negative_balance'
   | 'multi_mda'
   | 'no_approval_match'
-  | 'consecutive_loan';
+  | 'consecutive_loan'
+  | 'period_overlap'
+  | 'grade_tier_mismatch';
 
 export type ObservationStatus = 'unreviewed' | 'reviewed' | 'resolved' | 'promoted';
 

@@ -5,7 +5,7 @@
  * Template rendering is server-side to enforce vocabulary compliance at source.
  */
 
-import { eq, inArray } from 'drizzle-orm';
+import { eq, and, inArray, isNull, sql } from 'drizzle-orm';
 import Decimal from 'decimal.js';
 import { db } from '../db/index';
 import {
@@ -14,9 +14,24 @@ import {
   migrationUploads,
   personMatches,
   mdas,
+  mdaSubmissions,
+  submissionRows,
+  loans,
 } from '../db/schema';
 import { buildTimelines } from './staffProfileService';
+import { RATE_TOLERANCE } from './migrationValidationService';
+import { getTierForGradeLevel } from '@vlprs/shared';
 import type { ObservationType } from '@vlprs/shared';
+
+// Accelerated rate-to-tenure mapping (derived from KNOWN_RATE_TIERS minus 13.33% standard)
+// Formula: rate = 13.33% × tenure / 60
+const ACCELERATED_RATES: Record<number, number> = {
+  6.67: 30,
+  8.0: 36,
+  8.89: 40,
+  10.66: 48,
+  11.11: 50,
+};
 
 // ─── Types ──────────────────────────────────────────────────────────
 
@@ -80,6 +95,7 @@ export async function generateObservations(
       sourceRow: migrationRecords.sourceRow,
       installmentCount: migrationRecords.installmentCount,
       employeeNo: migrationRecords.employeeNo,
+      gradeLevel: migrationRecords.gradeLevel,
     })
     .from(migrationRecords)
     .where(eq(migrationRecords.uploadId, uploadId));
@@ -136,9 +152,17 @@ export async function generateObservations(
   const multiMdaObs = await detectMultiMda(uploadId, records, mdaMap);
   allObservations.push(...multiMdaObs);
 
-  // No Approval Match: skip if approved beneficiary lists not loaded
-  // This will be enabled when beneficiary list data is available
-  // const noApprovalObs = detectNoApprovalMatch(...);
+  // No Approval Match: cross-reference migration staff against live submission data
+  const noApprovalObs = await detectNoApprovalMatch(records, mdaMap, uploadId);
+  allObservations.push(...noApprovalObs);
+
+  // Period Overlap: detect when multiple uploads cover the same period+MDA
+  const periodOverlapObs = await detectPeriodOverlap(uploadId, records, mdaMap);
+  allObservations.push(...periodOverlapObs);
+
+  // Grade-Tier Mismatch: cross-validate grade level against principal amount limits
+  const gradeTierObs = detectGradeTierMismatch(records, mdaMap, uploadId);
+  allObservations.push(...gradeTierObs);
 
   // Batch insert with idempotency guard
   const { generated, skipped, byType } = await batchInsertObservations(allObservations, uploadId);
@@ -192,6 +216,52 @@ export function detectRateVariance(
     if (!r.monthlyDeduction) completeness -= 25;
     if (!r.installmentCount) completeness -= 25;
 
+    // Classify rate: accelerated, non-standard, or generic variance
+    const rateDecimal = new Decimal(rate);
+    let description: string;
+    let possibleExplanations: string[];
+    const dataPoints: Record<string, unknown> = {
+      rate,
+      interestAmount,
+      principal,
+      totalLoan,
+      tenure,
+      standardRate: '13.33',
+    };
+
+    // Check against accelerated rate tiers — find the closest match within tolerance
+    const matchedAccelerated = Object.entries(ACCELERATED_RATES)
+      .map(([tierRate, tenure]) => ({
+        tierRate,
+        tenure,
+        distance: rateDecimal.minus(Number(tierRate)).abs(),
+      }))
+      .filter((m) => m.distance.lte(RATE_TOLERANCE))
+      .sort((a, b) => a.distance.comparedTo(b.distance))[0] ?? null;
+
+    if (matchedAccelerated) {
+      const { tierRate: matchedRate, tenure: matchedTenure } = matchedAccelerated;
+      description = `Accelerated Repayment Detected — ${matchedTenure}-month tenure. The standard 13.33% annual rate applied to a ${matchedTenure}-month repayment period produces an effective ${matchedRate}% total interest. This is a recognized accelerated repayment pathway.`;
+      possibleExplanations = [
+        `Staff opted for a ${matchedTenure}-month accelerated repayment plan`,
+        'Approved shorter tenure to reduce total interest',
+      ];
+      dataPoints.matchedTenure = matchedTenure;
+      dataPoints.matchedRate = matchedRate;
+    } else {
+      // Compute theoretical tenure for non-standard rates
+      const computedTenure = Math.round(rateDecimal.div(new Decimal('13.33')).mul(60).toNumber());
+      dataPoints.computedTenure = computedTenure;
+
+      description = `Non-Standard Rate — effective rate ${rate}% (equivalent to ~${computedTenure}-month tenure) does not correspond to any recognized repayment pathway. This may indicate: partial repayment arrangement, administrative adjustment, or data entry variance. Requires manual verification against original loan approval records.`;
+      possibleExplanations = [
+        'Partial repayment arrangement outside standard tenures',
+        'Administrative adjustment to loan terms',
+        'Data entry variance in principal or total loan amount',
+      ];
+      dataPoints.knownNonStandard = true;
+    }
+
     result.push({
       type: 'rate_variance',
       staffName: r.staffName,
@@ -200,23 +270,12 @@ export function detectRateVariance(
       mdaId: r.mdaId,
       migrationRecordId: r.id,
       uploadId,
-      description: `This loan's total interest is ${rate}% (${interestAmount} on ${principal}), which differs from the standard 13.33%. This is consistent with a ${tenure}-installment repayment plan. Possible explanations: different approved tenure, GL-level based rate tier, administrative adjustment. Verify against loan application records.`,
+      description,
       context: {
-        possibleExplanations: [
-          'Different approved tenure than the standard plan',
-          'GL-level based rate tier applied to this loan',
-          'Administrative adjustment to loan terms',
-        ],
+        possibleExplanations,
         suggestedAction: `Verify against loan application records for ${r.staffName} at ${mdaName}.`,
         dataCompleteness: completeness,
-        dataPoints: {
-          rate,
-          interestAmount,
-          principal,
-          totalLoan,
-          tenure,
-          standardRate: '13.33',
-        },
+        dataPoints,
       },
       sourceReference: {
         file: r.sourceFile,
@@ -609,6 +668,345 @@ export function detectConsecutiveLoan(
       if (m.principal !== null) prevPrincipal = m.principal;
       if (m.outstandingBalance !== null) prevBalance = m.outstandingBalance;
     }
+  }
+
+  return result;
+}
+
+// ─── No Approval Match Detector ─────────────────────────────────────
+
+/**
+ * Cross-reference migration staff against confirmed submission data.
+ * Staff appearing in migration but NOT in any confirmed submission for the same MDA
+ * may warrant attention.
+ *
+ * Guard: Only runs if the MDA has ≥1 confirmed (non-historical) submission.
+ * Data completeness: 100% if ≥3 submissions, 50% if 1-2 submissions.
+ */
+async function detectNoApprovalMatch(
+  records: Array<{
+    id: string;
+    staffName: string;
+    mdaId: string;
+    loanId: string | null;
+    employeeNo: string | null;
+    sourceFile: string;
+    sourceSheet: string;
+    sourceRow: number;
+  }>,
+  mdaMap: Map<string, { id: string; name: string; code: string }>,
+  uploadId: string,
+): Promise<ObservationInsert[]> {
+  // Group migration records by MDA
+  const recordsByMda = new Map<string, typeof records>();
+  for (const r of records) {
+    const existing = recordsByMda.get(r.mdaId) ?? [];
+    existing.push(r);
+    recordsByMda.set(r.mdaId, existing);
+  }
+
+  const result: ObservationInsert[] = [];
+
+  // Batch query: count confirmed (non-historical) submissions per MDA (single query for all MDAs)
+  const allMdaIds = [...recordsByMda.keys()];
+  const submissionCounts = await db
+    .select({
+      mdaId: mdaSubmissions.mdaId,
+      count: sql<number>`COUNT(*)::int`,
+    })
+    .from(mdaSubmissions)
+    .where(
+      and(
+        inArray(mdaSubmissions.mdaId, allMdaIds),
+        eq(mdaSubmissions.status, 'confirmed'),
+        sql`${mdaSubmissions.source} != 'historical'`,
+      ),
+    )
+    .groupBy(mdaSubmissions.mdaId);
+
+  const submissionCountMap = new Map(submissionCounts.map((r) => [r.mdaId, r.count]));
+
+  // Filter to MDAs that have at least 1 confirmed submission
+  const eligibleMdaIds = allMdaIds.filter((id) => (submissionCountMap.get(id) ?? 0) > 0);
+  if (eligibleMdaIds.length === 0) return result;
+
+  // Batch query: get all distinct staffIds from confirmed submission rows for eligible MDAs
+  const submissionStaffRows = await db
+    .select({ mdaId: mdaSubmissions.mdaId, staffId: submissionRows.staffId })
+    .from(submissionRows)
+    .innerJoin(mdaSubmissions, eq(submissionRows.submissionId, mdaSubmissions.id))
+    .where(
+      and(
+        inArray(mdaSubmissions.mdaId, eligibleMdaIds),
+        eq(mdaSubmissions.status, 'confirmed'),
+        sql`${mdaSubmissions.source} != 'historical'`,
+      ),
+    );
+
+  // Group submission staff by MDA
+  const submissionStaffByMda = new Map<string, Set<string>>();
+  for (const r of submissionStaffRows) {
+    const existing = submissionStaffByMda.get(r.mdaId) ?? new Set<string>();
+    existing.add(r.staffId.toLowerCase().trim());
+    submissionStaffByMda.set(r.mdaId, existing);
+  }
+
+  // Batch query: get loan staffIds for ALL baselined records across all MDAs
+  const allBaselinedLoanIds = [...recordsByMda.values()]
+    .flat()
+    .filter((r) => r.loanId !== null)
+    .map((r) => r.loanId!);
+
+  const loanStaffMap = new Map<string, string>(); // loanId → staffId
+  if (allBaselinedLoanIds.length > 0) {
+    const loanRows = await db
+      .select({ id: loans.id, staffId: loans.staffId })
+      .from(loans)
+      .where(inArray(loans.id, allBaselinedLoanIds));
+    for (const l of loanRows) {
+      loanStaffMap.set(l.id, l.staffId.toLowerCase().trim());
+    }
+  }
+
+  for (const [mdaId, mdaRecords] of recordsByMda) {
+    const mdaSubCount = submissionCountMap.get(mdaId) ?? 0;
+    // Skip MDA entirely if no confirmed submissions (no reference data)
+    if (mdaSubCount === 0) continue;
+
+    const completeness = mdaSubCount >= 3 ? 100 : 50;
+    const submissionStaffIds = submissionStaffByMda.get(mdaId) ?? new Set<string>();
+
+    // Deduplicate: one observation per unique staff per MDA
+    const seenStaff = new Set<string>();
+    const mdaName = mdaMap.get(mdaId)?.name ?? 'Unknown MDA';
+
+    for (const r of mdaRecords) {
+      const staffKey = r.staffName.toLowerCase().trim();
+      if (seenStaff.has(staffKey)) continue;
+
+      // Determine staff's submission identity
+      let matched = false;
+
+      // Path 1: Baselined record → use loan staffId
+      if (r.loanId && loanStaffMap.has(r.loanId)) {
+        const loanStaffId = loanStaffMap.get(r.loanId)!;
+        if (submissionStaffIds.has(loanStaffId)) {
+          matched = true;
+        }
+      }
+
+      // Path 2: Non-baselined with employeeNo → try direct staffId match
+      if (!matched && r.employeeNo) {
+        if (submissionStaffIds.has(r.employeeNo.toLowerCase().trim())) {
+          matched = true;
+        }
+      }
+
+      if (!matched) {
+        seenStaff.add(staffKey);
+        result.push({
+          type: 'no_approval_match',
+          staffName: r.staffName,
+          staffId: r.employeeNo,
+          loanId: r.loanId,
+          mdaId,
+          migrationRecordId: null, // Person-level observation
+          uploadId,
+          description: `This staff member has migration baseline records but no confirmed deduction submission has been received for their MDA. Possible explanations: MDA has not yet submitted monthly deduction data, staff records are from a period before current reporting, name or ID variance between systems. Cross-check with MDA submission history.`,
+          context: {
+            possibleExplanations: [
+              'MDA has not yet submitted monthly deduction data for this staff member',
+              'Staff records are from a period before the current reporting cycle',
+              'Name or ID variance between migration records and submission data',
+            ],
+            suggestedAction: `Cross-check with ${mdaName} submission history. Verify whether this staff member appears under a different identifier.`,
+            dataCompleteness: completeness,
+            dataPoints: {
+              mdaSubmissionCount: mdaSubCount,
+              submissionStaffCount: submissionStaffIds.size,
+            },
+          },
+          sourceReference: {
+            file: r.sourceFile,
+            sheet: r.sourceSheet,
+            row: r.sourceRow,
+          },
+        });
+      } else {
+        seenStaff.add(staffKey);
+      }
+    }
+  }
+
+  return result;
+}
+
+// ─── Period Overlap Detector ────────────────────────────────────────
+
+/**
+ * Detect when multiple uploads cover the same period+MDA.
+ * Creates one observation per overlap per upload.
+ * Idempotency: composite key (type, uploadId, mdaId).
+ */
+async function detectPeriodOverlap(
+  uploadId: string,
+  records: Array<{
+    id: string;
+    mdaId: string;
+    periodYear: number | null;
+    periodMonth: number | null;
+  }>,
+  mdaMap: Map<string, { id: string; name: string; code: string }>,
+): Promise<ObservationInsert[]> {
+  // Group records by period+MDA
+  const periodMdaGroups = new Map<string, { mdaId: string; periodYear: number; periodMonth: number; count: number }>();
+  for (const r of records) {
+    if (r.periodYear === null || r.periodMonth === null) continue;
+    const key = `${r.periodYear}-${r.periodMonth}-${r.mdaId}`;
+    if (!periodMdaGroups.has(key)) {
+      periodMdaGroups.set(key, { mdaId: r.mdaId, periodYear: r.periodYear, periodMonth: r.periodMonth, count: 0 });
+    }
+    periodMdaGroups.get(key)!.count++;
+  }
+
+  const result: ObservationInsert[] = [];
+
+  for (const [, group] of periodMdaGroups) {
+    // Find OTHER uploads with records for the same period+MDA
+    const overlappingUploads = await db
+      .select({
+        uploadId: migrationRecords.uploadId,
+        count: sql<number>`COUNT(*)::int`,
+      })
+      .from(migrationRecords)
+      .innerJoin(migrationUploads, eq(migrationRecords.uploadId, migrationUploads.id))
+      .where(
+        and(
+          eq(migrationRecords.mdaId, group.mdaId),
+          eq(migrationRecords.periodYear, group.periodYear),
+          eq(migrationRecords.periodMonth, group.periodMonth),
+          sql`${migrationRecords.uploadId} != ${uploadId}`,
+          eq(migrationUploads.status, 'completed'),
+          isNull(migrationRecords.deletedAt),
+        ),
+      )
+      .groupBy(migrationRecords.uploadId);
+
+    if (overlappingUploads.length === 0) continue;
+
+    const period = `${group.periodYear}-${String(group.periodMonth).padStart(2, '0')}`;
+    const mdaName = mdaMap.get(group.mdaId)?.name ?? 'Unknown MDA';
+
+    for (const overlap of overlappingUploads) {
+      // System-level observation — no real staff. Synthetic staffName for display/filtering
+      result.push({
+        type: 'period_overlap',
+        staffName: `Period overlap: ${period}`,
+        staffId: null,
+        loanId: null,
+        mdaId: group.mdaId,
+        migrationRecordId: null,
+        uploadId,
+        description: `Upload for ${period} to ${mdaName} overlaps with existing upload ${overlap.uploadId.slice(0, 8)}. Previous upload: ${overlap.count} records. Current upload: ${group.count} records. Review both uploads to determine which should be superseded.`,
+        context: {
+          possibleExplanations: [
+            'Updated data uploaded to replace an earlier version',
+            'Duplicate upload of the same period data',
+            'Corrected records uploaded alongside original submission',
+          ],
+          suggestedAction: `Review both uploads for ${period} at ${mdaName}. Determine which upload should be the canonical source and consider superseding the other.`,
+          dataCompleteness: 100,
+          dataPoints: {
+            period,
+            existingUploadId: overlap.uploadId,
+            existingRecordCount: overlap.count,
+            currentRecordCount: group.count,
+          },
+        },
+        sourceReference: null,
+      });
+    }
+  }
+
+  return result;
+}
+
+// ─── Grade-Tier Mismatch Detector ───────────────────────────────────
+
+/**
+ * Detect when a migration record's principal exceeds the maximum eligible
+ * amount for the staff's grade-level tier.
+ */
+export function detectGradeTierMismatch(
+  records: Array<{
+    id: string;
+    staffName: string;
+    mdaId: string;
+    loanId: string | null;
+    principal: string | null;
+    gradeLevel: string | null;
+    employeeNo: string | null;
+    sourceFile: string;
+    sourceSheet: string;
+    sourceRow: number;
+  }>,
+  mdaMap: Map<string, { id: string; name: string; code: string }>,
+  uploadId: string,
+): ObservationInsert[] {
+  const result: ObservationInsert[] = [];
+
+  for (const r of records) {
+    if (!r.gradeLevel || !r.principal) continue;
+
+    // Parse numeric grade from string (e.g., "GL 10" → 10, "LEVEL 07" → 7, "10" → 10)
+    const gradeMatch = r.gradeLevel.match(/(\d+)/);
+    if (!gradeMatch) continue;
+
+    const gradeNum = parseInt(gradeMatch[1], 10);
+    if (isNaN(gradeNum)) continue;
+
+    const tier = getTierForGradeLevel(gradeNum);
+    // GL 11 has no tier — skip (not an observation)
+    if (!tier) continue;
+
+    const principalDecimal = new Decimal(r.principal);
+    const maxPrincipal = new Decimal(tier.maxPrincipal);
+
+    if (principalDecimal.lte(maxPrincipal)) continue;
+
+    const mdaName = mdaMap.get(r.mdaId)?.name ?? 'Unknown MDA';
+
+    result.push({
+      type: 'grade_tier_mismatch',
+      staffName: r.staffName,
+      staffId: r.employeeNo,
+      loanId: r.loanId,
+      mdaId: r.mdaId,
+      migrationRecordId: r.id,
+      uploadId,
+      description: `Staff at GL ${gradeNum} has principal ₦${principalDecimal.toFixed(2)}, which exceeds the maximum eligible amount of ₦${maxPrincipal.toFixed(2)} for Tier ${tier.tier} (${tier.gradeLevels}). Possible explanations: approved exception, incorrect grade level in records, loan predating current tier structure. Verify against loan application.`,
+      context: {
+        possibleExplanations: [
+          'Approved exception to standard tier limits',
+          'Incorrect grade level in migration records',
+          'Loan predating current tier structure',
+        ],
+        suggestedAction: `Verify grade level and loan approval records for ${r.staffName} at ${mdaName}.`,
+        dataCompleteness: 100,
+        dataPoints: {
+          gradeLevel: gradeNum,
+          principal: r.principal,
+          maxPrincipal: tier.maxPrincipal,
+          tier: tier.tier,
+          tierGradeLevels: tier.gradeLevels,
+        },
+      },
+      sourceReference: {
+        file: r.sourceFile,
+        sheet: r.sourceSheet,
+        row: r.sourceRow,
+      },
+    });
   }
 
   return result;

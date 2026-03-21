@@ -350,6 +350,7 @@ export const migrationRecords = pgTable(
     remarks: text('remarks'),
     dateOfBirth: text('date_of_birth'),
     dateOfFirstAppointment: text('date_of_first_appointment'),
+    gradeLevel: text('grade_level'),
     varianceCategory: varianceCategoryEnum('variance_category'),
     varianceAmount: numeric('variance_amount', { precision: 15, scale: 2 }),
     computedRate: numeric('computed_rate', { precision: 6, scale: 3 }),
@@ -420,7 +421,7 @@ export const personMatches = pgTable(
 
 // ─── Observation Type Enum (Story 3.6) ──────────────────────────────
 export const observationTypeEnum = pgEnum('observation_type', [
-  'rate_variance', 'stalled_balance', 'negative_balance', 'multi_mda', 'no_approval_match', 'consecutive_loan',
+  'rate_variance', 'stalled_balance', 'negative_balance', 'multi_mda', 'no_approval_match', 'consecutive_loan', 'period_overlap', 'grade_tier_mismatch',
 ]);
 
 // ─── Observation Status Enum (Story 3.6) ────────────────────────────

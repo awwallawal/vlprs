@@ -8,14 +8,16 @@
  * Story 3.8: Multi-MDA File Delineation & Deduplication
  */
 
-import { eq, and, between, isNull } from 'drizzle-orm';
+import { eq, and, between, isNull, inArray } from 'drizzle-orm';
 import { db } from '../db/index';
 import {
   migrationUploads,
   migrationRecords,
+  migrationExtraFields,
 } from '../db/schema';
 import { AppError } from '../lib/appError';
 import { withMdaScope } from '../lib/mdaScope';
+import { withTransaction } from '../lib/transaction';
 import { resolveMdaByName, getMdaById } from './mdaService';
 import { VOCABULARY } from '@vlprs/shared';
 import type { DelineationSection, DelineationResult, DelineationBoundaryRecord } from '@vlprs/shared';
@@ -291,20 +293,97 @@ function extractBoundaryRecords(
 /**
  * Detect MDA column from migration_extra_fields.
  *
- * STUB: Returns false. Extra-field MDA detection requires updating mdaText on
- * records after detection, which is a future enhancement. The primary detection
- * path uses the mdaText column populated during column mapping (Story 3.1).
+ * When column mapping doesn't detect an MDA column in standard fields, checks if
+ * any of the "extra" (unmapped) fields contain MDA names/codes. If found, populates
+ * migration_records.mdaText to enable proper delineation.
+ *
+ * Side effect: UPDATEs migration_records.mdaText within a transaction.
  */
 async function detectMdaFromExtraFields(
-  _uploadId: string,
-  _records: Array<{ id: string }>,
+  _uploadId: string, // Retained for API consistency with other delineation functions
+  records: Array<{ id: string }>,
 ): Promise<boolean> {
-  // TODO: Story 3.8 follow-up — implement extra-field MDA detection
-  // 1. Sample first N records' extra fields
-  // 2. For each field, check if >50% of values resolve to known MDAs via resolveMdaByName()
-  // 3. If MDA column found, UPDATE migration_records SET mdaText = extra_field_value
-  // 4. Return true to re-trigger boundary detection
-  return false;
+  if (records.length === 0) return false;
+
+  // Sample first 20 records' extra fields
+  const sampleRecordIds = records.slice(0, 20).map((r) => r.id);
+  const extraFields = await db
+    .select({
+      recordId: migrationExtraFields.recordId,
+      fieldName: migrationExtraFields.fieldName,
+      fieldValue: migrationExtraFields.fieldValue,
+    })
+    .from(migrationExtraFields)
+    .where(
+      and(
+        inArray(migrationExtraFields.recordId, sampleRecordIds),
+        isNull(migrationExtraFields.deletedAt),
+      ),
+    );
+
+  if (extraFields.length === 0) return false;
+
+  // Group values by field name
+  const fieldValues = new Map<string, Array<{ recordId: string; value: string }>>();
+  for (const ef of extraFields) {
+    if (!ef.fieldValue || ef.fieldValue.trim() === '') continue;
+    const existing = fieldValues.get(ef.fieldName) ?? [];
+    existing.push({ recordId: ef.recordId, value: ef.fieldValue.trim() });
+    fieldValues.set(ef.fieldName, existing);
+  }
+
+  // For each field, test values against resolveMdaByName — count successful resolutions
+  let bestField: string | null = null;
+  let bestResolutionRate = 0;
+
+  for (const [fieldName, values] of fieldValues) {
+    let resolvedCount = 0;
+    for (const v of values) {
+      const mda = await resolveMdaByName(v.value);
+      if (mda) resolvedCount++;
+    }
+    const rate = resolvedCount / values.length;
+    if (rate > 0.5 && rate > bestResolutionRate) {
+      bestField = fieldName;
+      bestResolutionRate = rate;
+    }
+  }
+
+  if (!bestField) return false;
+
+  // Found the MDA column — batch UPDATE migration_records.mdaText within a transaction
+  // Load ALL extra field values for this field name across ALL records in the upload
+  const allRecordIds = records.map((r) => r.id);
+  const allMdaValues = await db
+    .select({
+      recordId: migrationExtraFields.recordId,
+      fieldValue: migrationExtraFields.fieldValue,
+    })
+    .from(migrationExtraFields)
+    .where(
+      and(
+        inArray(migrationExtraFields.recordId, allRecordIds),
+        eq(migrationExtraFields.fieldName, bestField),
+        isNull(migrationExtraFields.deletedAt),
+      ),
+    );
+
+  try {
+    await withTransaction(async (tx) => {
+      for (const v of allMdaValues) {
+        if (!v.fieldValue) continue;
+        await tx
+          .update(migrationRecords)
+          .set({ mdaText: v.fieldValue.trim() })
+          .where(eq(migrationRecords.id, v.recordId));
+      }
+    });
+  } catch {
+    // Transaction failed — safe fallback, no partial mdaText population
+    return false;
+  }
+
+  return true;
 }
 
 // ─── Confirm Boundaries ─────────────────────────────────────────────

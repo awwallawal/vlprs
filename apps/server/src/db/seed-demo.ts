@@ -287,9 +287,11 @@ export async function runDemoSeed(): Promise<{ userCount: number; mdaCount: numb
     }
 
     // 3b. Seed CDU legacy naming variants (SQ-1 observed aliases)
+    // Note: 'CDU' is NOT seeded as an alias — it resolves via Layer 1 exact code match
+    // on mdas.code = 'CDU' before alias lookup executes (see mdaService.ts resolveMdaByName)
     const cduMdaId = mdaMap.get('CDU');
     if (cduMdaId) {
-      const cduAliases = ['CDU', 'COCOA DEVELOPMENT UNIT', 'OYO STATE COCOA DEVELOPMENT UNIT', 'COCOA', 'TCDU'];
+      const cduAliases = ['COCOA DEVELOPMENT UNIT', 'OYO STATE COCOA DEVELOPMENT UNIT', 'COCOA', 'TCDU'];
       for (const alias of cduAliases) {
         await tx
           .insert(mdaAliases)

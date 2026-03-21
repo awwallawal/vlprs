@@ -12,6 +12,8 @@ const TYPE_LABELS: Record<ObservationType, string> = {
   multi_mda: 'Multi-MDA',
   no_approval_match: 'No Approval Match',
   consecutive_loan: 'Consecutive Loan',
+  period_overlap: 'Period Overlap',
+  grade_tier_mismatch: 'Grade-Tier Mismatch',
 };
 
 const STATUS_VARIANT: Record<ObservationStatus, 'review' | 'info' | 'complete' | 'variance'> = {

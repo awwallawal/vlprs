@@ -157,6 +157,8 @@ export async function getObservationCounts(
       multiMda: sql<string>`COUNT(*) FILTER (WHERE ${observations.type} = 'multi_mda')`,
       noApprovalMatch: sql<string>`COUNT(*) FILTER (WHERE ${observations.type} = 'no_approval_match')`,
       consecutiveLoan: sql<string>`COUNT(*) FILTER (WHERE ${observations.type} = 'consecutive_loan')`,
+      periodOverlap: sql<string>`COUNT(*) FILTER (WHERE ${observations.type} = 'period_overlap')`,
+      gradeTierMismatch: sql<string>`COUNT(*) FILTER (WHERE ${observations.type} = 'grade_tier_mismatch')`,
       // By status
       unreviewed: sql<string>`COUNT(*) FILTER (WHERE ${observations.status} = 'unreviewed')`,
       reviewed: sql<string>`COUNT(*) FILTER (WHERE ${observations.status} = 'reviewed')`,
@@ -175,6 +177,8 @@ export async function getObservationCounts(
       multi_mda: parseInt(result.multiMda, 10),
       no_approval_match: parseInt(result.noApprovalMatch, 10),
       consecutive_loan: parseInt(result.consecutiveLoan, 10),
+      period_overlap: parseInt(result.periodOverlap, 10),
+      grade_tier_mismatch: parseInt(result.gradeTierMismatch, 10),
     },
     byStatus: {
       unreviewed: parseInt(result.unreviewed, 10),
