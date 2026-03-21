@@ -1,4 +1,4 @@
-import type { ActiveEventFlagType } from '../types/submission';
+import type { ActiveEventFlagType } from '../types/submission.js';
 
 /**
  * Non-punitive vocabulary constants.

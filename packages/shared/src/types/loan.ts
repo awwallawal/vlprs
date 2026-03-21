@@ -1,6 +1,6 @@
-import type { BalanceResult } from './balance';
-import type { RepaymentSchedule } from './computation';
-import type { LoanStatusValue } from '../constants/loanStatuses';
+import type { BalanceResult } from './balance.js';
+import type { RepaymentSchedule } from './computation.js';
+import type { LoanStatusValue } from '../constants/loanStatuses.js';
 
 export type LoanStatus = LoanStatusValue;
 

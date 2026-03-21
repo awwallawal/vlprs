@@ -1,4 +1,4 @@
-import type { Role } from '../constants/roles';
+import type { Role } from '../constants/roles.js';
 
 /**
  * User context guaranteed to be present after authenticate middleware.
