@@ -134,6 +134,14 @@ jobs:
 
       - name: Health check
         run: |
-          echo "Waiting 45s for services to start..."
-          sleep 45
-          curl -sf https://oyocarloan.com.ng/api/health || exit 1
+          echo "Waiting for services to start..."
+          for i in $(seq 1 12); do
+            if curl -sf https://oyocarloan.com.ng/api/health; then
+              echo "Health check passed on attempt $i"
+              exit 0
+            fi
+            echo "Attempt $i/12 failed, retrying in 15s..."
+            sleep 15
+          done
+          echo "Health check failed after 12 attempts (3 minutes)"
+          exit 1
