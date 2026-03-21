@@ -291,7 +291,7 @@ describe('MigrationCoverageTracker', () => {
     vi.stubGlobal('open', mockOpen);
 
     const mockBlobUrl = 'blob:test-pdf-url';
-    const createObjectURL = vi.fn(() => mockBlobUrl);
+    const createObjectURL = vi.fn((_blob: Blob) => mockBlobUrl);
     const revokeObjectURL = vi.fn();
     vi.stubGlobal('URL', { ...URL, createObjectURL, revokeObjectURL });
 
@@ -310,7 +310,7 @@ describe('MigrationCoverageTracker', () => {
     expect(mockOpen).toHaveBeenCalledWith('', '_blank');
     expect(createObjectURL).toHaveBeenCalled();
     // Verify Blob was created with text/html content
-    const blobArg = createObjectURL.mock.calls[0][0] as Blob;
+    const blobArg = createObjectURL.mock.calls[0][0];
     expect(blobArg).toBeInstanceOf(Blob);
     expect(blobArg.type).toBe('text/html');
     // Verify <a> was clicked with correct download filename
