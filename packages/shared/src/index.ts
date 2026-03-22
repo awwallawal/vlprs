@@ -18,6 +18,7 @@ export { apiResponseSchema } from './validators/apiSchemas.js';
 export { createEmploymentEventSchema, staffLookupQuerySchema, transferSearchQuerySchema, confirmTransferSchema, claimTransferSchema, employmentEventListQuerySchema } from './validators/employmentEventSchemas.js';
 export { reconciliationCountsSchema, reconciliationDetailSchema, reconciliationSummarySchema, resolveDiscrepancySchema, resolveDiscrepancyResponseSchema } from './validators/reconciliationSchemas.js';
 export { flagDiscrepancySchema, type FlagDiscrepancyBody } from './validators/historicalSubmissionSchemas.js';
+export { payrollConfirmSchema, payrollListQuerySchema } from './validators/payrollSchemas.js';
 
 // Types
 export type { ApiResponse, ApiError, ApiResult } from './types/api.js';
@@ -33,6 +34,7 @@ export { EMPLOYMENT_EVENT_TYPES, RECONCILIATION_STATUSES, TRANSFER_STATUSES, REF
 export type { EmploymentEventType, ReconciliationStatus, TransferStatus, EmploymentEvent, TransferRecord, StaffLookupResult, TransferSearchResult, CreateEmploymentEventRequest, CreateEmploymentEventResponse, ConfirmTransferRequest, ConfirmTransferResponse, ClaimTransferRequest, EmploymentEventListItem } from './types/employmentEvent.js';
 export type { ReconciliationOutcome, ReconciliationDetail, ReconciliationCounts, ReconciliationSummary, EventTypeMapping, ResolveDiscrepancyRequest } from './types/reconciliation.js';
 export type { HistoricalMatchStatus, FlagDiscrepancyRequest, FlaggedRow, HistoricalReconciliationDetail, HistoricalReconciliationSummary, HistoricalUploadResponse } from './types/historicalSubmission.js';
+export type { PayrollDelineationSummary, PayrollUploadResponse, PayrollConfirmRequest, PayrollMdaBreakdown, PayrollUploadListItem, PayrollUploadDetail } from './types/payrollUpload.js';
 export type { ExceptionPriority, ExceptionCategory, ExceptionItem } from './types/exception.js';
 export type { ObservationType, ObservationStatus, ObservationContext, SourceReference, Observation, ObservationListItem, ObservationCounts, PaginatedObservations, ExceptionRecord } from './types/observation.js';
 export type { LedgerEntryType, LedgerEntry } from './types/ledger.js';
@@ -50,3 +52,4 @@ export { LOAN_TIERS, getTierForGradeLevel, type LoanTierConfig } from './constan
 export { VALID_TRANSITIONS, TERMINAL_STATUSES, isValidTransition } from './constants/loanTransitions.js';
 export { EVENT_FLAG_TO_EMPLOYMENT_EVENT_MAP } from './constants/eventTypeMapping.js';
 export { LOAN_STATUS_VALUES, type LoanStatusValue } from './constants/loanStatuses.js';
+export { MDA_LIST, MDA_ALIASES, mdaByCode, type MdaCode } from './constants/mdas.js';

@@ -254,6 +254,13 @@ export const router = createBrowserRouter([
               })),
           },
           {
+            path: 'payroll-upload',
+            lazy: () =>
+              import('@/pages/dashboard/PayrollUploadPage').then((m) => ({
+                Component: m.PayrollUploadPage,
+              })),
+          },
+          {
             path: 'employment-events',
             lazy: () =>
               import('@/pages/dashboard/EmploymentEventsPage').then((m) => ({

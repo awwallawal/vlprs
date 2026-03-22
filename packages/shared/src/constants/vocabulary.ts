@@ -212,6 +212,15 @@ export const VOCABULARY = {
   HISTORICAL_ROW_LIMIT_EXCEEDED: 'Historical uploads are limited to 100 rows per file. Please split your data into smaller files.',
   HISTORICAL_DISCREPANCY_FLAGGED: 'Discrepancy flagged for review.',
   HISTORICAL_NO_BASELINE: 'Your historical data has been stored. Cross-validation will be available once migration data is imported.',
+  // Payroll Upload (Story 7.0h)
+  PAYROLL_UPLOAD_CONFIRMED: 'Payroll data uploaded and attributed to MDAs successfully.',
+  PAYROLL_INVALID_FILE_TYPE: 'Only CSV and XLSX files are accepted for payroll uploads.',
+  PAYROLL_MIXED_PERIOD: 'All rows must belong to the same period. Mixed-period files are not accepted.',
+  PAYROLL_UNMATCHED_MDA: 'Some MDA codes could not be matched to known MDAs. Please correct the file and re-upload.',
+  PAYROLL_ROW_LIMIT_EXCEEDED: 'Payroll uploads are limited to 500 rows per file. Please split your data into smaller files.',
+  PAYROLL_EMPTY_FILE: 'Payroll file contains no data rows.',
+  PAYROLL_MISSING_FILE: 'No file uploaded.',
+  PAYROLL_NO_PENDING_UPLOAD: 'No pending payroll upload to confirm for this period.',
 } as const;
 
 export const UI_COPY = {
@@ -342,4 +351,10 @@ export const UI_COPY = {
   HISTORICAL_MATCHED_LABEL: 'Matched',
   HISTORICAL_FLAG_FOR_REVIEW: 'Flag for Review',
   HISTORICAL_NO_BASELINE_MESSAGE: 'No migration baseline available for your MDA. Your historical data has been stored and will be cross-validated when migration data is imported.',
+  // Payroll Upload UI (Story 7.0h)
+  PAYROLL_UPLOAD_HEADER: 'Upload Monthly Payroll Deduction Extract',
+  PAYROLL_DELINEATION_HEADER: 'Delineation Summary — Records by MDA',
+  PAYROLL_CONFIRM_PROMPT: 'Review the breakdown above and confirm to store payroll records.',
+  PAYROLL_UPLOAD_SUCCESS: 'Payroll data uploaded — {records} records across {mdas} MDAs',
+  PAYROLL_UNMATCHED_WARNING: '{count} records with unrecognized MDA codes — please correct the file and re-upload',
 } as const;
