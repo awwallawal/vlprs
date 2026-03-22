@@ -1,6 +1,6 @@
 import Decimal from 'decimal.js';
 import { db } from '../db';
-import { loans, ledgerEntries, mdas } from '../db/schema';
+import { loans, ledgerEntries, mdas, mdaSubmissions } from '../db/schema';
 import { eq, and, sql, inArray } from 'drizzle-orm';
 import { withMdaScope } from '../lib/mdaScope';
 import { generateUuidv7 } from '../lib/uuidv7';
@@ -332,14 +332,110 @@ async function detectQuickWinLoans(
 
 // ─── Stub Detectors (future epics) ──────────────────────────────
 
-// TODO: Wire in Epic 5 when submission data exists
-async function detectSubmissionVariance(_mdaScope?: string | null): Promise<AttentionItem[]> {
-  return [];
+// Story 7.0i: Detect three-way reconciliation variances across MDAs
+async function detectSubmissionVariance(mdaScope?: string | null): Promise<AttentionItem[]> {
+  const conditions = [
+    sql`${mdaSubmissions.threeWayReconciliation} IS NOT NULL`,
+    eq(mdaSubmissions.status, 'confirmed'),
+  ];
+  const scopeCondition = withMdaScope(mdaSubmissions.mdaId, mdaScope);
+  if (scopeCondition) conditions.push(scopeCondition);
+
+  const results = await db.select({
+    mdaId: mdaSubmissions.mdaId,
+    threeWayReconciliation: mdaSubmissions.threeWayReconciliation,
+  })
+    .from(mdaSubmissions)
+    .where(and(...conditions));
+
+  let totalVarianceStaff = 0;
+  const mdaSet = new Set<string>();
+  for (const row of results) {
+    const summary = row.threeWayReconciliation as { fullVarianceCount?: number; mdaId?: string } | null;
+    if (summary && typeof summary.fullVarianceCount === 'number' && summary.fullVarianceCount > 0) {
+      totalVarianceStaff += summary.fullVarianceCount;
+      mdaSet.add(row.mdaId);
+    }
+  }
+
+  if (totalVarianceStaff === 0) return [];
+
+  return [{
+    id: generateUuidv7(),
+    type: 'submission_variance',
+    description: `Payroll Variance — ${totalVarianceStaff} staff across ${mdaSet.size} MDAs show declared ≠ actual`,
+    mdaName: 'Scheme-wide',
+    category: 'review',
+    priority: 10,
+    count: totalVarianceStaff,
+    drillDownUrl: '/dashboard/reconciliation/three-way',
+    timestamp: new Date().toISOString(),
+  }];
 }
 
-// TODO: Wire in Epic 5 when submission data exists
-async function detectOverdueSubmissions(_mdaScope?: string | null): Promise<AttentionItem[]> {
-  return [];
+// Story 7.0i: Detect MDAs with payroll data but no MDA submission for current period
+async function detectOverdueSubmissions(mdaScope?: string | null): Promise<AttentionItem[]> {
+  // Find payroll submissions where no csv/manual submission exists for same MDA+period
+  const payrollConditions = [
+    eq(mdaSubmissions.source, 'payroll'),
+    eq(mdaSubmissions.status, 'confirmed'),
+  ];
+  const scopeCondition = withMdaScope(mdaSubmissions.mdaId, mdaScope);
+  if (scopeCondition) payrollConditions.push(scopeCondition);
+
+  const payrollSubs = await db.select({
+    mdaId: mdaSubmissions.mdaId,
+    period: mdaSubmissions.period,
+  })
+    .from(mdaSubmissions)
+    .where(and(...payrollConditions));
+
+  if (payrollSubs.length === 0) return [];
+
+  // Deduplicate MDA+period pairs, then batch-check for declared submissions
+  const uniquePairs = new Map<string, { mdaId: string; period: string }>();
+  for (const ps of payrollSubs) {
+    const key = `${ps.mdaId}:${ps.period}`;
+    if (!uniquePairs.has(key)) uniquePairs.set(key, ps);
+  }
+
+  // Single query: all confirmed csv/manual submissions for relevant MDA+period combos
+  const declaredSubs = await db.select({
+    mdaId: mdaSubmissions.mdaId,
+    period: mdaSubmissions.period,
+  })
+    .from(mdaSubmissions)
+    .where(and(
+      eq(mdaSubmissions.status, 'confirmed'),
+      sql`${mdaSubmissions.source} IN ('csv', 'manual')`,
+    ));
+
+  const declaredSet = new Set(declaredSubs.map((s) => `${s.mdaId}:${s.period}`));
+
+  let pendingCount = 0;
+  const pendingPeriods = new Set<string>();
+
+  for (const [key, ps] of uniquePairs) {
+    if (!declaredSet.has(key)) {
+      pendingCount++;
+      pendingPeriods.add(ps.period);
+    }
+  }
+
+  if (pendingCount === 0) return [];
+
+  const periodsStr = [...pendingPeriods].sort().join(', ');
+  return [{
+    id: generateUuidv7(),
+    type: 'overdue_submission',
+    description: `${pendingCount} MDAs have payroll data but no submission for ${periodsStr}`,
+    mdaName: 'Scheme-wide',
+    category: 'review',
+    priority: 10,
+    count: pendingCount,
+    drillDownUrl: '/dashboard/reconciliation/three-way',
+    timestamp: new Date().toISOString(),
+  }];
 }
 
 // TODO: Wire in Epic 8 when auto-stop certificates exist

@@ -303,6 +303,13 @@ export const router = createBrowserRouter([
               })),
           },
           {
+            path: 'reconciliation/three-way',
+            lazy: () =>
+              import('@/pages/dashboard/ThreeWayReconciliationPage').then((m) => ({
+                Component: m.ThreeWayReconciliationPage,
+              })),
+          },
+          {
             path: 'exceptions',
             lazy: () =>
               import('@/pages/dashboard/ExceptionsPage').then((m) => ({

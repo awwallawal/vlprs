@@ -436,7 +436,7 @@ export const personMatches = pgTable(
 
 // ─── Observation Type Enum (Story 3.6) ──────────────────────────────
 export const observationTypeEnum = pgEnum('observation_type', [
-  'rate_variance', 'stalled_balance', 'negative_balance', 'multi_mda', 'no_approval_match', 'consecutive_loan', 'period_overlap', 'grade_tier_mismatch',
+  'rate_variance', 'stalled_balance', 'negative_balance', 'multi_mda', 'no_approval_match', 'consecutive_loan', 'period_overlap', 'grade_tier_mismatch', 'three_way_variance',
 ]);
 
 // ─── Observation Status Enum (Story 3.6) ────────────────────────────
@@ -607,6 +607,7 @@ export const mdaSubmissions = pgTable(
     varianceCount: integer('variance_count').notNull().default(0),
     reconciliationSummary: jsonb('reconciliation_summary'), // Story 11.3: { matched, dateDiscrepancy, unconfirmed, newCsvEvent }
     historicalReconciliation: jsonb('historical_reconciliation'), // Story 11.4: { matchedCount, varianceCount, largestVarianceAmount, matchRate, noBaseline, flaggedRows }
+    threeWayReconciliation: jsonb('three_way_reconciliation'), // Story 7.0i: ThreeWayReconciliationSummary for the submission that triggered reconciliation
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
   },

@@ -22,6 +22,7 @@ const TYPE_OPTIONS: { value: ObservationType; label: string }[] = [
   { value: 'consecutive_loan', label: 'Consecutive Loan' },
   { value: 'period_overlap', label: 'Period Overlap' },
   { value: 'grade_tier_mismatch', label: 'Grade/Tier Review' },
+  { value: 'three_way_variance', label: 'Three-Way Variance' },
 ];
 
 const STATUS_OPTIONS: { value: ObservationStatus; label: string }[] = [

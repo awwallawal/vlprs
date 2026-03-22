@@ -8,6 +8,7 @@ import { formatDate, formatCount } from '@/lib/formatters';
 import { useDashboardMetrics } from '@/hooks/useDashboardData';
 import { useMdaComplianceGrid } from '@/hooks/useMdaData';
 import { useAttentionItems } from '@/hooks/useAttentionItems';
+import { useThreeWayDashboard } from '@/hooks/useThreeWayReconciliation';
 import { HeroMetricCard } from '@/components/shared/HeroMetricCard';
 import { WelcomeGreeting } from '@/components/shared/WelcomeGreeting';
 import { ComplianceProgressHeader } from '@/components/shared/ComplianceProgressHeader';
@@ -50,6 +51,7 @@ export function DashboardPage() {
   const metrics = useDashboardMetrics();
   const compliance = useMdaComplianceGrid();
   const attention = useAttentionItems();
+  const threeWayDashboard = useThreeWayDashboard();
 
   const sortedComplianceRows = useMemo(
     () => compliance.data ? sortComplianceRows(compliance.data.rows) : [],
@@ -276,6 +278,49 @@ export function DashboardPage() {
           />
         </div>
       </section>
+
+      {/* Three-Way Reconciliation Metrics (Story 7.0i — AC 2) */}
+      {(isSuperAdmin || user?.role === ROLES.DEPT_ADMIN) && (
+        <section aria-label="Three-way reconciliation metrics">
+          <h2 className="mb-4 text-lg font-semibold text-text-primary">
+            Reconciliation Overview
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="rounded-lg border bg-white p-4">
+              <p className="text-sm text-text-secondary mb-1">Overall Match Rate</p>
+              {threeWayDashboard.isPending ? (
+                <Skeleton className="h-6 w-20" />
+              ) : (
+                <p className="text-lg font-semibold text-text-primary">
+                  {threeWayDashboard.data ? `${threeWayDashboard.data.overallMatchRate}%` : '—'}
+                </p>
+              )}
+            </div>
+            <div className="rounded-lg border bg-white p-4">
+              <p className="text-sm text-text-secondary mb-1">Full Variances</p>
+              {threeWayDashboard.isPending ? (
+                <Skeleton className="h-6 w-20" />
+              ) : (
+                <p className="text-lg font-semibold text-text-primary">
+                  {threeWayDashboard.data?.fullVarianceCount?.toString() ?? '—'}
+                </p>
+              )}
+            </div>
+            <div className="rounded-lg border bg-white p-4">
+              <p className="text-sm text-text-secondary mb-1">Top Variance MDAs</p>
+              {threeWayDashboard.isPending ? (
+                <Skeleton className="h-6 w-40" />
+              ) : (
+                <p className="text-sm font-medium text-text-primary">
+                  {threeWayDashboard.data?.topVarianceMdas.length
+                    ? threeWayDashboard.data.topVarianceMdas.slice(0, 5).map((m) => `${m.mdaName} (${m.varianceCount})`).join(', ')
+                    : 'None'}
+                </p>
+              )}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Attention items */}
       <section aria-label="Items requiring attention">

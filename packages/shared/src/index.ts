@@ -37,6 +37,7 @@ export type { HistoricalMatchStatus, FlagDiscrepancyRequest, FlaggedRow, Histori
 export type { PayrollDelineationSummary, PayrollUploadResponse, PayrollConfirmRequest, PayrollMdaBreakdown, PayrollUploadListItem, PayrollUploadDetail } from './types/payrollUpload.js';
 export type { ExceptionPriority, ExceptionCategory, ExceptionItem } from './types/exception.js';
 export type { ObservationType, ObservationStatus, ObservationContext, SourceReference, Observation, ObservationListItem, ObservationCounts, PaginatedObservations, ExceptionRecord } from './types/observation.js';
+export type { ThreeWayMatchStatus, ThreeWayVarianceCategory, ThreeWayReconciliationRow, ThreeWayReconciliationSummary, ThreeWayDashboardMetrics } from './types/threeWayReconciliation.js';
 export type { LedgerEntryType, LedgerEntry } from './types/ledger.js';
 export type { ComputationParams, ScheduleRow, RepaymentSchedule, AutoSplitResult } from './types/computation.js';
 export type { BalanceResult, LedgerEntryForBalance } from './types/balance.js';
