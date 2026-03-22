@@ -599,7 +599,7 @@ export const mdaSubmissions = pgTable(
     referenceNumber: varchar('reference_number', { length: 50 }).notNull().unique(),
     status: submissionRecordStatusEnum('status').notNull().default('processing'),
     recordCount: integer('record_count').notNull(),
-    source: varchar('source', { length: 10 }).notNull().default('csv'), // 'csv' | 'manual'
+    source: varchar('source', { length: 10 }).notNull().default('csv'), // 'csv' | 'manual' | 'historical' | 'payroll'
     filename: varchar('filename', { length: 500 }),
     fileSizeBytes: integer('file_size_bytes'),
     validationErrors: jsonb('validation_errors'),

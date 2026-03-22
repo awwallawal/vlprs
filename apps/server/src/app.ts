@@ -24,6 +24,7 @@ import employmentEventRoutes from './routes/employmentEventRoutes';
 import reconciliationRoutes from './routes/reconciliationRoutes';
 import historicalSubmissionRoutes from './routes/historicalSubmissionRoutes';
 import systemHealthRoutes from './routes/systemHealthRoutes';
+import payrollRoutes from './routes/payrollRoutes';
 import { AppError } from './lib/appError';
 import { VOCABULARY } from '@vlprs/shared';
 import { requestLogger } from './middleware/requestLogger';
@@ -82,6 +83,7 @@ app.use('/api', employmentEventRoutes);
 app.use('/api', reconciliationRoutes);
 app.use('/api', historicalSubmissionRoutes);
 app.use('/api', systemHealthRoutes);
+app.use('/api', payrollRoutes);
 
 // 404 handler
 app.use((_req: Request, res: Response) => {

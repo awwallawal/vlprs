@@ -146,7 +146,7 @@ export const submissionDetailResponseSchema = z.object({
   referenceNumber: z.string(),
   status: submissionRecordStatusSchema,
   recordCount: z.number().int().min(0),
-  source: z.enum(['csv', 'manual', 'historical']),
+  source: z.enum(['csv', 'manual', 'historical', 'payroll']),
   filename: z.string().nullable(),
   fileSizeBytes: z.number().nullable(),
   createdAt: z.string(),

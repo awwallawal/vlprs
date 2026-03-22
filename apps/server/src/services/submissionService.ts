@@ -1,4 +1,3 @@
-import Papa from 'papaparse';
 import { eq, and, inArray, sql, desc, count } from 'drizzle-orm';
 import { db } from '../db/index';
 import { mdaSubmissions, submissionRows, mdas, loans } from '../db/schema';
@@ -6,6 +5,7 @@ import { AppError } from '../lib/appError';
 import { withTransaction } from '../lib/transaction';
 import { withMdaScope } from '../lib/mdaScope';
 import { generateUuidv7 } from '../lib/uuidv7';
+import { parseCsvRows } from '../lib/fileParser';
 import { compareSubmission } from './comparisonEngine';
 import { reconcileSubmission } from './reconciliationEngine';
 import { sendReconciliationAlertEmail } from '../lib/email';
@@ -19,24 +19,9 @@ import type {
   EventFlagType,
 } from '@vlprs/shared';
 
-// ─── CSV Parsing ────────────────────────────────────────────────────
+// ─── CSV Parsing (delegated to lib/fileParser.ts, Story 7.0h) ───────
 
-const CSV_HEADERS = [
-  'Staff ID', 'Month', 'Amount Deducted', 'Payroll Batch Reference',
-  'MDA Code', 'Event Flag', 'Event Date', 'Cessation Reason',
-] as const;
-
-interface ParsedCsvRow {
-  rowNumber: number;
-  staffId: string;
-  month: string;
-  amountDeducted: string;
-  payrollBatchReference: string;
-  mdaCode: string;
-  eventFlag: string;
-  eventDate: string | null;
-  cessationReason: string | null;
-}
+export { parseCsvRows as parseSubmissionCsv, type ParsedCsvRow } from '../lib/fileParser';
 
 /** Row type used internally by the shared processing pipeline. */
 interface IndexedRow {
@@ -49,55 +34,6 @@ interface IndexedRow {
   eventFlag: string;
   eventDate: string | null;
   cessationReason: string | null;
-}
-
-export function parseSubmissionCsv(buffer: Buffer): ParsedCsvRow[] {
-  // Strip BOM if present
-  let csvText = buffer.toString('utf-8');
-  if (csvText.charCodeAt(0) === 0xFEFF) {
-    csvText = csvText.slice(1);
-  }
-
-  const result = Papa.parse<string[]>(csvText, {
-    header: false,
-    skipEmptyLines: true,
-    delimiter: ',',
-  });
-
-  if (result.errors.length > 0 && result.data.length === 0) {
-    throw new AppError(422, 'CSV_PARSE_ERROR', VOCABULARY.SUBMISSION_EMPTY_FILE);
-  }
-
-  // Skip header row if present (first row matches expected headers or is text-like)
-  let dataRows = result.data;
-  if (dataRows.length > 0) {
-    const firstRow = dataRows[0];
-    const isHeader = firstRow.some(
-      (cell) => CSV_HEADERS.some((h) => h.toLowerCase() === cell.trim().toLowerCase()),
-    );
-    if (isHeader) {
-      dataRows = dataRows.slice(1);
-    }
-  }
-
-  // Skip comment rows (lines starting with #)
-  dataRows = dataRows.filter((row) => !(row[0] || '').trim().startsWith('#'));
-
-  if (dataRows.length === 0) {
-    throw new AppError(422, 'SUBMISSION_VALIDATION_FAILED', VOCABULARY.SUBMISSION_EMPTY_FILE);
-  }
-
-  return dataRows.map((row, idx) => ({
-    rowNumber: idx + 2, // 1-based, +1 for header row
-    staffId: (row[0] || '').trim(),
-    month: (row[1] || '').trim(),
-    amountDeducted: (row[2] || '').trim(),
-    payrollBatchReference: (row[3] || '').trim(),
-    mdaCode: (row[4] || '').trim(),
-    eventFlag: (row[5] || '').trim(),
-    eventDate: row[6]?.trim() || null,
-    cessationReason: row[7]?.trim() || null,
-  }));
 }
 
 // ─── Row Validation ─────────────────────────────────────────────────
@@ -488,7 +424,8 @@ export async function processSubmissionRows(
     await tx.insert(submissionRows).values(rowValues);
 
     // Story 11.3: Reconcile mid-cycle employment events INSIDE transaction (AC 6)
-    // Story 11.4: Defensive guard — historical uploads use their own pipeline, never trigger reconciliation
+    // Story 11.4: historical uploads use their own pipeline, never trigger reconciliation
+    // Note: payroll uploads use payrollUploadService.ts and never reach this function
     const reconciliationResult = source !== 'historical'
       ? await reconcileSubmission(submissionId, mdaId, tx)
       : { counts: { matched: 0, dateDiscrepancy: 0, unconfirmed: 0, newCsvEvent: 0 } };
@@ -524,7 +461,8 @@ export async function processSubmissionRows(
   // Run comparison engine and persist aggregate counts.
   // Wrapped in try/catch: if comparison fails, the submission is still valid
   // with 0/0 counts — counts can be recomputed via GET /submissions/:id/comparison.
-  // Story 11.4: Defensive guard — historical uploads skip comparison (different purpose)
+  // Story 11.4: historical uploads skip comparison (different purpose)
+  // Note: payroll uploads use payrollUploadService.ts and never reach this function
   if (source === 'historical') {
     return {
       id: submissionId,
@@ -578,7 +516,7 @@ export async function processSubmission(
   userId: string,
   role?: string,
 ): Promise<SubmissionUploadResponse> {
-  const csvRows = parseSubmissionCsv(file.buffer);
+  const csvRows = parseCsvRows(file.buffer);
 
   // Strip CSV-specific rowNumber and pass to shared pipeline
   const rows = csvRows.map(({ rowNumber: _rn, ...rest }) => rest);

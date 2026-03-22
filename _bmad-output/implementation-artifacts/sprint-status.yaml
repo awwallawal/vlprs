@@ -209,7 +209,7 @@ development_status:
   7-0e-ux-polish-frontend-completeness: done  # SUPER_ADMIN sidebar fix, column sorting, prefetchQuery, template tracking, useCopyToClipboard refactor, PDF hardening, MDA color palette, Textarea component
   7-0f-system-health-monitoring-foundation: done  # 15 metrics (Infrastructure/API/Data Integrity/Business Health), dedicated sidebar page, Pino-based, role-scoped, auto-refresh 30s
   7-0g-upload-supersede-record-resolution: done  # cascading supersede workflow — all 9 code review findings resolved (H1: upload list tab, H2: integration test). All tasks complete
-  7-0h-payroll-extract-upload-mda-delineation: ready-for-dev  # AG uploads consolidated payroll file, auto-split by MDA, source='payroll', SUPER_ADMIN only. Reuses 3.8 delineation + DeductionRecord[] interface
+  7-0h-payroll-extract-upload-mda-delineation: done  # AG uploads consolidated payroll file, auto-split by MDA, source='payroll', SUPER_ADMIN only. Reuses 3.8 delineation + DeductionRecord[] interface
   7-0i-three-way-reconciliation-engine: ready-for-dev  # expected vs declared vs actual (payroll). Three-way summary, match rate metrics, payroll variance attention items, MDA-scoped views, exception auto-promotion. Depends on 7.0h
   7-1-exception-flagging-queue: ready-for-dev
   7-2-automatic-inactive-loan-detection: ready-for-dev

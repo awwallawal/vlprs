@@ -64,7 +64,7 @@ export interface SubmissionDetail {
   referenceNumber: string;
   status: SubmissionRecordStatus;
   recordCount: number;
-  source: 'csv' | 'manual' | 'historical';
+  source: 'csv' | 'manual' | 'historical' | 'payroll';
   filename: string | null;
   fileSizeBytes: number | null;
   createdAt: string;
