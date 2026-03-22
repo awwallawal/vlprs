@@ -11,13 +11,14 @@ import { MasterBeneficiaryLedger } from './components/MasterBeneficiaryLedger';
 import { ObservationsList } from './components/ObservationsList';
 import { DuplicateResolutionTable } from './components/DuplicateResolutionTable';
 import { MigrationCoverageTracker } from './components/MigrationCoverageTracker';
+import { MigrationUploadList } from './components/MigrationUploadList';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { usePageMeta } from '@/hooks/usePageMeta';
 import { ROLES, VOCABULARY } from '@vlprs/shared';
 
-type Tab = 'mda-progress' | 'beneficiary-ledger' | 'observations' | 'duplicates' | 'coverage';
+type Tab = 'mda-progress' | 'beneficiary-ledger' | 'observations' | 'duplicates' | 'coverage' | 'uploads';
 
 export function MigrationPage() {
   usePageMeta({ title: VOCABULARY.MIGRATION_DASHBOARD_TITLE, description: 'Migration progress and beneficiary ledger' });
@@ -156,6 +157,17 @@ export function MigrationPage() {
         >
           Coverage Tracker
         </button>
+        <button
+          type="button"
+          onClick={() => setActiveTab('uploads')}
+          className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+            activeTab === 'uploads'
+              ? 'border-teal text-teal'
+              : 'border-transparent text-text-muted hover:text-text-secondary'
+          }`}
+        >
+          Uploads
+        </button>
       </div>
 
       {/* MDA Progress Tab */}
@@ -225,6 +237,13 @@ export function MigrationPage() {
       {activeTab === 'coverage' && (
         <section aria-label="Migration Coverage Tracker">
           <MigrationCoverageTracker />
+        </section>
+      )}
+
+      {/* Uploads Tab */}
+      {activeTab === 'uploads' && (
+        <section aria-label="Migration Upload History">
+          <MigrationUploadList />
         </section>
       )}
     </div>

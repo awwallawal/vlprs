@@ -18,6 +18,7 @@ import {
   observations,
   auditLog,
 } from '../db/schema';
+import { isActiveRecord } from '../db/queryHelpers';
 import { AppError } from '../lib/appError';
 import { normalizeName, surnameAndInitial, levenshtein } from '../migration/nameMatch';
 import { VOCABULARY } from '@vlprs/shared';
@@ -104,7 +105,7 @@ async function detectForPair(
     .from(migrationRecords)
     .where(and(
       eq(migrationRecords.mdaId, parentMdaId),
-      isNull(migrationRecords.deletedAt),
+      isActiveRecord(),
     ));
 
   const childStaff = await db
@@ -112,7 +113,7 @@ async function detectForPair(
     .from(migrationRecords)
     .where(and(
       eq(migrationRecords.mdaId, childMdaId),
-      isNull(migrationRecords.deletedAt),
+      isActiveRecord(),
     ));
 
   if (parentStaff.length === 0 || childStaff.length === 0) {
@@ -178,7 +179,7 @@ async function detectForPair(
     .from(migrationRecords)
     .where(and(
       eq(migrationRecords.mdaId, parentMdaId),
-      isNull(migrationRecords.deletedAt),
+      isActiveRecord(),
     ))
     .groupBy(sql`LOWER(${migrationRecords.staffName})`);
 
@@ -190,7 +191,7 @@ async function detectForPair(
     .from(migrationRecords)
     .where(and(
       eq(migrationRecords.mdaId, childMdaId),
-      isNull(migrationRecords.deletedAt),
+      isActiveRecord(),
     ))
     .groupBy(sql`LOWER(${migrationRecords.staffName})`);
 

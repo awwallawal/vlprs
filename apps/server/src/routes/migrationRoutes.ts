@@ -7,13 +7,14 @@ import { authorise } from '../middleware/authorise';
 import { scopeToMda } from '../middleware/scopeToMda';
 import { validate, validateQuery } from '../middleware/validate';
 import { auditLog } from '../middleware/auditLog';
-import { ROLES, migrationUploadQuerySchema, confirmMappingBodySchema, validationResultQuerySchema, createBaselineBodySchema } from '@vlprs/shared';
+import { ROLES, migrationUploadQuerySchema, confirmMappingBodySchema, validationResultQuerySchema, createBaselineBodySchema, supersedeSchema } from '@vlprs/shared';
 import type { VarianceCategory } from '@vlprs/shared';
 import { AppError } from '../lib/appError';
 import { param } from '../lib/params';
 import * as migrationService from '../services/migrationService';
 import * as migrationValidationService from '../services/migrationValidationService';
 import * as baselineService from '../services/baselineService';
+import * as supersedeService from '../services/supersedeService';
 
 const router = Router();
 
@@ -227,6 +228,27 @@ router.get(
     const summary = await baselineService.getBaselineSummary(uploadId, req.mdaScope);
 
     res.json({ success: true, data: summary });
+  },
+);
+
+// POST /api/migrations/:uploadId/supersede — Supersede an upload with a replacement
+router.post(
+  '/migrations/:uploadId/supersede',
+  ...adminAuth,
+  validate(supersedeSchema),
+  auditLog,
+  async (req: Request, res: Response) => {
+    const uploadId = param(req.params.uploadId);
+    req.auditAction = 'MIGRATION_SUPERSEDE';
+
+    const result = await supersedeService.supersedeUpload(
+      uploadId,
+      req.body.replacementUploadId,
+      req.body.reason,
+      req.user!.userId,
+    );
+
+    res.json({ success: true, data: result });
   },
 );
 

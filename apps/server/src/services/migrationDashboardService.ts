@@ -2,6 +2,7 @@ import { eq, and, isNull, sql, count } from 'drizzle-orm';
 import Decimal from 'decimal.js';
 import { db } from '../db/index';
 import { mdas, migrationUploads, migrationRecords, loans, ledgerEntries, observations, deduplicationCandidates } from '../db/schema';
+import { isActiveRecord } from '../db/queryHelpers';
 import { computeBalanceForLoan } from './computationEngine';
 import { withMdaScope } from '../lib/mdaScope';
 import type { MigrationMdaStatus, MigrationStage, MigrationDashboardMetrics, CoverageMatrix } from '@vlprs/shared';
@@ -82,7 +83,7 @@ export async function getMigrationDashboard(
     ]),
   );
 
-  // Get record counts per MDA grouped by variance category
+  // Get record counts per MDA grouped by variance category (excludes superseded)
   const recordCounts = await db
     .select({
       mdaId: migrationRecords.mdaId,
@@ -90,7 +91,7 @@ export async function getMigrationDashboard(
       cnt: sql<string>`COUNT(*)`,
     })
     .from(migrationRecords)
-    .where(isNull(migrationRecords.deletedAt))
+    .where(isActiveRecord())
     .groupBy(migrationRecords.mdaId, migrationRecords.varianceCategory);
 
   const countMap = new Map<string, MigrationMdaStatus['recordCounts']>();
@@ -109,7 +110,7 @@ export async function getMigrationDashboard(
     else counts.clean += n; // null category treated as clean
   }
 
-  // Get baseline completion per MDA
+  // Get baseline completion per MDA (excludes superseded)
   const baselineCompletion = await db
     .select({
       mdaId: migrationRecords.mdaId,
@@ -117,7 +118,7 @@ export async function getMigrationDashboard(
       done: sql<string>`COUNT(*) FILTER (WHERE ${migrationRecords.isBaselineCreated} = true)`,
     })
     .from(migrationRecords)
-    .where(isNull(migrationRecords.deletedAt))
+    .where(isActiveRecord())
     .groupBy(migrationRecords.mdaId);
 
   const baselineMap = new Map(
@@ -231,13 +232,13 @@ export async function getDashboardMetrics(
     .where(and(...mdaCompleteConditions));
   const mdasComplete = parseInt(completeResult.cnt, 10);
 
-  // Baselines established
+  // Baselines established (excludes superseded)
   const [baselineResult] = await db
     .select({ cnt: count() })
     .from(migrationRecords)
     .where(and(
       eq(migrationRecords.isBaselineCreated, true),
-      isNull(migrationRecords.deletedAt),
+      isActiveRecord(),
     ));
 
   // Pending duplicates
@@ -296,9 +297,9 @@ export async function getMigrationCoverage(
   }
 
   // Aggregate migration records by MDA + period (year/month)
-  // Filter to the requested period range and exclude null period data
+  // Filter to the requested period range and exclude null period data + superseded
   const periodConditions = [
-    isNull(migrationRecords.deletedAt),
+    isActiveRecord()!,
     sql`${migrationRecords.periodYear} IS NOT NULL`,
     sql`${migrationRecords.periodMonth} IS NOT NULL`,
     sql`(${migrationRecords.periodYear} * 100 + ${migrationRecords.periodMonth}) >= ${startYear * 100 + startMonth}`,

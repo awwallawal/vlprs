@@ -5,9 +5,10 @@
  * and stores match results in person_matches table.
  */
 
-import { eq, and, isNull, or, sql, isNotNull } from 'drizzle-orm';
+import { eq, and, or, sql, isNotNull } from 'drizzle-orm';
 import { db } from '../db/index';
 import { migrationRecords, personMatches, mdas } from '../db/schema';
+import { isActiveRecord } from '../db/queryHelpers';
 import { normalizeName, matchName } from '../migration/nameMatch';
 import { AppError } from '../lib/appError';
 import { withMdaScope } from '../lib/mdaScope';
@@ -95,7 +96,7 @@ export async function runPersonMatching(mdaScope?: string | null) {
     .innerJoin(mdas, eq(migrationRecords.mdaId, mdas.id))
     .where(
       and(
-        isNull(migrationRecords.deletedAt),
+        isActiveRecord(),
         mdaScope ? withMdaScope(migrationRecords.mdaId, mdaScope) : undefined,
       ),
     );

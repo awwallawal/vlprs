@@ -280,6 +280,11 @@ export const migrationUploadStatusEnum = pgEnum('migration_upload_status', [
   'uploaded', 'mapped', 'processing', 'completed', 'validated', 'reconciled', 'failed',
 ]);
 
+// ─── Migration Record Status Enum (Story 7.0g) ─────────────────────
+export const migrationRecordStatusEnum = pgEnum('migration_record_status', [
+  'active', 'superseded',
+]);
+
 // ─── Variance Category Enum (Story 3.2) ─────────────────────────────
 export const varianceCategoryEnum = pgEnum('variance_category', [
   'clean', 'minor_variance', 'significant_variance', 'structural_error', 'anomalous',
@@ -304,12 +309,18 @@ export const migrationUploads = pgTable(
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
     deletedAt: timestamp('deleted_at', { withTimezone: true }),
+    // Supersession fields (Story 7.0g)
+    supersededBy: uuid('superseded_by').references((): AnyPgColumn => migrationUploads.id),
+    supersededAt: timestamp('superseded_at', { withTimezone: true }),
+    supersededReason: text('superseded_reason'),
+    supersededByUserId: uuid('superseded_by_user_id').references(() => users.id),
   },
   (table) => [
     index('idx_migration_uploads_mda_id').on(table.mdaId),
     index('idx_migration_uploads_uploaded_by').on(table.uploadedBy),
     index('idx_migration_uploads_status').on(table.status),
     index('idx_migration_uploads_created_at').on(table.createdAt),
+    index('idx_migration_uploads_superseded_by').on(table.supersededBy),
   ],
 );
 
@@ -363,6 +374,9 @@ export const migrationRecords = pgTable(
     sourceFile: text('source_file').notNull(),
     sourceSheet: text('source_sheet').notNull(),
     sourceRow: integer('source_row').notNull(),
+    // Supersession fields (Story 7.0g) — NULL = active (backward compatible)
+    recordStatus: migrationRecordStatusEnum('status').default('active'),
+    supersededAt: timestamp('superseded_at', { withTimezone: true }),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
     deletedAt: timestamp('deleted_at', { withTimezone: true }),
   },
@@ -373,6 +387,7 @@ export const migrationRecords = pgTable(
     index('idx_migration_records_created_at').on(table.createdAt),
     index('idx_migration_records_variance_category').on(table.varianceCategory),
     index('idx_migration_records_has_rate_variance').on(table.hasRateVariance),
+    index('idx_migration_records_status').on(table.recordStatus),
   ],
 );
 
@@ -499,6 +514,26 @@ export const exceptions = pgTable(
     index('idx_exceptions_observation_id').on(table.observationId),
     index('idx_exceptions_mda_id').on(table.mdaId),
     index('idx_exceptions_status').on(table.status),
+  ],
+);
+
+// ─── Baseline Annotations (Story 7.0g) ─────────────────────────────
+// Companion table for immutable ledger_entries. Append-only — no UPDATE, no DELETE.
+// Records metadata about baseline entries without violating ledger immutability.
+export const baselineAnnotations = pgTable(
+  'baseline_annotations',
+  {
+    id: uuid('id').primaryKey().$defaultFn(generateUuidv7),
+    ledgerEntryId: uuid('ledger_entry_id').notNull().references(() => ledgerEntries.id),
+    annotationType: varchar('annotation_type', { length: 50 }).notNull(), // 'superseded' (extensible)
+    note: text('note').notNull(),
+    supersededUploadId: uuid('superseded_upload_id').references(() => migrationUploads.id),
+    replacementUploadId: uuid('replacement_upload_id').references(() => migrationUploads.id),
+    annotatedBy: uuid('annotated_by').notNull().references(() => users.id),
+    annotatedAt: timestamp('annotated_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    index('idx_baseline_annotations_ledger_entry_id').on(table.ledgerEntryId),
   ],
 );
 

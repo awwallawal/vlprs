@@ -1,16 +1,17 @@
 import { useState, useEffect } from 'react';
 import { useObservationList, useReviewObservation, useResolveObservation, usePromoteObservation } from '@/hooks/useObservationData';
-import { useMigrationStatus } from '@/hooks/useMigrationData';
+import { useMigrationStatus, useSupersede } from '@/hooks/useMigrationData';
 import { ObservationCard } from './ObservationCard';
 import { ReviewDialog } from './ReviewDialog';
 import { ResolveDialog } from './ResolveDialog';
 import { PromoteDialog } from './PromoteDialog';
+import { SupersedeDialog } from './SupersedeDialog';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { formatCount } from '@/lib/formatters';
 import { UI_COPY } from '@vlprs/shared';
-import type { ObservationType, ObservationStatus } from '@vlprs/shared';
+import type { ObservationType, ObservationStatus, ObservationListItem } from '@vlprs/shared';
 
 const TYPE_OPTIONS: { value: ObservationType; label: string }[] = [
   { value: 'rate_variance', label: 'Rate Variance' },
@@ -19,6 +20,8 @@ const TYPE_OPTIONS: { value: ObservationType; label: string }[] = [
   { value: 'multi_mda', label: 'Multi-MDA' },
   { value: 'no_approval_match', label: 'No Approval Match' },
   { value: 'consecutive_loan', label: 'Consecutive Loan' },
+  { value: 'period_overlap', label: 'Period Overlap' },
+  { value: 'grade_tier_mismatch', label: 'Grade/Tier Review' },
 ];
 
 const STATUS_OPTIONS: { value: ObservationStatus; label: string }[] = [
@@ -40,6 +43,7 @@ export function ObservationsList() {
   const [reviewTarget, setReviewTarget] = useState<string | null>(null);
   const [resolveTarget, setResolveTarget] = useState<string | null>(null);
   const [promoteTarget, setPromoteTarget] = useState<string | null>(null);
+  const [supersedeTarget, setSupersedeTarget] = useState<ObservationListItem | null>(null);
 
   // Debounce search
   useEffect(() => {
@@ -64,6 +68,7 @@ export function ObservationsList() {
   const reviewMutation = useReviewObservation();
   const resolveMutation = useResolveObservation();
   const promoteMutation = usePromoteObservation();
+  const supersedeMutation = useSupersede();
 
   const counts = data?.counts;
   const pagination = data?.pagination;
@@ -181,6 +186,7 @@ export function ObservationsList() {
               onReview={(id) => setReviewTarget(id)}
               onResolve={(id) => setResolveTarget(id)}
               onPromote={(id) => setPromoteTarget(id)}
+              onSupersede={(obs) => setSupersedeTarget(obs)}
             />
           ))}
         </div>
@@ -251,6 +257,17 @@ export function ObservationsList() {
           }
         }}
         isPending={promoteMutation.isPending}
+      />
+      <SupersedeDialog
+        open={!!supersedeTarget}
+        observation={supersedeTarget}
+        onClose={() => setSupersedeTarget(null)}
+        onConfirm={(supersededUploadId, replacementUploadId, reason) => {
+          supersedeMutation.mutate({ supersededUploadId, replacementUploadId, reason }, {
+            onSuccess: () => setSupersedeTarget(null),
+          });
+        }}
+        isPending={supersedeMutation.isPending}
       />
     </div>
   );

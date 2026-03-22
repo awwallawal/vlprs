@@ -13,7 +13,7 @@ const TYPE_LABELS: Record<ObservationType, string> = {
   no_approval_match: 'No Approval Match',
   consecutive_loan: 'Consecutive Loan',
   period_overlap: 'Period Overlap',
-  grade_tier_mismatch: 'Grade-Tier Mismatch',
+  grade_tier_mismatch: 'Grade/Tier Review',
 };
 
 const STATUS_VARIANT: Record<ObservationStatus, 'review' | 'info' | 'complete' | 'variance'> = {
@@ -35,6 +35,7 @@ interface ObservationCardProps {
   onReview?: (id: string) => void;
   onResolve?: (id: string) => void;
   onPromote?: (id: string) => void;
+  onSupersede?: (observation: ObservationListItem) => void;
 }
 
 export function ObservationCard({
@@ -42,6 +43,7 @@ export function ObservationCard({
   onReview,
   onResolve,
   onPromote,
+  onSupersede,
 }: ObservationCardProps) {
   const [expanded, setExpanded] = useState(false);
 
@@ -137,6 +139,16 @@ export function ObservationCard({
 
           {/* Action buttons */}
           <div className="flex items-center gap-2 mt-3">
+            {observation.type === 'period_overlap' && observation.status === 'unreviewed' && onSupersede && (
+              <Button
+                variant="secondary"
+                size="sm"
+                className="text-amber-700 border-amber-300 hover:bg-amber-50"
+                onClick={() => onSupersede(observation)}
+              >
+                Supersede Previous Upload
+              </Button>
+            )}
             {observation.status === 'unreviewed' && onReview && (
               <Button variant="secondary" size="sm" onClick={() => onReview(observation.id)}>
                 Mark as Reviewed

@@ -627,6 +627,9 @@ export async function getUpload(uploadId: string, mdaScope: string | null | unde
     metadata: migrationUploads.metadata,
     createdAt: migrationUploads.createdAt,
     updatedAt: migrationUploads.updatedAt,
+    supersededBy: migrationUploads.supersededBy,
+    supersededAt: migrationUploads.supersededAt,
+    supersededReason: migrationUploads.supersededReason,
   })
     .from(migrationUploads)
     .innerJoin(mdas, eq(migrationUploads.mdaId, mdas.id))
@@ -668,6 +671,9 @@ export async function listUploads(
     status: migrationUploads.status,
     eraDetected: migrationUploads.eraDetected,
     createdAt: migrationUploads.createdAt,
+    supersededBy: migrationUploads.supersededBy,
+    supersededAt: migrationUploads.supersededAt,
+    supersededByFilename: sql<string | null>`(SELECT filename FROM migration_uploads WHERE id = ${migrationUploads.supersededBy})`,
   })
     .from(migrationUploads)
     .innerJoin(mdas, eq(migrationUploads.mdaId, mdas.id))

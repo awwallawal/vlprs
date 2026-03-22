@@ -5,9 +5,10 @@
  * Builds per-person timelines with monthly snapshots, gap detection, and cycle analysis.
  */
 
-import { eq, and, isNull, or, sql, asc } from 'drizzle-orm';
+import { eq, and, or, sql, asc } from 'drizzle-orm';
 import { db } from '../db/index';
 import { migrationRecords, personMatches, mdas } from '../db/schema';
+import { isActiveRecord } from '../db/queryHelpers';
 import { normalizeName } from '../migration/nameMatch';
 import { withMdaScope } from '../lib/mdaScope';
 import { AppError } from '../lib/appError';
@@ -75,7 +76,7 @@ export async function listPersons(
   filters: PersonListFilters,
   mdaScope?: string | null,
 ) {
-  const conditions = [isNull(migrationRecords.deletedAt)];
+  const conditions = [isActiveRecord()!];
   if (mdaScope) {
     conditions.push(withMdaScope(migrationRecords.mdaId, mdaScope)!);
   }
@@ -83,7 +84,7 @@ export async function listPersons(
     conditions.push(eq(migrationRecords.mdaId, filters.mdaFilter));
   }
 
-  // Fetch all records with aggregation-relevant fields
+  // Fetch all records with aggregation-relevant fields (excludes superseded)
   const allRecords = await db
     .select({
       staffName: migrationRecords.staffName,
@@ -194,8 +195,8 @@ export async function getPersonProfile(personKey: string, mdaScope?: string | nu
 
   const normalizedName = personKey.substring(colonIdx + 1);
 
-  // Fetch all records (optionally MDA-scoped), then filter by normalizeName() in app
-  const conditions = [isNull(migrationRecords.deletedAt)];
+  // Fetch all records (optionally MDA-scoped), then filter by normalizeName() in app (excludes superseded)
+  const conditions = [isActiveRecord()!];
   if (mdaScope) {
     conditions.push(withMdaScope(migrationRecords.mdaId, mdaScope)!);
   }

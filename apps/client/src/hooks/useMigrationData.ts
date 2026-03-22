@@ -1,6 +1,6 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/apiClient';
-import type { MigrationMdaStatus, MigrationDashboardMetrics, CoverageMatrix } from '@vlprs/shared';
+import type { MigrationMdaStatus, MigrationDashboardMetrics, CoverageMatrix, SupersedeResponse } from '@vlprs/shared';
 
 export function useMigrationStatus() {
   return useQuery<MigrationMdaStatus[]>({
@@ -23,5 +23,24 @@ export function useMigrationCoverage(extended: boolean) {
     queryKey: ['migration', 'coverage', { extended }],
     queryFn: () => apiClient<CoverageMatrix>(`/migrations/coverage${extended ? '?extended=true' : ''}`),
     staleTime: 60_000,
+  });
+}
+
+export function useSupersede() {
+  const queryClient = useQueryClient();
+  return useMutation<
+    SupersedeResponse,
+    Error,
+    { supersededUploadId: string; replacementUploadId: string; reason: string }
+  >({
+    mutationFn: ({ supersededUploadId, replacementUploadId, reason }) =>
+      apiClient<SupersedeResponse>(`/migrations/${supersededUploadId}/supersede`, {
+        method: 'POST',
+        body: JSON.stringify({ replacementUploadId, reason }),
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['migration'] });
+      queryClient.invalidateQueries({ queryKey: ['observations'] });
+    },
   });
 }
