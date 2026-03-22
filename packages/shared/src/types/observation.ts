@@ -6,7 +6,8 @@ export type ObservationType =
   | 'no_approval_match'
   | 'consecutive_loan'
   | 'period_overlap'
-  | 'grade_tier_mismatch';
+  | 'grade_tier_mismatch'
+  | 'three_way_variance';
 
 export type ObservationStatus = 'unreviewed' | 'reviewed' | 'resolved' | 'promoted';
 

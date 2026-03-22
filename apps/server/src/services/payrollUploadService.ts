@@ -20,6 +20,7 @@ import { generateUuidv7 } from '../lib/uuidv7';
 import { parseSubmissionFile, type ParsedCsvRow } from '../lib/fileParser';
 import { validateSubmissionRows } from './submissionService';
 import { resolveMdaByName } from './mdaService';
+import { checkDeclaredExists, triggerThreeWayReconciliation } from './threeWayReconciliationService';
 import { VOCABULARY } from '@vlprs/shared';
 import type {
   PayrollDelineationSummary,
@@ -281,6 +282,17 @@ export async function confirmPayrollUpload(
 
   // Clear preview cache
   pendingUploads.delete(userId);
+
+  // Story 7.0i: Fire-and-forget three-way reconciliation for MDAs with existing submissions
+  for (const [code] of mdaGroups) {
+    const resolved = pending.resolvedMdas.get(code);
+    if (!resolved) continue;
+    checkDeclaredExists(resolved.mdaId, period).then((hasDeclared) => {
+      if (hasDeclared) {
+        triggerThreeWayReconciliation(resolved.mdaId, period, userId, 'payroll');
+      }
+    }).catch(() => { /* reconciliation failure does not block payroll */ });
+  }
 
   return {
     referenceNumbers,

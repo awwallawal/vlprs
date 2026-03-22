@@ -159,6 +159,7 @@ export async function getObservationCounts(
       consecutiveLoan: sql<string>`COUNT(*) FILTER (WHERE ${observations.type} = 'consecutive_loan')`,
       periodOverlap: sql<string>`COUNT(*) FILTER (WHERE ${observations.type} = 'period_overlap')`,
       gradeTierMismatch: sql<string>`COUNT(*) FILTER (WHERE ${observations.type} = 'grade_tier_mismatch')`,
+      threeWayVariance: sql<string>`COUNT(*) FILTER (WHERE ${observations.type} = 'three_way_variance')`,
       // By status
       unreviewed: sql<string>`COUNT(*) FILTER (WHERE ${observations.status} = 'unreviewed')`,
       reviewed: sql<string>`COUNT(*) FILTER (WHERE ${observations.status} = 'reviewed')`,
@@ -179,6 +180,7 @@ export async function getObservationCounts(
       consecutive_loan: parseInt(result.consecutiveLoan, 10),
       period_overlap: parseInt(result.periodOverlap, 10),
       grade_tier_mismatch: parseInt(result.gradeTierMismatch, 10),
+      three_way_variance: parseInt(result.threeWayVariance, 10),
     },
     byStatus: {
       unreviewed: parseInt(result.unreviewed, 10),

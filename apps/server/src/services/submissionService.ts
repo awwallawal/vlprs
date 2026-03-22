@@ -8,6 +8,7 @@ import { generateUuidv7 } from '../lib/uuidv7';
 import { parseCsvRows } from '../lib/fileParser';
 import { compareSubmission } from './comparisonEngine';
 import { reconcileSubmission } from './reconciliationEngine';
+import { checkPayrollExists, triggerThreeWayReconciliation } from './threeWayReconciliationService';
 import { sendReconciliationAlertEmail } from '../lib/email';
 import { VOCABULARY, submissionRowSchema } from '@vlprs/shared';
 import type {
@@ -474,6 +475,14 @@ export async function processSubmissionRows(
       varianceCount: 0,
     };
   }
+  // Story 7.0i: Fire-and-forget three-way reconciliation when payroll exists
+  // (historical already returned above — only csv/manual reach here)
+  checkPayrollExists(mdaId, period).then((hasPayroll) => {
+    if (hasPayroll) {
+      triggerThreeWayReconciliation(mdaId, period, userId, source);
+    }
+  }).catch(() => { /* reconciliation failure does not block submission */ });
+
   try {
     const { summary: comparisonSummary } = await compareSubmission(submissionId, mdaScope);
     await db.update(mdaSubmissions)

@@ -11,6 +11,7 @@ import {
   Users,
   UserCog,
   Activity,
+  ArrowRightLeft,
 } from 'lucide-react';
 import type { ComponentType } from 'react';
 
@@ -30,6 +31,7 @@ export const NAV_ITEMS: NavItem[] = [
   { label: 'Payroll Upload', path: '/dashboard/payroll-upload', icon: FileSpreadsheet, roles: [ROLES.SUPER_ADMIN] },
   { label: 'Employment Events', path: '/dashboard/employment-events', icon: UserCog, roles: [ROLES.SUPER_ADMIN, ROLES.DEPT_ADMIN, ROLES.MDA_OFFICER] },
   { label: 'Migration', path: '/dashboard/migration', icon: Database, roles: [ROLES.SUPER_ADMIN, ROLES.DEPT_ADMIN] },
+  { label: 'Reconciliation', path: '/dashboard/reconciliation/three-way', icon: ArrowRightLeft, roles: [ROLES.SUPER_ADMIN, ROLES.DEPT_ADMIN, ROLES.MDA_OFFICER] },
   { label: 'Reports', path: '/dashboard/reports', icon: FileText, roles: [ROLES.SUPER_ADMIN, ROLES.DEPT_ADMIN] },
   { label: 'Exceptions', path: '/dashboard/exceptions', icon: AlertCircle, roles: [ROLES.SUPER_ADMIN, ROLES.DEPT_ADMIN] },
   { label: 'User Management', path: '/dashboard/admin', icon: Users, roles: [ROLES.SUPER_ADMIN, ROLES.DEPT_ADMIN] },

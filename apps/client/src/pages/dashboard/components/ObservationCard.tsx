@@ -14,6 +14,7 @@ const TYPE_LABELS: Record<ObservationType, string> = {
   consecutive_loan: 'Consecutive Loan',
   period_overlap: 'Period Overlap',
   grade_tier_mismatch: 'Grade/Tier Review',
+  three_way_variance: 'Three-Way Variance',
 };
 
 const STATUS_VARIANT: Record<ObservationStatus, 'review' | 'info' | 'complete' | 'variance'> = {
