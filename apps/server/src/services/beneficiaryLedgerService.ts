@@ -2,6 +2,7 @@ import { eq, and, sql, ilike, or } from 'drizzle-orm';
 import Decimal from 'decimal.js';
 import { db } from '../db/index';
 import { loans, mdas, ledgerEntries, personMatches, migrationRecords } from '../db/schema';
+import { isActiveRecord } from '../db/queryHelpers';
 import { computeBalanceForLoan } from './computationEngine';
 import { withMdaScope } from '../lib/mdaScope';
 import { getUnreviewedCount, getObservationCountsByStaffNames } from './observationService';
@@ -374,7 +375,10 @@ export async function exportBeneficiariesCsv(
     })
     .from(loans)
     .innerJoin(mdas, eq(loans.mdaId, mdas.id))
-    .leftJoin(migrationRecords, eq(migrationRecords.loanId, loans.id))
+    .leftJoin(migrationRecords, and(
+      eq(migrationRecords.loanId, loans.id),
+      isActiveRecord(),
+    ))
     .where(whereClause)
     .orderBy(loans.staffName);
 

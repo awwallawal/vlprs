@@ -208,7 +208,7 @@ development_status:
   7-0d-observation-engine-completion: done  # Approval Match detector, CDU alias, detectMdaFromExtraFields, period overlap warning+observation, OUTSTANDING BAL. column mapping, summary sheet filtering, accelerated rate labeling, tier-vs-grade validation, non-standard rates investigation
   7-0e-ux-polish-frontend-completeness: done  # SUPER_ADMIN sidebar fix, column sorting, prefetchQuery, template tracking, useCopyToClipboard refactor, PDF hardening, MDA color palette, Textarea component
   7-0f-system-health-monitoring-foundation: done  # 15 metrics (Infrastructure/API/Data Integrity/Business Health), dedicated sidebar page, Pino-based, role-scoped, auto-refresh 30s
-  7-0g-upload-supersede-record-resolution: ready-for-dev  # cascading supersede workflow — superseded_by state, record status updates, baseline recalculation, observation re-run, audit trail. Depends on 7.0d
+  7-0g-upload-supersede-record-resolution: done  # cascading supersede workflow — all 9 code review findings resolved (H1: upload list tab, H2: integration test). All tasks complete
   7-0h-payroll-extract-upload-mda-delineation: ready-for-dev  # AG uploads consolidated payroll file, auto-split by MDA, source='payroll', SUPER_ADMIN only. Reuses 3.8 delineation + DeductionRecord[] interface
   7-0i-three-way-reconciliation-engine: ready-for-dev  # expected vs declared vs actual (payroll). Three-way summary, match rate metrics, payroll variance attention items, MDA-scoped views, exception auto-promotion. Depends on 7.0h
   7-1-exception-flagging-queue: ready-for-dev
@@ -217,11 +217,11 @@ development_status:
   epic-7-retrospective: optional
 
   # Epic 6: Reporting & PDF Export (Sprint 10 — reports now contain migration + live submissions + events + exceptions)
-  epic-6: backlog
-  6-1-executive-summary-mda-compliance-reports: backlog
-  6-2-variance-loan-snapshot-reports: backlog
-  6-3-weekly-ag-report: backlog
-  6-4-branded-pdf-export-one-tap-sharing: backlog
+  epic-6: in-progress
+  6-1-executive-summary-mda-compliance-reports: ready-for-dev
+  6-2-variance-loan-snapshot-reports: ready-for-dev
+  6-3-weekly-ag-report: ready-for-dev
+  6-4-branded-pdf-export-one-tap-sharing: ready-for-dev
   epic-6-retrospective: optional
 
   # Epic 8: Auto-Stop Certificate & Loan Completion (Sprint 11)

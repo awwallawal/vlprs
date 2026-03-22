@@ -183,6 +183,13 @@
       "when": 1774108590517,
       "tag": "0025_brown_paibok",
       "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1774128253924,
+      "tag": "0026_curious_nekra",
+      "breakpoints": true
     }
   ]
 }

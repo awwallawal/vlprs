@@ -76,6 +76,27 @@ export interface MigrationUpload {
   metadata: unknown;
   createdAt: string;
   updatedAt: string;
+  // Supersession fields (Story 7.0g)
+  supersededBy: string | null;
+  supersededAt: string | null;
+  supersededReason: string | null;
+}
+
+// ─── Supersession Types (Story 7.0g) ────────────────────────────────
+
+export type MigrationRecordStatus = 'active' | 'superseded';
+
+export interface SupersedeRequest {
+  replacementUploadId: string;
+  reason: string;
+}
+
+export interface SupersedeResponse {
+  supersededUploadId: string;
+  replacementUploadId: string;
+  recordsSuperseded: number;
+  baselinesAnnotated: number;
+  observationsRegenerated: boolean;
 }
 
 export interface MigrationRecord {
@@ -137,6 +158,10 @@ export interface MigrationUploadSummary {
   status: MigrationUploadStatus;
   eraDetected: number | null;
   createdAt: string;
+  // Supersession fields (Story 7.0g)
+  supersededBy: string | null;
+  supersededAt: string | null;
+  supersededByFilename: string | null;
 }
 
 export interface MigrationUploadDetail extends MigrationUpload {
