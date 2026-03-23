@@ -23,6 +23,7 @@ const TYPE_OPTIONS: { value: ObservationType; label: string }[] = [
   { value: 'period_overlap', label: 'Period Overlap' },
   { value: 'grade_tier_mismatch', label: 'Grade/Tier Review' },
   { value: 'three_way_variance', label: 'Three-Way Variance' },
+  { value: 'manual_exception', label: 'Manual Exception' },
 ];
 
 const STATUS_OPTIONS: { value: ObservationStatus; label: string }[] = [

@@ -9,6 +9,7 @@ export { createLedgerEntrySchema, type CreateLedgerEntryInput } from './validato
 export { mdaQuerySchema } from './validators/mdaSchemas.js';
 export { migrationUploadQuerySchema, confirmMappingBodySchema, validationResultQuerySchema, personListQuerySchema, createBaselineBodySchema, beneficiaryQuerySchema, coverageQuerySchema, confirmDelineationSchema, resolveDuplicateSchema, duplicateListQuerySchema } from './validators/migrationSchemas.js';
 export { observationQuerySchema, reviewObservationSchema, resolveObservationSchema, promoteObservationSchema, generateObservationsSchema } from './validators/observationSchemas.js';
+export { flagExceptionSchema, resolveExceptionSchema, exceptionListQuerySchema } from './validators/exceptionSchemas.js';
 export { supersedeSchema, type SupersedeBody } from './validators/supersedeSchemas.js';
 export { serviceStatusVerificationQuerySchema } from './validators/reportSchemas.js';
 export { submissionRowSchema, submissionUploadQuerySchema, submissionListQuerySchema, manualSubmissionBodySchema, comparisonRowSchema, comparisonSummarySchema, submissionComparisonResponseSchema, submissionUploadResponseSchema, submissionListResponseSchema, submissionDetailResponseSchema, EVENT_FLAG_VALUES, type ManualSubmissionBody } from './validators/submissionSchemas.js';
@@ -35,7 +36,8 @@ export type { EmploymentEventType, ReconciliationStatus, TransferStatus, Employm
 export type { ReconciliationOutcome, ReconciliationDetail, ReconciliationCounts, ReconciliationSummary, EventTypeMapping, ResolveDiscrepancyRequest } from './types/reconciliation.js';
 export type { HistoricalMatchStatus, FlagDiscrepancyRequest, FlaggedRow, HistoricalReconciliationDetail, HistoricalReconciliationSummary, HistoricalUploadResponse } from './types/historicalSubmission.js';
 export type { PayrollDelineationSummary, PayrollUploadResponse, PayrollConfirmRequest, PayrollMdaBreakdown, PayrollUploadListItem, PayrollUploadDetail } from './types/payrollUpload.js';
-export type { ExceptionPriority, ExceptionCategory, ExceptionItem } from './types/exception.js';
+export type { ExceptionPriority, ExceptionCategory, ExceptionItem, ExceptionListItem, ExceptionDetail, FlagExceptionRequest, ResolveExceptionRequest, ExceptionActionTaken, ExceptionCounts } from './types/exception.js';
+export { EXCEPTION_CATEGORY_PRESETS } from './types/exception.js';
 export type { ObservationType, ObservationStatus, ObservationContext, SourceReference, Observation, ObservationListItem, ObservationCounts, PaginatedObservations, ExceptionRecord } from './types/observation.js';
 export type { ThreeWayMatchStatus, ThreeWayVarianceCategory, ThreeWayReconciliationRow, ThreeWayReconciliationSummary, ThreeWayDashboardMetrics } from './types/threeWayReconciliation.js';
 export type { LedgerEntryType, LedgerEntry } from './types/ledger.js';

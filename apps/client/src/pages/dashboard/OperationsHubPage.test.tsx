@@ -40,6 +40,7 @@ vi.mock('@/hooks/useLoanData', () => ({
 
 vi.mock('@/hooks/useExceptionData', () => ({
   useExceptionQueue: () => ({ data: mockExceptions, isPending: false }),
+  useExceptionCounts: () => ({ data: { high: 1, medium: 0, low: 0, total: 1 } }),
 }));
 
 function renderPage(initialEntries = ['/dashboard/operations']) {

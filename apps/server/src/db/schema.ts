@@ -436,7 +436,7 @@ export const personMatches = pgTable(
 
 // ─── Observation Type Enum (Story 3.6) ──────────────────────────────
 export const observationTypeEnum = pgEnum('observation_type', [
-  'rate_variance', 'stalled_balance', 'negative_balance', 'multi_mda', 'no_approval_match', 'consecutive_loan', 'period_overlap', 'grade_tier_mismatch', 'three_way_variance',
+  'rate_variance', 'stalled_balance', 'negative_balance', 'multi_mda', 'no_approval_match', 'consecutive_loan', 'period_overlap', 'grade_tier_mismatch', 'three_way_variance', 'manual_exception',
 ]);
 
 // ─── Observation Status Enum (Story 3.6) ────────────────────────────
@@ -507,6 +507,12 @@ export const exceptions = pgTable(
     priority: exceptionPriorityEnum('priority').notNull().default('medium'),
     status: exceptionStatusEnum('status').notNull().default('open'),
     promotedBy: uuid('promoted_by').notNull().references(() => users.id),
+    resolvedBy: uuid('resolved_by').references(() => users.id),
+    resolvedAt: timestamp('resolved_at', { withTimezone: true }),
+    resolutionNote: text('resolution_note'),
+    actionTaken: varchar('action_taken', { length: 50 }),
+    loanId: uuid('loan_id').references(() => loans.id),
+    flagNotes: text('flag_notes'),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
   },
@@ -514,6 +520,7 @@ export const exceptions = pgTable(
     index('idx_exceptions_observation_id').on(table.observationId),
     index('idx_exceptions_mda_id').on(table.mdaId),
     index('idx_exceptions_status').on(table.status),
+    index('idx_exceptions_loan_id').on(table.loanId),
   ],
 );
 

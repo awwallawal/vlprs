@@ -131,6 +131,11 @@ export const VOCABULARY = {
   OBSERVATION_NOT_FOUND: 'The requested observation could not be found',
   NO_APPROVAL_MATCH: 'No matching approval record found',
   BALANCE_BELOW_ZERO: 'Balance below zero',
+  // Exception Management (Story 7.1)
+  EXCEPTION_FLAGGED: 'Exception flagged for review',
+  EXCEPTION_RESOLVED: 'Exception resolved',
+  EXCEPTION_NOT_FOUND: 'The requested exception could not be found',
+  EXCEPTION_ALREADY_RESOLVED: 'This exception has already been resolved',
   // Trace Report (Story 3.7)
   TRACE_REPORT_TITLE: 'Individual Loan Trace Report',
   TRACE_DATA_SOURCE: 'Generated from legacy data migration records',
@@ -357,4 +362,9 @@ export const UI_COPY = {
   PAYROLL_CONFIRM_PROMPT: 'Review the breakdown above and confirm to store payroll records.',
   PAYROLL_UPLOAD_SUCCESS: 'Payroll data uploaded — {records} records across {mdas} MDAs',
   PAYROLL_UNMATCHED_WARNING: '{count} records with unrecognized MDA codes — please correct the file and re-upload',
+  // Exception Management UI (Story 7.1)
+  EXCEPTION_QUEUE_HEADER: 'Exception Queue',
+  EXCEPTION_FLAG_PROMPT: 'Flag this loan record for review — provide priority, category, and notes',
+  EXCEPTION_RESOLVE_PROMPT: 'Resolve this exception — provide resolution note and action taken',
+  EXCEPTION_ALL_RESOLVED: 'All exceptions have been resolved — no items requiring attention',
 } as const;

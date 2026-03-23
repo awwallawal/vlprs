@@ -317,6 +317,13 @@ export const router = createBrowserRouter([
               })),
           },
           {
+            path: 'exceptions/:id',
+            lazy: () =>
+              import('@/pages/dashboard/ExceptionDetailPage').then((m) => ({
+                Component: m.ExceptionDetailPage,
+              })),
+          },
+          {
             path: 'reports',
             lazy: () =>
               import('@/pages/dashboard/ReportsPage').then((m) => ({

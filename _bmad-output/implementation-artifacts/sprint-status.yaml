@@ -211,7 +211,7 @@ development_status:
   7-0g-upload-supersede-record-resolution: done  # cascading supersede workflow — all 9 code review findings resolved (H1: upload list tab, H2: integration test). All tasks complete
   7-0h-payroll-extract-upload-mda-delineation: done  # AG uploads consolidated payroll file, auto-split by MDA, source='payroll', SUPER_ADMIN only. Reuses 3.8 delineation + DeductionRecord[] interface
   7-0i-three-way-reconciliation-engine: done  # expected vs declared vs actual (payroll). Three-way summary, match rate metrics, payroll variance attention items, MDA-scoped views, exception auto-promotion. Depends on 7.0h
-  7-1-exception-flagging-queue: ready-for-dev
+  7-1-exception-flagging-queue: done  # Manual flag + auto-promote queue, 5 API endpoints, full frontend. All 7 ACs satisfied. Code review: 11 findings (4H 5M 2L) all resolved
   7-2-automatic-inactive-loan-detection: ready-for-dev
   7-3-record-annotations-event-flag-corrections: ready-for-dev
   epic-7-retrospective: optional
