@@ -3,11 +3,12 @@ import { useNavigate } from 'react-router';
 import { FileText, Briefcase, Calculator, Search } from 'lucide-react';
 import { useMigrationStatus } from '@/hooks/useMigrationData';
 import { useLoanSearch } from '@/hooks/useLoanData';
-import { useExceptionQueue } from '@/hooks/useExceptionData';
+import { useExceptionQueue, useExceptionCounts } from '@/hooks/useExceptionData';
 import { MigrationProgressCard } from '@/components/shared/MigrationProgressCard';
 import { WelcomeGreeting } from '@/components/shared/WelcomeGreeting';
 import { ExceptionQueueRow, ExceptionEmptyState } from '@/components/shared/ExceptionQueueRow';
 import { NairaDisplay } from '@/components/shared/NairaDisplay';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -45,6 +46,7 @@ export function OperationsHubPage() {
 
   // --- Exception Queue ---
   const { data: exceptions, isPending: isExceptionsPending } = useExceptionQueue();
+  const { data: exceptionCounts } = useExceptionCounts();
   const sortedExceptions = exceptions
     ? [...exceptions].sort(
         (a, b) => (PRIORITY_ORDER[a.priority] ?? 9) - (PRIORITY_ORDER[b.priority] ?? 9),
@@ -183,9 +185,27 @@ export function OperationsHubPage() {
 
       {/* Exception Queue */}
       <section aria-labelledby="exceptions-heading">
-        <h2 id="exceptions-heading" className="text-lg font-semibold text-text-primary mb-3">
-          Exception Queue
-        </h2>
+        <div className="flex items-center justify-between mb-3">
+          <h2 id="exceptions-heading" className="text-lg font-semibold text-text-primary">
+            Exception Queue
+          </h2>
+          <div className="flex items-center gap-3">
+            {exceptionCounts && (
+              <div className="flex items-center gap-1.5 text-xs">
+                <Badge variant="outline">{exceptionCounts.high} High</Badge>
+                <Badge variant="review">{exceptionCounts.medium} Med</Badge>
+                <Badge variant="info">{exceptionCounts.low} Low</Badge>
+              </div>
+            )}
+            <button
+              type="button"
+              onClick={() => navigate('/dashboard/exceptions')}
+              className="text-sm text-teal hover:text-teal-hover underline"
+            >
+              View All
+            </button>
+          </div>
+        </div>
 
         {isExceptionsPending ? (
           <div className="space-y-3">
@@ -208,6 +228,7 @@ export function OperationsHubPage() {
                 description={item.description}
                 createdAt={item.createdAt}
                 status={item.status}
+                onClick={() => navigate(`/dashboard/exceptions/${item.id}`)}
               />
             ))}
           </div>

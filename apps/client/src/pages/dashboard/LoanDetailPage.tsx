@@ -1,5 +1,6 @@
+import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router';
-import { ArrowLeft, Clock } from 'lucide-react';
+import { ArrowLeft, Clock, AlertTriangle } from 'lucide-react';
 import { formatDate } from '@/lib/formatters';
 import { useLoanDetail } from '@/hooks/useLoanData';
 import { NairaDisplay } from '@/components/shared/NairaDisplay';
@@ -12,6 +13,9 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion';
+import { FlagExceptionDialog } from './components/FlagExceptionDialog';
+import { useExceptions } from '@/hooks/useExceptionData';
+import { useAuthStore } from '@/stores/authStore';
 import type { LoanStatus } from '@vlprs/shared';
 
 const LOAN_STATUS_MAP = {
@@ -32,6 +36,9 @@ export function LoanDetailPage() {
   const { mdaId, loanId } = useParams<{ mdaId: string; loanId: string }>();
   const navigate = useNavigate();
   const loanDetail = useLoanDetail(loanId!);
+  const [flagOpen, setFlagOpen] = useState(false);
+  const user = useAuthStore((s) => s.user);
+  const canFlag = user?.role === 'super_admin' || user?.role === 'dept_admin';
 
   return (
     <div className="space-y-8">
@@ -163,6 +170,11 @@ export function LoanDetailPage() {
         </section>
       ) : null}
 
+      {/* Exception flagging */}
+      {canFlag && loanDetail.data && (
+        <ExceptionFlagSection loanId={loanId!} flagOpen={flagOpen} setFlagOpen={setFlagOpen} />
+      )}
+
       {/* Placeholder sections for future features */}
       <section aria-label="Upcoming features" className="space-y-4">
         <PlaceholderSection
@@ -196,6 +208,36 @@ export function LoanDetailPage() {
         </Accordion>
       </section>
     </div>
+  );
+}
+
+function ExceptionFlagSection({ loanId, flagOpen, setFlagOpen }: { loanId: string; flagOpen: boolean; setFlagOpen: (v: boolean) => void }) {
+  const navigate = useNavigate();
+  const { data: result } = useExceptions({ loanId, status: 'open', limit: 1 });
+  const openCount = result?.total ?? 0;
+
+  return (
+    <section aria-label="Exception flagging" className="space-y-3">
+      <div className="flex items-center gap-3">
+        <Button variant="outline" onClick={() => setFlagOpen(true)}>
+          <AlertTriangle className="h-4 w-4 mr-1" />
+          Flag as Exception
+        </Button>
+      </div>
+      {openCount > 0 && (
+        <p className="text-sm text-text-secondary">
+          {openCount} open exception{openCount !== 1 ? 's' : ''} for this loan —{' '}
+          <button
+            type="button"
+            className="text-teal hover:text-teal-hover underline"
+            onClick={() => navigate(`/dashboard/exceptions?loanId=${loanId}&status=open`)}
+          >
+            View in queue
+          </button>
+        </p>
+      )}
+      <FlagExceptionDialog open={flagOpen} onOpenChange={setFlagOpen} loanId={loanId} />
+    </section>
   );
 }
 
