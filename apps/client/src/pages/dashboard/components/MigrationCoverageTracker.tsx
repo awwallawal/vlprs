@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { formatCount } from '@/lib/formatters';
 import { Download, FileText } from 'lucide-react';
+import { MetricHelp } from '@/components/shared/MetricHelp';
 import type { CoverageMdaRow, CoverageMatrix } from '@vlprs/shared';
 
 /** Generate an array of 'YYYY-MM' strings between start and end inclusive */
@@ -298,7 +299,7 @@ export function MigrationCoverageTracker() {
                   </th>
                 ))}
                 <th className="py-2 px-2 text-center font-semibold text-text-muted uppercase min-w-[80px]">
-                  Coverage
+                  Coverage <MetricHelp metric="migration.coverage" />
                 </th>
               </tr>
             </thead>

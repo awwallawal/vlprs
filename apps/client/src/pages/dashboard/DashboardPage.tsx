@@ -15,6 +15,7 @@ import { ComplianceProgressHeader } from '@/components/shared/ComplianceProgress
 import { HealthScoreBadge } from '@/components/shared/HealthScoreBadge';
 import { SubmissionHeatmap } from '@/components/shared/SubmissionHeatmap';
 import { AttentionItemCard, AttentionEmptyState } from '@/components/shared/AttentionItemCard';
+import { MetricHelp } from '@/components/shared/MetricHelp';
 import { useAuthStore } from '@/stores/authStore';
 import { ROLES } from '@vlprs/shared';
 import { SchemeFundDialog } from './components/SchemeFundDialog';
@@ -155,6 +156,7 @@ export function DashboardPage() {
             value={metrics.data?.totalExposure ?? '0'}
             format="currency"
             isPending={metrics.isPending}
+            helpKey="dashboard.totalExposure"
             onClick={() => navigate('/dashboard/drill-down/total-exposure')}
           />
           {/* Fund Available — conditional rendering for unconfigured state */}
@@ -203,6 +205,7 @@ export function DashboardPage() {
               value={metrics.data?.fundAvailable ?? '0'}
               format="currency"
               isPending={false}
+              helpKey="dashboard.fundAvailable"
               onClick={() => navigate('/dashboard/drill-down/fund-available')}
             />
           )}
@@ -212,6 +215,7 @@ export function DashboardPage() {
               value={metrics.data?.monthlyRecovery ?? '0'}
               format="currency"
               isPending={metrics.isPending}
+              helpKey="dashboard.monthlyRecovery"
               onClick={() => navigate('/dashboard/drill-down/monthly-recovery')}
             />
             {metrics.data?.recoveryPeriod && (
@@ -239,6 +243,7 @@ export function DashboardPage() {
             value={metrics.data?.loansInWindow ?? 0}
             format="count"
             isPending={metrics.isPending}
+            helpKey="dashboard.loansInWindow"
             onClick={() => navigate('/dashboard/drill-down/loans-in-window')}
           />
           <HeroMetricCard
@@ -246,6 +251,7 @@ export function DashboardPage() {
             value={metrics.data?.totalOutstandingReceivables ?? '0'}
             format="currency"
             isPending={metrics.isPending}
+            helpKey="dashboard.outstandingReceivables"
             onClick={() => navigate('/dashboard/drill-down/outstanding-receivables')}
           />
           <HeroMetricCard
@@ -253,6 +259,7 @@ export function DashboardPage() {
             value={metrics.data?.monthlyCollectionPotential ?? '0'}
             format="currency"
             isPending={metrics.isPending}
+            helpKey="dashboard.collectionPotential"
             onClick={() => navigate('/dashboard/drill-down/collection-potential')}
           />
           <HeroMetricCard
@@ -260,6 +267,7 @@ export function DashboardPage() {
             value={metrics.data?.atRiskAmount ?? '0'}
             format="currency"
             isPending={metrics.isPending}
+            helpKey="dashboard.atRisk"
             onClick={() => navigate('/dashboard/drill-down/at-risk')}
           />
           <HeroMetricCard
@@ -267,6 +275,7 @@ export function DashboardPage() {
             value={metrics.data?.loanCompletionRate ?? 0}
             format="percentage"
             isPending={metrics.isPending}
+            helpKey="dashboard.completionRate"
             onClick={() => navigate('/dashboard/drill-down/completion-rate')}
           />
           <HeroMetricCard
@@ -274,6 +283,7 @@ export function DashboardPage() {
             value={metrics.data?.loanCompletionRateLifetime ?? 0}
             format="percentage"
             isPending={metrics.isPending}
+            helpKey="dashboard.completionRateLifetime"
             onClick={() => navigate('/dashboard/drill-down/completion-rate-lifetime')}
           />
         </div>
@@ -287,7 +297,7 @@ export function DashboardPage() {
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="rounded-lg border bg-white p-4">
-              <p className="text-sm text-text-secondary mb-1">Overall Match Rate</p>
+              <p className="text-sm text-text-secondary mb-1">Overall Match Rate<MetricHelp metric="reconciliation.matchRate" /></p>
               {threeWayDashboard.isPending ? (
                 <Skeleton className="h-6 w-20" />
               ) : (
@@ -297,7 +307,7 @@ export function DashboardPage() {
               )}
             </div>
             <div className="rounded-lg border bg-white p-4">
-              <p className="text-sm text-text-secondary mb-1">Full Variances</p>
+              <p className="text-sm text-text-secondary mb-1">Full Variances<MetricHelp metric="reconciliation.fullVariance" /></p>
               {threeWayDashboard.isPending ? (
                 <Skeleton className="h-6 w-20" />
               ) : (

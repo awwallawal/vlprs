@@ -164,6 +164,9 @@ export async function detectInactiveLoans(
         possibleExplanations: ['Payroll processing delay', 'Undeclared employment event', 'Administrative oversight'],
         suggestedAction: 'Review loan status and contact MDA for clarification',
         dataCompleteness: submissionInfo ? 80 : 50,
+        completenessNote: submissionInfo
+          ? 'Loan record, ledger history, employment events, and MDA submission reviewed.'
+          : 'Loan record, ledger history, and employment events reviewed. No MDA submission available for cross-reference.',
         dataPoints: {
           lastDeductionDate: candidate.lastDeductionDate,
           daysSinceDeduction: candidate.daysSinceDeduction,

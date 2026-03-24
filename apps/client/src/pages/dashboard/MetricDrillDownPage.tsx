@@ -10,6 +10,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
+import { MetricHelp } from '@/components/shared/MetricHelp';
 import { cn } from '@/lib/utils';
 
 const METRIC_LABELS: Record<string, string> = {
@@ -67,10 +68,10 @@ export function MetricDrillDownPage() {
                 <>
                   <th className="px-4 py-3 text-right font-medium text-text-secondary">Expected</th>
                   <th className="px-4 py-3 text-right font-medium text-text-secondary">Actual</th>
-                  <th className="px-4 py-3 text-right font-medium text-text-secondary">Variance</th>
+                  <th className="px-4 py-3 text-right font-medium text-text-secondary">Variance <MetricHelp metric="reconciliation.fullVariance" /></th>
                 </>
               )}
-              <th className="px-4 py-3 text-center font-medium text-text-secondary">Health</th>
+              <th className="px-4 py-3 text-center font-medium text-text-secondary">Health <MetricHelp metric="systemHealth.healthMetric" /></th>
               <th className="px-4 py-3 text-center font-medium text-text-secondary min-w-[120px]">Status Distribution</th>
               <TooltipProvider>
                 <Tooltip>

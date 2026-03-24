@@ -8,6 +8,7 @@ import { useAuthStore } from '@/stores/authStore';
 import { usePageMeta } from '@/hooks/usePageMeta';
 import { formatNaira } from '@/lib/formatters';
 import { ROLES } from '@vlprs/shared';
+import { MetricHelp } from '@/components/shared/MetricHelp';
 import type { ThreeWayMatchStatus, ThreeWayVarianceCategory, ThreeWayReconciliationRow } from '@vlprs/shared';
 
 const MATCH_STATUS_LABELS: Record<ThreeWayMatchStatus, string> = {
@@ -75,11 +76,13 @@ export function ThreeWayReconciliationPage() {
             label="Overall Match Rate"
             value={dashboard.data ? `${dashboard.data.overallMatchRate}%` : undefined}
             loading={dashboard.isLoading}
+            helpNode={<MetricHelp metric="reconciliation.matchRate" />}
           />
           <MetricCard
             label="Full Variances"
             value={dashboard.data?.fullVarianceCount?.toString()}
             loading={dashboard.isLoading}
+            helpNode={<MetricHelp metric="reconciliation.fullVariance" />}
           />
           <MetricCard
             label="Top Variance MDAs"
@@ -193,10 +196,10 @@ export function ThreeWayReconciliationPage() {
 
 // ─── Sub-Components ────────────────────────────────────────────────
 
-function MetricCard({ label, value, loading }: { label: string; value?: string; loading: boolean }) {
+function MetricCard({ label, value, loading, helpNode }: { label: string; value?: string; loading: boolean; helpNode?: React.ReactNode }) {
   return (
     <div className="rounded-lg border border-border bg-surface p-4">
-      <p className="text-xs font-medium text-text-secondary">{label}</p>
+      <p className="text-xs font-medium text-text-secondary">{label}{helpNode}</p>
       {loading ? (
         <Skeleton className="mt-1 h-6 w-24" />
       ) : (

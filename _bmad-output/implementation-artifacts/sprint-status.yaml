@@ -213,7 +213,7 @@ development_status:
   7-0i-three-way-reconciliation-engine: done  # expected vs declared vs actual (payroll). Three-way summary, match rate metrics, payroll variance attention items, MDA-scoped views, exception auto-promotion. Depends on 7.0h
   7-1-exception-flagging-queue: done  # Manual flag + auto-promote queue, 5 API endpoints, full frontend. All 7 ACs satisfied. Code review: 11 findings (4H 5M 2L) all resolved
   7-2-automatic-inactive-loan-detection: done  # Auto-detection: 60-day threshold, event exclusion, idempotent, background scheduler (6hr), on-demand endpoint, attention item enrichment. 10 tests, all 7 ACs. Code review: 6 findings (1H 4M 1L) all resolved
-  7-2a-metric-help-contextual-guidance: ready-for-dev  # Cross-cutting: typed glossary, <MetricHelp> component, completenessNote, compile-time + test-time + review-time enforcement
+  7-2a-metric-help-contextual-guidance: done  # Cross-cutting: typed glossary, <MetricHelp> component, completenessNote, compile-time + test-time + review-time enforcement. Code review: 10 findings (2H 4M 4L) all resolved
   7-3-record-annotations-event-flag-corrections: ready-for-dev
   epic-7-retrospective: optional
 

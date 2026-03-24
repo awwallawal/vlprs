@@ -13,6 +13,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion';
+import { MetricHelp } from '@/components/shared/MetricHelp';
 import { FlagExceptionDialog } from './components/FlagExceptionDialog';
 import { useExceptions } from '@/hooks/useExceptionData';
 import { useAuthStore } from '@/stores/authStore';
@@ -111,6 +112,7 @@ export function LoanDetailPage() {
             <div className="rounded-lg border bg-white p-6">
               <p className="text-sm text-text-secondary mb-1">
                 Grade Level Tier
+                <MetricHelp metric="loan.gradeLevelTier" />
               </p>
               <p className="font-medium text-text-primary">
                 Tier {loanDetail.data.gradeLevelTier}
@@ -139,6 +141,7 @@ export function LoanDetailPage() {
             <div className="rounded-lg border bg-white p-6">
               <p className="text-sm text-text-secondary mb-1">
                 Outstanding Balance
+                <MetricHelp metric="loan.outstandingBalance" />
               </p>
               <NairaDisplay
                 amount={loanDetail.data.outstandingBalance}

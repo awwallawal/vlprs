@@ -48,6 +48,7 @@ interface ObservationInsert {
     possibleExplanations: string[];
     suggestedAction: string;
     dataCompleteness: number;
+    completenessNote: string;
     dataPoints: Record<string, unknown>;
   };
   sourceReference: { file: string; sheet: string; row: number } | null;
@@ -275,6 +276,13 @@ export function detectRateVariance(
         possibleExplanations,
         suggestedAction: `Verify against loan application records for ${r.staffName} at ${mdaName}.`,
         dataCompleteness: completeness,
+        completenessNote: [
+          'Loan terms and ledger entries reviewed',
+          !r.principal ? 'Principal amount not available' : null,
+          !r.totalLoan ? 'Total loan amount not available' : null,
+          !r.monthlyDeduction ? 'Monthly deduction not available' : null,
+          !r.installmentCount ? 'Installment count not available' : null,
+        ].filter(Boolean).join('. ') + '.',
         dataPoints,
       },
       sourceReference: {
@@ -367,6 +375,9 @@ export function detectNegativeBalance(
         ],
         suggestedAction: `Verify deduction stop date for ${r.staffName} at ${mdaName}. Confirm if refund of ${overAmount} is warranted.`,
         dataCompleteness: completeness,
+        completenessNote: r.monthlyDeduction
+          ? 'Outstanding balance, monthly deduction, and period data reviewed.'
+          : 'Outstanding balance and period data reviewed. Monthly deduction not available for over-deduction estimate.',
         dataPoints: {
           amount: r.outstandingBalance,
           overAmount,
@@ -477,6 +488,7 @@ export function detectStalledBalance(
         ],
         suggestedAction: `Confirm with ${mdaName} payroll records whether deductions continued during ${formatPeriod(startMonth)}–${formatPeriod(endMonth)}.`,
         dataCompleteness: completeness,
+        completenessNote: `Timeline data spans ${tl.totalMonthsPresent} months across a ${spanMonths}-month observation window.`,
         dataPoints: {
           amount,
           count: bestStreak,
@@ -576,6 +588,7 @@ async function detectMultiMda(
         ],
         suggestedAction: 'Verify transfer documentation and confirm loan continuity across MDAs.',
         dataCompleteness: 100,
+        completenessNote: 'Cross-MDA person match data and migration records reviewed.',
         dataPoints: {
           count: mdaIds.size,
           mdaList: mdaNames,
@@ -646,6 +659,11 @@ export function detectConsecutiveLoan(
               ],
               suggestedAction: `Verify loan renewal documentation for ${tl.name} at ${mdaName}.`,
               dataCompleteness: completeness,
+              completenessNote: [
+                'Prior and current loan principal amounts reviewed',
+                !m.principal ? 'Current principal not available' : null,
+                !prevBalance ? 'Prior period balance not available' : null,
+              ].filter(Boolean).join('. ') + '.',
               dataPoints: {
                 newPrincipal: m.principal,
                 newStartPeriod: formatPeriod(m),
@@ -821,6 +839,9 @@ async function detectNoApprovalMatch(
             ],
             suggestedAction: `Cross-check with ${mdaName} submission history. Verify whether this staff member appears under a different identifier.`,
             dataCompleteness: completeness,
+            completenessNote: mdaSubCount >= 3
+              ? `Migration records and ${mdaSubCount} confirmed submissions reviewed.`
+              : `Migration records reviewed. Only ${mdaSubCount} confirmed submission(s) available for cross-reference.`,
             dataPoints: {
               mdaSubmissionCount: mdaSubCount,
               submissionStaffCount: submissionStaffIds.size,
@@ -916,6 +937,7 @@ async function detectPeriodOverlap(
           ],
           suggestedAction: `Review both uploads for ${period} at ${mdaName}. Determine which upload should be the canonical source and consider superseding the other.`,
           dataCompleteness: 100,
+          completenessNote: 'Both uploads for the overlapping period fully available for comparison.',
           dataPoints: {
             period,
             existingUploadId: overlap.uploadId,
@@ -993,6 +1015,7 @@ export function detectGradeTierMismatch(
         ],
         suggestedAction: `Verify grade level and loan approval records for ${r.staffName} at ${mdaName}.`,
         dataCompleteness: 100,
+        completenessNote: 'Grade level, principal amount, and tier configuration reviewed.',
         dataPoints: {
           gradeLevel: gradeNum,
           principal: r.principal,

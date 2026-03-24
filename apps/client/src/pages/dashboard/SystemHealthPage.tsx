@@ -1,4 +1,5 @@
 import { RefreshCw, Activity } from 'lucide-react';
+import { MetricHelp } from '@/components/shared/MetricHelp';
 import { cn } from '@/lib/utils';
 import { useSystemHealth } from '@/hooks/useSystemHealth';
 import { Card, CardContent } from '@/components/ui/card';
@@ -101,7 +102,7 @@ export function SystemHealthPage() {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <Activity className="h-6 w-6 text-text-secondary" />
-          <h1 className="text-2xl font-bold text-text-primary">System Health</h1>
+          <h1 className="text-2xl font-bold text-text-primary">System Health <MetricHelp metric="systemHealth.healthMetric" /></h1>
         </div>
         {data && (
           <p className="text-sm text-text-secondary">

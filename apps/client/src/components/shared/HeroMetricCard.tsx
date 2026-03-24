@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { cn } from '@/lib/utils';
 import { formatCount } from '@/lib/formatters';
 import { NairaDisplay } from './NairaDisplay';
+import { MetricHelp } from './MetricHelp';
 import { Skeleton } from '@/components/ui/skeleton';
 
 function useCountUp(target: number, duration = 200) {
@@ -45,6 +46,7 @@ interface HeroMetricCardProps {
   trend?: { direction: 'up' | 'down' | 'flat'; label: string };
   onClick?: () => void;
   isPending?: boolean;
+  helpKey?: string;
   className?: string;
 }
 
@@ -61,6 +63,7 @@ export function HeroMetricCard({
   trend,
   onClick,
   isPending: loading,
+  helpKey,
   className,
 }: HeroMetricCardProps) {
   const numericValue = typeof value === 'number' ? value : parseFloat(value) || 0;
@@ -123,7 +126,7 @@ export function HeroMetricCard({
         }
       }}
     >
-      <p className="text-sm text-text-secondary mb-1">{label}</p>
+      <p className="text-sm text-text-secondary mb-1">{label}{helpKey && <MetricHelp metric={helpKey} />}</p>
       <div className="mb-1 min-w-0 overflow-hidden">{displayValue()}</div>
       {trend && (
         <p className={cn('text-xs', trendConfig[trend.direction].color)}>

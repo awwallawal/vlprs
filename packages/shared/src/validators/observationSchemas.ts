@@ -6,6 +6,8 @@ export const observationQuerySchema = z.object({
   type: z.enum([
     'rate_variance', 'stalled_balance', 'negative_balance',
     'multi_mda', 'no_approval_match', 'consecutive_loan',
+    'period_overlap', 'grade_tier_mismatch', 'three_way_variance',
+    'manual_exception', 'inactive_loan',
   ]).optional(),
   mdaId: z.string().uuid().optional(),
   status: z.enum(['unreviewed', 'reviewed', 'resolved', 'promoted']).optional(),

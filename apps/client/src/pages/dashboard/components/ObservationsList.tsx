@@ -8,6 +8,7 @@ import { PromoteDialog } from './PromoteDialog';
 import { SupersedeDialog } from './SupersedeDialog';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
+import { MetricHelp } from '@/components/shared/MetricHelp';
 import { Skeleton } from '@/components/ui/skeleton';
 import { formatCount } from '@/lib/formatters';
 import { UI_COPY } from '@vlprs/shared';
@@ -116,17 +117,19 @@ export function ObservationsList() {
       {counts && (
         <div className="flex flex-wrap gap-2">
           {TYPE_OPTIONS.map((t) => (
-            <Badge
-              key={t.value}
-              variant="pending"
-              className="cursor-pointer"
-              onClick={() => {
-                setType(type === t.value ? '' : t.value);
-                setPage(1);
-              }}
-            >
-              {t.label}: {counts.byType[t.value]}
-            </Badge>
+            <span key={t.value} className="inline-flex items-center">
+              <Badge
+                variant="pending"
+                className="cursor-pointer"
+                onClick={() => {
+                  setType(type === t.value ? '' : t.value);
+                  setPage(1);
+                }}
+              >
+                {t.label}: {counts.byType[t.value]}
+              </Badge>
+              <MetricHelp metric={`observation.${t.value}`} />
+            </span>
           ))}
         </div>
       )}

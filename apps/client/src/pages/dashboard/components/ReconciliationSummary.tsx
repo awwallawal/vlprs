@@ -13,6 +13,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
+import { MetricHelp } from '@/components/shared/MetricHelp';
 import { UI_COPY } from '@vlprs/shared';
 import { useReconciliationSummary, useResolveDiscrepancy } from '@/hooks/useReconciliation';
 import type { ReconciliationDetail, Role } from '@vlprs/shared';
@@ -164,7 +165,7 @@ export function ReconciliationSummary({
                 <th className="pb-2 pr-3 font-medium">CSV Date</th>
                 <th className="pb-2 pr-3 font-medium">Event Date</th>
                 <th className="pb-2 pr-3 font-medium">Status</th>
-                <th className="pb-2 pr-3 font-medium">Days Diff</th>
+                <th className="pb-2 pr-3 font-medium">Days Diff<MetricHelp metric="reconciliation.daysDifference" /></th>
                 {canResolve && <th className="pb-2 font-medium">Actions</th>}
               </tr>
             </thead>

@@ -17,6 +17,7 @@ export interface ObservationContext {
   possibleExplanations: string[];
   suggestedAction: string;
   dataCompleteness: number;
+  completenessNote: string;
   dataPoints: Record<string, unknown>;
 }
 
