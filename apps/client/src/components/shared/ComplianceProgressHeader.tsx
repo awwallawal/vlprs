@@ -1,5 +1,6 @@
 import { differenceInCalendarDays } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
+import { MetricHelp } from '@/components/shared/MetricHelp';
 
 interface ComplianceProgressHeaderProps {
   submitted: number;
@@ -26,6 +27,7 @@ export function ComplianceProgressHeader({
       <div className="flex-1 space-y-1.5">
         <p className="text-sm font-medium text-text-primary">
           {submitted} of {total} MDAs submitted
+          <MetricHelp definition={{ label: 'MDA Submission Progress', description: 'Number of MDAs that have submitted their monthly return for the current period.', derivedFrom: 'Count of confirmed submissions against total registered MDAs with active loans.' }} />
         </p>
         <div className="h-2.5 w-full overflow-hidden rounded-full bg-slate-200">
           <div

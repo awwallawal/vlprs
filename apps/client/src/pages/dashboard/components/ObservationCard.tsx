@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Info, ChevronDown, ChevronUp } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { MetricHelp } from '@/components/shared/MetricHelp';
 import { formatDateTime } from '@/lib/formatters';
 import type { ObservationListItem, ObservationStatus, ObservationType } from '@vlprs/shared';
 
@@ -104,6 +105,7 @@ export function ObservationCard({
               <div>
                 <p className="text-xs font-medium text-text-muted mb-1">
                   Data completeness: {observation.context.dataCompleteness}%
+                  <MetricHelp metric="observation.dataCompleteness" />
                 </p>
                 <div className="w-full bg-slate-200 rounded-full h-1.5">
                   <div
@@ -111,6 +113,7 @@ export function ObservationCard({
                     style={{ width: `${observation.context.dataCompleteness}%` }}
                   />
                 </div>
+                {observation.context.completenessNote && <p className="text-xs text-text-muted mt-1">{observation.context.completenessNote}</p>}
               </div>
 
               {/* Source reference */}

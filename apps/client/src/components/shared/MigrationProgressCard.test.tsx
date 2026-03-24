@@ -59,7 +59,8 @@ describe('MigrationProgressCard', () => {
   it('handles click', () => {
     const onClick = vi.fn();
     render(<MigrationProgressCard {...defaultProps} onClick={onClick} />);
-    const card = screen.getByRole('button');
+    const cards = screen.getAllByRole('button');
+    const card = cards.find(el => el.getAttribute('tabindex') === '0')!;
     fireEvent.click(card);
     expect(onClick).toHaveBeenCalledTimes(1);
   });

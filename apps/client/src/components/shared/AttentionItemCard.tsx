@@ -12,6 +12,7 @@ import {
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { NairaDisplay } from '@/components/shared/NairaDisplay';
+import { MetricHelp } from '@/components/shared/MetricHelp';
 import { formatDateTime } from '@/lib/formatters';
 import { UI_COPY } from '@vlprs/shared';
 import type { AttentionItemType } from '@vlprs/shared';
@@ -94,6 +95,7 @@ export function AttentionItemCard({
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1">
             <span className="text-sm font-medium text-text-primary truncate">{mdaName}</span>
+            {type && <MetricHelp metric={`attention.${type}`} />}
             <Badge variant={category}>{category}</Badge>
             {count != null && (
               <span className="text-xs font-medium text-text-secondary">

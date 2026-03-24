@@ -1,6 +1,6 @@
 # Story 7.2a: Metric Help System & Contextual Guidance
 
-Status: ready-for-dev
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -64,78 +64,81 @@ So that I can interpret figures confidently without guessing or needing external
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Shared Metric Glossary (AC: 1, 4)
-  - [ ] 1.1 Create `packages/shared/src/constants/metricGlossary.ts`
-  - [ ] 1.2 Define `MetricDefinition` interface: `{ label, description, derivedFrom, guidance? }`
-  - [ ] 1.3 Create exhaustive typed sections — each section is a `Record<UnionType, MetricDefinition>` that TypeScript enforces:
-    - `OBSERVATION_HELP: Record<ObservationType, MetricDefinition>` (11 types)
-    - `ATTENTION_HELP: Record<AttentionItemType, MetricDefinition>` (12 types)
-    - `DASHBOARD_HELP: Record<DrillDownMetric, MetricDefinition>` (10 metrics — activeLoans, totalExposure, fundAvailable, monthlyRecovery, loansInWindow, outstandingReceivables, collectionPotential, atRisk, completionRate, completionRateLifetime)
-    - `EXCEPTION_HELP` for priority and category concepts
-    - `RECONCILIATION_HELP` for match rate, variance, days difference
-    - `MIGRATION_HELP` for coverage, stages, record quality bands
-    - `LOAN_HELP` for outstanding balance, grade tier
-    - `SYSTEM_HEALTH_HELP` for health metric interpretation
-  - [ ] 1.4 Export all sections + a unified `METRIC_GLOSSARY` lookup for the frontend component
-  - [ ] 1.5 Add exports to `packages/shared/src/index.ts`
+- [x] Task 1: Shared Metric Glossary (AC: 1, 4)
+  - [x] 1.1 Create `packages/shared/src/constants/metricGlossary.ts`
+  - [x] 1.2 Define `MetricDefinition` interface: `{ label, description, derivedFrom, guidance? }`
+  - [x] 1.3 Create glossary sections. **Three sections are exhaustive-typed** via `Record<UnionType, MetricDefinition>` — TypeScript enforces completeness (AC 4). **Five sections are plain objects** (`Record<string, MetricDefinition>`) — no enum backing exists, enforced only at review time (AC 6):
+    - **Exhaustive-typed (compile-time enforced):**
+      - `OBSERVATION_HELP: Record<ObservationType, MetricDefinition>` (11 types)
+      - `ATTENTION_HELP: Record<AttentionItemType, MetricDefinition>` (12 types)
+      - `DASHBOARD_HELP: Record<DrillDownMetric, MetricDefinition>` (10 metrics — activeLoans, totalExposure, fundAvailable, monthlyRecovery, loansInWindow, outstandingReceivables, collectionPotential, atRisk, completionRate, completionRateLifetime)
+    - **Plain objects (review-time enforced — no backing union type exists):**
+      - `EXCEPTION_HELP` for priority and category concepts
+      - `RECONCILIATION_HELP` for match rate, variance, days difference
+      - `MIGRATION_HELP` for coverage, stages, record quality bands
+      - `LOAN_HELP` for outstanding balance, grade tier
+      - `SYSTEM_HEALTH_HELP` for health metric interpretation
+  - [x] 1.4 Export all sections + a unified `METRIC_GLOSSARY` lookup for the frontend component
+  - [x] 1.5 Add exports to `packages/shared/src/index.ts`
 
-- [ ] Task 2: `completenessNote` on ObservationContext (AC: 3)
-  - [ ] 2.1 Add `completenessNote: string` (required, not optional) to `ObservationContext` in `packages/shared/src/types/observation.ts`
-  - [ ] 2.2 Update `observationEngine.ts` — add `completenessNote` to all detector functions (rate_variance, stalled_balance, negative_balance, multi_mda, no_approval_match, consecutive_loan, period_overlap, grade_tier_mismatch). Each note describes the specific data sources consulted for that detection run
-  - [ ] 2.3 Update `inactiveLoanDetector.ts` — add `completenessNote` based on submission data availability
-  - [ ] 2.4 Update `exceptionService.ts` — `completenessNote: 'Manually flagged — no automated analysis performed'` for manual exceptions
-  - [ ] 2.5 Update `threeWayReconciliationService.ts` — `completenessNote` describing payroll + submission + ledger sources
-  - [ ] 2.6 Update `deduplicationService.ts` — `completenessNote` describing cross-MDA comparison sources
-  - [ ] 2.7 Fix all existing tests that create `ObservationContext` objects to include `completenessNote`
+- [x] Task 2: `completenessNote` on ObservationContext (AC: 3)
+  - [x] 2.1 Add `completenessNote: string` (required, not optional) to `ObservationContext` in `packages/shared/src/types/observation.ts`
+  - [x] 2.2 Update `observationEngine.ts` — add `completenessNote` to all detector functions (rate_variance, stalled_balance, negative_balance, multi_mda, no_approval_match, consecutive_loan, period_overlap, grade_tier_mismatch). Each note describes the specific data sources consulted for that detection run
+  - [x] 2.3 Update `inactiveLoanDetector.ts` — add `completenessNote` based on submission data availability
+  - [x] 2.4 Update `exceptionService.ts` — `completenessNote: 'Manually flagged — no automated analysis performed'` for manual exceptions
+  - [x] 2.5 Update `threeWayReconciliationService.ts` — `completenessNote` describing payroll + submission + ledger sources
+  - [x] 2.6 Update `deduplicationService.ts` — `completenessNote` describing cross-MDA comparison sources
+  - [x] 2.7 Sync `observationQuerySchema` in `packages/shared/src/validators/observationSchemas.ts` — the `type` filter enum only lists 6 of 11 observation types (missing: `period_overlap`, `grade_tier_mismatch`, `three_way_variance`, `manual_exception`, `inactive_loan`). Add the 5 missing values so users can filter by all types
+  - [x] 2.8 Fix all existing tests that create `ObservationContext` objects to include `completenessNote`
 
-- [ ] Task 3: Frontend `<MetricHelp>` Component (AC: 2)
-  - [ ] 3.1 Create `apps/client/src/components/shared/MetricHelp.tsx`
-  - [ ] 3.2 Implement as a Tooltip/Popover with info icon (`lucide-react` `Info` or `HelpCircle`)
-  - [ ] 3.3 Accept `metric` prop (typed key from glossary) OR inline `definition: MetricDefinition` prop for one-off cases
-  - [ ] 3.4 Render: description, "Based on: {derivedFrom}", optional guidance line
-  - [ ] 3.5 Style: `text-text-muted`, small icon (h-3.5 w-3.5), non-intrusive, accessible (keyboard focusable, aria-label)
-  - [ ] 3.6 Write component tests (renders tooltip content, handles missing key gracefully)
+- [x] Task 3: Frontend `<MetricHelp>` Component (AC: 2)
+  - [x] 3.1 Create `apps/client/src/components/shared/MetricHelp.tsx`
+  - [x] 3.2 Implement as a Tooltip/Popover with info icon (`lucide-react` `Info` or `HelpCircle`)
+  - [x] 3.3 Accept `metric` prop (typed key from glossary) OR inline `definition: MetricDefinition` prop for one-off cases
+  - [x] 3.4 Render: description, "Based on: {derivedFrom}", optional guidance line
+  - [x] 3.5 Style: `text-text-muted`, small icon (h-3.5 w-3.5), non-intrusive, accessible (keyboard focusable, aria-label)
+  - [x] 3.6 Write component tests (renders tooltip content, handles missing key gracefully)
 
-- [ ] Task 4: Wire MetricHelp into Dashboard & Portfolio (AC: 2)
-  - [ ] 4.1 `DashboardPage.tsx` — hero metrics: Total Exposure, Fund Available, Collection Potential, At-Risk Amount, Completion Rate (60m), Completion Rate (All-Time)
-  - [ ] 4.2 `HeroMetricCard.tsx` — optional `helpKey` prop passed through from parent
-  - [ ] 4.3 `AttentionItemCard.tsx` — each attention item type gets tooltip from `ATTENTION_HELP`
-  - [ ] 4.4 `ComplianceProgressHeader.tsx` — "X of Y MDAs submitted" + deadline countdown
-  - [ ] 4.5 Three-way reconciliation summary on dashboard — match rate, variance count
+- [x] Task 4: Wire MetricHelp into Dashboard & Portfolio (AC: 2)
+  - [x] 4.1 `DashboardPage.tsx` — hero metrics: Total Exposure, Fund Available, Collection Potential, At-Risk Amount, Completion Rate (60m), Completion Rate (All-Time)
+  - [x] 4.2 `HeroMetricCard.tsx` — optional `helpKey` prop passed through from parent
+  - [x] 4.3 `AttentionItemCard.tsx` — each attention item type gets tooltip from `ATTENTION_HELP`
+  - [x] 4.4 `ComplianceProgressHeader.tsx` — "X of Y MDAs submitted" + deadline countdown
+  - [x] 4.5 Three-way reconciliation summary on dashboard — match rate, variance count
 
-- [ ] Task 5: Wire MetricHelp into Observation & Exception Screens (AC: 2, 3)
-  - [ ] 5.1 `ObservationCard.tsx` — "Data completeness" label gets `<MetricHelp metric="observation.dataCompleteness" />`, display `completenessNote` below progress bar
-  - [ ] 5.2 `ObservationsList.tsx` — type breakdown badges: tooltip on each type badge from `OBSERVATION_HELP`
-  - [ ] 5.3 `ExceptionsPage.tsx` — priority count badges (High/Medium/Low) get tooltip explaining expected response cadence
+- [x] Task 5: Wire MetricHelp into Observation & Exception Screens (AC: 2, 3)
+  - [x] 5.1 `ObservationCard.tsx` — "Data completeness" label gets `<MetricHelp metric="observation.dataCompleteness" />`, display `completenessNote` below progress bar
+  - [x] 5.2 `ObservationsList.tsx` — type breakdown badges: tooltip on each type badge from `OBSERVATION_HELP`
+  - [x] 5.3 `ExceptionsPage.tsx` — priority count badges (High/Medium/Low) get tooltip explaining expected response cadence
 
-- [ ] Task 6: Wire MetricHelp into Remaining Screens (AC: 2)
-  - [ ] 6.1 `LoanDetailPage.tsx` — Outstanding Balance, Grade Level Tier
-  - [ ] 6.2 `MigrationPage.tsx` — coverage percentages, stage progress ("Stage N of 6"), record quality bands
-  - [ ] 6.3 `MigrationCoverageTracker.tsx` — coverage cell meanings
-  - [ ] 6.4 `ThreeWayReconciliationPage.tsx` — match rate, full variance count, reconciliation health
-  - [ ] 6.5 `MetricDrillDownPage.tsx` — variance percentage, health band
-  - [ ] 6.6 `SystemHealthPage.tsx` — general health metric interpretation tooltip
-  - [ ] 6.7 `ComparisonSummary.tsx` — aligned records, minor variances
-  - [ ] 6.8 `ReconciliationSummary.tsx` — days difference ("Xd")
+- [x] Task 6: Wire MetricHelp into Remaining Screens (AC: 2)
+  - [x] 6.1 `LoanDetailPage.tsx` — Outstanding Balance, Grade Level Tier
+  - [x] 6.2 `MigrationPage.tsx` — coverage percentages, stage progress ("Stage N of 6"), record quality bands
+  - [x] 6.3 `MigrationCoverageTracker.tsx` — coverage cell meanings
+  - [x] 6.4 `ThreeWayReconciliationPage.tsx` — match rate, full variance count, reconciliation health
+  - [x] 6.5 `MetricDrillDownPage.tsx` — variance percentage, health band
+  - [x] 6.6 `SystemHealthPage.tsx` — general health metric interpretation tooltip
+  - [x] 6.7 `ComparisonSummary.tsx` — aligned records, minor variances
+  - [x] 6.8 `ReconciliationSummary.tsx` — days difference ("Xd")
 
-- [ ] Task 7: Enforcement Tests (AC: 5)
-  - [ ] 7.1 Create `packages/shared/src/constants/metricGlossary.test.ts`
-  - [ ] 7.2 Test: every `ObservationType` value has a key in `OBSERVATION_HELP` (and vice versa — no orphans)
-  - [ ] 7.3 Test: every `AttentionItemType` value has a key in `ATTENTION_HELP` (and vice versa)
-  - [ ] 7.4 Test: every drill-down metric has a key in `DASHBOARD_HELP` (and vice versa)
-  - [ ] 7.5 Test: no `MetricDefinition` has empty `description` or `derivedFrom`
+- [x] Task 7: Enforcement Tests (AC: 5)
+  - [x] 7.1 Create `packages/shared/src/constants/metricGlossary.test.ts`
+  - [x] 7.2 Test: every `ObservationType` value has a key in `OBSERVATION_HELP` (and vice versa — no orphans)
+  - [x] 7.3 Test: every `AttentionItemType` value has a key in `ATTENTION_HELP` (and vice versa)
+  - [x] 7.4 Test: every drill-down metric has a key in `DASHBOARD_HELP` (and vice versa)
+  - [x] 7.5 Test: no `MetricDefinition` has empty `description` or `derivedFrom`
 
-- [ ] Task 8: Code Review Checklist & Project Context (AC: 6)
-  - [ ] 8.1 Add to BMAD code review checklist (`_bmad/bmm/workflows/4-implementation/code-review/checklist.md`): `- [ ] **[BLOCKING]** If story adds user-facing metrics → glossary entry in metricGlossary.ts + <MetricHelp> in component`
-  - [ ] 8.2 Create or update `project-context.md` with metric help guidance: "When adding user-facing numbers: add glossary entry to `packages/shared/src/constants/metricGlossary.ts` and wrap the label with `<MetricHelp>` in the component. For observation creators: provide a non-empty `completenessNote` in the ObservationContext."
-  - [ ] 8.3 Add `completenessNote` requirement to the observation creation section of architecture docs (if applicable)
+- [x] Task 8: Code Review Checklist & Project Context (AC: 6)
+  - [x] 8.1 Add to BMAD code review checklist (`_bmad/bmm/workflows/4-implementation/code-review/checklist.md`): `- [ ] **[BLOCKING]** If story adds user-facing metrics → glossary entry in metricGlossary.ts + <MetricHelp> in component`
+  - [x] 8.2 Create or update `project-context.md` with metric help guidance: "When adding user-facing numbers: add glossary entry to `packages/shared/src/constants/metricGlossary.ts` and wrap the label with `<MetricHelp>` in the component. For observation creators: provide a non-empty `completenessNote` in the ObservationContext."
+  - [x] 8.3 Add `completenessNote` requirement to the observation creation section of architecture docs (if applicable)
 
-- [ ] Task 9: Full Test Suite Verification (AC: all)
-  - [ ] 9.1 Run `pnpm typecheck` — zero type errors (confirms exhaustive Record enforcement works)
-  - [ ] 9.2 Run `pnpm lint` — zero lint errors
-  - [ ] 9.3 Run shared tests — enforcement tests pass
-  - [ ] 9.4 Run server tests — all pass (observation creators updated with completenessNote)
-  - [ ] 9.5 Run client tests — all pass (MetricHelp component + wiring doesn't break existing tests)
+- [x] Task 9: Full Test Suite Verification (AC: all)
+  - [x] 9.1 Run `pnpm typecheck` — zero type errors (confirms exhaustive Record enforcement works)
+  - [x] 9.2 Run `pnpm lint` — zero lint errors
+  - [x] 9.3 Run shared tests — enforcement tests pass
+  - [x] 9.4 Run server tests — all pass (observation creators updated with completenessNote)
+  - [x] 9.5 Run client tests — all pass (MetricHelp component + wiring doesn't break existing tests)
 
 ## Dev Notes
 
@@ -217,6 +220,8 @@ Each observation creator provides a plain-language note describing what data was
 ```
 
 The component accepts either a `metric` key (looks up in glossary) or a raw `definition` object. This handles both the common case (static glossary) and edge cases (dynamic or one-off explanations).
+
+**UX Placement Rule:** The info icon always appears **inline-end of the label text**, vertically centered with the label baseline — never before the label, never floating right of the value. The icon is part of the label, not the data. Establish this pattern in Task 3 and replicate consistently across all 15+ screens in Tasks 4–6. Example: `<span>Total Exposure <MetricHelp ... /></span>` followed separately by the value.
 
 #### Metric Audit — What Needs Help vs What's Self-Explanatory
 
@@ -315,6 +320,7 @@ apps/client/src/
 ```
 packages/shared/src/
 ├── types/observation.ts                         ← MODIFY: add completenessNote to ObservationContext
+├── validators/observationSchemas.ts             ← MODIFY: sync type filter enum (add 5 missing observation types)
 ├── index.ts                                     ← MODIFY: export MetricDefinition + glossary sections
 
 apps/server/src/
@@ -381,6 +387,10 @@ _bmad/bmm/workflows/4-implementation/code-review/
 4. **Non-punitive vocabulary in glossary:** All descriptions must use approved terms from `vocabulary.ts`. Review all glossary text for compliance before shipping
 5. **Test all observation creators after adding completenessNote:** The required field will break ~20+ existing tests that create mock ObservationContext objects. Budget time for fixing them — this is expected and the test failures are the enforcement proving it works
 
+### Session Sizing
+
+This story has 9 tasks / ~48 subtasks. Under the 15-task guardrail but at the upper boundary. Tasks 4–6 (16 subtasks of screen wiring) are mechanical and repetitive — they follow the same pattern established in Task 3. Plan for a **2+ session minimum**: Session 1 covers Tasks 1–3 (glossary + completenessNote + component), Session 2 covers Tasks 4–9 (wiring + enforcement + verification). Tasks 4–6 can be done screen-by-screen without blocking each other.
+
 ### Project Structure Notes
 
 - This is a cross-cutting UX story that establishes infrastructure for all future stories
@@ -397,3 +407,81 @@ _bmad/bmm/workflows/4-implementation/code-review/
 - [Source: packages/shared/src/types/observation.ts] — ObservationContext interface
 - [Source: packages/shared/src/types/dashboard.ts:70-82] — AttentionItemType union
 - [Source: packages/shared/src/validators/dashboardSchemas.ts:70-81] — DrillDownMetric enum
+
+## Dev Agent Record
+
+### Implementation Plan
+
+Three-layer enforcement architecture:
+1. **Compile-time:** `Record<UnionType, MetricDefinition>` forces exhaustive glossary entries for ObservationType (11), AttentionItemType (12), DrillDownMetric (10)
+2. **Test-time:** 111 enforcement tests verify bidirectional enum/glossary sync and no-empty-fields
+3. **Review-time:** BLOCKING checklist item + project-context.md guidance
+
+`completenessNote` made a required (not optional) field on `ObservationContext` — 12 observation creation sites updated across 5 service files. Also fixed `dataCompleteness: 1` to `100` in threeWayReconciliationService (was a bug — scale is 0–100).
+
+### Completion Notes
+
+- Glossary: 8 sections (3 exhaustive-typed + 5 review-enforced), unified `METRIC_GLOSSARY` lookup with "section.key" namespace
+- `completenessNote`: Required field added to ObservationContext, all 12 creation paths updated with context-specific notes
+- `observationQuerySchema`: 5 missing observation types added to filter enum (period_overlap, grade_tier_mismatch, three_way_variance, manual_exception, inactive_loan)
+- `<MetricHelp>` component: HelpCircle icon, Tooltip-based, accessible (keyboard focusable, aria-label), accepts `metric` key or inline `definition`
+- Wired into 15+ screens: Dashboard hero metrics, attention items, compliance header, observation cards/lists, exception priorities, loan detail, migration progress, reconciliation summary, system health, drill-down, comparison summary
+- Fixed 2 pre-existing tests that used generic `getByRole('button')` — now correctly scoped after MetricHelp buttons were added
+- All test suites green: 416 shared (159 enforcement) + 1346 server + 622 client = 2384 tests passing
+
+### Review Follow-ups (AI)
+
+- [x] [AI-Review][HIGH] `dataCompleteness: 1` in exceptionService.ts — same 0–100 scale-mismatch bug as threeWayReconciliation. Fixed: 1 → 100 [exceptionService.ts:61]
+- [x] [AI-Review][HIGH] Enforcement tests only validate field quality for 3 of 8 glossary sections. Fixed: added EXCEPTION_HELP, RECONCILIATION_HELP, MIGRATION_HELP, LOAN_HELP, SYSTEM_HEALTH_HELP to field validation loop [metricGlossary.test.ts:91-111]
+- [x] [AI-Review][MEDIUM] MetricHelp on MigrationProgressBar was absolute-positioned from parent, breaking UX placement rule. Fixed: moved MetricHelp inline inside MigrationProgressBar.tsx, removed floating wrapper from MigrationPage.tsx [MigrationProgressBar.tsx, MigrationPage.tsx]
+- [x] [AI-Review][MEDIUM] `completenessNote` rendered with optional chaining despite being required. Fixed: removed `?.` guard on context [ObservationCard.tsx:116]
+- [x] [AI-Review][MEDIUM] Data Completeness used inline definition instead of glossary entry. Fixed: added `observation.dataCompleteness` to METRIC_GLOSSARY, ObservationCard now uses `metric="observation.dataCompleteness"` [metricGlossary.ts, ObservationCard.tsx:108]
+- [x] [AI-Review][MEDIUM] Enforcement test count understated actual section coverage gap — addressed by H2 fix above. Tests now cover all 8 sections (416 total, up from 368)
+- [x] [AI-Review][LOW] File Structure Requirements listed MigrationProgressBar.tsx but File List didn't — reconciled by M1 fix (file now modified and added to File List)
+- [x] [AI-Review][LOW] Inline definition object re-created each render — addressed by M3 fix (now uses glossary key)
+- [x] [AI-Review][LOW] `<button>` inside `<p>` tag in MigrationProgressCard.tsx — invalid HTML. Fixed: changed `<p>` to `<div>` [MigrationProgressCard.tsx:96]
+- [x] [AI-Review][LOW] ComparisonSummary.test.tsx button selector fragile after MetricHelp addition. Fixed: `{ name: /view variance detail/i }` [ComparisonSummary.test.tsx:91]
+
+## File List
+
+### New Files
+- `packages/shared/src/constants/metricGlossary.ts` — MetricDefinition interface + 8 glossary sections + unified lookup
+- `packages/shared/src/constants/metricGlossary.test.ts` — 159 enforcement tests (111 original + 48 added by review for plain sections)
+- `apps/client/src/components/shared/MetricHelp.tsx` — Tooltip component
+- `apps/client/src/components/shared/MetricHelp.test.tsx` — 6 component tests
+- `project-context.md` — Dev agent guidance for metric help + non-punitive vocabulary
+
+### Modified Files
+- `packages/shared/src/types/observation.ts` — added `completenessNote: string` to ObservationContext
+- `packages/shared/src/validators/observationSchemas.ts` — added 5 missing observation types to query filter enum
+- `packages/shared/src/index.ts` — exported MetricDefinition + all glossary sections
+- `apps/server/src/services/observationEngine.ts` — added completenessNote to ObservationInsert + all 8 detectors
+- `apps/server/src/services/inactiveLoanDetector.ts` — added completenessNote
+- `apps/server/src/services/exceptionService.ts` — added completenessNote for manual exceptions
+- `apps/server/src/services/threeWayReconciliationService.ts` — added completenessNote + fixed dataCompleteness 1→100
+- `apps/server/src/services/deduplicationService.ts` — added completenessNote
+- `apps/client/src/components/shared/HeroMetricCard.tsx` — added optional helpKey prop + MetricHelp rendering
+- `apps/client/src/components/shared/AttentionItemCard.tsx` — added MetricHelp by attention type
+- `apps/client/src/components/shared/ComplianceProgressHeader.tsx` — added MetricHelp on submission progress
+- `apps/client/src/components/shared/MigrationProgressCard.tsx` — added MetricHelp on stage progress
+- `apps/client/src/pages/dashboard/DashboardPage.tsx` — wired helpKey to all hero metrics + reconciliation labels
+- `apps/client/src/pages/dashboard/ExceptionsPage.tsx` — MetricHelp on priority badges
+- `apps/client/src/pages/dashboard/LoanDetailPage.tsx` — MetricHelp on balance + tier
+- `apps/client/src/pages/dashboard/MigrationPage.tsx` — MetricHelp on coverage + stages
+- `apps/client/src/pages/dashboard/ThreeWayReconciliationPage.tsx` — MetricHelp on match rate + variance
+- `apps/client/src/pages/dashboard/MetricDrillDownPage.tsx` — MetricHelp on variance + health band
+- `apps/client/src/pages/dashboard/SystemHealthPage.tsx` — MetricHelp on health metric
+- `apps/client/src/pages/dashboard/components/ObservationCard.tsx` — MetricHelp on data completeness + completenessNote display
+- `apps/client/src/pages/dashboard/components/ObservationsList.tsx` — MetricHelp on type breakdown badges
+- `apps/client/src/pages/dashboard/components/ComparisonSummary.tsx` — MetricHelp on match rate + variance
+- `apps/client/src/pages/dashboard/components/ReconciliationSummary.tsx` — MetricHelp on days difference
+- `apps/client/src/pages/dashboard/components/MigrationCoverageTracker.tsx` — MetricHelp on coverage header
+- `apps/client/src/pages/dashboard/components/MigrationProgressBar.tsx` — MetricHelp inline on coverage label (review fix)
+- `apps/client/src/components/shared/MigrationProgressCard.test.tsx` — fixed button selector after MetricHelp addition
+- `apps/client/src/pages/dashboard/components/ComparisonSummary.test.tsx` — fixed button selector after MetricHelp addition
+- `_bmad/bmm/workflows/4-implementation/code-review/checklist.md` — added BLOCKING metric help review item
+
+## Change Log
+
+- 2026-03-24: Story 7.2a implemented — Metric Help System & Contextual Guidance. Three-layer enforcement (compile + test + review), completenessNote on all observations, MetricHelp wired into 15+ screens, 111 enforcement tests added.
+- 2026-03-24: Code review — 10 issues found (2H, 4M, 4L), all fixed. Key fixes: dataCompleteness scale bug in exceptionService, enforcement tests extended to all 8 glossary sections (111→159 tests), MigrationProgressBar MetricHelp moved inline, ObservationCard uses glossary key, HTML validation fix in MigrationProgressCard, test selector hardened in ComparisonSummary. Total tests: 2384.

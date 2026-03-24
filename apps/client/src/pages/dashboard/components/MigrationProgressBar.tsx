@@ -1,3 +1,5 @@
+import { MetricHelp } from '@/components/shared/MetricHelp';
+
 interface MigrationProgressBarProps {
   mdasComplete: number;
   mdasWithData: number;
@@ -13,6 +15,7 @@ export function MigrationProgressBar({ mdasComplete, mdasWithData, totalMdas }: 
       <div className="flex items-center justify-between mb-2">
         <span className="text-sm font-medium text-text-primary">
           {mdasComplete} of {totalMdas} MDAs complete
+          <MetricHelp metric="migration.coverage" />
         </span>
         <span className="text-xs text-text-muted">
           {mdasWithData} with data

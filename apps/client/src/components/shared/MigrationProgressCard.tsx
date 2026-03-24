@@ -1,5 +1,6 @@
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
+import { MetricHelp } from '@/components/shared/MetricHelp';
 import { formatDateTime } from '@/lib/formatters';
 import { UI_COPY, VOCABULARY } from '@vlprs/shared';
 import type { MigrationStage } from '@vlprs/shared';
@@ -92,11 +93,11 @@ export function MigrationProgressCard({
         ))}
       </div>
 
-      <p className="text-xs text-text-secondary mb-2">
+      <div className="text-xs text-text-secondary mb-2">
         {stage === 'pending'
           ? VOCABULARY.DATA_PENDING_NEUTRAL
-          : `Stage ${currentIndex + 1} of 6: ${stage.charAt(0).toUpperCase() + stage.slice(1)}`}
-      </p>
+          : <><span>Stage {currentIndex + 1} of 6: {stage.charAt(0).toUpperCase() + stage.slice(1)}</span><MetricHelp metric="migration.stageProgress" /></>}
+      </div>
 
       {recordCounts && (
         <div className="flex flex-wrap gap-2 mb-2">

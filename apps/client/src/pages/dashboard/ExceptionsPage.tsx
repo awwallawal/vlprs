@@ -7,6 +7,7 @@ import { useMdaList } from '@/hooks/useMigration';
 import { useAuthStore } from '@/stores/authStore';
 import { ExceptionQueueRow, ExceptionEmptyState } from '@/components/shared/ExceptionQueueRow';
 import { FlagExceptionDialog } from './components/FlagExceptionDialog';
+import { MetricHelp } from '@/components/shared/MetricHelp';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -82,9 +83,18 @@ export function ExceptionsPage() {
         <div className="flex items-center gap-3">
           {counts && (
             <div className="flex items-center gap-2">
-              <Badge variant="outline">{counts.high} High</Badge>
-              <Badge variant="review">{counts.medium} Medium</Badge>
-              <Badge variant="info">{counts.low} Low</Badge>
+              <span className="inline-flex items-center">
+                <Badge variant="outline">{counts.high} High</Badge>
+                <MetricHelp metric="exception.priorityHigh" />
+              </span>
+              <span className="inline-flex items-center">
+                <Badge variant="review">{counts.medium} Medium</Badge>
+                <MetricHelp metric="exception.priorityMedium" />
+              </span>
+              <span className="inline-flex items-center">
+                <Badge variant="info">{counts.low} Low</Badge>
+                <MetricHelp metric="exception.priorityLow" />
+              </span>
               <span className="text-sm text-text-muted ml-2">{counts.total} open</span>
             </div>
           )}

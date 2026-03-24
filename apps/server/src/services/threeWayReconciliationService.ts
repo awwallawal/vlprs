@@ -283,7 +283,8 @@ export async function autoPromoteVariances(
         context: {
           possibleExplanations: [getVarianceExplanation(row.varianceCategory!)],
           suggestedAction: 'Review the three-way reconciliation detail and verify with the relevant department',
-          dataCompleteness: 1,
+          dataCompleteness: 100,
+          completenessNote: 'Payroll extract, MDA submission, and ledger records compared.',
           dataPoints: {
             period: summary.period,
             expectedAmount: row.expectedAmount,

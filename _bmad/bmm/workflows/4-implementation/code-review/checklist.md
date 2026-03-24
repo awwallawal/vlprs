@@ -11,6 +11,7 @@
 - [ ] Acceptance Criteria cross-checked against implementation
 - [ ] **[BLOCKING]** File List matches story-scoped git changes — reconcile story File List against files changed by this story's commits (exclude unrelated hotfix/prior-story commits)
 - [ ] Tests identified and mapped to ACs; gaps noted
+- [ ] **[BLOCKING]** If story adds user-facing metrics → glossary entry in `metricGlossary.ts` + `<MetricHelp>` in component
 - [ ] Code quality review performed on changed files
 - [ ] Security review performed on changed files and dependencies
 - [ ] Outcome decided (Approve/Changes Requested/Blocked)

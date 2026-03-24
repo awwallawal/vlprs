@@ -88,7 +88,7 @@ describe('ComparisonSummary', () => {
     const user = userEvent.setup();
     renderComponent();
 
-    const expandBtn = screen.getByRole('button');
+    const expandBtn = screen.getByRole('button', { name: /view variance detail/i });
     expect(expandBtn).toHaveAttribute('aria-expanded', 'false');
 
     await user.click(expandBtn);

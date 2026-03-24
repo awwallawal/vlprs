@@ -413,6 +413,7 @@ async function handleFlag(
         ],
         suggestedAction: `Investigate whether ${candidate.staffName} is the same person in both ${parentName} and ${childName} files.`,
         dataCompleteness: 100,
+        completenessNote: `Cross-MDA comparison using ${candidate.matchType} matching (confidence: ${candidate.matchConfidence}).`,
         dataPoints: {
           parentMda: parentName,
           childMda: childName,

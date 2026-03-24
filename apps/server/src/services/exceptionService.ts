@@ -58,7 +58,7 @@ export async function flagLoanAsException(
         loanId: loan.id,
         mdaId: loan.mdaId,
         description: input.notes,
-        context: { possibleExplanations: [], suggestedAction: 'Manual review required', dataCompleteness: 1, dataPoints: {} },
+        context: { possibleExplanations: [], suggestedAction: 'Manual review required', dataCompleteness: 100, completenessNote: 'Manually flagged — no automated analysis performed.', dataPoints: {} },
         sourceReference: null,
         status: 'promoted',
       })

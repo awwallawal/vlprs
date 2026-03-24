@@ -1,5 +1,6 @@
 import { Info, CheckCircle2 } from 'lucide-react';
 import { useComparisonSummary } from '@/hooks/useSubmissionData';
+import { MetricHelp } from '@/components/shared/MetricHelp';
 import { NonPunitiveVarianceDisplay } from '@/components/shared/NonPunitiveVarianceDisplay';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
@@ -55,6 +56,7 @@ export function ComparisonSummary({
           <CheckCircle2 className="h-4 w-4 text-[#16A34A] shrink-0" aria-hidden="true" />
           <span className="text-text-primary">
             {formatCount(summary.alignedCount)} records {UI_COPY.COMPARISON_ALIGNED_LABEL.toLowerCase()}
+            <MetricHelp metric="reconciliation.matchRate" />
           </span>
         </div>
 
@@ -64,6 +66,7 @@ export function ComparisonSummary({
           <span className="text-text-secondary">
             {formatCount(summary.minorVarianceCount)} {UI_COPY.COMPARISON_MINOR_VARIANCE_LABEL.toLowerCase()}
             {summary.minorVarianceCount !== 1 ? 's' : ''}
+            <MetricHelp metric="reconciliation.fullVariance" />
           </span>
         </div>
 
