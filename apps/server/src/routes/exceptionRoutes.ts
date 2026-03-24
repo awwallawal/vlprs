@@ -14,6 +14,7 @@ import {
 } from '@vlprs/shared';
 import { param } from '../lib/params';
 import * as exceptionService from '../services/exceptionService';
+import { detectInactiveLoans } from '../services/inactiveLoanDetector';
 
 const router = Router();
 
@@ -117,6 +118,18 @@ router.patch(
       },
     );
     res.json({ success: true, data: result, message: 'Exception resolved' });
+  },
+);
+
+// POST /api/exceptions/detect-inactive — Run inactive loan detection on demand (Story 7.2 AC 6)
+router.post(
+  '/exceptions/detect-inactive',
+  ...writeAuth,
+  auditLog,
+  async (req: Request, res: Response) => {
+    req.auditAction = 'INACTIVE_LOAN_DETECTION_RUN';
+    const result = await detectInactiveLoans(req.mdaScope ?? null, req.user!.userId);
+    res.json({ success: true, data: result, message: `Detection complete — ${result.newExceptions} new exception${result.newExceptions === 1 ? '' : 's'} created` });
   },
 );
 

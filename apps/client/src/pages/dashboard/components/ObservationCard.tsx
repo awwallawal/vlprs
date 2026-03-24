@@ -16,6 +16,7 @@ const TYPE_LABELS: Record<ObservationType, string> = {
   grade_tier_mismatch: 'Grade/Tier Review',
   three_way_variance: 'Three-Way Variance',
   manual_exception: 'Manual Exception',
+  inactive_loan: 'Inactive Loan',
 };
 
 const STATUS_VARIANT: Record<ObservationStatus, 'review' | 'info' | 'complete' | 'variance'> = {

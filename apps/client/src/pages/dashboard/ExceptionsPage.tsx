@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
-import { AlertTriangle, Filter, Plus } from 'lucide-react';
-import { useExceptions, useExceptionCounts } from '@/hooks/useExceptionData';
+import { AlertTriangle, Filter, Plus, Scan } from 'lucide-react';
+import { toast } from 'sonner';
+import { useExceptions, useExceptionCounts, useDetectInactive } from '@/hooks/useExceptionData';
 import { useMdaList } from '@/hooks/useMigration';
 import { useAuthStore } from '@/stores/authStore';
 import { ExceptionQueueRow, ExceptionEmptyState } from '@/components/shared/ExceptionQueueRow';
@@ -35,6 +36,7 @@ export function ExceptionsPage() {
 
   const canFlag = user?.role === 'super_admin' || user?.role === 'dept_admin';
   const [flagOpen, setFlagOpen] = useState(false);
+  const detectInactive = useDetectInactive();
 
   const { data: counts } = useExceptionCounts();
   const { data: mdas } = useMdaList();
@@ -87,10 +89,30 @@ export function ExceptionsPage() {
             </div>
           )}
           {canFlag && (
-            <Button size="sm" onClick={() => setFlagOpen(true)}>
-              <Plus className="h-4 w-4 mr-1" />
-              Flag Exception
-            </Button>
+            <>
+              <Button
+                size="sm"
+                variant="outline"
+                disabled={detectInactive.isPending}
+                onClick={() =>
+                  detectInactive.mutate(undefined, {
+                    onSuccess: (data) => {
+                      toast.success(`Detection complete — ${data.newExceptions} new exception${data.newExceptions === 1 ? '' : 's'} created`);
+                    },
+                    onError: () => {
+                      toast.error('Inactive loan detection failed');
+                    },
+                  })
+                }
+              >
+                <Scan className="h-4 w-4 mr-1" />
+                {detectInactive.isPending ? 'Detecting...' : 'Run Inactive Detection'}
+              </Button>
+              <Button size="sm" onClick={() => setFlagOpen(true)}>
+                <Plus className="h-4 w-4 mr-1" />
+                Flag Exception
+              </Button>
+            </>
           )}
         </div>
       </div>
@@ -135,6 +157,7 @@ export function ExceptionsPage() {
             <SelectItem value="post_retirement">Post-retirement</SelectItem>
             <SelectItem value="duplicate_staff_id">Duplicate Staff ID</SelectItem>
             {/* Auto-promoted categories */}
+            <SelectItem value="inactive_loan">Inactive Loan</SelectItem>
             <SelectItem value="ghost_deduction">Ghost Deduction</SelectItem>
             <SelectItem value="unreported_deduction">Unreported Deduction</SelectItem>
             <SelectItem value="amount_mismatch">Amount Mismatch</SelectItem>

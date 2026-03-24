@@ -161,6 +161,7 @@ export async function getObservationCounts(
       gradeTierMismatch: sql<string>`COUNT(*) FILTER (WHERE ${observations.type} = 'grade_tier_mismatch')`,
       threeWayVariance: sql<string>`COUNT(*) FILTER (WHERE ${observations.type} = 'three_way_variance')`,
       manualException: sql<string>`COUNT(*) FILTER (WHERE ${observations.type} = 'manual_exception')`,
+      inactiveLoan: sql<string>`COUNT(*) FILTER (WHERE ${observations.type} = 'inactive_loan')`,
       // By status
       unreviewed: sql<string>`COUNT(*) FILTER (WHERE ${observations.status} = 'unreviewed')`,
       reviewed: sql<string>`COUNT(*) FILTER (WHERE ${observations.status} = 'reviewed')`,
@@ -183,6 +184,7 @@ export async function getObservationCounts(
       grade_tier_mismatch: parseInt(result.gradeTierMismatch, 10),
       three_way_variance: parseInt(result.threeWayVariance, 10),
       manual_exception: parseInt(result.manualException, 10),
+      inactive_loan: parseInt(result.inactiveLoan, 10),
     },
     byStatus: {
       unreviewed: parseInt(result.unreviewed, 10),

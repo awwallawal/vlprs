@@ -8,7 +8,8 @@ export type ObservationType =
   | 'period_overlap'
   | 'grade_tier_mismatch'
   | 'three_way_variance'
-  | 'manual_exception';
+  | 'manual_exception'
+  | 'inactive_loan';
 
 export type ObservationStatus = 'unreviewed' | 'reviewed' | 'resolved' | 'promoted';
 
