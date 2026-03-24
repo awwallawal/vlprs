@@ -79,6 +79,27 @@ export function useFlagException() {
   });
 }
 
+interface DetectionResult {
+  detected: number;
+  excluded: number;
+  newExceptions: number;
+  alreadyFlagged: number;
+}
+
+export function useDetectInactive() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: () =>
+      apiClient<DetectionResult>('/exceptions/detect-inactive', {
+        method: 'POST',
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['exceptions'] });
+      queryClient.invalidateQueries({ queryKey: ['exception-counts'] });
+    },
+  });
+}
+
 export function useResolveException() {
   const queryClient = useQueryClient();
   return useMutation({

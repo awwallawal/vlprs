@@ -17,6 +17,7 @@ vi.mock('@/hooks/useExceptionData', () => ({
   useExceptionDetail: vi.fn(),
   useFlagException: vi.fn().mockReturnValue({ mutate: vi.fn(), isPending: false }),
   useResolveException: vi.fn(),
+  useDetectInactive: vi.fn().mockReturnValue({ mutate: vi.fn(), isPending: false }),
 }));
 
 vi.mock('@/hooks/useMigration', () => ({

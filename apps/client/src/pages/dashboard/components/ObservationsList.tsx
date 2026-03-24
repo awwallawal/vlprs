@@ -24,6 +24,7 @@ const TYPE_OPTIONS: { value: ObservationType; label: string }[] = [
   { value: 'grade_tier_mismatch', label: 'Grade/Tier Review' },
   { value: 'three_way_variance', label: 'Three-Way Variance' },
   { value: 'manual_exception', label: 'Manual Exception' },
+  { value: 'inactive_loan', label: 'Inactive Loan' },
 ];
 
 const STATUS_OPTIONS: { value: ObservationStatus; label: string }[] = [

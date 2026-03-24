@@ -67,14 +67,33 @@ async function detectZeroDeductionLoans(
   const rows = result.rows as Array<{ mda_id: string; mda_name: string; affected_count: number }>;
   if (rows.length === 0) return [];
 
+  // Query inactive exception counts per MDA for description enrichment (Story 7.2 AC 7)
+  const exceptionCountResult = await db.execute(sql`
+    SELECT mda_id, count(*) FILTER (WHERE status = 'open')::int AS open_count
+    FROM exceptions
+    WHERE category = 'inactive_loan'
+    GROUP BY mda_id
+  `);
+  const exceptionsByMda = new Map(
+    (exceptionCountResult.rows as Array<{ mda_id: string; open_count: number }>).map(r => [r.mda_id, r.open_count]),
+  );
+  const hasAnyExceptions = exceptionsByMda.size > 0;
+
   return buildPerMdaItems(
     rows,
     'zero_deduction',
     'review',
     10,
-    (row) => `${row.affected_count} loan${row.affected_count === 1 ? '' : 's'} with no deduction for 60+ days`,
-    (row) => `/dashboard/loans?filter=zero-deduction&mda=${row.mda_id}`,
-    '/dashboard/loans?filter=zero-deduction',
+    (row) => {
+      const base = `${row.affected_count} loan${row.affected_count === 1 ? '' : 's'} with no deduction for 60+ days`;
+      const mdaExceptions = exceptionsByMda.get(row.mda_id) ?? 0;
+      if (mdaExceptions > 0) {
+        return `${base} — ${mdaExceptions} flagged as exceptions, ${row.affected_count - mdaExceptions} pending review`;
+      }
+      return base;
+    },
+    (row) => (exceptionsByMda.get(row.mda_id) ?? 0) > 0 ? `/dashboard/exceptions?category=inactive_loan` : `/dashboard/loans?filter=zero-deduction&mda=${row.mda_id}`,
+    hasAnyExceptions ? '/dashboard/exceptions?category=inactive_loan' : '/dashboard/loans?filter=zero-deduction',
   );
 }
 

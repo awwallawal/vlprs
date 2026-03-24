@@ -204,6 +204,13 @@
       "when": 1774207295069,
       "tag": "0028_bumpy_the_renegades",
       "breakpoints": true
+    },
+    {
+      "idx": 29,
+      "version": "7",
+      "when": 1774250150709,
+      "tag": "0029_light_emma_frost",
+      "breakpoints": true
     }
   ]
 }
