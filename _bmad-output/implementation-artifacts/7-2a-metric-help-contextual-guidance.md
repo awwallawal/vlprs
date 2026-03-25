@@ -442,6 +442,32 @@ Three-layer enforcement architecture:
 - [x] [AI-Review][LOW] `<button>` inside `<p>` tag in MigrationProgressCard.tsx — invalid HTML. Fixed: changed `<p>` to `<div>` [MigrationProgressCard.tsx:96]
 - [x] [AI-Review][LOW] ComparisonSummary.test.tsx button selector fragile after MetricHelp addition. Fixed: `{ name: /view variance detail/i }` [ComparisonSummary.test.tsx:91]
 
+### Post-Delivery Finding: Silent 401 Failures on Live (2026-03-25)
+
+**Symptom:** MDA list on `/dashboard/migration/upload` shows empty on live site but works on local dev.
+
+**Root cause:** 23 raw `fetch()` calls across 7 hook files bypassed `apiClient`, which provides 401→token-refresh→retry logic. On live, when the JWT access token expires, these hooks get a 401 and silently fail — no refresh attempt, no retry. Local dev masks this because the dev server restarts frequently and tokens rarely expire mid-session.
+
+**Systemic pattern:** The `apiClient` was the only fetch wrapper with token refresh. Any hook that used raw `fetch()` (FormData uploads, paginated responses, blob downloads) was vulnerable. The comments in some files ("Uses raw fetch because apiClient only supports JSON") acknowledged the bypass but didn't add refresh logic.
+
+**Fix applied:**
+1. Refactored `apiClient.ts` to extract `authenticatedFetch()` (returns raw `Response` with auth+refresh) and `parseJsonResponse()` (structured JSON error handling)
+2. Migrated all 23 raw `fetch()` calls across 7 files to use `authenticatedFetch` (for FormData/blob/paginated) or `apiClient` (for standard JSON)
+3. Also fixed `integrityChecker.ts` — 5 `db.execute()` calls used array destructuring on non-iterable result (TypeError on startup)
+
+**Affected files:**
+- `apps/client/src/lib/apiClient.ts` — refactored to export `authenticatedFetch`, `parseJsonResponse`
+- `apps/client/src/hooks/useMigration.ts` — 11 hooks migrated
+- `apps/client/src/hooks/useStaffProfile.ts` — 5 hooks migrated
+- `apps/client/src/hooks/usePayrollUpload.ts` — 1 hook migrated
+- `apps/client/src/hooks/useSubmissionData.ts` — 1 hook migrated
+- `apps/client/src/hooks/useHistoricalSubmission.ts` — 1 hook migrated
+- `apps/client/src/hooks/useBeneficiaryData.ts` — 1 hook migrated (blob download)
+- `apps/client/src/hooks/useTraceReport.ts` — 1 hook migrated (blob download)
+- `apps/server/src/services/integrityChecker.ts` — 5 destructuring fixes
+
+**Retro discussion point:** Consider adding an ESLint rule (e.g. `no-restricted-globals` for `fetch` in `src/hooks/`) to prevent future raw fetch bypasses. All network calls from hooks should go through the authenticated fetch layer.
+
 ## File List
 
 ### New Files
@@ -485,3 +511,4 @@ Three-layer enforcement architecture:
 
 - 2026-03-24: Story 7.2a implemented — Metric Help System & Contextual Guidance. Three-layer enforcement (compile + test + review), completenessNote on all observations, MetricHelp wired into 15+ screens, 111 enforcement tests added.
 - 2026-03-24: Code review — 10 issues found (2H, 4M, 4L), all fixed. Key fixes: dataCompleteness scale bug in exceptionService, enforcement tests extended to all 8 glossary sections (111→159 tests), MigrationProgressBar MetricHelp moved inline, ObservationCard uses glossary key, HTML validation fix in MigrationProgressCard, test selector hardened in ComparisonSummary. Total tests: 2384.
+- 2026-03-25: **Production issue found** — Raw `fetch()` calls bypass `apiClient` token refresh, causing silent 401 failures on live. See Post-Delivery Finding below.

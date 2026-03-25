@@ -1,9 +1,6 @@
 import { useQuery, useMutation } from '@tanstack/react-query';
-import { apiClient } from '@/lib/apiClient';
-import { useAuthStore } from '@/stores/authStore';
+import { apiClient, authenticatedFetch } from '@/lib/apiClient';
 import type { TraceReportData } from '@vlprs/shared';
-
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
 
 export function useTraceReport(personKey: string | undefined) {
   return useQuery<TraceReportData>({
@@ -20,19 +17,8 @@ export function useDownloadTracePdf(personKey: string | undefined) {
     mutationFn: async () => {
       if (!personKey) throw new Error('No person key');
 
-      // Read token at call time, not render time (H3 code review fix — stale token)
-      const { accessToken } = useAuthStore.getState();
-      const headers: Record<string, string> = {};
-      if (accessToken) {
-        headers['Authorization'] = `Bearer ${accessToken}`;
-      }
-
-      const res = await fetch(
-        `${API_BASE}/staff/${encodeURIComponent(personKey)}/trace/pdf`,
-        {
-          headers,
-          credentials: 'include',
-        },
+      const res = await authenticatedFetch(
+        `/staff/${encodeURIComponent(personKey)}/trace/pdf`,
       );
 
       if (!res.ok) {

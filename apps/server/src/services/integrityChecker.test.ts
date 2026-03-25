@@ -5,7 +5,7 @@ import { db } from '../db/index.js';
 // Mock the database
 vi.mock('../db/index.js', () => ({
   db: {
-    execute: vi.fn().mockResolvedValue([{ count: 0, total_active: 10, covered_count: 7 }]),
+    execute: vi.fn().mockResolvedValue({ rows: [{ count: 0, total_active: 10, covered_count: 7 }] }),
   },
 }));
 
@@ -17,7 +17,7 @@ vi.mock('../config/env.js', () => ({
 describe('integrityChecker', () => {
   beforeEach(() => {
     resetCache();
-    vi.mocked(db.execute).mockResolvedValue([{ count: 0, total_active: 10, covered_count: 7 }]);
+    vi.mocked(db.execute).mockResolvedValue({ rows: [{ count: 0, total_active: 10, covered_count: 7 }] });
   });
 
   describe('getIntegrityResults', () => {
@@ -79,11 +79,11 @@ describe('integrityChecker', () => {
   describe('computed metric values', () => {
     it('maps distinct DB results to correct fields', async () => {
       vi.mocked(db.execute)
-        .mockResolvedValueOnce([{ count: 3 }])                              // migration records
-        .mockResolvedValueOnce([{ count: 12 }])                             // pending observations
-        .mockResolvedValueOnce([{ total_active: 20, covered_count: 8 }])    // coverage
-        .mockResolvedValueOnce([{ count: 5 }])                              // unresolved exceptions
-        .mockResolvedValueOnce([{ count: 2 }]);                             // stale MDAs
+        .mockResolvedValueOnce({ rows: [{ count: 3 }] })                              // migration records
+        .mockResolvedValueOnce({ rows: [{ count: 12 }] })                             // pending observations
+        .mockResolvedValueOnce({ rows: [{ total_active: 20, covered_count: 8 }] })    // coverage
+        .mockResolvedValueOnce({ rows: [{ count: 5 }] })                              // unresolved exceptions
+        .mockResolvedValueOnce({ rows: [{ count: 2 }] });                             // stale MDAs
 
       await runCheckOnce();
 
@@ -101,11 +101,11 @@ describe('integrityChecker', () => {
 
     it('handles zero active MDAs without division error', async () => {
       vi.mocked(db.execute)
-        .mockResolvedValueOnce([{ count: 0 }])
-        .mockResolvedValueOnce([{ count: 0 }])
-        .mockResolvedValueOnce([{ total_active: 0, covered_count: 0 }])
-        .mockResolvedValueOnce([{ count: 0 }])
-        .mockResolvedValueOnce([{ count: 0 }]);
+        .mockResolvedValueOnce({ rows: [{ count: 0 }] })
+        .mockResolvedValueOnce({ rows: [{ count: 0 }] })
+        .mockResolvedValueOnce({ rows: [{ total_active: 0, covered_count: 0 }] })
+        .mockResolvedValueOnce({ rows: [{ count: 0 }] })
+        .mockResolvedValueOnce({ rows: [{ count: 0 }] });
 
       await runCheckOnce();
 

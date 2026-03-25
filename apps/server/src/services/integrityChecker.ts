@@ -34,28 +34,28 @@ async function checkIntegrity(): Promise<void> {
     };
 
     // Migration record integrity: null staff_name or orphaned upload_id
-    const [migrationResult] = await db.execute(sql`
+    const migrationResult = await db.execute(sql`
       SELECT count(*)::int AS count
       FROM migration_records
       WHERE staff_name IS NULL
          OR upload_id NOT IN (SELECT id FROM migration_uploads)
     `);
-    const migrationRecordIntegrity = { count: (migrationResult as { count: number }).count };
+    const migrationRecordIntegrity = { count: (migrationResult.rows[0] as { count: number }).count };
 
     // Pending observations
-    const [pendingResult] = await db.execute(sql`
+    const pendingResult = await db.execute(sql`
       SELECT count(*)::int AS count
       FROM observations
       WHERE status = 'unreviewed'
     `);
-    const pendingObservations = { count: (pendingResult as { count: number }).count };
+    const pendingObservations = { count: (pendingResult.rows[0] as { count: number }).count };
 
     // Business health metrics
     // MDA Submission Coverage: active MDAs with a confirmed submission in current period
     const now = new Date();
     const currentPeriod = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
 
-    const [coverageResult] = await db.execute(sql`
+    const coverageResult = await db.execute(sql`
       SELECT
         (SELECT count(*)::int FROM mdas WHERE is_active = true AND deleted_at IS NULL) AS total_active,
         (SELECT count(DISTINCT mda_id)::int
@@ -63,21 +63,21 @@ async function checkIntegrity(): Promise<void> {
          WHERE status = 'confirmed'
            AND period = ${currentPeriod}) AS covered_count
     `);
-    const coverage = coverageResult as { total_active: number; covered_count: number };
+    const coverage = coverageResult.rows[0] as { total_active: number; covered_count: number };
     const totalActive = coverage.total_active || 0;
     const coveredCount = coverage.covered_count || 0;
     const percent = totalActive > 0 ? +((coveredCount / totalActive) * 100).toFixed(1) : 0;
 
     // Unresolved Exceptions: observations with status unreviewed or reviewed (not yet resolved)
-    const [unresolvedResult] = await db.execute(sql`
+    const unresolvedResult = await db.execute(sql`
       SELECT count(*)::int AS count
       FROM observations
       WHERE status IN ('unreviewed', 'reviewed')
     `);
-    const unresolvedExceptions = { count: (unresolvedResult as { count: number }).count };
+    const unresolvedExceptions = { count: (unresolvedResult.rows[0] as { count: number }).count };
 
     // Stale Data Detection: MDAs with no submission activity in last 90 days
-    const [staleResult] = await db.execute(sql`
+    const staleResult = await db.execute(sql`
       SELECT count(*)::int AS count
       FROM mdas m
       WHERE m.is_active = true
@@ -88,7 +88,7 @@ async function checkIntegrity(): Promise<void> {
             AND s.created_at >= NOW() - INTERVAL '90 days'
         )
     `);
-    const staleMdas = { count: (staleResult as { count: number }).count };
+    const staleMdas = { count: (staleResult.rows[0] as { count: number }).count };
 
     cachedResults = {
       integrity: { ledgerImmutability, migrationRecordIntegrity, pendingObservations },

@@ -52,15 +52,22 @@ export function resetRefreshState(): void {
   refreshPromise = null;
 }
 
-export async function apiClient<T>(
+/**
+ * Low-level authenticated fetch with 401→refresh→retry.
+ * Use this when you need custom response handling (FormData, blobs, pagination).
+ * For standard JSON { success, data } responses, prefer apiClient().
+ */
+export async function authenticatedFetch(
   endpoint: string,
   options: RequestInit = {},
-): Promise<T> {
+): Promise<Response> {
   const { accessToken } = useAuthStore.getState();
   const method = (options.method || 'GET').toUpperCase();
+  const isFormData = options.body instanceof FormData;
 
   const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
+    // Skip Content-Type for FormData — browser sets multipart boundary
+    ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
     ...((options.headers as Record<string, string>) || {}),
   };
 
@@ -112,8 +119,18 @@ export async function apiClient<T>(
     }
   }
 
-  // Guard against non-JSON responses (e.g. 502 HTML from nginx during deploys)
-  let body: { success?: boolean; data?: unknown; error?: { code: string; message: string; details?: unknown } };
+  // Reset session inactivity timer on successful API call
+  if (res.ok) resetActivityTimer();
+
+  return res;
+}
+
+/**
+ * Parse an authenticated response as JSON, throwing structured errors.
+ * Shared by apiClient and hooks that need custom top-level fields (e.g. pagination).
+ */
+export async function parseJsonResponse(res: Response) {
+  let body: { success?: boolean; data?: unknown; pagination?: unknown; error?: { code: string; message: string; details?: unknown } };
   try {
     body = await res.json();
   } catch {
@@ -135,8 +152,14 @@ export async function apiClient<T>(
     });
   }
 
-  // Reset session inactivity timer on successful API call
-  resetActivityTimer();
+  return body;
+}
 
+export async function apiClient<T>(
+  endpoint: string,
+  options: RequestInit = {},
+): Promise<T> {
+  const res = await authenticatedFetch(endpoint, options);
+  const body = await parseJsonResponse(res);
   return body.data as T;
 }
