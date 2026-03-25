@@ -214,7 +214,7 @@ development_status:
   7-1-exception-flagging-queue: done  # Manual flag + auto-promote queue, 5 API endpoints, full frontend. All 7 ACs satisfied. Code review: 11 findings (4H 5M 2L) all resolved
   7-2-automatic-inactive-loan-detection: done  # Auto-detection: 60-day threshold, event exclusion, idempotent, background scheduler (6hr), on-demand endpoint, attention item enrichment. 10 tests, all 7 ACs. Code review: 6 findings (1H 4M 1L) all resolved
   7-2a-metric-help-contextual-guidance: done  # Cross-cutting: typed glossary, <MetricHelp> component, completenessNote, compile-time + test-time + review-time enforcement. Code review: 10 findings (2H 4M 4L) all resolved
-  7-3-record-annotations-event-flag-corrections: ready-for-dev
+  7-3-record-annotations-event-flag-corrections: done
   epic-7-retrospective: optional
 
   # Epic 6: Reporting & PDF Export (Sprint 10 — reports now contain migration + live submissions + events + exceptions)

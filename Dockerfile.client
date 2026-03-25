@@ -18,6 +18,8 @@ EXPOSE 5173
 # Stage 4: Build
 FROM deps AS build
 ARG VITE_API_URL
+ARG BUILD_SHA=dev
+ENV VITE_BUILD_SHA=$BUILD_SHA
 COPY . .
 RUN pnpm --filter shared build && pnpm --filter client build
 

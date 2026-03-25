@@ -2,6 +2,7 @@ import app from './app';
 import { env } from './config/env';
 import { logger } from './lib/logger';
 import { runMigrations } from './db/migrate';
+import { seedReferenceMdas } from './db/seedReferenceMdas';
 import { startIntegrityChecker, stopIntegrityChecker } from './services/integrityChecker';
 import { startInactiveLoanScheduler, stopInactiveLoanScheduler } from './services/inactiveLoanDetector';
 
@@ -12,6 +13,13 @@ async function start(): Promise<void> {
   } catch (err) {
     logger.fatal({ err }, 'Migration failed — server cannot start');
     process.exit(1);
+  }
+
+  // Seed MDA reference data (all environments — idempotent)
+  try {
+    await seedReferenceMdas();
+  } catch (err) {
+    logger.error({ err }, 'seedReferenceMdas failed — server will start but MDA data may be missing');
   }
 
   const server = app.listen(env.PORT, async () => {

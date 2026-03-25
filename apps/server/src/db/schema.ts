@@ -717,6 +717,44 @@ export const transfers = pgTable(
   ],
 );
 
+// ─── Loan Annotations (Story 7.3) ─────────────────────────────────
+// Append-only, immutable. No updatedAt, no deletedAt.
+export const loanAnnotations = pgTable(
+  'loan_annotations',
+  {
+    id: uuid('id').primaryKey().$defaultFn(generateUuidv7),
+    loanId: uuid('loan_id').notNull().references(() => loans.id),
+    content: text('content').notNull(),
+    createdBy: uuid('created_by').notNull().references(() => users.id),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    index('idx_loan_annotations_loan_id').on(table.loanId),
+    index('idx_loan_annotations_created_at').on(table.createdAt),
+  ],
+);
+
+// ─── Loan Event Flag Corrections (Story 7.3) ─────────────────────
+// Append-only, immutable. Original submission_rows.eventFlag is NEVER modified.
+export const loanEventFlagCorrections = pgTable(
+  'loan_event_flag_corrections',
+  {
+    id: uuid('id').primaryKey().$defaultFn(generateUuidv7),
+    loanId: uuid('loan_id').notNull().references(() => loans.id),
+    staffId: varchar('staff_id', { length: 50 }).notNull(),
+    submissionRowId: uuid('submission_row_id').references(() => submissionRows.id),
+    originalEventFlag: eventFlagTypeEnum('original_event_flag').notNull(),
+    newEventFlag: eventFlagTypeEnum('new_event_flag').notNull(),
+    correctionReason: text('correction_reason').notNull(),
+    correctedBy: uuid('corrected_by').notNull().references(() => users.id),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    index('idx_loan_event_flag_corrections_loan_id').on(table.loanId),
+    index('idx_loan_event_flag_corrections_created_at').on(table.createdAt),
+  ],
+);
+
 // ─── Audit Log (Story 1.5) ─────────────────────────────────────────
 // Append-only, immutable audit trail. No updated_at, no deleted_at.
 // Immutability enforced by DB trigger (fn_prevent_modification).

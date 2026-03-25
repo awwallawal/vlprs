@@ -19,8 +19,8 @@ export async function devAutoSeed(): Promise<void> {
     if (userCount === 0) {
       logger.info('devAutoSeed: users table is empty — seeding demo data...');
       const { runDemoSeed } = await import('./seed-demo');
-      const { userCount: seeded, mdaCount } = await runDemoSeed();
-      logger.info(`devAutoSeed: seeded ${seeded} users, ${mdaCount} MDAs`);
+      const { userCount: seeded, loanCount } = await runDemoSeed();
+      logger.info(`devAutoSeed: seeded ${seeded} users, ${loanCount} loans`);
       logger.info('devAutoSeed: demo credentials — email: ag@vlprs.oyo.gov.ng, password: DemoPass1');
     }
   } catch (seedErr) {
