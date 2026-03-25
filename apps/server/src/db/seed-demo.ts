@@ -1,9 +1,9 @@
 import { eq } from 'drizzle-orm';
 import { db } from './index';
-import { mdas, mdaAliases, users, loans, schemeConfig } from './schema';
+import { mdas, users, loans, schemeConfig } from './schema';
 import { hashPassword } from '../lib/password';
 import { generateUuidv7 } from '../lib/uuidv7';
-import { MDA_LIST, MDA_ALIASES } from '@vlprs/shared';
+import { seedReferenceMdas } from './seedReferenceMdas';
 
 const DEMO_PASSWORD = process.env.DEMO_SEED_PASSWORD || 'DemoPass1';
 
@@ -135,71 +135,24 @@ function buildMockLoans(mdaMap: Map<string, string>) {
  * Core seed logic — reusable by both CLI and dev auto-seed.
  * Idempotent: uses onConflictDoNothing for both MDAs and users.
  */
-export async function runDemoSeed(): Promise<{ userCount: number; mdaCount: number; loanCount: number }> {
+export async function runDemoSeed(): Promise<{ userCount: number; loanCount: number }> {
   const hashedPassword = await hashPassword(DEMO_PASSWORD);
 
-  let mdaCount = 0;
   let userCount = 0;
   let loanCount = 0;
 
-  await db.transaction(async (tx) => {
-    // 1. Seed all 63 MDAs (idempotent via onConflictDoNothing on code)
-    for (const mda of MDA_LIST) {
-      const [record] = await tx
-        .insert(mdas)
-        .values({
-          id: generateUuidv7(),
-          name: mda.name,
-          code: mda.code,
-          abbreviation: mda.abbreviation,
-        })
-        .onConflictDoNothing({ target: mdas.code })
-        .returning();
-      if (record) mdaCount++;
-    }
+  // 1. Seed reference MDAs (idempotent, shared with all environments)
+  await seedReferenceMdas();
 
-    // 2. Lookup seeded MDA IDs for alias and user assignment
+  await db.transaction(async (tx) => {
+    // 2. Lookup MDA IDs for user assignment
     const allMdaRows = await tx.select().from(mdas);
     const mdaMap = new Map<string, string>();
     for (const m of allMdaRows) {
       mdaMap.set(m.code, m.id);
     }
 
-    // 3. Seed MDA aliases (old codes → new canonical MDAs)
-    for (const { oldCode, newCode } of MDA_ALIASES) {
-      const mdaId = mdaMap.get(newCode);
-      if (!mdaId) continue;
-      // No target specified: unique index is on LOWER(alias) expression, which Drizzle can't target directly
-      await tx
-        .insert(mdaAliases)
-        .values({ id: generateUuidv7(), mdaId, alias: oldCode })
-        .onConflictDoNothing();
-    }
-
-    // 3b. Seed CDU legacy naming variants (SQ-1 observed aliases)
-    // Note: 'CDU' is NOT seeded as an alias — it resolves via Layer 1 exact code match
-    // on mdas.code = 'CDU' before alias lookup executes (see mdaService.ts resolveMdaByName)
-    const cduMdaId = mdaMap.get('CDU');
-    if (cduMdaId) {
-      const cduAliases = ['COCOA DEVELOPMENT UNIT', 'OYO STATE COCOA DEVELOPMENT UNIT', 'COCOA', 'TCDU'];
-      for (const alias of cduAliases) {
-        await tx
-          .insert(mdaAliases)
-          .values({ id: generateUuidv7(), mdaId: cduMdaId, alias })
-          .onConflictDoNothing();
-      }
-    }
-
-    // 3c. Set CDU parent relationship (CDU is a sub-agency of Agriculture)
-    const agricultureMdaId = mdaMap.get('AGRICULTURE');
-    if (cduMdaId && agricultureMdaId) {
-      await tx
-        .update(mdas)
-        .set({ parentMdaId: agricultureMdaId })
-        .where(eq(mdas.id, cduMdaId));
-    }
-
-    // 4. Seed demo user accounts using new authoritative MDA codes
+    // 3. Seed demo user accounts using authoritative MDA codes
     const healthMdaId = mdaMap.get('HEALTH') ?? null;
     const educationMdaId = mdaMap.get('EDUCATION') ?? null;
 
@@ -253,7 +206,7 @@ export async function runDemoSeed(): Promise<{ userCount: number; mdaCount: numb
     }
   });
 
-  return { userCount, mdaCount, loanCount };
+  return { userCount, loanCount };
 }
 
 // CLI entry point — only runs when executed directly (not when imported)
@@ -261,8 +214,8 @@ const isDirectRun = process.argv[1]?.includes('seed-demo');
 if (isDirectRun) {
   console.log('Seeding demo data...');
   runDemoSeed()
-    .then(({ userCount, mdaCount, loanCount }) => {
-      console.log(`Seeded ${userCount} users, ${mdaCount} MDAs, ${loanCount} loans`);
+    .then(({ userCount, loanCount }) => {
+      console.log(`Seeded ${userCount} users, ${loanCount} loans`);
       console.log('Demo seed complete.');
       process.exit(0);
     })

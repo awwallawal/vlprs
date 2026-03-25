@@ -23,6 +23,8 @@ RUN pnpm deploy --prod --filter server /app/deploy
 
 # Stage 5: Production
 FROM node:22-alpine AS production
+ARG BUILD_SHA=dev
+ENV BUILD_SHA=$BUILD_SHA
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 WORKDIR /app
 COPY --from=build /app/deploy ./

@@ -226,6 +226,12 @@ export const VOCABULARY = {
   PAYROLL_EMPTY_FILE: 'Payroll file contains no data rows.',
   PAYROLL_MISSING_FILE: 'No file uploaded.',
   PAYROLL_NO_PENDING_UPLOAD: 'No pending payroll upload to confirm for this period.',
+  // Annotations & Event Flag Corrections (Story 7.3)
+  ANNOTATION_ADDED: 'Annotation added to loan record.',
+  EVENT_FLAG_CORRECTED: 'Event flag correction recorded with full audit trail.',
+  ANNOTATION_LOAN_NOT_FOUND: 'The loan record could not be found or is not accessible.',
+  CORRECTION_SAME_FLAG: 'New event flag must differ from the original.',
+  CORRECTION_REASON_TOO_SHORT: 'Correction reason must be at least 10 characters.',
 } as const;
 
 export const UI_COPY = {
@@ -367,4 +373,17 @@ export const UI_COPY = {
   EXCEPTION_FLAG_PROMPT: 'Flag this loan record for review — provide priority, category, and notes',
   EXCEPTION_RESOLVE_PROMPT: 'Resolve this exception — provide resolution note and action taken',
   EXCEPTION_ALL_RESOLVED: 'All exceptions have been resolved — no items requiring attention',
+  // Annotations & Event Flag Corrections UI (Story 7.3)
+  ANNOTATIONS_HEADER: 'Annotations',
+  ADD_ANNOTATION_PROMPT: 'Add a note to this loan record',
+  NO_ANNOTATIONS_YET: 'No annotations yet',
+  ANNOTATION_ADDED: 'Annotation added',
+  ANNOTATION_CONTENT_REQUIRED: 'Annotation content is required',
+  CORRECTIONS_HEADER: 'Event Flag Corrections',
+  CORRECT_EVENT_FLAG_PROMPT: 'Record a correction to the declared event flag',
+  EVENT_FLAG_ORIGINAL: 'Original',
+  EVENT_FLAG_NEW: 'Corrected',
+  EVENT_FLAG_CORRECTED: 'Event flag correction recorded',
+  NO_CORRECTIONS_YET: 'No corrections recorded',
+  SUGGEST_CREATE_EVENT: 'Would you like to file a {eventType} employment event for this loan?',
 } as const;

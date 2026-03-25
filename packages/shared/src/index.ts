@@ -20,6 +20,7 @@ export { createEmploymentEventSchema, staffLookupQuerySchema, transferSearchQuer
 export { reconciliationCountsSchema, reconciliationDetailSchema, reconciliationSummarySchema, resolveDiscrepancySchema, resolveDiscrepancyResponseSchema } from './validators/reconciliationSchemas.js';
 export { flagDiscrepancySchema, type FlagDiscrepancyBody } from './validators/historicalSubmissionSchemas.js';
 export { payrollConfirmSchema, payrollListQuerySchema } from './validators/payrollSchemas.js';
+export { addAnnotationSchema, correctEventFlagSchema } from './validators/annotationSchemas.js';
 
 // Types
 export type { ApiResponse, ApiError, ApiResult } from './types/api.js';
@@ -46,6 +47,7 @@ export type { BalanceResult, LedgerEntryForBalance } from './types/balance.js';
 export type { ServiceStatusVerificationRow, ServiceStatusVerificationSummary, ServiceStatusVerificationReport } from './types/report.js';
 export type { TraceReportData, TraceLoanCycle, BalanceEntry, RateAnalysis, TraceReportMetadata, TraceReportSummary, DataCompletenessScore } from './types/traceReport.js';
 export type { SystemHealthResponse, HealthMetric, HealthGroup, HealthGroupName, MetricStatus } from './types/systemHealth.js';
+export type { LoanAnnotation, AddAnnotationRequest, EventFlagCorrection, CorrectEventFlagRequest, EventFlagCorrectionResponse } from './types/annotation.js';
 
 // Constants
 export { ROLES, ALL_ROLES, ROLE_HIERARCHY, getManageableRoles, canManageRole, type Role } from './constants/roles.js';

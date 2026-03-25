@@ -15,6 +15,8 @@ import {
 } from '@/components/ui/accordion';
 import { MetricHelp } from '@/components/shared/MetricHelp';
 import { FlagExceptionDialog } from './components/FlagExceptionDialog';
+import { LoanAnnotations } from './components/LoanAnnotations';
+import { EventFlagCorrections } from './components/EventFlagCorrections';
 import { useExceptions } from '@/hooks/useExceptionData';
 import { useAuthStore } from '@/stores/authStore';
 import type { LoanStatus } from '@vlprs/shared';
@@ -178,6 +180,14 @@ export function LoanDetailPage() {
         <ExceptionFlagSection loanId={loanId!} flagOpen={flagOpen} setFlagOpen={setFlagOpen} />
       )}
 
+      {/* Annotations & Event Flag Corrections (Story 7.3) */}
+      {loanId && (
+        <section aria-label="Annotations and corrections" className="space-y-4">
+          <LoanAnnotations loanId={loanId} />
+          <EventFlagCorrections loanId={loanId} />
+        </section>
+      )}
+
       {/* Placeholder sections for future features */}
       <section aria-label="Upcoming features" className="space-y-4">
         <PlaceholderSection
@@ -187,10 +197,6 @@ export function LoanDetailPage() {
         <PlaceholderSection
           title="Ledger History"
           sprint="Coming in Sprint 2 (Epic 2)"
-        />
-        <PlaceholderSection
-          title="Annotations"
-          sprint="Coming in Sprint 9 (Epic 7)"
         />
       </section>
 

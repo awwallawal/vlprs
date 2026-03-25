@@ -102,6 +102,8 @@ jobs:
             ${{ env.SERVER_IMAGE }}:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
+          build-args: |
+            BUILD_SHA=${{ github.sha }}
 
       - name: Build and push client image
         uses: docker/build-push-action@v6
@@ -117,6 +119,7 @@ jobs:
           cache-to: type=gha,mode=max
           build-args: |
             VITE_API_URL=https://oyocarloan.com.ng/api
+            BUILD_SHA=${{ github.sha }}
 
       - name: Deploy to Droplet
         uses: appleboy/ssh-action@v1
@@ -129,19 +132,20 @@ jobs:
             git pull origin main
             export IMAGE_TAG=${{ github.sha }}
             docker compose -f compose.prod.yaml pull
-            docker compose -f compose.prod.yaml up -d --remove-orphans
+            docker compose -f compose.prod.yaml up -d --force-recreate --remove-orphans
             docker image prune -f
 
-      - name: Health check
+      - name: Verify deployment
         run: |
-          echo "Waiting for services to start..."
+          echo "Verifying deployed version matches ${{ github.sha }}..."
           for i in $(seq 1 12); do
-            if curl -sf https://oyocarloan.com.ng/api/health; then
-              echo "Health check passed on attempt $i"
+            DEPLOYED=$(curl -sf https://oyocarloan.com.ng/api/health | jq -r '.version')
+            if [ "$DEPLOYED" = "${{ github.sha }}" ]; then
+              echo "Deployment verified: $DEPLOYED"
               exit 0
             fi
-            echo "Attempt $i/12 failed, retrying in 15s..."
+            echo "Expected ${{ github.sha }}, got $DEPLOYED — retrying in 15s..."
             sleep 15
           done
-          echo "Health check failed after 12 attempts (3 minutes)"
+          echo "DEPLOYMENT VERIFICATION FAILED"
           exit 1
