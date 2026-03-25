@@ -466,7 +466,12 @@ Three-layer enforcement architecture:
 - `apps/client/src/hooks/useTraceReport.ts` — 1 hook migrated (blob download)
 - `apps/server/src/services/integrityChecker.ts` — 5 destructuring fixes
 
-**Retro discussion point:** Consider adding an ESLint rule (e.g. `no-restricted-globals` for `fetch` in `src/hooks/`) to prevent future raw fetch bypasses. All network calls from hooks should go through the authenticated fetch layer.
+**Prevention rule implemented:** ESLint `no-restricted-globals` rule added to `eslint.config.js` — bans raw `fetch()` in `apps/client/src/hooks/**`. Any future hook that attempts raw fetch gets a compile-time error: *"Use authenticatedFetch() or apiClient() from @/lib/apiClient. Raw fetch() bypasses token refresh and causes silent 401 failures on live."*
+
+**Retro discussion points:**
+- **Extend, don't fork:** When a shared utility can't handle a use case (e.g. apiClient didn't support FormData), the correct response is to extend the utility — not bypass it with raw calls that drop cross-cutting concerns. Propose as team agreement.
+- **Cross-cutting review checklist:** The CR workflow reviews story diffs against ACs but doesn't check horizontal invariants (auth, error surfacing, loading states). Consider adding a "Cross-Cutting Concerns" section to the code review checklist.
+- **"Bypass smell" pattern:** Comments like "Uses raw fetch because X only supports JSON" are TODOs disguised as documentation. They should trigger an immediate extension of X, not acceptance of the bypass.
 
 ## File List
 

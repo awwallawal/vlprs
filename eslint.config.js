@@ -17,5 +17,19 @@ export default tseslint.config(
       ],
       "@typescript-eslint/no-explicit-any": "warn",
     },
+  },
+  // Ban raw fetch() in client hooks and components — must use authenticatedFetch/apiClient
+  // to ensure 401→token-refresh→retry logic is never bypassed.
+  {
+    files: ["apps/client/src/hooks/**/*.ts", "apps/client/src/hooks/**/*.tsx"],
+    rules: {
+      "no-restricted-globals": [
+        "error",
+        {
+          name: "fetch",
+          message: "Use authenticatedFetch() or apiClient() from @/lib/apiClient. Raw fetch() bypasses token refresh and causes silent 401 failures on live.",
+        },
+      ],
+    },
   }
 );
