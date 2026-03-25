@@ -1,13 +1,9 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getAuthHeaders } from '@/lib/fetchHelpers';
-import { apiClient } from '@/lib/apiClient';
+import { apiClient, authenticatedFetch, parseJsonResponse } from '@/lib/apiClient';
 import type { HistoricalUploadResponse, HistoricalReconciliationSummary } from '@vlprs/shared';
-
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
 
 /**
  * Upload a historical CSV file.
- * Uses raw fetch (NOT apiClient) because apiClient only supports JSON.
  */
 export function useHistoricalUpload() {
   const queryClient = useQueryClient();
@@ -17,24 +13,11 @@ export function useHistoricalUpload() {
       const formData = new FormData();
       formData.append('file', file);
 
-      const res = await fetch(`${API_BASE}/submissions/historical`, {
+      const res = await authenticatedFetch('/submissions/historical', {
         method: 'POST',
-        headers: getAuthHeaders(),
-        credentials: 'include',
         body: formData,
       });
-
-      const body = await res.json();
-      if (!res.ok || !body.success) {
-        const err = Object.assign(
-          new Error(body.error?.message || 'Upload needs attention'),
-          {
-            code: body.error?.code,
-            details: body.error?.details,
-          },
-        );
-        throw err;
-      }
+      const body = await parseJsonResponse(res);
       return body.data as HistoricalUploadResponse;
     },
     onSuccess: () => {

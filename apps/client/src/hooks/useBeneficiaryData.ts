@@ -1,6 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { apiClient } from '@/lib/apiClient';
-import { useAuthStore } from '@/stores/authStore';
+import { apiClient, authenticatedFetch } from '@/lib/apiClient';
 import type { PaginatedBeneficiaries, BeneficiaryListMetrics } from '@vlprs/shared';
 
 interface BeneficiaryFilters {
@@ -43,17 +42,9 @@ export function useBeneficiaryMetrics() {
 }
 
 export function useExportBeneficiaries() {
-  const { accessToken } = useAuthStore.getState();
-  const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
-
   return async (filters: BeneficiaryFilters) => {
     const qs = buildQueryString(filters);
-    const res = await fetch(`${API_BASE}/migrations/beneficiaries/export${qs}`, {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
-      credentials: 'include',
-    });
+    const res = await authenticatedFetch(`/migrations/beneficiaries/export${qs}`);
 
     if (!res.ok) throw new Error('Export failed');
 

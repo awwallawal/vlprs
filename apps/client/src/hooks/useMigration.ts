@@ -1,9 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useAuthStore } from '@/stores/authStore';
-import { getAuthHeaders } from '@/lib/fetchHelpers';
+import { apiClient, authenticatedFetch, parseJsonResponse } from '@/lib/apiClient';
 import type { MigrationUploadPreview, MigrationUploadSummary, MdaListItem, ValidationSummary, ValidationResult, VarianceCategory, BaselineResult, BatchBaselineResult, BaselineSummary } from '@vlprs/shared';
-
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
 
 export function useUploadMigration() {
   const queryClient = useQueryClient();
@@ -14,18 +11,12 @@ export function useUploadMigration() {
       formData.append('file', file);
       formData.append('mdaId', mdaId);
 
-      const res = await fetch(`${API_BASE}/migrations/upload`, {
+      const res = await authenticatedFetch('/migrations/upload', {
         method: 'POST',
-        headers: getAuthHeaders(),
         body: formData,
-        credentials: 'include',
       });
-
-      const body = await res.json();
-      if (!res.ok || !body.success) {
-        throw new Error(body.error?.message || 'Upload failed');
-      }
-      return body.data;
+      const body = await parseJsonResponse(res);
+      return body.data as MigrationUploadPreview;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['migrations'] });
@@ -47,18 +38,12 @@ export function useConfirmMapping() {
       formData.append('mdaId', mdaId);
       formData.append('sheets', JSON.stringify(sheets));
 
-      const res = await fetch(`${API_BASE}/migrations/${uploadId}/confirm`, {
+      const res = await authenticatedFetch(`/migrations/${uploadId}/confirm`, {
         method: 'POST',
-        headers: getAuthHeaders(),
         body: formData,
-        credentials: 'include',
       });
-
-      const body = await res.json();
-      if (!res.ok || !body.success) {
-        throw new Error(body.error?.message || 'Confirmation failed');
-      }
-      return body.data;
+      const body = await parseJsonResponse(res);
+      return body.data as { totalRecords: number; recordsPerSheet: Array<{ sheetName: string; count: number; era: number }> };
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['migrations'] });
@@ -75,20 +60,9 @@ export function useListMigrations(filters?: { page?: number; limit?: number; sta
       if (filters?.limit) params.set('limit', String(filters.limit));
       if (filters?.status) params.set('status', filters.status);
 
-      const { accessToken } = useAuthStore.getState();
-      const res = await fetch(`${API_BASE}/migrations?${params}`, {
-        headers: {
-          'Content-Type': 'application/json',
-          ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
-        },
-        credentials: 'include',
-      });
-
-      const body = await res.json();
-      if (!res.ok || !body.success) {
-        throw new Error(body.error?.message || 'Failed to load migrations');
-      }
-      return { data: body.data, pagination: body.pagination };
+      const res = await authenticatedFetch(`/migrations?${params}`);
+      const body = await parseJsonResponse(res);
+      return { data: body.data as MigrationUploadSummary[], pagination: body.pagination as { page: number; limit: number; total: number; totalPages: number } };
     },
     staleTime: 30_000,
   });
@@ -97,21 +71,7 @@ export function useListMigrations(filters?: { page?: number; limit?: number; sta
 export function useMdaList() {
   return useQuery<MdaListItem[]>({
     queryKey: ['mdas', 'active'],
-    queryFn: async () => {
-      const { accessToken } = useAuthStore.getState();
-      const res = await fetch(`${API_BASE}/mdas?isActive=true`, {
-        headers: {
-          ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
-        },
-        credentials: 'include',
-      });
-
-      const body = await res.json();
-      if (!res.ok || !body.success) {
-        throw new Error(body.error?.message || 'Failed to load MDAs');
-      }
-      return body.data;
-    },
+    queryFn: () => apiClient<MdaListItem[]>('/mdas?isActive=true'),
     staleTime: 60_000,
   });
 }
@@ -120,22 +80,8 @@ export function useValidateUpload() {
   const queryClient = useQueryClient();
 
   return useMutation<ValidationSummary, Error, { uploadId: string }>({
-    mutationFn: async ({ uploadId }) => {
-      const res = await fetch(`${API_BASE}/migrations/${uploadId}/validate`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...getAuthHeaders(),
-        },
-        credentials: 'include',
-      });
-
-      const body = await res.json();
-      if (!res.ok || !body.success) {
-        throw new Error(body.error?.message || 'Validation failed');
-      }
-      return body.data;
-    },
+    mutationFn: ({ uploadId }) =>
+      apiClient<ValidationSummary>(`/migrations/${uploadId}/validate`, { method: 'POST' }),
     onSuccess: (_data, { uploadId }) => {
       queryClient.invalidateQueries({ queryKey: ['migrations'] });
       queryClient.invalidateQueries({ queryKey: ['migrations', uploadId] });
@@ -158,20 +104,9 @@ export function useValidationResults(
       if (filters?.sortBy) params.set('sortBy', filters.sortBy);
       if (filters?.sortOrder) params.set('sortOrder', filters.sortOrder);
 
-      const { accessToken } = useAuthStore.getState();
-      const res = await fetch(`${API_BASE}/migrations/${uploadId}/validation?${params}`, {
-        headers: {
-          'Content-Type': 'application/json',
-          ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
-        },
-        credentials: 'include',
-      });
-
-      const body = await res.json();
-      if (!res.ok || !body.success) {
-        throw new Error(body.error?.message || 'Failed to load validation results');
-      }
-      return body.data;
+      return apiClient<ValidationResult & { pagination: { page: number; limit: number; total: number; totalPages: number } }>(
+        `/migrations/${uploadId}/validation?${params}`,
+      );
     },
     enabled: !!uploadId,
     staleTime: 30_000,
@@ -181,22 +116,7 @@ export function useValidationResults(
 export function useGetMigration(uploadId: string) {
   return useQuery({
     queryKey: ['migrations', uploadId],
-    queryFn: async () => {
-      const { accessToken } = useAuthStore.getState();
-      const res = await fetch(`${API_BASE}/migrations/${uploadId}`, {
-        headers: {
-          'Content-Type': 'application/json',
-          ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
-        },
-        credentials: 'include',
-      });
-
-      const body = await res.json();
-      if (!res.ok || !body.success) {
-        throw new Error(body.error?.message || 'Failed to load migration');
-      }
-      return body.data;
-    },
+    queryFn: () => apiClient(`/migrations/${uploadId}`),
     enabled: !!uploadId,
     staleTime: 30_000,
   });
@@ -208,23 +128,11 @@ export function useCreateBaseline(uploadId: string) {
   const queryClient = useQueryClient();
 
   return useMutation<BaselineResult, Error, { recordId: string }>({
-    mutationFn: async ({ recordId }) => {
-      const res = await fetch(`${API_BASE}/migrations/${uploadId}/records/${recordId}/baseline`, {
+    mutationFn: ({ recordId }) =>
+      apiClient<BaselineResult>(`/migrations/${uploadId}/records/${recordId}/baseline`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...getAuthHeaders(),
-        },
         body: JSON.stringify({ confirm: true }),
-        credentials: 'include',
-      });
-
-      const body = await res.json();
-      if (!res.ok || !body.success) {
-        throw new Error(body.error?.message || 'Baseline creation failed');
-      }
-      return body.data;
-    },
+      }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['migrations'] });
       queryClient.invalidateQueries({ queryKey: ['baseline-summary', uploadId] });
@@ -237,23 +145,11 @@ export function useCreateBatchBaseline(uploadId: string) {
   const queryClient = useQueryClient();
 
   return useMutation<BatchBaselineResult, Error>({
-    mutationFn: async () => {
-      const res = await fetch(`${API_BASE}/migrations/${uploadId}/baseline`, {
+    mutationFn: () =>
+      apiClient<BatchBaselineResult>(`/migrations/${uploadId}/baseline`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...getAuthHeaders(),
-        },
         body: JSON.stringify({ confirm: true }),
-        credentials: 'include',
-      });
-
-      const body = await res.json();
-      if (!res.ok || !body.success) {
-        throw new Error(body.error?.message || 'Batch baseline creation failed');
-      }
-      return body.data;
-    },
+      }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['migrations'] });
       queryClient.invalidateQueries({ queryKey: ['baseline-summary', uploadId] });
@@ -270,62 +166,29 @@ export function useCheckOverlap() {
     Error,
     { uploadId: string; periodYear?: number; periodMonth?: number }
   >({
-    mutationFn: async ({ uploadId, periodYear, periodMonth }) => {
+    mutationFn: ({ uploadId, periodYear, periodMonth }) => {
       const params = new URLSearchParams();
       if (periodYear !== undefined) params.set('periodYear', String(periodYear));
       if (periodMonth !== undefined) params.set('periodMonth', String(periodMonth));
 
-      const res = await fetch(`${API_BASE}/migrations/${uploadId}/check-overlap?${params}`, {
-        headers: { ...getAuthHeaders() },
-        credentials: 'include',
-      });
-
-      const body = await res.json();
-      if (!res.ok || !body.success) {
-        throw new Error(body.error?.message || 'Overlap check failed');
-      }
-      return body.data;
+      return apiClient(`/migrations/${uploadId}/check-overlap?${params}`);
     },
   });
 }
 
 export function useConfirmOverlap() {
   return useMutation<{ confirmed: boolean }, Error, { uploadId: string }>({
-    mutationFn: async ({ uploadId }) => {
-      const res = await fetch(`${API_BASE}/migrations/${uploadId}/confirm-overlap`, {
+    mutationFn: ({ uploadId }) =>
+      apiClient<{ confirmed: boolean }>(`/migrations/${uploadId}/confirm-overlap`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
-        credentials: 'include',
-      });
-
-      const body = await res.json();
-      if (!res.ok || !body.success) {
-        throw new Error(body.error?.message || 'Overlap confirmation failed');
-      }
-      return body.data;
-    },
+      }),
   });
 }
 
 export function useBaselineSummary(uploadId: string) {
   return useQuery<BaselineSummary>({
     queryKey: ['baseline-summary', uploadId],
-    queryFn: async () => {
-      const { accessToken } = useAuthStore.getState();
-      const res = await fetch(`${API_BASE}/migrations/${uploadId}/baseline-summary`, {
-        headers: {
-          'Content-Type': 'application/json',
-          ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
-        },
-        credentials: 'include',
-      });
-
-      const body = await res.json();
-      if (!res.ok || !body.success) {
-        throw new Error(body.error?.message || 'Failed to load baseline summary');
-      }
-      return body.data;
-    },
+    queryFn: () => apiClient<BaselineSummary>(`/migrations/${uploadId}/baseline-summary`),
     enabled: !!uploadId,
     staleTime: 15_000,
   });
