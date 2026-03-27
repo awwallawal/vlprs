@@ -27,3 +27,129 @@ export interface ServiceStatusVerificationReport {
   summary: ServiceStatusVerificationSummary;
   pagination: { page: number; pageSize: number; totalItems: number; totalPages: number };
 }
+
+// ─── Executive Summary Report (Story 6.1, FR37) ──────────────────
+
+export interface SchemeOverview {
+  activeLoans: number;
+  totalExposure: string;
+  fundAvailable: string | null;
+  monthlyRecoveryRate: string;
+  recoveryPeriod: string;
+}
+
+export interface PortfolioStatusRow {
+  classification: string; // Non-punitive label
+  count: number;
+  percentage: number;
+}
+
+export interface MdaScorecardRow {
+  mdaId: string;
+  mdaName: string;
+  mdaCode: string;
+  healthScore: number;
+  healthBand: 'healthy' | 'attention' | 'for-review';
+  totalOutstanding: string;
+  observationCount: number;
+}
+
+export interface ReceivablesRankingRow {
+  mdaId: string;
+  mdaName: string;
+  mdaCode: string;
+  totalOutstanding: string;
+  activeLoans: number;
+}
+
+export interface RecoveryTier {
+  tierName: string; // "Quick Recovery" | "Requires Intervention" | "Extended Follow-up"
+  loanCount: number;
+  totalAmount: string;
+  monthlyProjection: string;
+}
+
+export interface SubmissionCoverageSummary {
+  activeMdas: number;
+  spottyMdas: number;
+  darkMdas: number;
+  totalMdas: number;
+}
+
+export interface OnboardingPipelineSummary {
+  approvedNotCollectingCount: number;
+  revenueAtRisk: string;
+}
+
+export interface ExceptionSummary {
+  openCount: number;
+  resolvedCount: number;
+  totalCount: number;
+}
+
+export interface TopVarianceRow {
+  staffName: string;
+  mdaName: string;
+  declaredAmount: string;
+  computedAmount: string;
+  difference: string;
+}
+
+export interface TrendMetric {
+  current: number;
+  previous: number;
+  changePercent: number;
+}
+
+export interface MonthOverMonthTrend {
+  activeLoans: TrendMetric;
+  totalExposure: TrendMetric;
+  monthlyRecovery: TrendMetric;
+  completionRate: TrendMetric;
+}
+
+export interface ExecutiveSummaryReportData {
+  schemeOverview: SchemeOverview;
+  portfolioStatus: PortfolioStatusRow[];
+  mdaScorecard: { topHealthy: MdaScorecardRow[]; bottomForReview: MdaScorecardRow[] };
+  receivablesRanking: ReceivablesRankingRow[];
+  recoveryPotential: RecoveryTier[];
+  submissionCoverage: SubmissionCoverageSummary;
+  onboardingPipeline: OnboardingPipelineSummary;
+  exceptionSummary: ExceptionSummary;
+  topVariances: TopVarianceRow[];
+  monthOverMonthTrend: MonthOverMonthTrend;
+  generatedAt: string;
+}
+
+// ─── MDA Compliance Report (Story 6.1, FR38) ────────────────────
+
+export interface MdaComplianceReportRow {
+  mdaId: string;
+  mdaName: string;
+  mdaCode: string;
+  submissionStatus: string;
+  lastSubmissionDate: string | null;
+  recordCount: number;
+  compliancePercent: number;
+  healthScore: number;
+  healthBand: 'healthy' | 'attention' | 'for-review';
+  coveragePercent: number | null;
+  totalOutstanding: string;
+  unresolvedObservationCount: number;
+}
+
+export interface MdaComplianceReportSummary {
+  totalMdas: number;
+  averageHealthScore: number;
+  totalOutstanding: string;
+  totalObservations: number;
+}
+
+export interface MdaComplianceReportData {
+  rows: MdaComplianceReportRow[];
+  summary: MdaComplianceReportSummary;
+  periodYear: number;
+  periodMonth: number;
+  generatedAt: string;
+}
