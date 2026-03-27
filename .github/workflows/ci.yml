@@ -65,8 +65,8 @@ jobs:
       - name: Typecheck
         run: pnpm typecheck
 
-      - name: Test
-        run: pnpm test
+      - name: Test (unit + integration)
+        run: pnpm test && pnpm --filter server test:integration
 
   deploy:
     name: Build, Push & Deploy

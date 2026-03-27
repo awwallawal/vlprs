@@ -11,6 +11,7 @@
     "lint": "eslint .",
     "typecheck": "pnpm -r run typecheck",
     "test": "pnpm -r run test",
+    "test:all": "pnpm -r run test && pnpm --filter server test:integration",
     "build": "pnpm -r run build",
     "docker:dev": "docker compose -f compose.dev.yaml up --build",
     "docker:dev:down": "docker compose -f compose.dev.yaml down",
