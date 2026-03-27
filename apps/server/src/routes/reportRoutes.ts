@@ -4,9 +4,13 @@ import { requirePasswordChange } from '../middleware/requirePasswordChange';
 import { authorise } from '../middleware/authorise';
 import { scopeToMda } from '../middleware/scopeToMda';
 import { validateQuery } from '../middleware/validate';
+import { validateResponse } from '../middleware/validateResponse';
+import { readLimiter } from '../middleware/rateLimiter';
 import { auditLog } from '../middleware/auditLog';
-import { ROLES, serviceStatusVerificationQuerySchema } from '@vlprs/shared';
+import { ROLES, serviceStatusVerificationQuerySchema, executiveSummaryQuerySchema, mdaComplianceQuerySchema, apiResponseSchema, executiveSummaryReportSchema, mdaComplianceReportSchema } from '@vlprs/shared';
 import * as reportService from '../services/serviceStatusReportService';
+import * as executiveSummaryReportService from '../services/executiveSummaryReportService';
+import * as mdaComplianceReportService from '../services/mdaComplianceReportService';
 
 const router = Router();
 
@@ -15,6 +19,15 @@ const reportAuth = [
   requirePasswordChange,
   authorise(ROLES.SUPER_ADMIN, ROLES.DEPT_ADMIN, ROLES.MDA_OFFICER),
   scopeToMda,
+];
+
+const executiveReportAuth = [
+  authenticate,
+  requirePasswordChange,
+  authorise(ROLES.SUPER_ADMIN, ROLES.DEPT_ADMIN),
+  scopeToMda,
+  readLimiter,
+  auditLog,
 ];
 
 // GET /api/reports/service-status-verification — Post-retirement activity detection report (Story 10.4, FR71)
@@ -39,6 +52,37 @@ router.get(
       summary: report.summary,
       pagination: report.pagination,
     });
+  },
+);
+
+// GET /api/reports/executive-summary — Executive Summary Report (Story 6.1, FR37)
+router.get(
+  '/reports/executive-summary',
+  ...executiveReportAuth,
+  validateQuery(executiveSummaryQuerySchema),
+  validateResponse(apiResponseSchema(executiveSummaryReportSchema)),
+  async (req: Request, res: Response) => {
+    const report = await executiveSummaryReportService.generateExecutiveSummaryReport(
+      req.mdaScope,
+    );
+    res.json({ success: true, data: report });
+  },
+);
+
+// GET /api/reports/mda-compliance — MDA Compliance Report (Story 6.1, FR38)
+router.get(
+  '/reports/mda-compliance',
+  ...executiveReportAuth,
+  validateQuery(mdaComplianceQuerySchema),
+  validateResponse(apiResponseSchema(mdaComplianceReportSchema)),
+  async (req: Request, res: Response) => {
+    const report = await mdaComplianceReportService.generateMdaComplianceReport({
+      mdaId: req.query.mdaId as string | undefined,
+      periodYear: req.query.periodYear ? Number(req.query.periodYear) : undefined,
+      periodMonth: req.query.periodMonth ? Number(req.query.periodMonth) : undefined,
+      mdaScope: req.mdaScope,
+    });
+    res.json({ success: true, data: report });
   },
 );
 
