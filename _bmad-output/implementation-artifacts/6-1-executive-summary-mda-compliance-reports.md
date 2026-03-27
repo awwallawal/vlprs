@@ -410,6 +410,8 @@ Claude Opus 4.6 (1M context)
 - 2026-03-26: Story 6.1 implemented — Executive Summary and MDA Compliance reports with full API, services, and frontend views
 - 2026-03-27: Code review — 7 findings (3 critical, 3 high, 1 low). All fixed: scope leakage in submission coverage, period param contract mismatch, duplicate MDA queries, parseFloat for money sort, MoM trend MVP documentation, redundant Number() wrappers, scorecard overlap deduplication
 - 2026-03-27: Flaky test fix — `hookTimeout: 15_000` added to `vitest.config.ts`; `resetDb.ts` docstring updated. Full suite 1382/1382 green
+- 2026-03-27: Test infrastructure — split unit/integration test suites + DB health check guard (see Infrastructure Fix #2 below)
+- 2026-03-27: CI typecheck fix — globalSetup.ts imported `pg` Client directly, causing TS7016 on CI (`@types/pg` not installed). Replaced with Node built-in `net.Socket` TCP check (see Infrastructure Fix #3 below)
 
 ### Senior Developer Review (AI)
 
@@ -448,10 +450,41 @@ Claude Opus 4.6 (1M context)
 |---|---|---|
 | Flaky `userRoutes.test.ts` — `beforeEach` hook timeout | `hookTimeout` defaults to 10s while `testTimeout` is 15s; `TRUNCATE ... CASCADE` on `users` acquires ACCESS EXCLUSIVE locks on all FK-referencing tables, occasionally exceeding 10s under load | Added `hookTimeout: 15_000` to `vitest.config.ts` to match `testTimeout` |
 
+**Infrastructure Fix #2 — Test suite split & DB health check guard**
+
+| Aspect | Details |
+|---|---|
+| **Issue** | All 36 DB-dependent server tests fail with cryptic `ECONNREFUSED` on `localhost:5433` when Docker Desktop port bindings break (triggered by WiFi/network adapter state changes on Windows). Takes ~8 minutes to fail across all files. No way to run unit tests independently. |
+| **Root cause** | Docker Desktop on Windows uses a virtual network layer (Hyper-V/WSL2). When the host network adapter changes state (WiFi drops/reconnects), Docker's port forwarding from `localhost:5433` to the container breaks. The container is still running but the host can't reach it. This is a known Docker Desktop for Windows behaviour, not a code bug. |
+| **Fix — Structural (Approach B)** | Split unit and integration tests via naming convention + vitest configs. 14 DB-dependent test files were incorrectly named `.test.ts` — renamed to `.integration.test.ts`. Default `vitest.config.ts` excludes `*.integration.test.ts`. New `vitest.integration.config.ts` includes only integration tests. |
+| **Fix — Fail-fast guard (Approach A)** | `src/test/globalSetup.ts` pings PostgreSQL with a 3-second timeout before any integration test runs. If unreachable, aborts immediately with an actionable error message (suggests `docker restart vlprs-db-1` or `pnpm test:unit`). |
+| **CI update** | `ci.yml` updated: runs `pnpm test` (unit) + `pnpm --filter server test:integration` (integration) to maintain full coverage. |
+| **Files renamed (14)** | `userRoutes`, `systemHealthRoutes`, `dashboardRoutes`, `mdaRoutes`, `authRoutes`, `authRoutes.refresh`, `authService`, `authService.refresh`, `ledgerService`, `mdaService`, `revenueProjectionService`, `loanService`, `queryCounter`, `seed-verification` — all `.test.ts` → `.integration.test.ts` |
+| **New files** | `apps/server/src/test/globalSetup.ts`, `apps/server/vitest.integration.config.ts` |
+| **New scripts** | `test:unit` (unit only, no DB), `test:integration` (DB-dependent only, with health check), `test:all` (both sequentially). Root `package.json` also gets `test:all`. |
+
+| Command | Scope | Needs DB? |
+|---|---|---|
+| `pnpm test` | All unit tests across all packages (1,931 tests) | No |
+| `pnpm test:all` | Full suite — unit + integration (2,432 tests) | Yes |
+| `pnpm --filter server test:integration` | Server integration only (501 tests) | Yes |
+
+**Infrastructure Fix #3 — CI typecheck failure from `pg` import in globalSetup**
+
+| Aspect | Details |
+|---|---|
+| **Issue** | CI `pnpm typecheck` failed with `TS7016: Could not find a declaration file for module 'pg'` in `src/test/globalSetup.ts`. Locally typecheck passed because `pg` types were resolved from hoisted `node_modules`. |
+| **Root cause** | `globalSetup.ts` imported `{ Client } from 'pg'` directly. The server has `pg` as a runtime dependency but `@types/pg` is not in `devDependencies`. CI with `--frozen-lockfile` does not hoist types the same way as the local pnpm store, exposing the missing declaration. |
+| **Options considered** | (1) Add `@types/pg` to devDependencies — adds a new dependency for a single file. (2) Replace `pg.Client` with Node built-in `net.Socket` TCP check — zero dependencies, same behaviour. |
+| **Decision** | Option 2 — use `net.createConnection()` to TCP-ping the DB host:port with a 3-second timeout. Parses host/port from `DATABASE_URL` via `new URL()`. Same fail-fast UX, no new packages, no type issues. |
+| **Files changed** | `apps/server/src/test/globalSetup.ts` |
+
 #### Retro Items
 
 - **Observation:** `resetDb.ts` is missing 7 tables added since E3 (`baseline_annotations`, `submission_rows`, `mda_submissions`, `employment_events`, `transfers`, `loan_annotations`, `loan_event_flag_corrections`). CASCADE handles cleanup transitively, so it works — but explicitly listing all tables would reduce lock contention. Adding them requires confirming all migrations are applied to the test DB first. Consider as prep story or tech debt item.
 - **Observation:** MoM trend (Task 2.4) specified computing 4 metrics for current vs previous period, but only `monthlyRecovery` has a real previous-period query. The other 3 require point-in-time snapshot queries that don't exist yet. This was a scope gap between the story spec and what's achievable with current services. Future enhancement could add ledger-based historical snapshots.
+- **Observation:** 14 DB-dependent test files were named `.test.ts` instead of `.integration.test.ts`, making it impossible to run unit tests independently. This naming inconsistency accumulated over E2–E5 as route/service tests were written against the real DB without following the `.integration.test.ts` convention. Going forward, any test that imports `db` without mocking it MUST use the `.integration.test.ts` suffix.
+- **Observation:** Docker Desktop on Windows breaks `localhost` port forwarding when WiFi drops — a silent DX trap. The globalSetup health check now catches this in 3 seconds. Teams using Docker Desktop on Windows should be aware of `docker restart <container>` as the quick fix.
 - **Positive:** Composition pattern is clean and consistent with established services. Non-punitive vocabulary compliance is thorough. Financial arithmetic uses Decimal.js throughout the server layer. Auth stack correctly restricts to SUPER_ADMIN + DEPT_ADMIN.
 
 #### Test Results (post-review)
@@ -460,6 +493,7 @@ Claude Opus 4.6 (1M context)
 |---|---|---|
 | shared | 416 | All pass |
 | testing | 2 | All pass |
-| server | 1382 | All pass |
+| server (unit) | 881 | All pass |
+| server (integration) | 501 | All pass |
 | client | 632 | All pass |
 | **Total** | **2,432** | **All pass** |
