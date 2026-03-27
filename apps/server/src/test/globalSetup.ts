@@ -1,4 +1,4 @@
-import { Client } from 'pg';
+import net from 'net';
 import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -8,8 +8,9 @@ dotenv.config({ path: path.resolve(__dirname, '../../../../.env') });
 
 /**
  * Vitest globalSetup — runs once before any test file.
- * Pings PostgreSQL and aborts immediately with a clear message if unreachable.
- * Saves ~8 minutes of waiting for 36 integration tests to each fail with ECONNREFUSED.
+ * Pings PostgreSQL with a raw TCP check and aborts immediately with a
+ * clear message if unreachable. Avoids importing `pg` directly so we
+ * don't need @types/pg as a devDependency.
  */
 export async function setup(): Promise<void> {
   const url = process.env['DATABASE_URL'];
@@ -24,16 +25,31 @@ export async function setup(): Promise<void> {
     );
   }
 
-  const client = new Client({ connectionString: url, connectionTimeoutMillis: 3_000 });
-  try {
-    await client.connect();
-    await client.query('SELECT 1');
-  } catch {
+  const parsed = new URL(url);
+  const host = parsed.hostname;
+  const port = Number(parsed.port) || 5432;
+
+  await new Promise<void>((resolve, reject) => {
+    const socket = net.createConnection({ host, port, timeout: 3_000 });
+    socket.once('connect', () => {
+      socket.destroy();
+      resolve();
+    });
+    socket.once('timeout', () => {
+      socket.destroy();
+      reject(new Error('timeout'));
+    });
+    socket.once('error', (err) => {
+      socket.destroy();
+      reject(err);
+    });
+  }).catch(() => {
+    const masked = url.replace(/\/\/.*@/, '//***@');
     throw new Error(
       '\n\n╔══════════════════════════════════════════════════════════════╗\n' +
         '║  Cannot reach PostgreSQL                                    ║\n' +
         '║                                                             ║\n' +
-        `║  URL: ${url.replace(/\/\/.*@/, '//***@').padEnd(53)}║\n` +
+        `║  URL: ${masked.padEnd(53)}║\n` +
         '║                                                             ║\n' +
         '║  Possible causes:                                           ║\n' +
         '║    • Docker Desktop is not running                          ║\n' +
@@ -44,7 +60,5 @@ export async function setup(): Promise<void> {
         '║    pnpm test:unit                                           ║\n' +
         '╚══════════════════════════════════════════════════════════════╝\n',
     );
-  } finally {
-    await client.end().catch(() => {});
-  }
+  });
 }

@@ -411,6 +411,7 @@ Claude Opus 4.6 (1M context)
 - 2026-03-27: Code review — 7 findings (3 critical, 3 high, 1 low). All fixed: scope leakage in submission coverage, period param contract mismatch, duplicate MDA queries, parseFloat for money sort, MoM trend MVP documentation, redundant Number() wrappers, scorecard overlap deduplication
 - 2026-03-27: Flaky test fix — `hookTimeout: 15_000` added to `vitest.config.ts`; `resetDb.ts` docstring updated. Full suite 1382/1382 green
 - 2026-03-27: Test infrastructure — split unit/integration test suites + DB health check guard (see Infrastructure Fix #2 below)
+- 2026-03-27: CI typecheck fix — globalSetup.ts imported `pg` Client directly, causing TS7016 on CI (`@types/pg` not installed). Replaced with Node built-in `net.Socket` TCP check (see Infrastructure Fix #3 below)
 
 ### Senior Developer Review (AI)
 
@@ -467,6 +468,16 @@ Claude Opus 4.6 (1M context)
 | `pnpm test` | All unit tests across all packages (1,931 tests) | No |
 | `pnpm test:all` | Full suite — unit + integration (2,432 tests) | Yes |
 | `pnpm --filter server test:integration` | Server integration only (501 tests) | Yes |
+
+**Infrastructure Fix #3 — CI typecheck failure from `pg` import in globalSetup**
+
+| Aspect | Details |
+|---|---|
+| **Issue** | CI `pnpm typecheck` failed with `TS7016: Could not find a declaration file for module 'pg'` in `src/test/globalSetup.ts`. Locally typecheck passed because `pg` types were resolved from hoisted `node_modules`. |
+| **Root cause** | `globalSetup.ts` imported `{ Client } from 'pg'` directly. The server has `pg` as a runtime dependency but `@types/pg` is not in `devDependencies`. CI with `--frozen-lockfile` does not hoist types the same way as the local pnpm store, exposing the missing declaration. |
+| **Options considered** | (1) Add `@types/pg` to devDependencies — adds a new dependency for a single file. (2) Replace `pg.Client` with Node built-in `net.Socket` TCP check — zero dependencies, same behaviour. |
+| **Decision** | Option 2 — use `net.createConnection()` to TCP-ping the DB host:port with a 3-second timeout. Parses host/port from `DATABASE_URL` via `new URL()`. Same fail-fast UX, no new packages, no type issues. |
+| **Files changed** | `apps/server/src/test/globalSetup.ts` |
 
 #### Retro Items
 
