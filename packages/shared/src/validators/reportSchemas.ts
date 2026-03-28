@@ -19,6 +19,25 @@ export const mdaComplianceQuerySchema = z.object({
   periodMonth: z.coerce.number().int().min(1).max(12).optional(),
 });
 
+// ─── Variance Report (Story 6.2) ───────────────────────────────
+
+export const varianceReportQuerySchema = z.object({
+  mdaId: z.uuid().optional(),
+  periodYear: z.coerce.number().int().min(2020).max(2100).optional(),
+  periodMonth: z.coerce.number().int().min(1).max(12).optional(),
+});
+
+// ─── Loan Snapshot Report (Story 6.2) ──────────────────────────
+
+export const loanSnapshotQuerySchema = z.object({
+  mdaId: z.uuid(),
+  page: z.coerce.number().int().min(1).optional(),
+  pageSize: z.coerce.number().int().min(1).max(200).optional(),
+  sortBy: z.enum(['staffName', 'staffId', 'principalAmount', 'status', 'approvalDate', 'monthlyDeductionAmount', 'tenureMonths', 'gradeLevel']).optional(),
+  sortOrder: z.enum(['asc', 'desc']).optional(),
+  statusFilter: z.string().optional(),
+});
+
 // ─── Response Schemas (for validateResponse middleware) ──────────
 
 const trendMetricSchema = z.object({
@@ -102,6 +121,84 @@ export const executiveSummaryReportSchema = z.object({
     completionRate: trendMetricSchema,
   }),
   generatedAt: z.string(),
+});
+
+// ─── Variance Report Response (Story 6.2) ──────────────────────
+
+export const varianceReportSchema = z.object({
+  summary: z.object({
+    alignedCount: z.number(),
+    minorVarianceCount: z.number(),
+    varianceCount: z.number(),
+    totalRecords: z.number(),
+  }),
+  rows: z.array(z.object({
+    staffId: z.string(),
+    staffName: z.string(),
+    declaredAmount: z.string(),
+    computedAmount: z.string(),
+    difference: z.string(),
+    category: z.enum(['aligned', 'minor_variance', 'variance']),
+    explanation: z.string(),
+  })),
+  overdueRegister: z.array(z.object({
+    staffName: z.string(),
+    staffId: z.string(),
+    loanId: z.string(),
+    monthsPastExpected: z.number(),
+    outstandingBalance: z.string(),
+    severityTier: z.enum(['Mild', 'Moderate', 'Elevated']),
+  })),
+  stalledRegister: z.array(z.object({
+    staffName: z.string(),
+    staffId: z.string(),
+    loanId: z.string(),
+    consecutiveUnchangedMonths: z.number(),
+    frozenAmount: z.string(),
+  })),
+  overDeductedRegister: z.array(z.object({
+    staffName: z.string(),
+    staffId: z.string(),
+    loanId: z.string(),
+    negativeAmount: z.string(),
+    estimatedOverMonths: z.number(),
+  })),
+  generatedAt: z.string(),
+});
+
+// ─── Loan Snapshot Report Response (Story 6.2) ─────────────────
+
+export const loanSnapshotReportSchema = z.object({
+  data: z.array(z.object({
+    staffId: z.string(),
+    staffName: z.string(),
+    gradeLevel: z.string(),
+    principalAmount: z.string(),
+    interestRate: z.string(),
+    tenureMonths: z.number(),
+    moratoriumMonths: z.number(),
+    monthlyDeductionAmount: z.string(),
+    installmentsPaid: z.number(),
+    outstandingBalance: z.string(),
+    status: z.string(),
+    lastDeductionDate: z.string().nullable(),
+    nextDeductionDate: z.string().nullable(),
+    approvalDate: z.string(),
+    loanReference: z.string(),
+    mdaCode: z.string(),
+  })),
+  summary: z.object({
+    totalLoans: z.number(),
+    totalOutstanding: z.string(),
+    totalMonthlyDeduction: z.string(),
+    averageInterestRate: z.string(),
+  }),
+  pagination: z.object({
+    page: z.number(),
+    pageSize: z.number(),
+    totalItems: z.number(),
+    totalPages: z.number(),
+  }),
 });
 
 export const mdaComplianceReportSchema = z.object({

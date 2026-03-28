@@ -153,3 +153,93 @@ export interface MdaComplianceReportData {
   periodMonth: number;
   generatedAt: string;
 }
+
+// ─── Variance Report (Story 6.2, FR39) ─────────────────────────
+
+export type ReportVarianceCategory = 'aligned' | 'minor_variance' | 'variance';
+
+export interface VarianceReportRow {
+  staffId: string;
+  staffName: string;
+  declaredAmount: string;
+  computedAmount: string;
+  difference: string;
+  category: ReportVarianceCategory;
+  explanation: string;
+}
+
+export interface OverdueRegisterRow {
+  staffName: string;
+  staffId: string;
+  loanId: string;
+  monthsPastExpected: number;
+  outstandingBalance: string;
+  severityTier: 'Mild' | 'Moderate' | 'Elevated';
+}
+
+export interface StalledRegisterRow {
+  staffName: string;
+  staffId: string;
+  loanId: string;
+  consecutiveUnchangedMonths: number;
+  frozenAmount: string;
+}
+
+export interface OverDeductedRegisterRow {
+  staffName: string;
+  staffId: string;
+  loanId: string;
+  negativeAmount: string;
+  estimatedOverMonths: number;
+}
+
+export interface VarianceReportData {
+  summary: {
+    alignedCount: number;
+    minorVarianceCount: number;
+    varianceCount: number;
+    totalRecords: number;
+  };
+  rows: VarianceReportRow[];
+  overdueRegister: OverdueRegisterRow[];
+  stalledRegister: StalledRegisterRow[];
+  overDeductedRegister: OverDeductedRegisterRow[];
+  generatedAt: string;
+}
+
+// ─── Loan Snapshot Report (Story 6.2, FR40) ────────────────────
+
+export interface LoanSnapshotRow {
+  staffId: string;
+  staffName: string;
+  gradeLevel: string;
+  principalAmount: string;
+  interestRate: string;
+  tenureMonths: number;
+  moratoriumMonths: number;
+  monthlyDeductionAmount: string;
+  installmentsPaid: number;
+  outstandingBalance: string;
+  status: string;
+  lastDeductionDate: string | null;
+  nextDeductionDate: string | null;
+  approvalDate: string;
+  loanReference: string;
+  mdaCode: string;
+}
+
+export interface LoanSnapshotReportData {
+  data: LoanSnapshotRow[];
+  summary: {
+    totalLoans: number;
+    totalOutstanding: string;
+    totalMonthlyDeduction: string;
+    averageInterestRate: string;
+  };
+  pagination: {
+    page: number;
+    pageSize: number;
+    totalItems: number;
+    totalPages: number;
+  };
+}
