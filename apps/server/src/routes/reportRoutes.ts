@@ -7,10 +7,12 @@ import { validateQuery } from '../middleware/validate';
 import { validateResponse } from '../middleware/validateResponse';
 import { readLimiter } from '../middleware/rateLimiter';
 import { auditLog } from '../middleware/auditLog';
-import { ROLES, serviceStatusVerificationQuerySchema, executiveSummaryQuerySchema, mdaComplianceQuerySchema, apiResponseSchema, executiveSummaryReportSchema, mdaComplianceReportSchema } from '@vlprs/shared';
+import { ROLES, serviceStatusVerificationQuerySchema, executiveSummaryQuerySchema, mdaComplianceQuerySchema, varianceReportQuerySchema, loanSnapshotQuerySchema, apiResponseSchema, executiveSummaryReportSchema, mdaComplianceReportSchema, varianceReportSchema, loanSnapshotReportSchema } from '@vlprs/shared';
 import * as reportService from '../services/serviceStatusReportService';
 import * as executiveSummaryReportService from '../services/executiveSummaryReportService';
 import * as mdaComplianceReportService from '../services/mdaComplianceReportService';
+import * as varianceReportService from '../services/varianceReportService';
+import * as loanSnapshotReportService from '../services/loanSnapshotReportService';
 
 const router = Router();
 
@@ -82,6 +84,45 @@ router.get(
       periodMonth: req.query.periodMonth ? Number(req.query.periodMonth) : undefined,
       mdaScope: req.mdaScope,
     });
+    res.json({ success: true, data: report });
+  },
+);
+
+// GET /api/reports/variance — Variance Report (Story 6.2, FR39)
+router.get(
+  '/reports/variance',
+  ...executiveReportAuth,
+  validateQuery(varianceReportQuerySchema),
+  validateResponse(apiResponseSchema(varianceReportSchema)),
+  async (req: Request, res: Response) => {
+    const report = await varianceReportService.generateVarianceReport(
+      (req.query.mdaId as string) ?? null,
+      req.mdaScope ?? null,
+      req.query.periodYear ? Number(req.query.periodYear) : undefined,
+      req.query.periodMonth ? Number(req.query.periodMonth) : undefined,
+    );
+    res.json({ success: true, data: report });
+  },
+);
+
+// GET /api/reports/loan-snapshot — Loan Snapshot Report (Story 6.2, FR40)
+router.get(
+  '/reports/loan-snapshot',
+  ...executiveReportAuth,
+  validateQuery(loanSnapshotQuerySchema),
+  validateResponse(apiResponseSchema(loanSnapshotReportSchema)),
+  async (req: Request, res: Response) => {
+    const report = await loanSnapshotReportService.generateLoanSnapshotReport(
+      req.query.mdaId as string,
+      req.mdaScope ?? null,
+      {
+        page: req.query.page ? Number(req.query.page) : undefined,
+        pageSize: req.query.pageSize ? Number(req.query.pageSize) : undefined,
+        sortBy: req.query.sortBy as 'staffName' | undefined,
+        sortOrder: req.query.sortOrder as 'asc' | 'desc' | undefined,
+        statusFilter: req.query.statusFilter as string | undefined,
+      },
+    );
     res.json({ success: true, data: report });
   },
 );

@@ -1,5 +1,6 @@
 /**
- * Report routes integration tests — Executive Summary and MDA Compliance endpoints.
+ * Report routes integration tests — Executive Summary, MDA Compliance,
+ * Variance, and Loan Snapshot endpoints.
  *
  * Tests auth, response shape, and query param validation.
  */
@@ -202,5 +203,133 @@ describe('GET /api/reports/mda-compliance', () => {
     expect(summary).toHaveProperty('averageHealthScore');
     expect(summary).toHaveProperty('totalOutstanding');
     expect(summary).toHaveProperty('totalObservations');
+  });
+});
+
+describe('GET /api/reports/variance', () => {
+  it('returns 200 with variance data for super_admin', async () => {
+    const res = await request(app)
+      .get('/api/reports/variance')
+      .set('Authorization', `Bearer ${superAdminToken}`);
+
+    expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
+    expect(res.body.data).toBeDefined();
+    expect(res.body.data.summary).toBeDefined();
+    expect(res.body.data.summary).toHaveProperty('alignedCount');
+    expect(res.body.data.summary).toHaveProperty('minorVarianceCount');
+    expect(res.body.data.summary).toHaveProperty('varianceCount');
+    expect(res.body.data.summary).toHaveProperty('totalRecords');
+    expect(res.body.data.rows).toBeInstanceOf(Array);
+    expect(res.body.data.overdueRegister).toBeInstanceOf(Array);
+    expect(res.body.data.stalledRegister).toBeInstanceOf(Array);
+    expect(res.body.data.overDeductedRegister).toBeInstanceOf(Array);
+    expect(res.body.data.generatedAt).toBeDefined();
+  });
+
+  it('returns 200 for dept_admin', async () => {
+    const res = await request(app)
+      .get('/api/reports/variance')
+      .set('Authorization', `Bearer ${deptAdminToken}`);
+
+    expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
+  });
+
+  it('returns 403 for mda_officer', async () => {
+    const res = await request(app)
+      .get('/api/reports/variance')
+      .set('Authorization', `Bearer ${mdaOfficerToken}`);
+
+    expect(res.status).toBe(403);
+  });
+
+  it('returns 401 without auth token', async () => {
+    const res = await request(app)
+      .get('/api/reports/variance');
+
+    expect(res.status).toBe(401);
+  });
+
+  it('accepts optional mdaId and period params', async () => {
+    const res = await request(app)
+      .get(`/api/reports/variance?mdaId=${testMdaId}&periodYear=2026&periodMonth=3`)
+      .set('Authorization', `Bearer ${superAdminToken}`);
+
+    expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
+  });
+});
+
+describe('GET /api/reports/loan-snapshot', () => {
+  it('returns 200 with snapshot data for super_admin', async () => {
+    const res = await request(app)
+      .get(`/api/reports/loan-snapshot?mdaId=${testMdaId}`)
+      .set('Authorization', `Bearer ${superAdminToken}`);
+
+    expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
+    expect(res.body.data).toBeDefined();
+    expect(res.body.data.data).toBeInstanceOf(Array);
+    expect(res.body.data.summary).toBeDefined();
+    expect(res.body.data.summary).toHaveProperty('totalLoans');
+    expect(res.body.data.summary).toHaveProperty('totalOutstanding');
+    expect(res.body.data.summary).toHaveProperty('totalMonthlyDeduction');
+    expect(res.body.data.summary).toHaveProperty('averageInterestRate');
+    expect(res.body.data.pagination).toBeDefined();
+    expect(res.body.data.pagination).toHaveProperty('page');
+    expect(res.body.data.pagination).toHaveProperty('pageSize');
+  });
+
+  it('returns 200 for dept_admin', async () => {
+    const res = await request(app)
+      .get(`/api/reports/loan-snapshot?mdaId=${testMdaId}`)
+      .set('Authorization', `Bearer ${deptAdminToken}`);
+
+    expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
+  });
+
+  it('returns 403 for mda_officer', async () => {
+    const res = await request(app)
+      .get(`/api/reports/loan-snapshot?mdaId=${testMdaId}`)
+      .set('Authorization', `Bearer ${mdaOfficerToken}`);
+
+    expect(res.status).toBe(403);
+  });
+
+  it('requires mdaId parameter', async () => {
+    const res = await request(app)
+      .get('/api/reports/loan-snapshot')
+      .set('Authorization', `Bearer ${superAdminToken}`);
+
+    expect(res.status).toBe(400);
+  });
+
+  it('rejects invalid mdaId', async () => {
+    const res = await request(app)
+      .get('/api/reports/loan-snapshot?mdaId=not-a-uuid')
+      .set('Authorization', `Bearer ${superAdminToken}`);
+
+    expect(res.status).toBe(400);
+  });
+
+  it('accepts pagination and sort params', async () => {
+    const res = await request(app)
+      .get(`/api/reports/loan-snapshot?mdaId=${testMdaId}&page=1&pageSize=25&sortBy=staffName&sortOrder=asc`)
+      .set('Authorization', `Bearer ${superAdminToken}`);
+
+    expect(res.status).toBe(200);
+    expect(res.body.data.pagination.page).toBe(1);
+    expect(res.body.data.pagination.pageSize).toBe(25);
+  });
+
+  it('accepts statusFilter param', async () => {
+    const res = await request(app)
+      .get(`/api/reports/loan-snapshot?mdaId=${testMdaId}&statusFilter=ACTIVE`)
+      .set('Authorization', `Bearer ${superAdminToken}`);
+
+    expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
   });
 });
