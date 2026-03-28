@@ -4,7 +4,8 @@ import { ExecutiveSummaryReport } from './components/ExecutiveSummaryReport';
 import { MdaComplianceReport } from './components/MdaComplianceReport';
 import { VarianceReport } from './components/VarianceReport';
 import { LoanSnapshotReport } from './components/LoanSnapshotReport';
-import { FileBarChart, Building2, ArrowLeftRight, Camera } from 'lucide-react';
+import { WeeklyAgReport } from './components/WeeklyAgReport';
+import { FileBarChart, Building2, ArrowLeftRight, Camera, CalendarDays } from 'lucide-react';
 
 export function ReportsPage() {
   usePageMeta({
@@ -37,6 +38,10 @@ export function ReportsPage() {
             <Camera className="h-4 w-4" />
             Loan Snapshot
           </TabsTrigger>
+          <TabsTrigger value="weekly-ag" className="gap-2">
+            <CalendarDays className="h-4 w-4" />
+            Weekly AG Report
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="executive-summary" className="mt-6">
@@ -53,6 +58,10 @@ export function ReportsPage() {
 
         <TabsContent value="loan-snapshot" className="mt-6">
           <LoanSnapshotReport />
+        </TabsContent>
+
+        <TabsContent value="weekly-ag" className="mt-6">
+          <WeeklyAgReport />
         </TabsContent>
       </Tabs>
     </div>

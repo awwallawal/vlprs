@@ -1,3 +1,5 @@
+import type { AttentionItem } from './dashboard.js';
+
 export interface ServiceStatusVerificationRow {
   loanId: string;
   staffName: string;
@@ -242,4 +244,67 @@ export interface LoanSnapshotReportData {
     totalItems: number;
     totalPages: number;
   };
+}
+
+// ─── Weekly AG Report (Story 6.3, FR41) ───────────────────────
+
+export interface WeeklyExecutiveSummary {
+  activeLoans: number;
+  totalExposure: string;
+  fundAvailable: string | null;
+  monthlyRecoveryRate: string;
+}
+
+export interface WeeklySubmissionRow {
+  mdaName: string;
+  mdaCode: string;
+  submissionDate: string;
+  recordCount: number;
+  status: string;
+}
+
+export interface WeeklyComplianceStatus {
+  submissionsThisWeek: WeeklySubmissionRow[];
+  totalSubmissions: number;
+}
+
+export interface WeeklyResolvedException {
+  staffName: string;
+  type: string;
+  resolutionNote: string | null;
+  resolvedAt: string;
+  mdaName: string;
+}
+
+export interface QuickRecoveryRow {
+  staffName: string;
+  staffId: string;
+  mdaName: string;
+  outstandingBalance: string;
+  estimatedRemainingInstallments: number;
+}
+
+export interface ObservationActivitySummary {
+  newCount: number;
+  reviewedCount: number;
+  resolvedCount: number;
+}
+
+export interface PortfolioSnapshotRow {
+  classification: string;
+  count: number;
+  percentage: number;
+}
+
+export interface WeeklyAgReportData {
+  generatedAt: string;
+  periodStart: string;
+  periodEnd: string;
+  executiveSummary: WeeklyExecutiveSummary;
+  complianceStatus: WeeklyComplianceStatus;
+  exceptionsResolved: WeeklyResolvedException[];
+  outstandingAttentionItems: AttentionItem[];
+  quickRecoveryOpportunities: QuickRecoveryRow[];
+  observationActivity: ObservationActivitySummary;
+  portfolioSnapshot: PortfolioSnapshotRow[];
 }

@@ -7,12 +7,13 @@ import { validateQuery } from '../middleware/validate';
 import { validateResponse } from '../middleware/validateResponse';
 import { readLimiter } from '../middleware/rateLimiter';
 import { auditLog } from '../middleware/auditLog';
-import { ROLES, serviceStatusVerificationQuerySchema, executiveSummaryQuerySchema, mdaComplianceQuerySchema, varianceReportQuerySchema, loanSnapshotQuerySchema, apiResponseSchema, executiveSummaryReportSchema, mdaComplianceReportSchema, varianceReportSchema, loanSnapshotReportSchema } from '@vlprs/shared';
+import { ROLES, serviceStatusVerificationQuerySchema, executiveSummaryQuerySchema, mdaComplianceQuerySchema, varianceReportQuerySchema, loanSnapshotQuerySchema, weeklyAgReportQuerySchema, apiResponseSchema, executiveSummaryReportSchema, mdaComplianceReportSchema, varianceReportSchema, loanSnapshotReportSchema, weeklyAgReportSchema } from '@vlprs/shared';
 import * as reportService from '../services/serviceStatusReportService';
 import * as executiveSummaryReportService from '../services/executiveSummaryReportService';
 import * as mdaComplianceReportService from '../services/mdaComplianceReportService';
 import * as varianceReportService from '../services/varianceReportService';
 import * as loanSnapshotReportService from '../services/loanSnapshotReportService';
+import * as weeklyAgReportService from '../services/weeklyAgReportService';
 
 const router = Router();
 
@@ -122,6 +123,24 @@ router.get(
         sortOrder: req.query.sortOrder as 'asc' | 'desc' | undefined,
         statusFilter: req.query.statusFilter as string | undefined,
       },
+    );
+    res.json({ success: true, data: report });
+  },
+);
+
+// GET /api/reports/weekly-ag — Weekly AG Report (Story 6.3, FR41)
+router.get(
+  '/reports/weekly-ag',
+  ...executiveReportAuth,
+  validateQuery(weeklyAgReportQuerySchema),
+  validateResponse(apiResponseSchema(weeklyAgReportSchema)),
+  async (req: Request, res: Response) => {
+    const asOfDate = req.query.asOfDate
+      ? new Date(req.query.asOfDate as string)
+      : undefined;
+    const report = await weeklyAgReportService.generateWeeklyAgReport(
+      req.mdaScope ?? null,
+      asOfDate,
     );
     res.json({ success: true, data: report });
   },
