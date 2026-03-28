@@ -333,3 +333,115 @@ describe('GET /api/reports/loan-snapshot', () => {
     expect(res.body.success).toBe(true);
   });
 });
+
+describe('GET /api/reports/weekly-ag', () => {
+  it('returns 200 with report data for super_admin', async () => {
+    const res = await request(app)
+      .get('/api/reports/weekly-ag')
+      .set('Authorization', `Bearer ${superAdminToken}`);
+
+    expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
+    expect(res.body.data).toBeDefined();
+    expect(res.body.data.generatedAt).toBeDefined();
+    expect(res.body.data.periodStart).toBeDefined();
+    expect(res.body.data.periodEnd).toBeDefined();
+    expect(res.body.data.executiveSummary).toBeDefined();
+    expect(res.body.data.complianceStatus).toBeDefined();
+    expect(res.body.data.complianceStatus.submissionsThisWeek).toBeInstanceOf(Array);
+    expect(res.body.data.exceptionsResolved).toBeInstanceOf(Array);
+    expect(res.body.data.outstandingAttentionItems).toBeInstanceOf(Array);
+    expect(res.body.data.quickRecoveryOpportunities).toBeInstanceOf(Array);
+    expect(res.body.data.observationActivity).toBeDefined();
+    expect(res.body.data.portfolioSnapshot).toBeInstanceOf(Array);
+  });
+
+  it('returns 200 for dept_admin', async () => {
+    const res = await request(app)
+      .get('/api/reports/weekly-ag')
+      .set('Authorization', `Bearer ${deptAdminToken}`);
+
+    expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
+  });
+
+  it('returns 403 for mda_officer', async () => {
+    const res = await request(app)
+      .get('/api/reports/weekly-ag')
+      .set('Authorization', `Bearer ${mdaOfficerToken}`);
+
+    expect(res.status).toBe(403);
+  });
+
+  it('returns 401 without auth token', async () => {
+    const res = await request(app)
+      .get('/api/reports/weekly-ag');
+
+    expect(res.status).toBe(401);
+  });
+
+  it('defaults to current date when no asOfDate provided', async () => {
+    const res = await request(app)
+      .get('/api/reports/weekly-ag')
+      .set('Authorization', `Bearer ${superAdminToken}`);
+
+    expect(res.status).toBe(200);
+    const { periodEnd } = res.body.data;
+    const today = new Date().toISOString().slice(0, 10);
+    expect(periodEnd).toBe(today);
+  });
+
+  it('accepts valid asOfDate parameter', async () => {
+    const res = await request(app)
+      .get('/api/reports/weekly-ag?asOfDate=2026-03-15')
+      .set('Authorization', `Bearer ${superAdminToken}`);
+
+    expect(res.status).toBe(200);
+    expect(res.body.data.periodEnd).toBe('2026-03-15');
+    expect(res.body.data.periodStart).toBe('2026-03-08');
+  });
+
+  it('returns 400 for invalid asOfDate', async () => {
+    const res = await request(app)
+      .get('/api/reports/weekly-ag?asOfDate=not-a-date')
+      .set('Authorization', `Bearer ${superAdminToken}`);
+
+    expect(res.status).toBe(400);
+  });
+
+  it('includes executive summary section shape', async () => {
+    const res = await request(app)
+      .get('/api/reports/weekly-ag')
+      .set('Authorization', `Bearer ${superAdminToken}`);
+
+    expect(res.status).toBe(200);
+    const { executiveSummary } = res.body.data;
+    expect(executiveSummary).toHaveProperty('activeLoans');
+    expect(executiveSummary).toHaveProperty('totalExposure');
+    expect(executiveSummary).toHaveProperty('fundAvailable');
+    expect(executiveSummary).toHaveProperty('monthlyRecoveryRate');
+  });
+
+  it('includes observation activity section shape', async () => {
+    const res = await request(app)
+      .get('/api/reports/weekly-ag')
+      .set('Authorization', `Bearer ${superAdminToken}`);
+
+    expect(res.status).toBe(200);
+    const { observationActivity } = res.body.data;
+    expect(observationActivity).toHaveProperty('newCount');
+    expect(observationActivity).toHaveProperty('reviewedCount');
+    expect(observationActivity).toHaveProperty('resolvedCount');
+  });
+
+  it('generates report within 10-second performance budget (NFR-PERF-4)', async () => {
+    const start = Date.now();
+    const res = await request(app)
+      .get('/api/reports/weekly-ag')
+      .set('Authorization', `Bearer ${superAdminToken}`);
+
+    const elapsed = Date.now() - start;
+    expect(res.status).toBe(200);
+    expect(elapsed).toBeLessThan(10_000);
+  });
+});

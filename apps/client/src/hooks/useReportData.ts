@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import type { ExecutiveSummaryReportData, MdaComplianceReportData, VarianceReportData, LoanSnapshotReportData } from '@vlprs/shared';
+import type { ExecutiveSummaryReportData, MdaComplianceReportData, VarianceReportData, LoanSnapshotReportData, WeeklyAgReportData } from '@vlprs/shared';
 import { apiClient } from '@/lib/apiClient';
 
 /**
@@ -77,5 +77,21 @@ export function useLoanSnapshotReport(
     queryFn: () => apiClient<LoanSnapshotReportData>(`/reports/loan-snapshot${qs ? `?${qs}` : ''}`),
     staleTime: 60_000,
     enabled: !!mdaId,
+  });
+}
+
+/**
+ * Fetches Weekly AG Report.
+ * @target GET /api/reports/weekly-ag
+ */
+export function useWeeklyAgReport(asOfDate?: string) {
+  const params = new URLSearchParams();
+  if (asOfDate) params.set('asOfDate', asOfDate);
+  const qs = params.toString();
+
+  return useQuery<WeeklyAgReportData>({
+    queryKey: ['reports', 'weekly-ag', asOfDate],
+    queryFn: () => apiClient<WeeklyAgReportData>(`/reports/weekly-ag${qs ? `?${qs}` : ''}`),
+    staleTime: 60_000,
   });
 }

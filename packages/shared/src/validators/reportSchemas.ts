@@ -19,6 +19,12 @@ export const mdaComplianceQuerySchema = z.object({
   periodMonth: z.coerce.number().int().min(1).max(12).optional(),
 });
 
+// ─── Weekly AG Report (Story 6.3) ─────────────────────────────
+
+export const weeklyAgReportQuerySchema = z.object({
+  asOfDate: z.iso.date('asOfDate must be a valid ISO date (YYYY-MM-DD)').optional(),
+});
+
 // ─── Variance Report (Story 6.2) ───────────────────────────────
 
 export const varianceReportQuerySchema = z.object({
@@ -225,4 +231,65 @@ export const mdaComplianceReportSchema = z.object({
   periodYear: z.number(),
   periodMonth: z.number(),
   generatedAt: z.string(),
+});
+
+// ─── Weekly AG Report Response (Story 6.3) ────────────────────
+
+export const weeklyAgReportSchema = z.object({
+  generatedAt: z.string(),
+  periodStart: z.string(),
+  periodEnd: z.string(),
+  executiveSummary: z.object({
+    activeLoans: z.number(),
+    totalExposure: z.string(),
+    fundAvailable: z.string().nullable(),
+    monthlyRecoveryRate: z.string(),
+  }),
+  complianceStatus: z.object({
+    submissionsThisWeek: z.array(z.object({
+      mdaName: z.string(),
+      mdaCode: z.string(),
+      submissionDate: z.string(),
+      recordCount: z.number(),
+      status: z.string(),
+    })),
+    totalSubmissions: z.number(),
+  }),
+  exceptionsResolved: z.array(z.object({
+    staffName: z.string(),
+    type: z.string(),
+    resolutionNote: z.string().nullable(),
+    resolvedAt: z.string(),
+    mdaName: z.string(),
+  })),
+  outstandingAttentionItems: z.array(z.object({
+    id: z.string(),
+    type: z.string(),
+    description: z.string(),
+    mdaName: z.string(),
+    category: z.enum(['review', 'info', 'complete']),
+    priority: z.number(),
+    count: z.number().optional(),
+    amount: z.string().optional(),
+    drillDownUrl: z.string().optional(),
+    hasMore: z.number().optional(),
+    timestamp: z.string(),
+  })),
+  quickRecoveryOpportunities: z.array(z.object({
+    staffName: z.string(),
+    staffId: z.string(),
+    mdaName: z.string(),
+    outstandingBalance: z.string(),
+    estimatedRemainingInstallments: z.number(),
+  })),
+  observationActivity: z.object({
+    newCount: z.number(),
+    reviewedCount: z.number(),
+    resolvedCount: z.number(),
+  }),
+  portfolioSnapshot: z.array(z.object({
+    classification: z.string(),
+    count: z.number(),
+    percentage: z.number(),
+  })),
 });

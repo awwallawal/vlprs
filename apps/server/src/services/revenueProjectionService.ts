@@ -37,8 +37,9 @@ export async function getMonthlyCollectionPotential(
  */
 export async function getTotalOutstandingReceivables(
   mdaScope?: string | null,
+  preComputedClassifications?: Map<string, LoanClassification>,
 ): Promise<string> {
-  const classifications = await classifyAllLoans(mdaScope);
+  const classifications = preComputedClassifications ?? await classifyAllLoans(mdaScope);
   const qualifyingIds: string[] = [];
 
   for (const [loanId, classification] of classifications) {

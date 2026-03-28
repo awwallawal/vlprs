@@ -73,6 +73,11 @@ describe('ReportsPage', () => {
     expect(screen.getByText('Loan Snapshot')).toBeInTheDocument();
   });
 
+  it('renders Weekly AG Report tab', () => {
+    renderWithProviders(<ReportsPage />);
+    expect(screen.getByText('Weekly AG Report')).toBeInTheDocument();
+  });
+
   it('does not render any forbidden non-punitive terms', () => {
     renderWithProviders(<ReportsPage />);
     const html = document.body.innerHTML;
