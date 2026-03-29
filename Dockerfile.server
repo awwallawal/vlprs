@@ -29,6 +29,7 @@ RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 WORKDIR /app
 COPY --from=build /app/deploy ./
 COPY --from=build /app/apps/server/dist ./dist
+COPY --from=build /app/apps/server/src/assets ./assets
 COPY --from=build /app/apps/server/drizzle ./drizzle
 
 # CLI helper — provides friendly commands for admin operations:
