@@ -1,5 +1,26 @@
 import type { AttentionItem } from './dashboard.js';
 
+// ─── PDF Report Types (Story 6.4, FR53/FR54) ───────────────────
+
+export type PdfReportType = 'executive-summary' | 'mda-compliance' | 'variance' | 'loan-snapshot' | 'weekly-ag';
+
+export interface PdfReportMeta {
+  referenceNumber: string;
+  generatedAt: string;
+  generatedBy: string;
+  reportTitle: string;
+  reportSubtitle: string;
+}
+
+export interface ShareReportRequest {
+  reportType: PdfReportType;
+  recipientEmail: string;
+  coverMessage?: string;
+  reportParams: Record<string, string>;
+}
+
+// ─── Service Status Verification ────────────────────────────────
+
 export interface ServiceStatusVerificationRow {
   loanId: string;
   staffName: string;

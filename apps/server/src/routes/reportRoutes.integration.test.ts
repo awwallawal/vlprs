@@ -445,3 +445,162 @@ describe('GET /api/reports/weekly-ag', () => {
     expect(elapsed).toBeLessThan(10_000);
   });
 });
+
+// ─── PDF Export Endpoints (Story 6.4) ─────────────────────────────
+
+describe('GET /api/reports/executive-summary/pdf', () => {
+  it('returns PDF with correct content type for super_admin', async () => {
+    const res = await request(app)
+      .get('/api/reports/executive-summary/pdf')
+      .set('Authorization', `Bearer ${superAdminToken}`);
+
+    expect(res.status).toBe(200);
+    expect(res.headers['content-type']).toBe('application/pdf');
+    expect(res.headers['content-disposition']).toMatch(/vlprs-executive-summary-.*\.pdf/);
+    expect(Number(res.headers['content-length'])).toBeGreaterThan(0);
+  }, 30_000);
+
+  it('returns 403 for mda_officer', async () => {
+    const res = await request(app)
+      .get('/api/reports/executive-summary/pdf')
+      .set('Authorization', `Bearer ${mdaOfficerToken}`);
+
+    expect(res.status).toBe(403);
+  });
+
+  it('returns 401 without auth token', async () => {
+    const res = await request(app)
+      .get('/api/reports/executive-summary/pdf');
+
+    expect(res.status).toBe(401);
+  });
+});
+
+describe('GET /api/reports/mda-compliance/pdf', () => {
+  it('returns PDF for super_admin', async () => {
+    const res = await request(app)
+      .get('/api/reports/mda-compliance/pdf')
+      .set('Authorization', `Bearer ${superAdminToken}`);
+
+    expect(res.status).toBe(200);
+    expect(res.headers['content-type']).toBe('application/pdf');
+    expect(res.headers['content-disposition']).toMatch(/vlprs-mda-compliance-.*\.pdf/);
+  }, 30_000);
+});
+
+describe('GET /api/reports/variance/pdf', () => {
+  it('returns PDF for super_admin', async () => {
+    const res = await request(app)
+      .get('/api/reports/variance/pdf')
+      .set('Authorization', `Bearer ${superAdminToken}`);
+
+    expect(res.status).toBe(200);
+    expect(res.headers['content-type']).toBe('application/pdf');
+    expect(res.headers['content-disposition']).toMatch(/vlprs-variance.*\.pdf/);
+  }, 30_000);
+});
+
+describe('GET /api/reports/loan-snapshot/pdf', () => {
+  it('returns PDF for super_admin with mdaId', async () => {
+    const res = await request(app)
+      .get(`/api/reports/loan-snapshot/pdf?mdaId=${testMdaId}`)
+      .set('Authorization', `Bearer ${superAdminToken}`);
+
+    expect(res.status).toBe(200);
+    expect(res.headers['content-type']).toBe('application/pdf');
+    expect(res.headers['content-disposition']).toMatch(/vlprs-loan-snapshot-.*\.pdf/);
+  }, 30_000);
+
+  it('returns 400 without mdaId', async () => {
+    const res = await request(app)
+      .get('/api/reports/loan-snapshot/pdf')
+      .set('Authorization', `Bearer ${superAdminToken}`);
+
+    expect(res.status).toBe(400);
+  });
+});
+
+describe('GET /api/reports/weekly-ag/pdf', () => {
+  it('returns PDF for super_admin', async () => {
+    const res = await request(app)
+      .get('/api/reports/weekly-ag/pdf')
+      .set('Authorization', `Bearer ${superAdminToken}`);
+
+    expect(res.status).toBe(200);
+    expect(res.headers['content-type']).toBe('application/pdf');
+    expect(res.headers['content-disposition']).toMatch(/vlprs-weekly-ag-.*\.pdf/);
+  }, 30_000);
+});
+
+// ─── Share Endpoint (Story 6.4) ────────────────────────────────────
+
+describe('POST /api/reports/share', () => {
+  it('returns 200 for valid share request (super_admin)', async () => {
+    const res = await request(app)
+      .post('/api/reports/share')
+      .set('Authorization', `Bearer ${superAdminToken}`)
+      .send({
+        reportType: 'executive-summary',
+        recipientEmail: 'commissioner@oyo.gov.ng',
+        coverMessage: 'Monthly report attached',
+        reportParams: {},
+      });
+
+    expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
+    expect(res.body.data.queued).toBe(true);
+  }, 30_000);
+
+  it('returns 200 for dept_admin', async () => {
+    const res = await request(app)
+      .post('/api/reports/share')
+      .set('Authorization', `Bearer ${deptAdminToken}`)
+      .send({
+        reportType: 'mda-compliance',
+        recipientEmail: 'admin@oyo.gov.ng',
+        reportParams: {},
+      });
+
+    expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
+  }, 30_000);
+
+  it('returns 403 for mda_officer', async () => {
+    const res = await request(app)
+      .post('/api/reports/share')
+      .set('Authorization', `Bearer ${mdaOfficerToken}`)
+      .send({
+        reportType: 'executive-summary',
+        recipientEmail: 'test@example.com',
+        reportParams: {},
+      });
+
+    expect(res.status).toBe(403);
+  });
+
+  it('returns 400 for invalid email', async () => {
+    const res = await request(app)
+      .post('/api/reports/share')
+      .set('Authorization', `Bearer ${superAdminToken}`)
+      .send({
+        reportType: 'executive-summary',
+        recipientEmail: 'not-an-email',
+        reportParams: {},
+      });
+
+    expect(res.status).toBe(400);
+  });
+
+  it('returns 400 for invalid reportType', async () => {
+    const res = await request(app)
+      .post('/api/reports/share')
+      .set('Authorization', `Bearer ${superAdminToken}`)
+      .send({
+        reportType: 'invalid-report-type',
+        recipientEmail: 'test@example.com',
+        reportParams: {},
+      });
+
+    expect(res.status).toBe(400);
+  });
+});

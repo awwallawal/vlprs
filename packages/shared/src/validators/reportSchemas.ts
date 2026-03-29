@@ -44,6 +44,17 @@ export const loanSnapshotQuerySchema = z.object({
   statusFilter: z.string().optional(),
 });
 
+// ─── Share Report (Story 6.4, FR54) ────────────────────────────
+
+export const PDF_REPORT_TYPES = ['executive-summary', 'mda-compliance', 'variance', 'loan-snapshot', 'weekly-ag'] as const;
+
+export const shareReportSchema = z.object({
+  reportType: z.enum(PDF_REPORT_TYPES),
+  recipientEmail: z.email('recipientEmail must be a valid email address'),
+  coverMessage: z.string().max(500).optional(),
+  reportParams: z.record(z.string(), z.string()),
+});
+
 // ─── Response Schemas (for validateResponse middleware) ──────────
 
 const trendMetricSchema = z.object({
