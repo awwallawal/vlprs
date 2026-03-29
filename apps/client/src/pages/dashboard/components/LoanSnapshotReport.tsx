@@ -11,6 +11,7 @@ import { useMdaList } from '@/hooks/useMigration';
 import { useAuthStore } from '@/stores/authStore';
 import { MetricHelp } from '@/components/shared/MetricHelp';
 import { AlertTriangle, ArrowUpDown, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ReportActions } from './ReportActions';
 import type { LoanSnapshotRow } from '@vlprs/shared';
 
 const PAGE_SIZE_OPTIONS = [25, 50, 100];
@@ -122,8 +123,9 @@ export function LoanSnapshotReport() {
 
   return (
     <div className="space-y-6">
-      {/* Filters */}
-      <div className="flex flex-wrap gap-3">
+      {/* Filters + Actions */}
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-wrap gap-3">
         {canSelectMda && (
           <Select value={mdaId} onValueChange={(v) => { setMdaId(v); setPage(1); }}>
             <SelectTrigger className="w-64">
@@ -157,6 +159,12 @@ export function LoanSnapshotReport() {
             ))}
           </SelectContent>
         </Select>
+        </div>
+        <ReportActions
+          reportType="loan-snapshot"
+          queryParams={{ mdaId: mdaId! }}
+          reportTitle="Loan Snapshot Report"
+        />
       </div>
 
       {/* Summary */}

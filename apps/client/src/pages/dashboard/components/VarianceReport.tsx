@@ -11,6 +11,7 @@ import { useMdaList } from '@/hooks/useMigration';
 import { useAuthStore } from '@/stores/authStore';
 import { MetricHelp } from '@/components/shared/MetricHelp';
 import { AlertTriangle, ChevronDown, ChevronRight } from 'lucide-react';
+import { ReportActions } from './ReportActions';
 import type { VarianceReportRow, OverdueRegisterRow, StalledRegisterRow, OverDeductedRegisterRow } from '@vlprs/shared';
 
 const FILTER_ALL = '__all';
@@ -80,8 +81,9 @@ export function VarianceReport() {
 
   return (
     <div className="space-y-6">
-      {/* Filters */}
-      <div className="flex flex-wrap gap-3">
+      {/* Filters + Actions */}
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-wrap gap-3">
         {canSelectMda && (
           <Select value={mdaId || FILTER_ALL} onValueChange={(v) => setMdaId(v === FILTER_ALL ? undefined : v)}>
             <SelectTrigger className="w-64">
@@ -115,6 +117,12 @@ export function VarianceReport() {
             ))}
           </SelectContent>
         </Select>
+        </div>
+        <ReportActions
+          reportType="variance"
+          queryParams={{ ...(mdaId ? { mdaId } : {}), periodYear: String(periodYear), periodMonth: String(periodMonth) }}
+          reportTitle="Variance Report"
+        />
       </div>
 
       {/* Summary */}

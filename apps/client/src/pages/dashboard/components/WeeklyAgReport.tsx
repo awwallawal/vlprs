@@ -7,6 +7,7 @@ import { NairaDisplay } from '@/components/shared/NairaDisplay';
 import { MetricHelp } from '@/components/shared/MetricHelp';
 import { useWeeklyAgReport } from '@/hooks/useReportData';
 import { AlertTriangle, CalendarDays, CheckCircle2, Eye, FileText, Sparkles, PieChart } from 'lucide-react';
+import { ReportActions } from './ReportActions';
 import { OBSERVATION_HELP } from '@vlprs/shared';
 import type { AttentionItem } from '@vlprs/shared';
 
@@ -85,6 +86,11 @@ export function WeeklyAgReport() {
                 value={asOfDate}
                 onChange={(e) => setAsOfDate(e.target.value)}
                 className="rounded-md border border-gray-300 px-3 py-1.5 text-sm"
+              />
+              <ReportActions
+                reportType="weekly-ag"
+                queryParams={asOfDate ? { asOfDate } : {}}
+                reportTitle="Weekly AG Report"
               />
             </div>
           </div>

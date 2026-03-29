@@ -218,11 +218,11 @@ development_status:
   epic-7-retrospective: optional
 
   # Epic 6: Reporting & PDF Export (Sprint 10 — reports now contain migration + live submissions + events + exceptions)
-  epic-6: in-progress
+  epic-6: done
   6-1-executive-summary-mda-compliance-reports: done
   6-2-variance-loan-snapshot-reports: done
   6-3-weekly-ag-report: done
-  6-4-branded-pdf-export-one-tap-sharing: ready-for-dev
+  6-4-branded-pdf-export-one-tap-sharing: done
   epic-6-retrospective: optional
 
   # Epic 8: Auto-Stop Certificate & Loan Completion (Sprint 11)

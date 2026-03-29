@@ -6,6 +6,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { NairaDisplay } from '@/components/shared/NairaDisplay';
 import { useMdaComplianceReport } from '@/hooks/useReportData';
 import { AlertTriangle, ArrowUpDown } from 'lucide-react';
+import { ReportActions } from './ReportActions';
 import type { MdaComplianceReportRow } from '@vlprs/shared';
 
 type SortField = 'mdaName' | 'healthScore' | 'compliancePercent' | 'totalOutstanding' | 'unresolvedObservationCount';
@@ -103,9 +104,10 @@ export function MdaComplianceReport() {
 
   return (
     <div className="space-y-6">
-      {/* Period Selector */}
-      <div className="flex items-center gap-3">
-        <label className="text-sm font-medium text-text-secondary">Period:</label>
+      {/* Header with Period Selector + Actions */}
+      <div className="flex items-center justify-between flex-wrap gap-4">
+        <div className="flex items-center gap-3">
+          <label className="text-sm font-medium text-text-secondary">Period:</label>
         <select
           value={periodYear}
           onChange={e => setPeriodYear(Number(e.target.value))}
@@ -120,6 +122,12 @@ export function MdaComplianceReport() {
         >
           {monthNames.map((m, i) => <option key={i + 1} value={i + 1}>{m}</option>)}
         </select>
+        </div>
+        <ReportActions
+          reportType="mda-compliance"
+          queryParams={{ periodYear: String(periodYear), periodMonth: String(periodMonth) }}
+          reportTitle="MDA Compliance Report"
+        />
       </div>
 
       {/* Compliance Table */}

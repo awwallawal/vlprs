@@ -6,6 +6,7 @@ import { NairaDisplay } from '@/components/shared/NairaDisplay';
 import { MetricHelp } from '@/components/shared/MetricHelp';
 import { useExecutiveSummaryReport } from '@/hooks/useReportData';
 import { TrendingUp, TrendingDown, Minus, AlertTriangle } from 'lucide-react';
+import { ReportActions } from './ReportActions';
 import type { TrendMetric, MdaScorecardRow } from '@vlprs/shared';
 
 function healthBadge(band: string) {
@@ -98,6 +99,11 @@ export function ExecutiveSummaryReport() {
 
   return (
     <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h2 className="text-lg font-semibold text-text-primary">Executive Summary Report</h2>
+        <ReportActions reportType="executive-summary" queryParams={{}} reportTitle="Executive Summary Report" />
+      </div>
+
       {/* Scheme Overview Hero Row */}
       <Card>
         <CardHeader><CardTitle>Scheme Overview</CardTitle></CardHeader>
