@@ -1,6 +1,6 @@
 import Decimal from 'decimal.js';
 import { addYears, addMonths, min, differenceInMonths } from 'date-fns';
-import type { ComputationParams, ScheduleRow, RepaymentSchedule, AutoSplitResult, BalanceResult, LedgerEntryForBalance, GratuityProjectionResult } from '@vlprs/shared';
+import type { ComputationParams, ScheduleRow, RepaymentSchedule, AutoSplitResult, BalanceResult, LedgerEntryForBalance, GratuityProjectionResult, SchemeExpectedResult } from '@vlprs/shared';
 
 // Configure decimal.js for financial precision
 Decimal.set({ precision: 20, rounding: Decimal.ROUND_HALF_UP });
@@ -142,6 +142,88 @@ export function autoSplitDeduction(
   return {
     principalComponent: principalComponent.toFixed(2),
     interestComponent: interestComponent.toFixed(2),
+  };
+}
+
+// ─── Scheme Expected Computation (Story 8.0a) ─────────────────────
+
+/**
+ * Known rate tier table: apparent rate → tenure months.
+ * Apparent rate = 13.33% × tenure / 60. Tolerance ±0.05 for matching.
+ */
+const SCHEME_RATE_TIER_TABLE: Array<{ apparentRate: number; tenureMonths: number }> = [
+  { apparentRate: 13.33, tenureMonths: 60 },
+  { apparentRate: 11.11, tenureMonths: 50 },
+  { apparentRate: 10.66, tenureMonths: 48 },
+  { apparentRate: 8.89, tenureMonths: 40 },
+  { apparentRate: 8.00, tenureMonths: 36 },
+  { apparentRate: 6.67, tenureMonths: 30 },
+  { apparentRate: 5.33, tenureMonths: 24 },
+];
+
+const SCHEME_RATE_TOLERANCE = new Decimal('0.05');
+const SCHEME_BASE_RATE = new Decimal('0.1333');
+const SCHEME_DIVISOR = new Decimal('60');
+
+/**
+ * Infer tenure from a computed rate by matching against known rate tiers.
+ * Uses ±0.05 absolute tolerance (consistent with matchesKnownTier() pattern
+ * in migrationValidationService) because computeEffectiveRate() returns
+ * strings with rounding artefacts (e.g., "6.663" not "6.67").
+ *
+ * Returns null if rate doesn't match any tier.
+ */
+export function inferTenureFromRate(computedRate: string): number | null {
+  let rate: Decimal;
+  try {
+    rate = new Decimal(computedRate);
+  } catch {
+    return null;
+  }
+  if (rate.isNaN() || !rate.isFinite()) return null;
+
+  for (const tier of SCHEME_RATE_TIER_TABLE) {
+    if (rate.minus(tier.apparentRate).abs().lte(SCHEME_RATE_TOLERANCE)) {
+      return tier.tenureMonths;
+    }
+  }
+  return null;
+}
+
+/**
+ * Compute scheme expected values using the authoritative formula.
+ *
+ * Monthly Interest = (Principal × 0.1333) / 60   — ALWAYS divide by 60
+ * Monthly Principal = Principal / tenure
+ * Monthly Deduction = Monthly Principal + Monthly Interest
+ * Total Interest = Monthly Interest × tenure
+ * Total Loan = Principal + Total Interest
+ * Apparent Rate = 13.33% × tenure / 60
+ */
+export function computeSchemeExpected(principal: string, tenureMonths: number): SchemeExpectedResult {
+  const p = new Decimal(principal);
+  if (p.isNaN() || !p.isFinite() || p.lte(0)) {
+    throw new Error('principal must be a positive number');
+  }
+  if (!Number.isInteger(tenureMonths) || tenureMonths <= 0) {
+    throw new Error('tenureMonths must be a positive integer');
+  }
+
+  const standardInterest = p.mul(SCHEME_BASE_RATE);
+  const monthlyInterest = standardInterest.div(SCHEME_DIVISOR).toDecimalPlaces(2, Decimal.ROUND_HALF_UP);
+  const monthlyPrincipal = p.div(tenureMonths).toDecimalPlaces(2, Decimal.ROUND_HALF_UP);
+  const monthlyDeduction = monthlyPrincipal.plus(monthlyInterest);
+  const totalInterest = monthlyInterest.mul(tenureMonths);
+  const totalLoan = p.plus(totalInterest);
+  const apparentRate = new Decimal('13.33').mul(tenureMonths).div(60).toDecimalPlaces(2, Decimal.ROUND_HALF_UP);
+
+  return {
+    monthlyInterest: monthlyInterest.toFixed(2),
+    monthlyPrincipal: monthlyPrincipal.toFixed(2),
+    monthlyDeduction: monthlyDeduction.toFixed(2),
+    totalInterest: totalInterest.toFixed(2),
+    totalLoan: totalLoan.toFixed(2),
+    apparentRate: apparentRate.toFixed(2),
   };
 }
 

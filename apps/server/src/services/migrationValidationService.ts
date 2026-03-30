@@ -6,7 +6,7 @@ import { AppError } from '../lib/appError';
 import { withMdaScope } from '../lib/mdaScope';
 import { VOCABULARY } from '@vlprs/shared';
 import type { VarianceCategory, ValidationSummary, ValidationResultRecord } from '@vlprs/shared';
-import { computeRepaymentSchedule } from './computationEngine';
+import { computeRepaymentSchedule, computeSchemeExpected, inferTenureFromRate } from './computationEngine';
 import { detectMultiMda } from '../migration/mdaDelineation';
 
 // Configure decimal.js for financial precision (consistent with computationEngine)
@@ -64,6 +64,9 @@ interface RecordValidationResult {
   computedTotalLoan: string | null;
   computedMonthlyDeduction: string | null;
   computedOutstandingBalance: string | null;
+  schemeExpectedTotalLoan: string | null;
+  schemeExpectedMonthlyDeduction: string | null;
+  schemeExpectedTotalInterest: string | null;
 }
 
 interface MigrationRecordRow {
@@ -80,10 +83,29 @@ interface MigrationRecordRow {
 }
 
 /**
+ * Determine tenure for scheme expected computation using priority order:
+ * 1. installmentCount if available AND > 0
+ * 2. inferTenureFromRate() if rate matches known tier
+ * 3. null if neither available (don't silently default to 60)
+ */
+function inferSchemeExpectedTenure(record: MigrationRecordRow, computedRate: string | null): number | null {
+  if (record.installmentCount != null && record.installmentCount > 0) {
+    return record.installmentCount;
+  }
+  if (computedRate !== null) {
+    return inferTenureFromRate(computedRate);
+  }
+  return null;
+}
+
+/**
  * Validate a single migration record: compute rate, compare values, categorise variance.
+ * Computes three vectors: Scheme Expected, Reverse Engineered, MDA Declared.
  */
 export function validateRecord(record: MigrationRecordRow): RecordValidationResult {
   const { principal, totalLoan, monthlyDeduction, outstandingBalance } = record;
+
+  const nullScheme = { schemeExpectedTotalLoan: null, schemeExpectedMonthlyDeduction: null, schemeExpectedTotalInterest: null };
 
   // Check if we have enough data for any validation
   const hasFinancialData = principal || totalLoan || monthlyDeduction || outstandingBalance;
@@ -96,6 +118,7 @@ export function validateRecord(record: MigrationRecordRow): RecordValidationResu
       computedTotalLoan: null,
       computedMonthlyDeduction: null,
       computedOutstandingBalance: null,
+      ...nullScheme,
     };
   }
 
@@ -107,16 +130,34 @@ export function validateRecord(record: MigrationRecordRow): RecordValidationResu
   // so computed values are still available for admin comparison
   const isStructuralError = computedRate !== null && hasRateVariance && !matchesKnownTier(computedRate);
 
-  // Step 3: Determine rate to use for computation
-  // For structural errors, still use the detected rate to provide comparison data
+  // Step 3: Determine rate to use for reverse-engineered computation
   const rateForComputation = computedRate !== null && hasRateVariance
     ? computedRate
     : STANDARD_RATE.toString();
 
-  // Step 4: Infer tenure
+  // Step 4: Infer tenure (for reverse-engineered path)
   const tenure = inferTenure(record);
 
-  // Step 5: If we can compute, use the computation engine
+  // Step 5: Compute Scheme Expected vector (separate tenure inference — no silent defaults)
+  let schemeExpectedTotalLoan: string | null = null;
+  let schemeExpectedMonthlyDeduction: string | null = null;
+  let schemeExpectedTotalInterest: string | null = null;
+
+  if (principal) {
+    const schemeTenure = inferSchemeExpectedTenure(record, computedRate);
+    if (schemeTenure !== null) {
+      try {
+        const scheme = computeSchemeExpected(principal, schemeTenure);
+        schemeExpectedTotalLoan = scheme.totalLoan;
+        schemeExpectedMonthlyDeduction = scheme.monthlyDeduction;
+        schemeExpectedTotalInterest = scheme.totalInterest;
+      } catch {
+        // invalid principal for scheme computation — leave null
+      }
+    }
+  }
+
+  // Step 6: Reverse-engineered computation (existing path)
   if (principal && tenure > 0) {
     try {
       const schedule = computeRepaymentSchedule({
@@ -137,15 +178,24 @@ export function validateRecord(record: MigrationRecordRow): RecordValidationResu
         computedOutstandingBal = new Decimal(computedTotalLoan).minus(totalPaid).toFixed(2);
       }
 
-      // Compare declared vs computed — use largest absolute difference
+      // Variance: use Scheme Expected vs MDA Declared if scheme is available,
+      // otherwise fall back to Reverse Engineered vs Declared
       const diffs: Decimal[] = [];
 
-      if (totalLoan) {
+      if (schemeExpectedTotalLoan !== null && totalLoan) {
+        diffs.push(new Decimal(totalLoan).minus(schemeExpectedTotalLoan).abs());
+      } else if (totalLoan) {
         diffs.push(new Decimal(totalLoan).minus(computedTotalLoan).abs());
       }
-      if (monthlyDeduction) {
+
+      if (schemeExpectedMonthlyDeduction !== null && monthlyDeduction) {
+        diffs.push(new Decimal(monthlyDeduction).minus(schemeExpectedMonthlyDeduction).abs());
+      } else if (monthlyDeduction) {
         diffs.push(new Decimal(monthlyDeduction).minus(computedMonthlyDed).abs());
       }
+
+      // Outstanding balance: no scheme expected equivalent exists (depends on payment history,
+      // not the scheme formula — see Story 8.0b). Falls back to reverse-engineered vs declared.
       if (outstandingBalance && computedOutstandingBal) {
         diffs.push(new Decimal(outstandingBalance).minus(computedOutstandingBal).abs());
       }
@@ -167,9 +217,11 @@ export function validateRecord(record: MigrationRecordRow): RecordValidationResu
         computedTotalLoan,
         computedMonthlyDeduction: computedMonthlyDed,
         computedOutstandingBalance: computedOutstandingBal,
+        schemeExpectedTotalLoan,
+        schemeExpectedMonthlyDeduction,
+        schemeExpectedTotalInterest,
       };
     } catch {
-      // If computation engine throws (e.g. invalid params), mark appropriately
       return {
         varianceCategory: isStructuralError ? 'structural_error' : 'anomalous',
         varianceAmount: '0.00',
@@ -178,6 +230,9 @@ export function validateRecord(record: MigrationRecordRow): RecordValidationResu
         computedTotalLoan: null,
         computedMonthlyDeduction: null,
         computedOutstandingBalance: null,
+        schemeExpectedTotalLoan,
+        schemeExpectedMonthlyDeduction,
+        schemeExpectedTotalInterest,
       };
     }
   }
@@ -191,6 +246,9 @@ export function validateRecord(record: MigrationRecordRow): RecordValidationResu
     computedTotalLoan: null,
     computedMonthlyDeduction: null,
     computedOutstandingBalance: null,
+    schemeExpectedTotalLoan,
+    schemeExpectedMonthlyDeduction,
+    schemeExpectedTotalInterest,
   };
 }
 
@@ -315,7 +373,7 @@ export async function validateUpload(
       const batch = validationResults.slice(i, i + BATCH_SIZE);
       const values = sql.join(
         batch.map(({ id, result: r }) =>
-          sql`(${id}::uuid, ${r.varianceCategory}::varchar, ${r.varianceAmount}::numeric, ${r.computedRate}::numeric, ${r.hasRateVariance}::boolean, ${r.computedTotalLoan}::numeric, ${r.computedMonthlyDeduction}::numeric, ${r.computedOutstandingBalance}::numeric)`
+          sql`(${id}::uuid, ${r.varianceCategory}::varchar, ${r.varianceAmount}::numeric, ${r.computedRate}::numeric, ${r.hasRateVariance}::boolean, ${r.computedTotalLoan}::numeric, ${r.computedMonthlyDeduction}::numeric, ${r.computedOutstandingBalance}::numeric, ${r.schemeExpectedTotalLoan}::numeric, ${r.schemeExpectedMonthlyDeduction}::numeric, ${r.schemeExpectedTotalInterest}::numeric)`
         ),
         sql`, `,
       );
@@ -328,8 +386,11 @@ export async function validateUpload(
           has_rate_variance = v.hrv,
           computed_total_loan = v.ctl,
           computed_monthly_deduction = v.cmd,
-          computed_outstanding_balance = v.cob
-        FROM (VALUES ${values}) AS v(id, vc, va, cr, hrv, ctl, cmd, cob)
+          computed_outstanding_balance = v.cob,
+          scheme_expected_total_loan = v.setl,
+          scheme_expected_monthly_deduction = v.semd,
+          scheme_expected_total_interest = v.seti
+        FROM (VALUES ${values}) AS v(id, vc, va, cr, hrv, ctl, cmd, cob, setl, semd, seti)
         WHERE mr.id = v.id
       `);
     }
@@ -439,24 +500,41 @@ export async function getValidationResults(
     .limit(params.limit)
     .offset(offset);
 
-  const records: ValidationResultRecord[] = rows.map((r) => ({
-    recordId: r.id,
-    staffName: r.staffName,
-    varianceCategory: (r.varianceCategory ?? 'anomalous') as VarianceCategory,
-    varianceAmount: r.varianceAmount,
-    computedRate: r.computedRate,
-    declaredValues: {
-      principal: r.principal,
-      totalLoan: r.totalLoan,
-      monthlyDeduction: r.monthlyDeduction,
-      outstandingBalance: r.outstandingBalance,
-    },
-    computedValues: {
-      totalLoan: r.computedTotalLoan,
-      monthlyDeduction: r.computedMonthlyDeduction,
-      outstandingBalance: r.computedOutstandingBalance,
-    },
-  }));
+  const records: ValidationResultRecord[] = rows.map((r) => {
+    // Compute apparent rate as a virtual field from computedRate via tier table
+    let apparentRate: string | null = null;
+    if (r.computedRate) {
+      const inferredTenure = inferTenureFromRate(r.computedRate);
+      if (inferredTenure !== null) {
+        apparentRate = new Decimal('13.33').mul(inferredTenure).div(60).toDecimalPlaces(2, Decimal.ROUND_HALF_UP).toFixed(2);
+      }
+    }
+
+    return {
+      recordId: r.id,
+      staffName: r.staffName,
+      varianceCategory: (r.varianceCategory ?? 'anomalous') as VarianceCategory,
+      varianceAmount: r.varianceAmount,
+      computedRate: r.computedRate,
+      apparentRate,
+      declaredValues: {
+        principal: r.principal,
+        totalLoan: r.totalLoan,
+        monthlyDeduction: r.monthlyDeduction,
+        outstandingBalance: r.outstandingBalance,
+      },
+      computedValues: {
+        totalLoan: r.computedTotalLoan,
+        monthlyDeduction: r.computedMonthlyDeduction,
+        outstandingBalance: r.computedOutstandingBalance,
+      },
+      schemeExpectedValues: {
+        totalLoan: r.schemeExpectedTotalLoan ?? null,
+        monthlyDeduction: r.schemeExpectedMonthlyDeduction ?? null,
+        totalInterest: r.schemeExpectedTotalInterest ?? null,
+      },
+    };
+  });
 
   return {
     summary,

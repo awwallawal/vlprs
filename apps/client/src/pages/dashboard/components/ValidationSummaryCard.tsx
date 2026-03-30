@@ -102,12 +102,12 @@ export function ValidationSummaryCard({ summary, multiMda, onCategoryFilter, act
         </div>
       )}
 
-      {/* Rate variance info */}
+      {/* Rate variance info — references scheme formula as authoritative */}
       {summary.rateVarianceCount > 0 && (
         <div className="flex items-start gap-3 bg-amber-50 border border-amber-200 rounded-lg p-3">
           <Info className="h-4 w-4 text-amber-500 flex-shrink-0 mt-0.5" />
           <p className="text-xs text-text-secondary">
-            {summary.rateVarianceCount} record(s) have interest rates that differ from the standard 13.33%.
+            {summary.rateVarianceCount} record(s) show a variance between the authoritative scheme formula (13.33% &divide; 60) and the declared values.
             This is an observation for review, not an error.
           </p>
         </div>

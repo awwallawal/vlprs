@@ -239,6 +239,7 @@ export const UI_COPY = {
   UPLOAD_SUCCESS_HEADER: 'Upload Complete',
   COMPARISON_COMPLETE: 'Comparison Complete',
   VARIANCE_LABEL: 'Variance',
+  VARIANCE_NEUTRAL_PREFIX: 'A variance',
   ATTENTION_LABEL: 'Review',
   EMPTY_ATTENTION: 'No attention items — all systems normal',
   EMPTY_EXCEPTIONS: 'No exceptions — all issues resolved',

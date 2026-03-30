@@ -3,7 +3,7 @@ import { FileUploadZone } from '@/components/shared/FileUploadZone';
 import { ColumnMappingReview } from './components/ColumnMappingReview';
 import { MigrationUploadResult } from './components/MigrationUploadResult';
 import { ValidationSummaryCard } from './components/ValidationSummaryCard';
-import { RecordComparisonRow } from './components/RecordComparisonRow';
+import { RecordComparisonRow, RecordComparisonHeader } from './components/RecordComparisonRow';
 import { StaffProfilePanel } from './components/StaffProfilePanel';
 import { useUploadMigration, useConfirmMapping, useValidateUpload, useValidationResults, useMdaList, useCreateBaseline, useCreateBatchBaseline, useBaselineSummary, useCheckOverlap, useConfirmOverlap } from '@/hooks/useMigration';
 import { BaselineConfirmationDialog } from './components/BaselineConfirmationDialog';
@@ -682,21 +682,9 @@ export function MigrationUploadPage() {
           <div className="bg-white rounded-lg border border-border overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-left">
-                <thead className="bg-gray-50 border-b border-border">
-                  <tr>
-                    <th className="py-2 px-3 text-xs font-semibold text-text-muted uppercase">Staff Name</th>
-                    <th className="py-2 px-3 text-xs font-semibold text-text-muted uppercase">Category</th>
-                    <th className="py-2 px-3 text-xs font-semibold text-text-muted uppercase text-right">Variance</th>
-                    <th className="py-2 px-3 text-xs font-semibold text-text-muted uppercase text-right">Declared Total</th>
-                    <th className="py-2 px-3 text-xs font-semibold text-text-muted uppercase text-right">Computed Total</th>
-                    <th className="py-2 px-3 text-xs font-semibold text-text-muted uppercase text-right">Declared Deduction</th>
-                    <th className="py-2 px-3 text-xs font-semibold text-text-muted uppercase text-right">Computed Deduction</th>
-                    <th className="py-2 px-3 text-xs font-semibold text-text-muted uppercase text-right">Rate</th>
-                    {!baselineResult && (!baselineSummary.data || baselineSummary.data.status !== 'complete') && (
-                      <th className="py-2 px-3 text-xs font-semibold text-text-muted uppercase text-right">Action</th>
-                    )}
-                  </tr>
-                </thead>
+                <RecordComparisonHeader
+                  showBaseline={!baselineResult && (!baselineSummary.data || baselineSummary.data.status !== 'complete')}
+                />
                 <tbody>
                   {validationResults.data.records.map((record) => (
                     <RecordComparisonRow

@@ -2,7 +2,7 @@ import { describe, it, expect, beforeAll } from 'vitest';
 import Decimal from 'decimal.js';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { computeRepaymentSchedule, autoSplitDeduction, computeBalanceFromEntries, computeBalanceForLoan, computeRetirementDate, computeRemainingServiceMonths, computeGratuityProjection } from './computationEngine';
+import { computeRepaymentSchedule, autoSplitDeduction, computeBalanceFromEntries, computeBalanceForLoan, computeRetirementDate, computeRemainingServiceMonths, computeGratuityProjection, computeSchemeExpected, inferTenureFromRate } from './computationEngine';
 import type { ComputationParams } from '@vlprs/shared';
 
 // ─── Task 4: Unit tests with hand-verified calculations ─────────────────────
@@ -1576,6 +1576,106 @@ describe('computeGratuityProjection', () => {
 
     expect(result.loanMaturityDate).toBe('2030-01-01'); // 2025-01-01 + 60 months
     expect(result.computedRetirementDate).toBe('2028-06-15');
+  });
+});
+
+// ─── Story 8.0a: Scheme Expected Computation ──────────────────────────────────
+
+describe('computeSchemeExpected', () => {
+  // Task 1.4: Verify against retro worked example (Principal 450,000 / 30-month)
+  it('produces correct values for retro worked example (450K, 30-month)', () => {
+    const result = computeSchemeExpected('450000', 30);
+
+    // Standard Interest = 450,000 × 0.1333 = 59,985
+    // Monthly Interest = 59,985 / 60 = 999.75
+    expect(result.monthlyInterest).toBe('999.75');
+    // Monthly Principal = 450,000 / 30 = 15,000
+    expect(result.monthlyPrincipal).toBe('15000.00');
+    // Monthly Deduction = 15,000 + 999.75 = 15,999.75
+    expect(result.monthlyDeduction).toBe('15999.75');
+    // Total Interest = 999.75 × 30 = 29,992.50
+    expect(result.totalInterest).toBe('29992.50');
+    // Total Loan = 450,000 + 29,992.50 = 479,992.50
+    expect(result.totalLoan).toBe('479992.50');
+    // Apparent Rate = 13.33% × 30 / 60 = 6.67%
+    expect(result.apparentRate).toBe('6.67');
+  });
+
+  // Task 1.5: Verify all 7 known tenure/apparent-rate pairs
+  it.each([
+    { tenure: 60, expectedApparentRate: '13.33', expectedMonthlyInterest: '999.75', label: '60-month' },
+    { tenure: 50, expectedApparentRate: '11.11', expectedMonthlyInterest: '999.75', label: '50-month' },
+    { tenure: 48, expectedApparentRate: '10.66', expectedMonthlyInterest: '999.75', label: '48-month' },
+    { tenure: 40, expectedApparentRate: '8.89', expectedMonthlyInterest: '999.75', label: '40-month' },
+    { tenure: 36, expectedApparentRate: '8.00', expectedMonthlyInterest: '999.75', label: '36-month' },
+    { tenure: 30, expectedApparentRate: '6.67', expectedMonthlyInterest: '999.75', label: '30-month' },
+    { tenure: 24, expectedApparentRate: '5.33', expectedMonthlyInterest: '999.75', label: '24-month' },
+  ])('produces correct apparent rate for $label tenure (P=450K)', ({ tenure, expectedApparentRate, expectedMonthlyInterest }) => {
+    const result = computeSchemeExpected('450000', tenure);
+    expect(result.apparentRate).toBe(expectedApparentRate);
+    expect(result.monthlyInterest).toBe(expectedMonthlyInterest);
+  });
+
+  // Task 1.6: Verify the /60 invariant — monthly interest identical regardless of tenure
+  it('monthly interest is identical for same principal regardless of tenure (/60 invariant)', () => {
+    const tenures = [24, 30, 36, 40, 48, 50, 60];
+    const results = tenures.map((t) => computeSchemeExpected('450000', t));
+    const allMonthlyInterest = results.map((r) => r.monthlyInterest);
+
+    // All monthly interest values should be identical
+    expect(new Set(allMonthlyInterest).size).toBe(1);
+    expect(allMonthlyInterest[0]).toBe('999.75');
+  });
+
+  it('monthly interest is identical for 250K principal regardless of tenure', () => {
+    const tenures = [24, 30, 36, 40, 48, 50, 60];
+    const results = tenures.map((t) => computeSchemeExpected('250000', t));
+    const allMonthlyInterest = results.map((r) => r.monthlyInterest);
+
+    // 250,000 × 0.1333 = 33,325 / 60 = 555.42
+    expect(new Set(allMonthlyInterest).size).toBe(1);
+    expect(allMonthlyInterest[0]).toBe('555.42');
+  });
+
+  it('throws for invalid principal', () => {
+    expect(() => computeSchemeExpected('0', 60)).toThrow('principal must be a positive number');
+    expect(() => computeSchemeExpected('-100', 60)).toThrow('principal must be a positive number');
+  });
+
+  it('throws for invalid tenure', () => {
+    expect(() => computeSchemeExpected('450000', 0)).toThrow('tenureMonths must be a positive integer');
+    expect(() => computeSchemeExpected('450000', -1)).toThrow('tenureMonths must be a positive integer');
+  });
+});
+
+describe('inferTenureFromRate', () => {
+  it.each([
+    { rate: '13.33', expected: 60, label: '13.33% → 60 months' },
+    { rate: '11.11', expected: 50, label: '11.11% → 50 months' },
+    { rate: '10.66', expected: 48, label: '10.66% → 48 months' },
+    { rate: '8.89', expected: 40, label: '8.89% → 40 months' },
+    { rate: '8.00', expected: 36, label: '8.00% → 36 months' },
+    { rate: '6.67', expected: 30, label: '6.67% → 30 months' },
+    { rate: '5.33', expected: 24, label: '5.33% → 24 months' },
+  ])('maps $label', ({ rate, expected }) => {
+    expect(inferTenureFromRate(rate)).toBe(expected);
+  });
+
+  it('handles rounding artefacts within tolerance (±0.05)', () => {
+    // computeEffectiveRate returns "6.663" not "6.67" due to rounding
+    expect(inferTenureFromRate('6.663')).toBe(30);
+    expect(inferTenureFromRate('13.35')).toBe(60);
+    expect(inferTenureFromRate('8.02')).toBe(36);
+  });
+
+  it('returns null for unknown rates', () => {
+    expect(inferTenureFromRate('15.00')).toBeNull();
+    expect(inferTenureFromRate('7.50')).toBeNull();
+    expect(inferTenureFromRate('0')).toBeNull();
+  });
+
+  it('returns null for invalid input', () => {
+    expect(inferTenureFromRate('abc')).toBeNull();
   });
 });
 

@@ -26,6 +26,21 @@ export function ComputationTransparencyAccordion({ record }: ComputationTranspar
   const categoryLabel = UI_COPY.VARIANCE_CATEGORY_LABELS[category] || category;
   const categoryStyle = CATEGORY_STYLES[category] || CATEGORY_STYLES.anomalous;
 
+  const hasSchemeExpected = record.schemeExpectedTotalLoan !== null;
+
+  // Scheme formula intermediate values for display — computed directly from principal,
+  // avoiding dependency on installmentCount which is null for rate-inferred tenure records
+  const schemeStandardInterest = record.principal ? (Number(record.principal) * 0.1333).toFixed(2) : null;
+  const schemeMonthlyInterest = record.principal ? (Number(record.principal) * 0.1333 / 60).toFixed(2) : null;
+  // Derive tenure from stored scheme expected values: tenure = totalInterest / monthlyInterest
+  const schemeInferredTenure = schemeMonthlyInterest && record.schemeExpectedTotalInterest && Number(schemeMonthlyInterest) > 0
+    ? Math.round(Number(record.schemeExpectedTotalInterest) / Number(schemeMonthlyInterest))
+    : null;
+  // Rev. Engineered total interest = computedTotalLoan − principal (not available as a stored field)
+  const revEngTotalInterest = record.computedTotalLoan && record.principal
+    ? (Number(record.computedTotalLoan) - Number(record.principal)).toFixed(2)
+    : null;
+
   const dataFields = [
     { label: 'Staff Name', available: !!record.staffName },
     { label: 'Principal', available: !!record.principal },
@@ -55,46 +70,97 @@ export function ComputationTransparencyAccordion({ record }: ComputationTranspar
         </AccordionTrigger>
         <AccordionContent className="pt-0 pb-3">
           <div className="space-y-3 text-xs">
-            {/* Formula explanation */}
-            {record.principal && (
-              <div className="bg-gray-50 rounded p-2 space-y-1">
-                <p className="font-medium text-text-primary">Computation Formula</p>
+            {/* Scheme Expected formula breakdown */}
+            {record.principal && hasSchemeExpected && (
+              <div className="bg-teal/5 rounded p-2 space-y-1 border border-teal/10">
+                <p className="font-medium text-text-primary">Scheme Expected (Authoritative Formula)</p>
                 <p className="text-text-secondary font-mono text-[11px]">
-                  Total Loan = Principal + (Principal x Rate / 100)
+                  Standard Interest = {formatNairaOrDash(record.principal)} &times; 13.33% = {formatNairaOrDash(schemeStandardInterest)}
                 </p>
                 <p className="text-text-secondary font-mono text-[11px]">
-                  Monthly Deduction = Total Loan / Tenure Months
+                  Monthly Interest = {formatNairaOrDash(schemeStandardInterest)} &divide; 60 = {formatNairaOrDash(schemeMonthlyInterest)}
+                </p>
+                <p className="text-text-secondary font-mono text-[11px]">
+                  Total Interest = {formatNairaOrDash(schemeMonthlyInterest)} &times; {schemeInferredTenure ?? '?'} = {formatNairaOrDash(record.schemeExpectedTotalInterest)}
+                </p>
+                <p className="text-text-secondary font-mono text-[11px]">
+                  Total Loan = {formatNairaOrDash(record.principal)} + {formatNairaOrDash(record.schemeExpectedTotalInterest)} = {formatNairaOrDash(record.schemeExpectedTotalLoan)}
                 </p>
               </div>
             )}
 
-            {/* Declared vs Computed comparison */}
+            {/* Reverse Engineered formula breakdown */}
+            {record.principal && record.computedRate && (
+              <div className="bg-gray-50 rounded p-2 space-y-1">
+                <p className="font-medium text-text-primary">Reverse Engineered</p>
+                <p className="text-text-secondary font-mono text-[11px]">
+                  Detected Rate = (({formatNairaOrDash(record.totalLoan)} &minus; {formatNairaOrDash(record.principal)}) &divide; {formatNairaOrDash(record.principal)}) &times; 100 = {record.computedRate}%
+                </p>
+              </div>
+            )}
+
+            {/* Scheme expected not available */}
+            {record.principal && !hasSchemeExpected && (
+              <div className="bg-gray-50 rounded p-2 space-y-1">
+                <p className="font-medium text-text-primary">Computation Formula</p>
+                <p className="text-text-secondary font-mono text-[11px]">
+                  Total Loan = Principal + (Principal &times; Rate / 100)
+                </p>
+                <p className="text-text-secondary font-mono text-[11px]">
+                  Monthly Deduction = Total Loan / Tenure Months
+                </p>
+                <p className="text-text-muted text-[10px] mt-1 italic">
+                  Scheme expected values unavailable — tenure could not be determined
+                </p>
+              </div>
+            )}
+
+            {/* Three-vector comparison table */}
             <table className="w-full text-left">
               <thead>
                 <tr className="text-text-muted">
                   <th className="py-1 pr-3 font-medium">Field</th>
-                  <th className="py-1 pr-3 font-medium text-right">Declared</th>
-                  <th className="py-1 font-medium text-right">Computed</th>
+                  {hasSchemeExpected && <th className="py-1 pr-3 font-medium text-right">Scheme Expected</th>}
+                  <th className="py-1 pr-3 font-medium text-right">Rev. Engineered</th>
+                  <th className="py-1 font-medium text-right">MDA Declared</th>
                 </tr>
               </thead>
               <tbody className="text-text-secondary">
                 <tr>
                   <td className="py-1 pr-3">Total Loan</td>
-                  <td className="py-1 pr-3 text-right">{formatNairaOrDash(record.totalLoan)}</td>
-                  <td className="py-1 text-right">{formatNairaOrDash(record.computedTotalLoan)}</td>
+                  {hasSchemeExpected && <td className="py-1 pr-3 text-right">{formatNairaOrDash(record.schemeExpectedTotalLoan)}</td>}
+                  <td className="py-1 pr-3 text-right">{formatNairaOrDash(record.computedTotalLoan)}</td>
+                  <td className="py-1 text-right">{formatNairaOrDash(record.totalLoan)}</td>
                 </tr>
                 <tr>
                   <td className="py-1 pr-3">Monthly Deduction</td>
-                  <td className="py-1 pr-3 text-right">{formatNairaOrDash(record.monthlyDeduction)}</td>
-                  <td className="py-1 text-right">{formatNairaOrDash(record.computedMonthlyDeduction)}</td>
+                  {hasSchemeExpected && <td className="py-1 pr-3 text-right">{formatNairaOrDash(record.schemeExpectedMonthlyDeduction)}</td>}
+                  <td className="py-1 pr-3 text-right">{formatNairaOrDash(record.computedMonthlyDeduction)}</td>
+                  <td className="py-1 text-right">{formatNairaOrDash(record.monthlyDeduction)}</td>
                 </tr>
+                {hasSchemeExpected && (
+                  <tr>
+                    <td className="py-1 pr-3">Total Interest</td>
+                    <td className="py-1 pr-3 text-right">{formatNairaOrDash(record.schemeExpectedTotalInterest)}</td>
+                    <td className="py-1 pr-3 text-right">{formatNairaOrDash(revEngTotalInterest)}</td>
+                    <td className="py-1 text-right">{formatNairaOrDash(record.interestTotal)}</td>
+                  </tr>
+                )}
                 <tr>
                   <td className="py-1 pr-3">Outstanding Balance</td>
-                  <td className="py-1 pr-3 text-right">{formatNairaOrDash(record.outstandingBalance)}</td>
-                  <td className="py-1 text-right">{formatNairaOrDash(record.computedOutstandingBalance)}</td>
+                  {hasSchemeExpected && <td className="py-1 pr-3 text-right">{'\u2014'}</td>}
+                  <td className="py-1 pr-3 text-right">{formatNairaOrDash(record.computedOutstandingBalance)}</td>
+                  <td className="py-1 text-right">{formatNairaOrDash(record.outstandingBalance)}</td>
                 </tr>
               </tbody>
             </table>
+
+            {/* Non-punitive variance explanation */}
+            {record.varianceAmount && Number(record.varianceAmount) > 0 && (
+              <p className="text-text-secondary text-[11px] italic">
+                {UI_COPY.VARIANCE_NEUTRAL_PREFIX} of {formatNairaOrDash(record.varianceAmount)} was observed between {hasSchemeExpected ? 'the authoritative scheme formula (13.33% \u00F7 60)' : 'the computed values'} and the declared values.
+              </p>
+            )}
 
             {/* Rate analysis */}
             {record.computedRate && (

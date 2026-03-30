@@ -86,6 +86,18 @@ function StatCard({ value, label }: { value: string | number; label: string }) {
 }
 
 function MathBox({ analysis }: { analysis: RateAnalysis }) {
+  // Compute scheme expected values for display
+  const principal = Number(analysis.principal);
+  const standardInterest = principal * 0.1333;
+  const monthlyInterest = standardInterest / 60;
+  // Determine tenure: standard match → 60, accelerated match → its tenure, otherwise unknown.
+  // MUST NOT silently default to 60 (AC7).
+  const tenure: number | null = analysis.standardTest.match
+    ? 60
+    : analysis.acceleratedTest?.tenure ?? null;
+  const schemeExpectedTotalInterest = tenure !== null ? monthlyInterest * tenure : null;
+  const schemeExpectedTotalLoan = schemeExpectedTotalInterest !== null ? principal + schemeExpectedTotalInterest : null;
+
   return (
     <div className="bg-gray-100 rounded p-4 mb-4 font-mono text-xs print:bg-gray-50 print:border print:border-gray-200">
       <p className="font-bold text-sm mb-2 font-sans">Interest Rate Verification</p>
@@ -93,8 +105,20 @@ function MathBox({ analysis }: { analysis: RateAnalysis }) {
       <p>Actual Total Loan: {formatNaira(analysis.actualTotalLoan)}</p>
       <p>Actual Interest: {formatNaira(analysis.actualInterest)}</p>
       <p>Apparent Rate: {analysis.apparentRate}%</p>
+
+      {/* Scheme Expected vector — only shown when tenure is determinable */}
+      {tenure !== null && schemeExpectedTotalInterest !== null && schemeExpectedTotalLoan !== null && (
+        <div className="mt-3 pt-2 border-t border-gray-300">
+          <p className="font-bold text-[11px] font-sans text-text-primary mb-1">Scheme Expected (Authoritative)</p>
+          <p>Standard Interest = {formatNaira(analysis.principal)} &times; 13.33% = {formatNaira(standardInterest.toFixed(2))}</p>
+          <p>Monthly Interest = {formatNaira(standardInterest.toFixed(2))} &divide; 60 = {formatNaira(monthlyInterest.toFixed(2))}</p>
+          <p>Total Interest ({tenure}mo) = {formatNaira(monthlyInterest.toFixed(2))} &times; {tenure} = {formatNaira(schemeExpectedTotalInterest.toFixed(2))}</p>
+          <p>Total Loan = {formatNaira(analysis.principal)} + {formatNaira(schemeExpectedTotalInterest.toFixed(2))} = {formatNaira(schemeExpectedTotalLoan.toFixed(2))}</p>
+        </div>
+      )}
+
       <p className="mt-2">
-        Standard Test (13.33% × 60mo): {formatNaira(analysis.standardTest.expectedInterest)}
+        Standard Test (13.33% &times; 60mo): {formatNaira(analysis.standardTest.expectedInterest)}
         {' — '}
         <span className={analysis.standardTest.match ? 'text-green-700' : 'text-text-muted'}>
           {analysis.standardTest.match ? 'MATCH' : 'No match'}
@@ -107,7 +131,9 @@ function MathBox({ analysis }: { analysis: RateAnalysis }) {
           <span className="text-green-700">MATCH</span>
         </p>
       )}
-      <p className="mt-2 italic font-sans text-text-secondary">{analysis.conclusion}</p>
+      <p className="mt-2 italic font-sans text-text-secondary">
+        {analysis.conclusion} Variance is measured against the authoritative scheme formula as the primary reference.
+      </p>
     </div>
   );
 }

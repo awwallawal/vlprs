@@ -305,6 +305,96 @@ describe('Migration Validation Integration Tests', () => {
       expect(res.body.data.pagination.totalPages).toBe(2);
     });
 
+    it('returns all three vectors with scheme expected values computed from authoritative formula', async () => {
+      await request(app)
+        .post(`/api/migrations/${uploadId}/validate`)
+        .set('Authorization', `Bearer ${adminToken}`);
+
+      const res = await request(app)
+        .get(`/api/migrations/${uploadId}/validation?sortBy=source_row&sortOrder=asc`)
+        .set('Authorization', `Bearer ${adminToken}`);
+
+      expect(res.status).toBe(200);
+      const records = res.body.data.records;
+      expect(records.length).toBe(3);
+
+      // Every record must have all three vector objects + apparentRate
+      for (const record of records) {
+        expect(record).toHaveProperty('declaredValues');
+        expect(record).toHaveProperty('computedValues');
+        expect(record).toHaveProperty('schemeExpectedValues');
+        expect(record).toHaveProperty('apparentRate');
+        // Shape check: keys exist (values may be null for anomalous records)
+        expect(record.schemeExpectedValues).toHaveProperty('totalLoan');
+        expect(record.schemeExpectedValues).toHaveProperty('monthlyDeduction');
+        expect(record.schemeExpectedValues).toHaveProperty('totalInterest');
+      }
+
+      // Record 1 (CLEAN): 250K / 60mo → scheme expected via installmentCount
+      // P × 13.33% ÷ 60: monthlyInterest = 555.42, totalInterest = 33325.20, totalLoan = 283325.20
+      const clean = records.find((r: any) => r.staffName === 'CLEAN RECORD');
+      expect(clean.schemeExpectedValues.totalLoan).toBe('283325.20');
+      expect(clean.schemeExpectedValues.totalInterest).toBe('33325.20');
+      expect(clean.schemeExpectedValues.monthlyDeduction).toBe('4722.09');
+      // apparentRate: 13.33% computed rate → 60mo tier → 13.33
+      expect(clean.apparentRate).toBe('13.33');
+
+      // Record 2 (RATE VARIANCE): 450K / 60mo (installmentCount) → scheme expected with tenure 60
+      // monthlyInterest = 999.75, totalInterest = 59985.00, totalLoan = 509985.00
+      const rateVar = records.find((r: any) => r.staffName === 'RATE VARIANCE RECORD');
+      expect(rateVar.schemeExpectedValues.totalLoan).toBe('509985.00');
+      expect(rateVar.schemeExpectedValues.totalInterest).toBe('59985.00');
+      // apparentRate: 8.00% computed rate → 36mo tier → 8.00
+      expect(rateVar.apparentRate).toBe('8.00');
+
+      // Record 3 (ANOMALOUS): no principal → scheme expected all null, apparentRate null
+      const anomalous = records.find((r: any) => r.staffName === 'ANOMALOUS RECORD');
+      expect(anomalous.schemeExpectedValues.totalLoan).toBeNull();
+      expect(anomalous.schemeExpectedValues.monthlyDeduction).toBeNull();
+      expect(anomalous.schemeExpectedValues.totalInterest).toBeNull();
+      expect(anomalous.apparentRate).toBeNull();
+    });
+
+    it('populates schemeExpectedValues via rate-inferred tenure when installmentCount is absent', async () => {
+      // Insert record with NO installmentCount but a known 36-month rate (≈8%)
+      await db.insert(migrationRecords).values({
+        id: generateUuidv7(),
+        uploadId,
+        mdaId: testMdaId,
+        sheetName: 'Sheet1',
+        rowNumber: 5,
+        era: 3,
+        staffName: 'RATE INFERRED RECORD',
+        principal: '300000.00',
+        totalLoan: '324000.00', // interest = 24000, rate = 8.00% → 36mo tier
+        monthlyDeduction: '9000.00',
+        sourceFile: 'test-validation.xlsx',
+        sourceSheet: 'Sheet1',
+        sourceRow: 5,
+      });
+
+      await request(app)
+        .post(`/api/migrations/${uploadId}/validate`)
+        .set('Authorization', `Bearer ${adminToken}`);
+
+      const res = await request(app)
+        .get(`/api/migrations/${uploadId}/validation?sortBy=source_row&sortOrder=asc`)
+        .set('Authorization', `Bearer ${adminToken}`);
+
+      expect(res.status).toBe(200);
+      const record = res.body.data.records.find((r: any) => r.staffName === 'RATE INFERRED RECORD');
+      expect(record).toBeTruthy();
+
+      // Scheme expected computed via rate-inferred tenure (36mo):
+      // monthlyInterest = 300000 × 0.1333 / 60 = 666.50
+      // totalInterest = 666.50 × 36 = 23994.00
+      // totalLoan = 300000 + 23994.00 = 323994.00
+      expect(record.schemeExpectedValues.totalLoan).toBe('323994.00');
+      expect(record.schemeExpectedValues.totalInterest).toBe('23994.00');
+      expect(record.schemeExpectedValues.monthlyDeduction).not.toBeNull();
+      expect(record.apparentRate).toBe('8.00');
+    });
+
     it('validates query schema — rejects limit > 100', async () => {
       const res = await request(app)
         .get(`/api/migrations/${uploadId}/validation?limit=999`)

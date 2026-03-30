@@ -22,6 +22,16 @@ export interface AutoSplitResult {
   interestComponent: string; // NUMERIC(15,2) as string
 }
 
+/** Result of computing scheme expected values using authoritative formula (P × 13.33% ÷ 60) */
+export interface SchemeExpectedResult {
+  monthlyInterest: string;   // (P × 0.1333) / 60 — ALWAYS divide by 60
+  monthlyPrincipal: string;  // P / tenure
+  monthlyDeduction: string;  // monthlyPrincipal + monthlyInterest
+  totalInterest: string;     // monthlyInterest × tenure
+  totalLoan: string;         // P + totalInterest
+  apparentRate: string;      // 13.33% × tenure / 60
+}
+
 /** Complete repayment schedule output */
 export interface RepaymentSchedule {
   params: ComputationParams;

@@ -369,6 +369,10 @@ export const migrationRecords = pgTable(
     computedTotalLoan: numeric('computed_total_loan', { precision: 15, scale: 2 }),
     computedMonthlyDeduction: numeric('computed_monthly_deduction', { precision: 15, scale: 2 }),
     computedOutstandingBalance: numeric('computed_outstanding_balance', { precision: 15, scale: 2 }),
+    // Scheme expected columns (Story 8.0a) — authoritative formula: P × 13.33% ÷ 60
+    schemeExpectedTotalLoan: numeric('scheme_expected_total_loan', { precision: 15, scale: 2 }),
+    schemeExpectedMonthlyDeduction: numeric('scheme_expected_monthly_deduction', { precision: 15, scale: 2 }),
+    schemeExpectedTotalInterest: numeric('scheme_expected_total_interest', { precision: 15, scale: 2 }),
     loanId: uuid('loan_id').references(() => loans.id),
     isBaselineCreated: boolean('is_baseline_created').notNull().default(false),
     sourceFile: text('source_file').notNull(),
