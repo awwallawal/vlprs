@@ -186,6 +186,16 @@ export interface ValidatedMigrationRecord extends MigrationRecord {
   computedTotalLoan: string | null;
   computedMonthlyDeduction: string | null;
   computedOutstandingBalance: string | null;
+  schemeExpectedTotalLoan: string | null;
+  schemeExpectedMonthlyDeduction: string | null;
+  schemeExpectedTotalInterest: string | null;
+}
+
+// Scheme Expected values computed using authoritative formula (P × 13.33% ÷ 60)
+export interface SchemeExpectedValues {
+  totalLoan: string | null;
+  monthlyDeduction: string | null;
+  totalInterest: string | null;
 }
 
 export interface ValidationResultRecord {
@@ -194,6 +204,7 @@ export interface ValidationResultRecord {
   varianceCategory: VarianceCategory;
   varianceAmount: string | null;
   computedRate: string | null;
+  apparentRate: string | null;
   declaredValues: {
     principal: string | null;
     totalLoan: string | null;
@@ -205,6 +216,7 @@ export interface ValidationResultRecord {
     monthlyDeduction: string | null;
     outstandingBalance: string | null;
   };
+  schemeExpectedValues: SchemeExpectedValues;
 }
 
 export interface ValidationResult {

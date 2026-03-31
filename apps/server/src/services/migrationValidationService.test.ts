@@ -300,4 +300,87 @@ describe('validateRecord', () => {
     expect(result.varianceCategory).toBe('clean');
     expect(result.computedOutstandingBalance).toBe('278602.91');
   });
+
+  // ─── Story 8.0a: Three-Vector Validation ───────────────────────────
+
+  // Task 4.7: Three-vector validation with retro worked example (450,000/30mo)
+  it('computes all three vectors and uses scheme expected for variance (retro example)', () => {
+    const result = validateRecord({
+      id: 'test-three-vector',
+      principal: '450000.00',
+      totalLoan: '479985.00',        // MDA Declared
+      monthlyDeduction: '15999.50',   // MDA Declared
+      outstandingBalance: null,
+      installmentCount: 30,
+      installmentsPaid: null,
+      installmentsOutstanding: null,
+      interestTotal: '29985.00',
+    });
+
+    // Scheme Expected: P × 13.33% ÷ 60 → monthly interest 999.75
+    // Total Interest = 999.75 × 30 = 29,992.50
+    // Total Loan = 450,000 + 29,992.50 = 479,992.50
+    expect(result.schemeExpectedTotalLoan).toBe('479992.50');
+    expect(result.schemeExpectedMonthlyDeduction).toBe('15999.75');
+    expect(result.schemeExpectedTotalInterest).toBe('29992.50');
+
+    // Reverse Engineered: rate from Excel = (479985 - 450000) / 450000 × 100 = 6.663%
+    // computeRepaymentSchedule with 6.663% and 30 months
+    expect(result.computedRate).toBe('6.663');
+    expect(result.computedTotalLoan).not.toBeNull();
+
+    // Variance should use Scheme Expected vs MDA Declared (not reverse-engineered)
+    // abs(479992.50 - 479985.00) = 7.50
+    // abs(15999.75 - 15999.50) = 0.25
+    // MAX = 7.50
+    expect(result.varianceAmount).toBe('7.50');
+    expect(result.varianceCategory).toBe('minor_variance');
+  });
+
+  // Task 4.8: Record without installmentCount but with known rate tier → scheme expected computed
+  it('infers tenure from known rate tier when installmentCount is missing', () => {
+    // 30-month loan: apparent rate is 6.67% → inferTenureFromRate returns 30
+    const result = validateRecord({
+      id: 'test-infer-tenure',
+      principal: '450000.00',
+      totalLoan: '479985.00',        // gives rate ~6.663% → matches 6.67 tier (30mo)
+      monthlyDeduction: '15999.50',
+      outstandingBalance: null,
+      installmentCount: null,         // no installmentCount!
+      installmentsPaid: null,
+      installmentsOutstanding: null,
+      interestTotal: null,
+    });
+
+    // Should still compute scheme expected from inferred tenure (30)
+    expect(result.schemeExpectedTotalLoan).toBe('479992.50');
+    expect(result.schemeExpectedMonthlyDeduction).toBe('15999.75');
+    expect(result.schemeExpectedTotalInterest).toBe('29992.50');
+  });
+
+  // Task 4.9: Record with neither installmentCount nor known rate → scheme expected is null
+  it('sets scheme expected to null when tenure cannot be determined', () => {
+    // Use a rate that doesn't match any known tier
+    // principal=450000, totalLoan=495000 → rate = (495000-450000)/450000*100 = 10%
+    // 10% doesn't match any tier within ±0.05 tolerance
+    const result = validateRecord({
+      id: 'test-no-tenure',
+      principal: '450000.00',
+      totalLoan: '495000.00',        // gives rate 10.0% — no matching tier
+      monthlyDeduction: '8250.00',
+      outstandingBalance: null,
+      installmentCount: null,
+      installmentsPaid: null,
+      installmentsOutstanding: null,
+      interestTotal: null,
+    });
+
+    // Scheme expected should be null — can't determine tenure
+    expect(result.schemeExpectedTotalLoan).toBeNull();
+    expect(result.schemeExpectedMonthlyDeduction).toBeNull();
+    expect(result.schemeExpectedTotalInterest).toBeNull();
+
+    // Falls back to reverse-engineered variance (structural_error since 10% is unknown tier)
+    expect(result.varianceCategory).toBe('structural_error');
+  });
 });

@@ -312,6 +312,21 @@ export const MIGRATION_HELP: Record<string, MetricDefinition> = {
     derivedFrom: 'Validation engine output — high severity observations or missing required fields.',
     guidance: 'These records cannot proceed until the underlying data issues are resolved.',
   },
+  schemeExpected: {
+    label: 'Scheme Expected',
+    description: 'Values computed using the authoritative scheme formula: Monthly Interest = (Principal × 13.33%) ÷ 60, regardless of tenure.',
+    derivedFrom: 'Authoritative scheme formula applied to the principal and detected tenure.',
+  },
+  reverseEngineered: {
+    label: 'Reverse Engineered',
+    description: 'Values computed by detecting the rate from declared Principal and Total Loan, then applying standard computation.',
+    derivedFrom: 'Effective Rate = ((Total Loan − Principal) ÷ Principal) × 100, applied to repayment schedule engine.',
+  },
+  mdaDeclared: {
+    label: 'MDA Declared',
+    description: 'Raw values as submitted by the MDA in the legacy Excel file, without any system computation.',
+    derivedFrom: 'Direct extraction from the uploaded spreadsheet.',
+  },
 };
 
 export const LOAN_HELP: Record<string, MetricDefinition> = {
