@@ -213,6 +213,22 @@ export function useConfirmOverlap() {
   });
 }
 
+// ─── Discard Upload (Story 8.0c) ────────────────────────────────────
+
+export function useDiscardMigration() {
+  const queryClient = useQueryClient();
+
+  return useMutation<{ discarded: true; recordsAffected: number }, Error, { uploadId: string }>({
+    mutationFn: ({ uploadId }) =>
+      apiClient<{ discarded: true; recordsAffected: number }>(`/migrations/${uploadId}/discard`, {
+        method: 'PATCH',
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['migrations'] });
+    },
+  });
+}
+
 export function useBaselineSummary(uploadId: string) {
   return useQuery<BaselineSummary>({
     queryKey: ['baseline-summary', uploadId],

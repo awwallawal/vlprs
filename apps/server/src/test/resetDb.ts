@@ -8,14 +8,17 @@ import { db } from '../db';
  * Call in beforeAll / afterAll of every integration test file
  * so that each file starts and finishes with a clean database.
  *
- * NOTE: 7 newer tables (loan_annotations, loan_event_flag_corrections,
- * baseline_annotations, submission_rows, mda_submissions, employment_events,
- * transfers) are not explicitly listed but are cleaned via CASCADE from their
- * parent FK references. Adding them here requires confirming all migrations
- * have been applied to the test database.
+ * -- All application tables listed explicitly. Keep this in sync with schema.ts when adding new tables.
  */
 export async function resetDb(): Promise<void> {
   await db.execute(sql`TRUNCATE
+    loan_annotations,
+    loan_event_flag_corrections,
+    baseline_annotations,
+    submission_rows,
+    mda_submissions,
+    employment_events,
+    transfers,
     exceptions,
     observations,
     deduplication_candidates,

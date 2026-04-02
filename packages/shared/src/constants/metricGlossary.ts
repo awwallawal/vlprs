@@ -327,6 +327,12 @@ export const MIGRATION_HELP: Record<string, MetricDefinition> = {
     description: 'Raw values as submitted by the MDA in the legacy Excel file, without any system computation.',
     derivedFrom: 'Direct extraction from the uploaded spreadsheet.',
   },
+  varianceCategory: {
+    label: 'Variance Category',
+    description: 'Classification of the record\'s overall data quality based on the magnitude and nature of differences between declared and expected values.',
+    derivedFrom: 'Largest absolute difference between the scheme expected and MDA declared values for total loan, monthly deduction, and total interest.',
+    guidance: 'Clean records can be baselined immediately. Records with variance should be reviewed before baseline acceptance.',
+  },
 };
 
 export const LOAN_HELP: Record<string, MetricDefinition> = {

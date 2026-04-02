@@ -1,17 +1,27 @@
 /**
- * MigrationUploadList — Table of migration uploads with superseded visual treatment.
- * Superseded uploads show reduced opacity, a "Superseded" badge, and
- * "Superseded by [filename] on [date]" text with a link.
+ * MigrationUploadList — Table of migration uploads with superseded visual treatment
+ * and discard action for incomplete uploads.
  *
  * Story 7.0g — Tasks 10.1 + 10.2 (AC 6)
+ * Story 8.0c — Discard action for uploaded/mapped/failed uploads
  */
 
 import { useState } from 'react';
-import { useListMigrations } from '@/hooks/useMigration';
+import { toast } from 'sonner';
+import { useListMigrations, useDiscardMigration } from '@/hooks/useMigration';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ChevronLeft, ChevronRight, FileSpreadsheet } from 'lucide-react';
+import {
+  AlertDialog,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import { ChevronLeft, ChevronRight, FileSpreadsheet, Trash2 } from 'lucide-react';
 import type { MigrationUploadSummary, MigrationUploadStatus } from '@vlprs/shared';
 
 const STATUS_LABELS: Record<MigrationUploadStatus, string> = {
@@ -42,14 +52,30 @@ function formatDate(iso: string): string {
   });
 }
 
+const DISCARDABLE_STATUSES: MigrationUploadStatus[] = ['uploaded', 'mapped', 'failed'];
+
 export function MigrationUploadList() {
   const [page, setPage] = useState(1);
+  const [discardTarget, setDiscardTarget] = useState<MigrationUploadSummary | null>(null);
   const limit = 15;
 
   const { data, isPending, isError } = useListMigrations({ page, limit });
+  const discardMutation = useDiscardMigration();
 
   const uploads = data?.data ?? [];
   const pagination = data?.pagination;
+
+  const handleDiscard = async () => {
+    if (!discardTarget) return;
+    try {
+      await discardMutation.mutateAsync({ uploadId: discardTarget.id });
+      toast.success('Upload discarded');
+      setDiscardTarget(null);
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Failed to discard upload';
+      toast.error(message);
+    }
+  };
 
   if (isPending) {
     return (
@@ -89,11 +115,12 @@ export function MigrationUploadList() {
               <th className="px-4 py-3 text-right font-medium text-text-secondary">Records</th>
               <th className="px-4 py-3 text-left font-medium text-text-secondary">Status</th>
               <th className="px-4 py-3 text-left font-medium text-text-secondary">Date</th>
+              <th className="px-4 py-3 text-left font-medium text-text-secondary">Actions</th>
             </tr>
           </thead>
           <tbody>
             {uploads.map((upload) => (
-              <UploadRow key={upload.id} upload={upload} />
+              <UploadRow key={upload.id} upload={upload} onDiscard={setDiscardTarget} />
             ))}
           </tbody>
         </table>
@@ -125,12 +152,35 @@ export function MigrationUploadList() {
           </div>
         </div>
       )}
+
+      {/* Discard Confirmation Dialog */}
+      <AlertDialog open={!!discardTarget} onOpenChange={(open) => !open && setDiscardTarget(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Discard Upload</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently remove <strong>{discardTarget?.filename}</strong>{discardTarget?.totalRecords ? ` (${discardTarget.totalRecords.toLocaleString()} records)` : ''} from the migration dashboard. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <Button
+              onClick={handleDiscard}
+              disabled={discardMutation.isPending}
+              variant="destructive"
+            >
+              {discardMutation.isPending ? 'Discarding...' : 'Discard Upload'}
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
 
-function UploadRow({ upload }: { upload: MigrationUploadSummary }) {
+function UploadRow({ upload, onDiscard }: { upload: MigrationUploadSummary; onDiscard: (upload: MigrationUploadSummary) => void }) {
   const isSuperseded = !!upload.supersededBy;
+  const canDiscard = DISCARDABLE_STATUSES.includes(upload.status);
 
   return (
     <tr
@@ -166,6 +216,18 @@ function UploadRow({ upload }: { upload: MigrationUploadSummary }) {
       </td>
       <td className="px-4 py-3 text-text-secondary whitespace-nowrap">
         {formatDate(upload.createdAt)}
+      </td>
+      <td className="px-4 py-3">
+        {canDiscard && (
+          <button
+            type="button"
+            onClick={() => onDiscard(upload)}
+            className="p-1.5 rounded-md text-text-muted hover:text-destructive hover:bg-destructive/10 transition-colors"
+            title="Discard upload"
+          >
+            <Trash2 className="h-4 w-4" />
+          </button>
+        )}
       </td>
     </tr>
   );
