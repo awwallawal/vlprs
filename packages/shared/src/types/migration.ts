@@ -367,6 +367,70 @@ export interface DuplicateCandidate {
   createdAt: string;
 }
 
+// ─── Record Detail (Story 8.0b) ─────────────────────────────────────
+
+export interface MigrationRecordDetail {
+  recordId: string;
+  uploadId: string;
+  // Personnel info
+  staffName: string;
+  staffId: string | null;
+  gradeLevel: string | null;
+  station: string | null;
+  mdaText: string | null;
+  serialNumber: string | null;
+  // Source info
+  sheetName: string;
+  sourceRow: number;
+  era: number;
+  periodYear: number | null;
+  periodMonth: number | null;
+  // Variance metadata
+  varianceCategory: VarianceCategory;
+  varianceAmount: string | null;
+  computedRate: string | null;
+  apparentRate: string | null;
+  hasRateVariance: boolean;
+  // Three-vector financial comparison
+  declaredValues: {
+    principal: string | null;
+    totalLoan: string | null;
+    monthlyDeduction: string | null;
+    outstandingBalance: string | null;
+    interestTotal: string | null;
+    installmentCount: number | null;
+    installmentsPaid: number | null;
+    installmentsOutstanding: number | null;
+  };
+  computedValues: {
+    totalLoan: string | null;
+    monthlyDeduction: string | null;
+    outstandingBalance: string | null;
+  };
+  schemeExpectedValues: SchemeExpectedValues;
+  // Grade inference from principal amount
+  inferredGrade: {
+    tier: number;
+    gradeLevels: string;
+    maxPrincipal: string;
+  } | null;
+  // Baseline status
+  isBaselineCreated: boolean;
+  loanId: string | null;
+  // Correction fields (populated after correction columns are added)
+  correctedValues: {
+    outstandingBalance: string | null;
+    totalLoan: string | null;
+    monthlyDeduction: string | null;
+    installmentCount: number | null;
+    installmentsPaid: number | null;
+    installmentsOutstanding: number | null;
+  } | null;
+  originalValuesSnapshot: Record<string, unknown> | null;
+  correctedBy: string | null;
+  correctedAt: string | null;
+}
+
 // ─── Baseline Acknowledgment (Story 3.4) ────────────────────────────
 
 export interface BaselineResult {
@@ -375,6 +439,7 @@ export interface BaselineResult {
   ledgerEntryId: string;
   varianceCategory: VarianceCategory | null;
   baselineAmount: string;
+  correctionApplied: boolean;
 }
 
 export interface BatchBaselineResult {
@@ -382,6 +447,7 @@ export interface BatchBaselineResult {
   loansCreated: number;
   entriesCreated: number;
   byCategory: Record<string, number>;
+  skippedRecords: Array<{ recordId: string; staffName: string; reason: string }>;
   processingTimeMs: number;
 }
 

@@ -7,6 +7,7 @@ import { RecordComparisonRow, RecordComparisonHeader } from './components/Record
 import { StaffProfilePanel } from './components/StaffProfilePanel';
 import { useUploadMigration, useConfirmMapping, useValidateUpload, useValidationResults, useMdaList, useCreateBaseline, useCreateBatchBaseline, useBaselineSummary, useCheckOverlap, useConfirmOverlap } from '@/hooks/useMigration';
 import { BaselineConfirmationDialog } from './components/BaselineConfirmationDialog';
+import { RecordDetailDrawer } from './components/RecordDetailDrawer';
 import { BaselineResultSummary } from './components/BaselineResultSummary';
 import { usePersonList, useMatchPersons } from '@/hooks/useStaffProfile';
 import { usePageMeta } from '@/hooks/usePageMeta';
@@ -50,6 +51,8 @@ export function MigrationUploadPage() {
     mdaName?: string;
   } | null>(null);
   const [pendingMappings, setPendingMappings] = useState<Array<{ sheetName: string; mappings: Array<{ sourceIndex: number; canonicalField: string | null }> }> | null>(null);
+  const [selectedRecordId, setSelectedRecordId] = useState<string | null>(null);
+  const [drawerOpen, setDrawerOpen] = useState(false);
 
   const uploadMutation = useUploadMigration();
   const confirmMutation = useConfirmMapping();
@@ -201,6 +204,11 @@ export function MigrationUploadPage() {
       setBaselineInProgressId(null);
     }
   }, [singleBaselineMutation]);
+
+  const handleRowClick = useCallback((recordId: string) => {
+    setSelectedRecordId(recordId);
+    setDrawerOpen(true);
+  }, []);
 
   const handleReset = useCallback(() => {
     setStep('select-mda');
@@ -644,6 +652,7 @@ export function MigrationUploadPage() {
             <BaselineResultSummary
               result={baselineResult}
               onViewLoans={() => window.location.assign('/dashboard/loans')}
+              onViewRecord={handleRowClick}
             />
           )}
 
@@ -694,6 +703,7 @@ export function MigrationUploadPage() {
                         ? handleSingleBaseline : undefined}
                       isBaselineLoading={baselineInProgressId === record.recordId}
                       isBaselineCreated={baselinedRecordIds.has(record.recordId)}
+                      onRowClick={handleRowClick}
                     />
                   ))}
                 </tbody>
@@ -730,6 +740,16 @@ export function MigrationUploadPage() {
         </div>
       )}
       </>}
+
+      {/* Record Detail Drawer (Story 8.0b) */}
+      {preview?.uploadId && (
+        <RecordDetailDrawer
+          uploadId={preview.uploadId}
+          recordId={selectedRecordId}
+          open={drawerOpen}
+          onOpenChange={setDrawerOpen}
+        />
+      )}
     </div>
   );
 }

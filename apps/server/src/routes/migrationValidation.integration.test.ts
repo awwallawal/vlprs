@@ -410,4 +410,281 @@ describe('Migration Validation Integration Tests', () => {
       expect(res.status).toBe(401);
     });
   });
+
+  describe('GET /api/migrations/:uploadId/records/:recordId — Record Detail (Story 8.0b)', () => {
+    it('returns full record detail with all three vectors', async () => {
+      // Validate first to populate computed fields
+      await request(app)
+        .post(`/api/migrations/${uploadId}/validate`)
+        .set('Authorization', `Bearer ${adminToken}`);
+
+      // Get a record ID from validation results
+      const valRes = await request(app)
+        .get(`/api/migrations/${uploadId}/validation?sortBy=source_row&sortOrder=asc`)
+        .set('Authorization', `Bearer ${adminToken}`);
+
+      const cleanRecord = valRes.body.data.records.find((r: any) => r.staffName === 'CLEAN RECORD');
+      expect(cleanRecord).toBeTruthy();
+
+      // GET record detail
+      const res = await request(app)
+        .get(`/api/migrations/${uploadId}/records/${cleanRecord.recordId}`)
+        .set('Authorization', `Bearer ${adminToken}`);
+
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+
+      const detail = res.body.data;
+
+      // Personnel info
+      expect(detail.recordId).toBe(cleanRecord.recordId);
+      expect(detail.uploadId).toBe(uploadId);
+      expect(detail.staffName).toBe('CLEAN RECORD');
+      expect(detail.sheetName).toBe('Sheet1');
+      expect(detail.sourceRow).toBe(2);
+      expect(detail.era).toBe(3);
+
+      // Variance metadata
+      expect(detail.varianceCategory).toBeTruthy();
+      expect(detail).toHaveProperty('varianceAmount');
+      expect(detail).toHaveProperty('computedRate');
+      expect(detail).toHaveProperty('apparentRate');
+      expect(detail).toHaveProperty('hasRateVariance');
+
+      // Three-vector financial comparison
+      expect(detail.declaredValues).toEqual({
+        principal: '250000.00',
+        totalLoan: '283325.00',
+        monthlyDeduction: '4722.09',
+        outstandingBalance: null,
+        interestTotal: null,
+        installmentCount: 60,
+        installmentsPaid: null,
+        installmentsOutstanding: null,
+      });
+
+      expect(detail.computedValues).toHaveProperty('totalLoan');
+      expect(detail.computedValues).toHaveProperty('monthlyDeduction');
+      expect(detail.computedValues).toHaveProperty('outstandingBalance');
+
+      // Scheme expected values (250K / 60mo)
+      expect(detail.schemeExpectedValues.totalLoan).toBe('283325.20');
+      expect(detail.schemeExpectedValues.monthlyDeduction).toBe('4722.09');
+      expect(detail.schemeExpectedValues.totalInterest).toBe('33325.20');
+
+      // Apparent rate
+      expect(detail.apparentRate).toBe('13.33');
+
+      // Baseline status
+      expect(detail.isBaselineCreated).toBe(false);
+      expect(detail.loanId).toBeNull();
+
+      // Correction fields (null before correction columns added)
+      expect(detail.correctedValues).toBeNull();
+      expect(detail.originalValuesSnapshot).toBeNull();
+      expect(detail.correctedBy).toBeNull();
+      expect(detail.correctedAt).toBeNull();
+    });
+
+    it('returns 404 for non-existent record', async () => {
+      const fakeRecordId = generateUuidv7();
+      const res = await request(app)
+        .get(`/api/migrations/${uploadId}/records/${fakeRecordId}`)
+        .set('Authorization', `Bearer ${adminToken}`);
+
+      expect(res.status).toBe(404);
+    });
+
+    it('returns 404 for non-existent upload', async () => {
+      const fakeUploadId = generateUuidv7();
+      const fakeRecordId = generateUuidv7();
+      const res = await request(app)
+        .get(`/api/migrations/${fakeUploadId}/records/${fakeRecordId}`)
+        .set('Authorization', `Bearer ${adminToken}`);
+
+      expect(res.status).toBe(404);
+    });
+
+    it('respects MDA scope for dept_admin', async () => {
+      await request(app)
+        .post(`/api/migrations/${uploadId}/validate`)
+        .set('Authorization', `Bearer ${adminToken}`);
+
+      const valRes = await request(app)
+        .get(`/api/migrations/${uploadId}/validation?sortBy=source_row&sortOrder=asc`)
+        .set('Authorization', `Bearer ${deptAdminToken}`);
+
+      const record = valRes.body.data.records[0];
+
+      // dept_admin scoped to the same MDA should have access
+      const res = await request(app)
+        .get(`/api/migrations/${uploadId}/records/${record.recordId}`)
+        .set('Authorization', `Bearer ${deptAdminToken}`);
+
+      expect(res.status).toBe(200);
+      expect(res.body.data.staffName).toBeTruthy();
+    });
+
+    it('returns 401 without authentication', async () => {
+      const res = await request(app)
+        .get(`/api/migrations/${uploadId}/records/${generateUuidv7()}`);
+
+      expect(res.status).toBe(401);
+    });
+  });
+
+  describe('PATCH /api/migrations/:uploadId/records/:recordId/correct — Record Correction (Story 8.0b)', () => {
+    async function validateAndGetRecord(staffName: string) {
+      await request(app)
+        .post(`/api/migrations/${uploadId}/validate`)
+        .set('Authorization', `Bearer ${adminToken}`);
+
+      const valRes = await request(app)
+        .get(`/api/migrations/${uploadId}/validation?sortBy=source_row&sortOrder=asc`)
+        .set('Authorization', `Bearer ${adminToken}`);
+
+      return valRes.body.data.records.find((r: any) => r.staffName === staffName);
+    }
+
+    it('persists correction and preserves original snapshot on first correction', async () => {
+      const record = await validateAndGetRecord('CLEAN RECORD');
+
+      const res = await request(app)
+        .patch(`/api/migrations/${uploadId}/records/${record.recordId}/correct`)
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({ outstandingBalance: '150000.00' });
+
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+
+      const detail = res.body.data;
+      expect(detail.correctedValues).not.toBeNull();
+      expect(detail.correctedValues.outstandingBalance).toBe('150000.00');
+      expect(detail.correctedBy).toBe(testUserId);
+      expect(detail.correctedAt).toBeTruthy();
+
+      // Original snapshot should be preserved
+      expect(detail.originalValuesSnapshot).not.toBeNull();
+      expect(detail.originalValuesSnapshot.outstandingBalance).toBeNull(); // was null before correction
+      expect(detail.originalValuesSnapshot).toHaveProperty('varianceCategory');
+      expect(detail.originalValuesSnapshot).toHaveProperty('varianceAmount');
+    });
+
+    it('rejects correction on already-baselined record (409 Conflict)', async () => {
+      // Insert a record WITH outstandingBalance so baseline can succeed
+      const baselinableRecordId = generateUuidv7();
+      await db.insert(migrationRecords).values({
+        id: baselinableRecordId,
+        uploadId,
+        mdaId: testMdaId,
+        sheetName: 'Sheet1',
+        rowNumber: 10,
+        era: 3,
+        staffName: 'BASELINABLE RECORD',
+        principal: '250000.00',
+        totalLoan: '283325.00',
+        monthlyDeduction: '4722.09',
+        outstandingBalance: '150000.00',
+        installmentCount: 60,
+        sourceFile: 'test-validation.xlsx',
+        sourceSheet: 'Sheet1',
+        sourceRow: 10,
+      });
+
+      // Validate to populate computed fields
+      await request(app)
+        .post(`/api/migrations/${uploadId}/validate`)
+        .set('Authorization', `Bearer ${adminToken}`);
+
+      // Establish baseline
+      const baselineRes = await request(app)
+        .post(`/api/migrations/${uploadId}/records/${baselinableRecordId}/baseline`)
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({ confirm: true });
+
+      expect(baselineRes.status).toBe(201);
+
+      // Try to correct after baseline — should be rejected
+      const res = await request(app)
+        .patch(`/api/migrations/${uploadId}/records/${baselinableRecordId}/correct`)
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({ outstandingBalance: '100000.00' });
+
+      expect(res.status).toBe(409);
+    });
+
+    it('re-correction updates corrected values but does NOT overwrite original snapshot', async () => {
+      const record = await validateAndGetRecord('CLEAN RECORD');
+
+      // First correction
+      await request(app)
+        .patch(`/api/migrations/${uploadId}/records/${record.recordId}/correct`)
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({ outstandingBalance: '150000.00' });
+
+      // Get snapshot from first correction
+      const first = await request(app)
+        .get(`/api/migrations/${uploadId}/records/${record.recordId}`)
+        .set('Authorization', `Bearer ${adminToken}`);
+      const firstSnapshot = first.body.data.originalValuesSnapshot;
+
+      // Second correction
+      const res = await request(app)
+        .patch(`/api/migrations/${uploadId}/records/${record.recordId}/correct`)
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({ outstandingBalance: '200000.00' });
+
+      expect(res.status).toBe(200);
+      expect(res.body.data.correctedValues.outstandingBalance).toBe('200000.00');
+
+      // Original snapshot should NOT change
+      expect(res.body.data.originalValuesSnapshot).toEqual(firstSnapshot);
+    });
+
+    it('correcting installmentCount triggers scheme expected recomputation', async () => {
+      const record = await validateAndGetRecord('CLEAN RECORD');
+
+      // Original scheme expected computed with installmentCount=60
+      const beforeRes = await request(app)
+        .get(`/api/migrations/${uploadId}/records/${record.recordId}`)
+        .set('Authorization', `Bearer ${adminToken}`);
+      const originalScheme = beforeRes.body.data.schemeExpectedValues;
+      expect(originalScheme.totalLoan).toBe('283325.20'); // 250K / 60mo
+
+      // Correct installmentCount to 36
+      const res = await request(app)
+        .patch(`/api/migrations/${uploadId}/records/${record.recordId}/correct`)
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({ installmentCount: 36 });
+
+      expect(res.status).toBe(200);
+
+      // Scheme expected should be recomputed for 36 months
+      // 250K / 36mo: monthlyInterest = (250000 × 0.1333) / 60 = 555.42
+      // totalInterest = 555.42 × 36 = 19995.12 (actually: 19995.00 due to rounding)
+      // totalLoan = 250000 + 19995.00 = 269995.00
+      const newScheme = res.body.data.schemeExpectedValues;
+      expect(newScheme.totalLoan).not.toBe(originalScheme.totalLoan);
+      expect(newScheme.totalLoan).toBeTruthy();
+    });
+
+    it('rejects correction with empty body', async () => {
+      const record = await validateAndGetRecord('CLEAN RECORD');
+
+      const res = await request(app)
+        .patch(`/api/migrations/${uploadId}/records/${record.recordId}/correct`)
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({});
+
+      expect(res.status).toBe(400);
+    });
+
+    it('returns 401 without authentication', async () => {
+      const res = await request(app)
+        .patch(`/api/migrations/${uploadId}/records/${generateUuidv7()}/correct`)
+        .send({ outstandingBalance: '100000.00' });
+
+      expect(res.status).toBe(401);
+    });
+  });
 });

@@ -3,9 +3,9 @@
 # project_key: NOKEY
 # tracking_system: file-system
 # story_location: _bmad-output/implementation-artifacts
-# sprint_sequence: 1→E1, 2→E14, 3→E2, 4→E10, 5→E3, 6→E4, 7→E5, 8→E11, 9→E7, 10→E6, 11→E8+E15(parallel), 12→E12, 13→E9, 14→E13
-# total_epics: 15
-# total_stories: 101 (Epic 1: 12, Epic 14: 3, Epic 2: 8 incl. 2.0, Epic 3: 10 incl. 3.0a+3.0b prep from E10 retro, Epic 5: 5 (5.6 moved to E11), Epic 11: 8 incl. 11.0a+11.0b UAT remediation split + 11.2b split + 5.6 moved here, Epic 7: 13 incl. 7.0a-7.0i prep from E3-E11 mega-retro, Epic 6: 4, Epic 8: 12 incl. 8.0a-8.0i prep from E7+E6 retro, Epic 10: 4, Epic 4: 4, Epic 12: 3, Epic 9: 3, Epic 13: 2, Epic 15: 6 — FR72/FR73 moved from Epic 13 to Epic 1, Story 2.0 added from Epic 1+14 retro, Epic 3 reshaped per PM alignment cascade 2026-03-01, Stories 3.0a+3.0b added per Epic 10 retro 2026-03-05, Story 5.6 moved from E5 to E11 sequence per PM validation 2026-03-16, Story 11.0 added then split into 11.0a+11.0b per PM decision 2026-03-17, FR91+FR92 added, Stories 7.0a-7.0g added per E3-E11 mega-retro 2026-03-20, Stories 7.0h+7.0i added during E7 prep, Stories 8.0a-8.0i added per E7+E6 retro 2026-03-29, Epic 15 added per E7+E6 retro planning item A 2026-03-29 — FR93-FR95 added, Stories 8.0h+8.0i added per Awwal zero-debt-forward mandate 2026-03-29)
+# sprint_sequence: 1→E1, 2→E14, 3→E2, 4→E10, 5→E3, 6→E4, 7→E5, 8→E11, 9→E7, 10→E6, 11→E8+E15(parallel), 12→E12+E16(parallel), 13→E9, 14→E13
+# total_epics: 16
+# total_stories: 102 (Epic 1: 12, Epic 14: 3, Epic 2: 8 incl. 2.0, Epic 3: 10 incl. 3.0a+3.0b prep from E10 retro, Epic 5: 5 (5.6 moved to E11), Epic 11: 8 incl. 11.0a+11.0b UAT remediation split + 11.2b split + 5.6 moved here, Epic 7: 13 incl. 7.0a-7.0i prep from E3-E11 mega-retro, Epic 6: 4, Epic 8: 13 incl. 8.0a-8.0j prep from E7+E6 retro + 8.0b UAT triage, Epic 10: 4, Epic 4: 4, Epic 12: 3, Epic 9: 3, Epic 13: 2, Epic 15: 6, Epic 16: TBD (discovery required) — FR72/FR73 moved from Epic 13 to Epic 1, Story 2.0 added from Epic 1+14 retro, Epic 3 reshaped per PM alignment cascade 2026-03-01, Stories 3.0a+3.0b added per Epic 10 retro 2026-03-05, Story 5.6 moved from E5 to E11 sequence per PM validation 2026-03-16, Story 11.0 added then split into 11.0a+11.0b per PM decision 2026-03-17, FR91+FR92 added, Stories 7.0a-7.0g added per E3-E11 mega-retro 2026-03-20, Stories 7.0h+7.0i added during E7 prep, Stories 8.0a-8.0i added per E7+E6 retro 2026-03-29, Epic 15 added per E7+E6 retro planning item A 2026-03-29 — FR93-FR95 added, Stories 8.0h+8.0i added per Awwal zero-debt-forward mandate 2026-03-29, Story 8.0j added per PM triage of 8.0b UAT escalations 2026-04-02, Epic 16 added per PM triage 2026-04-02 — FRs TBD)
 
 # STATUS DEFINITIONS:
 # ==================
@@ -227,7 +227,7 @@ development_status:
 
   # Epic 8: Auto-Stop Certificate & Loan Completion (Sprint 11)
   # Prep Stories 8.0a-8.0g added per E7+E6 retro 2026-03-29 — UAT-driven, zero-debt-forward principle
-  # Sequence: 8.0a → 8.0b → 8.0c → 8.0d → 8.0e + 8.0f (parallel) → 8.0g → 8.0h + 8.0i (parallel) → UAT checkpoint → 8.1
+  # Sequence: 8.0a → 8.0b → 8.0c → 8.0d → 8.0e + 8.0f (parallel) → 8.0g → 8.0h + 8.0i + 8.0j (parallel) → UAT checkpoint → 8.1
   #
   # PREP STORY MANDATE (E7+E6 retro decision):
   #   - All 7 prep stories must complete before Story 8.1 starts
@@ -245,7 +245,7 @@ development_status:
   #   - After 8.0i: Clean-room UAT — purge, upload single BIR file, verify every dashboard figure (incl. MoM trends) against manual calc
   epic-8: in-progress
   8-0a-migration-computation-model-scheme-formula: done  # CRITICAL: scheme formula (P×13.33%÷60) + three-vector display (Scheme Expected / Reverse Engineered / MDA Declared)
-  8-0b-record-detail-view-pre-baseline-inspection: ready-for-dev  # CRITICAL: clickable records, declared vs computed breakdown, correction flow before baseline acceptance
+  8-0b-record-detail-view-pre-baseline-inspection: done  # CRITICAL: clickable records, declared vs computed breakdown, correction flow before baseline acceptance
   8-0c-migration-dashboard-hygiene: ready-for-dev  # discard uploads, incomplete cleanup, variance column labelling + MetricHelp, resetDb.ts update
   8-0d-multi-sheet-period-handling: ready-for-dev  # per-sheet overlap detection, sheet enable/disable, period display in results
   8-0e-session-resilience-background-refresh: ready-for-dev  # background token refresh, keep-alive for idle tabs, extended warning threshold
@@ -253,6 +253,7 @@ development_status:
   8-0g-comprehensive-app-documentation: ready-for-dev  # end-user guide + developer documentation, page-by-page with card/table derivation explanations
   8-0h-monthly-metric-snapshots-mom-trend: ready-for-dev  # metric_snapshots table, monthly scheduler, backfill, 4 MoM metrics computed from real historical data. Zero-debt-forward: no broken 0% arrows
   8-0i-correction-aware-flag-reading: ready-for-dev  # getEffectiveEventFlag() helper, applied to reconciliation engine, comparison engine, inactive loan detector, pre-submission service. Completes Story 7.3's full intent
+  8-0j-selective-baseline-mda-review-handoff: backlog  # Three-stage pipeline: selective batch baseline (Clean+Minor auto, Significant+ flagged) → MDA officer review with mandatory reasons (online drawer or bulk download/upload) → DEPT_ADMIN verify + baseline. 14-day per-MDA review window with 3-day countdown. Depends on 8.0b. Parallel with 8.0h+8.0i. PM triage 2026-04-02
   8-1-zero-balance-detection-auto-stop-trigger: ready-for-dev
   8-2-auto-stop-certificate-generation: ready-for-dev
   8-3-auto-stop-dual-notification: ready-for-dev
@@ -276,13 +277,13 @@ development_status:
   #   - Epic 15 is the on-ramp to existing Pathway 4 — no new settlement logic
   #   - Deceased: informational only (estate/guarantor recovery is policy-driven)
   #   - MDA Alias Review with persistent saved mappings (novel reusable component)
-  epic-15: backlog
-  15-1-committee-list-upload-pipeline: backlog  # Two-track wizard: 3-step approval (5-col) + 5-step retiree/deceased (17-col). MDA Alias Review, dual schema detection, flexible batch model (FR93)
-  15-2-fuzzy-name-matching-engine: backlog  # Confidence bands: High ≥95% (auto-link), Medium 85-94% (review queue), Low <85% (flagged). Token-set similarity, benchmark Jaro-Winkler vs Levenshtein (FR85 extended)
-  15-3-monthly-onboarding-scan: backlog  # Hooks into Epic 5 submission pipeline, fire-and-forget. Tracks first_deduction_month, generates attention items at 3/6 months (FR85 extended, FR33(l) extended)
-  15-4-onboarding-pipeline-dashboard-report: backlog  # Onboarding curve, per-MDA breakdown, historical rates, Executive Summary stub population, branded PDF export (FR94)
-  15-5-retirement-deceased-verification-report: backlog  # RETIRED→Pathway 4 (gratuity), DECEASED→informational. Batch event filing, three-vector validation for 17-col loan creation. HARD dep on 8.0a/8.0b (FR95)
-  15-6-attention-items-observation-integration: backlog  # Wire FR33(l) onboarding lag, extend FR87(5) No Approval Match with temporal context
+  epic-15: in-progress
+  15-1-committee-list-upload-pipeline: ready-for-dev  # Two-track wizard: 3-step approval (5-col) + 5-step retiree/deceased (17-col). Global MDA Alias Enhancement, dual schema detection, flexible batch model (FR93)
+  15-2-fuzzy-name-matching-engine: ready-for-dev  # Confidence bands: High ≥95% (auto-link), Medium 85-94% (review queue), Low <85% (flagged). Token-set similarity, benchmark Jaro-Winkler vs Levenshtein (FR85 extended)
+  15-3-monthly-onboarding-scan: ready-for-dev  # Hooks into Epic 5 submission pipeline, fire-and-forget. Tracks first_deduction_month, generates attention items at 3/6 months (FR85 extended, FR33(l) extended)
+  15-4-onboarding-pipeline-dashboard-report: ready-for-dev  # Onboarding curve, per-MDA breakdown, historical rates, Executive Summary population, branded PDF export (FR94)
+  15-5-retirement-deceased-verification-report: ready-for-dev  # RETIRED→Pathway 4 (gratuity), DECEASED→informational. Batch event filing, three-vector validation for 17-col loan creation. HARD dep on 8.0a/8.0b (FR95)
+  15-6-attention-items-observation-integration: ready-for-dev  # Wire FR33(l) onboarding lag, extend FR87(5) No Approval Match with temporal context
   epic-15-retrospective: optional
 
   # Epic 12: Early Exit Processing (Sprint 12)
@@ -303,4 +304,19 @@ development_status:
   epic-13: backlog
   13-3-staff-id-management: backlog
   13-4-duplicate-staff-id-detection: backlog
-  epic-13-retrospective: optional 
+  epic-13-retrospective: optional
+
+  # Epic 16: Cross-Month Data Integrity & Trend Analysis (Sprint 12 — parallel with E12)
+  # Detects anomalies across sequential monthly submissions: disappearing beneficiaries, principal drift,
+  # deduction drift, phantom completions, new mid-stream appearances.
+  # STATUS: Backlog — discovery spike required before story breakdown (3-5 stories estimated)
+  # DEPENDENCIES: Epic 5 (MDA Submission — done), Story 8.0d (periods). Requires ≥2 months real data.
+  # ORIGIN: Story 8.0b UAT escalation #4 (2026-04-01), PM triage 2026-04-02
+  epic-16: backlog
+  # Stories TBD — discovery spike required. Provisional arc:
+  # 16.1: Cross-month diffing engine
+  # 16.2: Anomaly classification & severity
+  # 16.3: Anomaly drill-down & record timeline
+  # 16.4: Dashboard surfacing & MDA-scoped views
+  # 16.5: Cross-month aggregate trends (optional — may merge with 16.4)
+  epic-16-retrospective: optional

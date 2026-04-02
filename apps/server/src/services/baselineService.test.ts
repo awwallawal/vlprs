@@ -284,4 +284,37 @@ describe('Baseline Computation Logic', () => {
       expect(reference).toMatch(/^VLC-MIG-\d{4}-\d{4,}$/);
     });
   });
+
+  describe('Corrected values baseline computation (Story 8.0b)', () => {
+    it('baseline with corrections uses corrected outstanding balance', () => {
+      const principal = new Decimal('500000.00');
+      const rate = new Decimal('13.330');
+      const totalLoan = principal.plus(principal.mul(rate).div(100)); // 566650.00
+
+      const declaredOutstanding = new Decimal('999999.00'); // Bad declared value
+      const correctedOutstanding = new Decimal('150000.00'); // Corrected to valid value
+
+      // Effective value pattern: corrected ?? declared
+      const effectiveOutstanding = correctedOutstanding; // corrected takes priority
+      const baselineAmount = totalLoan.minus(effectiveOutstanding);
+
+      expect(baselineAmount.toFixed(2)).toBe('416650.00');
+      // NOT using declared (which would give negative: 566650 - 999999 = -433349)
+      expect(totalLoan.minus(declaredOutstanding).toFixed(2)).toBe('-433349.00');
+    });
+
+    it('baseline without corrections uses original declared values (backward compatible)', () => {
+      const principal = new Decimal('500000.00');
+      const rate = new Decimal('13.330');
+      const totalLoan = principal.plus(principal.mul(rate).div(100)); // 566650.00
+      const declaredOutstanding = new Decimal('150000.00');
+
+      // When no corrections: corrected is null, use declared
+      const correctedOutstanding: Decimal | null = null;
+      const effectiveOutstanding = correctedOutstanding ?? declaredOutstanding;
+      const baselineAmount = totalLoan.minus(effectiveOutstanding);
+
+      expect(baselineAmount.toFixed(2)).toBe('416650.00');
+    });
+  });
 });

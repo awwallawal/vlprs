@@ -464,14 +464,18 @@ describe('Baseline Integration Tests (Story 3.4 AC 7)', () => {
       });
     });
 
-    it('returns 400 when record has null outstandingBalance', async () => {
+    it('skips record with null outstandingBalance and reports it in skippedRecords', async () => {
       const res = await request(app)
         .post(`/api/migrations/${failUploadId}/baseline`)
         .set('Authorization', `Bearer ${adminToken}`)
         .send({ confirm: true });
 
-      expect(res.status).toBe(400);
-      expect(res.body.error.code).toBe('BASELINE_MISSING_BALANCE');
+      expect(res.status).toBe(201);
+      expect(res.body.data.totalProcessed).toBe(0);
+      expect(res.body.data.loansCreated).toBe(0);
+      expect(res.body.data.skippedRecords).toBeInstanceOf(Array);
+      expect(res.body.data.skippedRecords.length).toBe(1);
+      expect(res.body.data.skippedRecords[0].staffName).toBe('No Balance Staff');
     });
   });
 
@@ -525,6 +529,165 @@ describe('Baseline Integration Tests (Story 3.4 AC 7)', () => {
         .send({ confirm: true });
 
       expect(res.status).toBe(404);
+    });
+  });
+
+  describe('Outstanding balance guard (Story 8.0b AC 7, 8)', () => {
+    it('single baseline blocked when outstanding > totalLoan, returns 422', async () => {
+      // Create a record with outstandingBalance > totalLoan
+      const badRecordId = generateUuidv7();
+      await db.insert(migrationRecords).values({
+        id: badRecordId,
+        uploadId,
+        mdaId: testMdaId,
+        sheetName: 'Sheet1',
+        rowNumber: 10,
+        era: 2023,
+        periodYear: 2025,
+        periodMonth: 6,
+        staffName: 'Bad Balance Record',
+        principal: PRINCIPAL,
+        totalLoan: TOTAL_LOAN,
+        monthlyDeduction: '9444.17',
+        installmentCount: 60,
+        computedRate: RATE,
+        varianceCategory: 'clean' as const,
+        varianceAmount: '0.00',
+        hasRateVariance: false,
+        outstandingBalance: '999999.00', // Way more than totalLoan
+        sourceFile: 'baseline-test.xlsx',
+        sourceSheet: 'Sheet1',
+        sourceRow: 10,
+      });
+
+      const res = await request(app)
+        .post(`/api/migrations/${uploadId}/records/${badRecordId}/baseline`)
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({ confirm: true });
+
+      expect(res.status).toBe(422);
+      expect(res.body.error?.code || res.body.code).toBe('BASELINE_BALANCE_EXCEEDS_LOAN');
+    });
+
+    it('batch baseline skips bad records, processes good ones, reports both', async () => {
+      // Create a fresh upload with mixed records
+      const batchUploadId = generateUuidv7();
+      await db.insert(migrationUploads).values({
+        id: batchUploadId,
+        mdaId: testMdaId,
+        uploadedBy: testUserId,
+        filename: 'batch-guard-test.xlsx',
+        fileSizeBytes: 1024,
+        sheetCount: 1,
+        totalRecords: 2,
+        status: 'validated',
+      });
+
+      const goodRecId = generateUuidv7();
+      const badRecId = generateUuidv7();
+
+      await db.insert(migrationRecords).values([
+        {
+          id: goodRecId,
+          uploadId: batchUploadId,
+          mdaId: testMdaId,
+          sheetName: 'Sheet1',
+          rowNumber: 2,
+          era: 2023,
+          staffName: 'Good Record',
+          principal: PRINCIPAL,
+          totalLoan: TOTAL_LOAN,
+          monthlyDeduction: '9444.17',
+          installmentCount: 60,
+          computedRate: RATE,
+          varianceCategory: 'clean' as const,
+          varianceAmount: '0.00',
+          hasRateVariance: false,
+          outstandingBalance: OUTSTANDING_1,
+          sourceFile: 'batch-guard-test.xlsx',
+          sourceSheet: 'Sheet1',
+          sourceRow: 2,
+        },
+        {
+          id: badRecId,
+          uploadId: batchUploadId,
+          mdaId: testMdaId,
+          sheetName: 'Sheet1',
+          rowNumber: 3,
+          era: 2023,
+          staffName: 'Bad Record',
+          principal: PRINCIPAL,
+          totalLoan: TOTAL_LOAN,
+          monthlyDeduction: '9444.17',
+          installmentCount: 60,
+          computedRate: RATE,
+          varianceCategory: 'clean' as const,
+          varianceAmount: '0.00',
+          hasRateVariance: false,
+          outstandingBalance: '999999.00', // Exceeds totalLoan
+          sourceFile: 'batch-guard-test.xlsx',
+          sourceSheet: 'Sheet1',
+          sourceRow: 3,
+        },
+      ]);
+
+      const res = await request(app)
+        .post(`/api/migrations/${batchUploadId}/baseline`)
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({ confirm: true });
+
+      expect(res.status).toBe(201);
+      const data = res.body.data;
+
+      // Good record processed
+      expect(data.loansCreated).toBe(1);
+      expect(data.totalProcessed).toBe(1);
+
+      // Bad record skipped
+      expect(data.skippedRecords).toBeInstanceOf(Array);
+      expect(data.skippedRecords.length).toBe(1);
+      expect(data.skippedRecords[0].recordId).toBe(badRecId);
+      expect(data.skippedRecords[0].staffName).toBe('Bad Record');
+      expect(data.skippedRecords[0].reason).toContain('exceeds');
+    });
+
+    it('corrected outstanding balance that is valid allows baseline through', async () => {
+      // Create record with bad declared outstanding but corrected to valid value
+      const correctedRecordId = generateUuidv7();
+      await db.insert(migrationRecords).values({
+        id: correctedRecordId,
+        uploadId,
+        mdaId: testMdaId,
+        sheetName: 'Sheet1',
+        rowNumber: 11,
+        era: 2023,
+        periodYear: 2025,
+        periodMonth: 6,
+        staffName: 'Corrected Record',
+        principal: PRINCIPAL,
+        totalLoan: TOTAL_LOAN,
+        monthlyDeduction: '9444.17',
+        installmentCount: 60,
+        computedRate: RATE,
+        varianceCategory: 'clean' as const,
+        varianceAmount: '0.00',
+        hasRateVariance: false,
+        outstandingBalance: '999999.00', // Bad declared value
+        correctedOutstandingBalance: OUTSTANDING_1, // Valid corrected value
+        correctedBy: testUserId,
+        correctedAt: new Date(),
+        sourceFile: 'baseline-test.xlsx',
+        sourceSheet: 'Sheet1',
+        sourceRow: 11,
+      });
+
+      const res = await request(app)
+        .post(`/api/migrations/${uploadId}/records/${correctedRecordId}/baseline`)
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({ confirm: true });
+
+      expect(res.status).toBe(201);
+      expect(res.body.data.loanId).toBeTruthy();
     });
   });
 });

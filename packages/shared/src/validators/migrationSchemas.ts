@@ -93,6 +93,19 @@ export const createBaselineBodySchema = z.object({
   confirm: z.literal(true),
 });
 
+// ─── Record Correction (Story 8.0b) ─────────────────────────────────
+export const correctMigrationRecordSchema = z.object({
+  outstandingBalance: z.string().regex(/^\d+(\.\d{1,2})?$/, 'Must be a valid decimal amount').optional(),
+  totalLoan: z.string().regex(/^\d+(\.\d{1,2})?$/, 'Must be a valid decimal amount').optional(),
+  monthlyDeduction: z.string().regex(/^\d+(\.\d{1,2})?$/, 'Must be a valid decimal amount').optional(),
+  installmentCount: z.number().int().min(1).max(120).optional(),
+  installmentsPaid: z.number().int().min(0).max(120).optional(),
+  installmentsOutstanding: z.number().int().min(0).max(120).optional(),
+}).refine(
+  (data) => Object.values(data).some((v) => v !== undefined),
+  { message: 'At least one field must be provided for correction' },
+);
+
 // ─── Coverage Tracker Query (Story 11.0b) ────────────────────────────
 export const coverageQuerySchema = z.object({
   extended: z.enum(['true', 'false']).optional().default('false'),

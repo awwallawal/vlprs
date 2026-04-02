@@ -515,6 +515,10 @@ Claude Opus 4.6 (1M context)
   - L3: Variance PDF filename + subtitle now show MDA code via DB lookup (both direct route and share endpoint)
   - L4: Download button auto-resets to "Download PDF" after 3 seconds
   - L5: Share response changed from `{ sent: true }` to `{ queued: true }`, integration tests updated
+- **2026-03-29 — Production Deploy Fix:** Server crashed on startup with `ENOENT: no such file or directory, open '/app/assets/oyo-crest.png'`
+  - **Root cause:** `reportPdfComponents.tsx` reads the Oyo State crest PNG via `fs.readFileSync` at module load time. tsup bundles JS but does not copy binary assets. The Dockerfile production stage only copied `dist/` and `drizzle/`, missing `src/assets/` where the PNG lives. The bundled chunk's `__dirname` resolved to `/app/dist/`, so `../assets/oyo-crest.png` pointed to `/app/assets/` which didn't exist in the container.
+  - **Fix:** Added `COPY --from=build /app/apps/server/src/assets ./assets` to `Dockerfile.server` production stage.
+  - **Retro note:** Any future static assets (images, templates, fonts) added to the server need a matching Dockerfile COPY line. The dev agent should flag non-JS assets in story File Lists as requiring Docker awareness. tsup will never bundle them.
 
 ### Completion Notes List
 
