@@ -28,6 +28,7 @@ vi.mock('../lib/logger', () => ({
 import { EVENT_FLAG_TO_EMPLOYMENT_EVENT_MAP } from '@vlprs/shared';
 import type { EventFlagType } from '@vlprs/shared';
 import { reconcileSubmission, resolveDiscrepancy } from './reconciliationEngine';
+import type { TxHandle } from '../lib/transaction';
 import { AppError } from '../lib/appError';
 
 // ─── Mock tx factory for reconcileSubmission ─────────────────────────
@@ -66,7 +67,7 @@ function buildMockTx(selectResults: unknown[][]) {
     })),
   };
 
-  return { tx, updateCalls };
+  return { tx: tx as unknown as TxHandle, updateCalls };
 }
 
 // ─── Reset mocks between tests ───────────────────────────────────────
@@ -160,7 +161,7 @@ describe('reconcileSubmission', () => {
       [], // Query 1: no CSV event rows
     ]);
 
-    const result = await reconcileSubmission(SUB_ID, MDA_ID, tx as any);
+    const result = await reconcileSubmission(SUB_ID, MDA_ID, tx);
 
     expect(result.counts).toEqual({
       matched: 0,
@@ -181,7 +182,7 @@ describe('reconcileSubmission', () => {
       [{ staffId: 'STAFF-001', staffName: 'John Doe' }],
     ]);
 
-    const result = await reconcileSubmission(SUB_ID, MDA_ID, tx as any);
+    const result = await reconcileSubmission(SUB_ID, MDA_ID, tx);
 
     expect(result.counts.matched).toBe(1);
     expect(result.counts.dateDiscrepancy).toBe(0);
@@ -201,7 +202,7 @@ describe('reconcileSubmission', () => {
       [{ staffId: 'STAFF-001', staffName: 'Jane Doe' }],
     ]);
 
-    const result = await reconcileSubmission(SUB_ID, MDA_ID, tx as any);
+    const result = await reconcileSubmission(SUB_ID, MDA_ID, tx);
 
     expect(result.counts.dateDiscrepancy).toBe(1);
     expect(result.counts.matched).toBe(0);
@@ -227,7 +228,7 @@ describe('reconcileSubmission', () => {
       ],
     ]);
 
-    const result = await reconcileSubmission(SUB_ID, MDA_ID, tx as any);
+    const result = await reconcileSubmission(SUB_ID, MDA_ID, tx);
 
     expect(result.counts.matched).toBe(1);       // STAFF-001 DECEASED matched
     expect(result.counts.unconfirmed).toBe(1);    // STAFF-002 RETIRED had no CSV match
@@ -247,7 +248,7 @@ describe('reconcileSubmission', () => {
       [{ staffId: 'STAFF-001', staffName: 'Charlie' }],
     ]);
 
-    const result = await reconcileSubmission(SUB_ID, MDA_ID, tx as any);
+    const result = await reconcileSubmission(SUB_ID, MDA_ID, tx);
 
     expect(result.counts.newCsvEvent).toBe(1);
     expect(result.counts.matched).toBe(0);
@@ -270,7 +271,7 @@ describe('reconcileSubmission', () => {
       [{ staffId: 'STAFF-002', staffName: 'Dave' }],
     ]);
 
-    const result = await reconcileSubmission(SUB_ID, MDA_ID, tx as any);
+    const result = await reconcileSubmission(SUB_ID, MDA_ID, tx);
 
     // NONE row skipped, DEATH row counted as new_csv_event
     expect(result.counts.newCsvEvent).toBe(1);
@@ -287,7 +288,7 @@ describe('reconcileSubmission', () => {
       [{ staffId: 'STAFF-001', staffName: 'Eve' }],
     ]);
 
-    const result = await reconcileSubmission(SUB_ID, MDA_ID, tx as any);
+    const result = await reconcileSubmission(SUB_ID, MDA_ID, tx);
 
     expect(result.counts.matched).toBe(1);
     expect(result.details[0].eventType).toBe('LWOP_END');
@@ -304,7 +305,7 @@ describe('reconcileSubmission', () => {
       [{ staffId: 'STAFF-001', staffName: 'Eve' }],
     ]);
 
-    const result = await reconcileSubmission(SUB_ID, MDA_ID, tx as any);
+    const result = await reconcileSubmission(SUB_ID, MDA_ID, tx);
 
     // Should match LWOP_START (the first mapped type tried)
     expect(result.counts.matched).toBe(1);
@@ -323,7 +324,7 @@ describe('reconcileSubmission', () => {
       [{ staffId: 'STAFF-001', staffName: 'Frank' }],
     ]);
 
-    const result = await reconcileSubmission(SUB_ID, MDA_ID, tx as any);
+    const result = await reconcileSubmission(SUB_ID, MDA_ID, tx);
 
     expect(result.counts.dateDiscrepancy).toBe(1);
     expect(result.counts.matched).toBe(0);
@@ -341,7 +342,7 @@ describe('reconcileSubmission', () => {
       [{ staffId: 'STAFF-001', staffName: 'Grace' }],
     ]);
 
-    const result = await reconcileSubmission(SUB_ID, MDA_ID, tx as any);
+    const result = await reconcileSubmission(SUB_ID, MDA_ID, tx);
 
     // evt-1: 2 days diff → MATCHED. evt-2: 37 days diff → DATE_DISCREPANCY
     expect(result.counts.matched).toBe(1);
@@ -361,7 +362,7 @@ describe('reconcileSubmission', () => {
       [{ staffId: 'STAFF-001', staffName: 'Hank' }],
     ]);
 
-    const result = await reconcileSubmission(SUB_ID, MDA_ID, tx as any);
+    const result = await reconcileSubmission(SUB_ID, MDA_ID, tx);
 
     expect(result.counts.matched).toBe(1);
     expect(result.details[0].daysDifference).toBe(7);
@@ -375,7 +376,7 @@ describe('reconcileSubmission', () => {
       [{ staffId: 'STAFF-001', staffName: 'Ivy' }],
     ]);
 
-    const result = await reconcileSubmission(SUB_ID, MDA_ID, tx as any);
+    const result = await reconcileSubmission(SUB_ID, MDA_ID, tx);
 
     expect(result.counts.dateDiscrepancy).toBe(1);
     expect(result.details[0].daysDifference).toBe(8);
@@ -398,7 +399,7 @@ describe('reconcileSubmission', () => {
       ],
     ]);
 
-    await reconcileSubmission(SUB_ID, MDA_ID, tx as any);
+    await reconcileSubmission(SUB_ID, MDA_ID, tx);
 
     // Should have called update twice: once for matched, once for discrepancy
     expect(tx.update).toHaveBeenCalledTimes(2);
@@ -425,7 +426,7 @@ describe('reconcileSubmission', () => {
       ],
     ]);
 
-    const result = await reconcileSubmission(SUB_ID, MDA_ID, tx as any);
+    const result = await reconcileSubmission(SUB_ID, MDA_ID, tx);
 
     expect(result.counts.matched).toBe(1);       // STAFF-001 RETIRED ↔ RETIRED
     expect(result.counts.newCsvEvent).toBe(1);    // STAFF-003 SUSPENSION → no employment event
@@ -440,7 +441,7 @@ describe('reconcileSubmission', () => {
       [], // No loan records for staff name lookup
     ]);
 
-    const result = await reconcileSubmission(SUB_ID, MDA_ID, tx as any);
+    const result = await reconcileSubmission(SUB_ID, MDA_ID, tx);
 
     expect(result.details[0].staffName).toBe('Unknown');
   });

@@ -9,6 +9,19 @@ import { generateUuidv7 } from '../lib/uuidv7';
 import { resetRateLimiters } from '../middleware/rateLimiter';
 import { resetDb } from '../test/resetDb';
 
+/** Minimal shape for validation result records returned by the API */
+interface ValRecord {
+  recordId: string;
+  staffName: string;
+  apparentRate: string | null;
+  schemeExpectedValues: {
+    totalLoan: string | null;
+    monthlyDeduction: string | null;
+    totalInterest: string | null;
+  };
+  [key: string]: unknown;
+}
+
 let testMdaId: string;
 let testUserId: string;
 let deptAdminId: string;
@@ -332,7 +345,7 @@ describe('Migration Validation Integration Tests', () => {
 
       // Record 1 (CLEAN): 250K / 60mo → scheme expected via installmentCount
       // P × 13.33% ÷ 60: monthlyInterest = 555.42, totalInterest = 33325.20, totalLoan = 283325.20
-      const clean = records.find((r: any) => r.staffName === 'CLEAN RECORD');
+      const clean = records.find((r: ValRecord) => r.staffName === 'CLEAN RECORD');
       expect(clean.schemeExpectedValues.totalLoan).toBe('283325.20');
       expect(clean.schemeExpectedValues.totalInterest).toBe('33325.20');
       expect(clean.schemeExpectedValues.monthlyDeduction).toBe('4722.09');
@@ -341,14 +354,14 @@ describe('Migration Validation Integration Tests', () => {
 
       // Record 2 (RATE VARIANCE): 450K / 60mo (installmentCount) → scheme expected with tenure 60
       // monthlyInterest = 999.75, totalInterest = 59985.00, totalLoan = 509985.00
-      const rateVar = records.find((r: any) => r.staffName === 'RATE VARIANCE RECORD');
+      const rateVar = records.find((r: ValRecord) => r.staffName === 'RATE VARIANCE RECORD');
       expect(rateVar.schemeExpectedValues.totalLoan).toBe('509985.00');
       expect(rateVar.schemeExpectedValues.totalInterest).toBe('59985.00');
       // apparentRate: 8.00% computed rate → 36mo tier → 8.00
       expect(rateVar.apparentRate).toBe('8.00');
 
       // Record 3 (ANOMALOUS): no principal → scheme expected all null, apparentRate null
-      const anomalous = records.find((r: any) => r.staffName === 'ANOMALOUS RECORD');
+      const anomalous = records.find((r: ValRecord) => r.staffName === 'ANOMALOUS RECORD');
       expect(anomalous.schemeExpectedValues.totalLoan).toBeNull();
       expect(anomalous.schemeExpectedValues.monthlyDeduction).toBeNull();
       expect(anomalous.schemeExpectedValues.totalInterest).toBeNull();
@@ -382,7 +395,7 @@ describe('Migration Validation Integration Tests', () => {
         .set('Authorization', `Bearer ${adminToken}`);
 
       expect(res.status).toBe(200);
-      const record = res.body.data.records.find((r: any) => r.staffName === 'RATE INFERRED RECORD');
+      const record = res.body.data.records.find((r: ValRecord) => r.staffName === 'RATE INFERRED RECORD');
       expect(record).toBeTruthy();
 
       // Scheme expected computed via rate-inferred tenure (36mo):
@@ -423,7 +436,7 @@ describe('Migration Validation Integration Tests', () => {
         .get(`/api/migrations/${uploadId}/validation?sortBy=source_row&sortOrder=asc`)
         .set('Authorization', `Bearer ${adminToken}`);
 
-      const cleanRecord = valRes.body.data.records.find((r: any) => r.staffName === 'CLEAN RECORD');
+      const cleanRecord = valRes.body.data.records.find((r: ValRecord) => r.staffName === 'CLEAN RECORD');
       expect(cleanRecord).toBeTruthy();
 
       // GET record detail
@@ -543,7 +556,7 @@ describe('Migration Validation Integration Tests', () => {
         .get(`/api/migrations/${uploadId}/validation?sortBy=source_row&sortOrder=asc`)
         .set('Authorization', `Bearer ${adminToken}`);
 
-      return valRes.body.data.records.find((r: any) => r.staffName === staffName);
+      return valRes.body.data.records.find((r: ValRecord) => r.staffName === staffName);
     }
 
     it('persists correction and preserves original snapshot on first correction', async () => {
