@@ -8,6 +8,7 @@ interface RecordComparisonRowProps {
   onBaseline?: (recordId: string) => void;
   isBaselineLoading?: boolean;
   isBaselineCreated?: boolean;
+  onRowClick?: (recordId: string) => void;
 }
 
 const BADGE_STYLES: Record<VarianceCategory, string> = {
@@ -60,13 +61,16 @@ function InsufficientDataCell() {
   );
 }
 
-export function RecordComparisonRow({ record, onBaseline, isBaselineLoading, isBaselineCreated }: RecordComparisonRowProps) {
+export function RecordComparisonRow({ record, onBaseline, isBaselineLoading, isBaselineCreated, onRowClick }: RecordComparisonRowProps) {
   const label = UI_COPY.VARIANCE_CATEGORY_LABELS[record.varianceCategory] ?? record.varianceCategory;
   const highlightField = getLargestVarianceField(record);
   const hasSchemeExpected = record.schemeExpectedValues.totalLoan !== null;
 
   return (
-    <tr className="border-b border-border/50 hover:bg-gray-50/50">
+    <tr
+      className={`border-b border-border/50 hover:bg-gray-50/50 ${onRowClick ? 'cursor-pointer' : ''}`}
+      onClick={() => onRowClick?.(record.recordId)}
+    >
       {/* Staff Name */}
       <td className="py-2 px-3 text-sm text-text-primary font-medium">{record.staffName}</td>
 
@@ -113,7 +117,7 @@ export function RecordComparisonRow({ record, onBaseline, isBaselineLoading, isB
           ) : (
             <button
               type="button"
-              onClick={() => onBaseline(record.recordId)}
+              onClick={(e) => { e.stopPropagation(); onBaseline(record.recordId); }}
               disabled={isBaselineLoading}
               className="px-2 py-1 text-xs bg-teal/10 text-teal border border-teal/20 rounded hover:bg-teal/20 disabled:opacity-50"
             >

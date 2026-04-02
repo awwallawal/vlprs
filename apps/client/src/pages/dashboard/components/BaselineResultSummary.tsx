@@ -4,11 +4,12 @@ import type { BatchBaselineResult } from '@vlprs/shared';
 interface BaselineResultSummaryProps {
   result: BatchBaselineResult;
   onViewLoans?: () => void;
+  onViewRecord?: (recordId: string) => void;
 }
 
 const CATEGORY_LABELS = UI_COPY.VARIANCE_CATEGORY_LABELS;
 
-export function BaselineResultSummary({ result, onViewLoans }: BaselineResultSummaryProps) {
+export function BaselineResultSummary({ result, onViewLoans, onViewRecord }: BaselineResultSummaryProps) {
   return (
     <div className="bg-teal/5 border border-teal/20 rounded-lg p-5">
       <h3 className="text-sm font-semibold text-teal mb-3">
@@ -46,6 +47,32 @@ export function BaselineResultSummary({ result, onViewLoans }: BaselineResultSum
               <span key={cat} className="text-xs text-text-secondary">
                 {CATEGORY_LABELS[cat] || cat}: <strong>{count}</strong>
               </span>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {result.skippedRecords.length > 0 && (
+        <div className="bg-amber-50/60 border border-amber-200 rounded-lg p-3 mb-4">
+          <p className="text-xs font-medium text-amber-700 uppercase mb-2">
+            {result.skippedRecords.length} record{result.skippedRecords.length !== 1 ? 's' : ''} require review
+          </p>
+          <div className="space-y-1">
+            {result.skippedRecords.map((r) => (
+              <div key={r.recordId} className="flex items-center justify-between text-xs">
+                <span className="text-text-secondary">{r.staffName}</span>
+                {onViewRecord ? (
+                  <button
+                    type="button"
+                    onClick={() => onViewRecord(r.recordId)}
+                    className="text-teal hover:text-teal-hover underline"
+                  >
+                    Review
+                  </button>
+                ) : (
+                  <span className="text-amber-600">Review required</span>
+                )}
+              </div>
             ))}
           </div>
         </div>

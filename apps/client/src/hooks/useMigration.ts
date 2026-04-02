@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient, authenticatedFetch, parseJsonResponse } from '@/lib/apiClient';
-import type { MigrationUploadPreview, MigrationUploadSummary, MdaListItem, ValidationSummary, ValidationResult, VarianceCategory, BaselineResult, BatchBaselineResult, BaselineSummary } from '@vlprs/shared';
+import type { MigrationUploadPreview, MigrationUploadSummary, MdaListItem, ValidationSummary, ValidationResult, VarianceCategory, BaselineResult, BatchBaselineResult, BaselineSummary, MigrationRecordDetail } from '@vlprs/shared';
 
 export function useUploadMigration() {
   const queryClient = useQueryClient();
@@ -133,10 +133,11 @@ export function useCreateBaseline(uploadId: string) {
         method: 'POST',
         body: JSON.stringify({ confirm: true }),
       }),
-    onSuccess: () => {
+    onSuccess: (_data, { recordId }) => {
       queryClient.invalidateQueries({ queryKey: ['migrations'] });
       queryClient.invalidateQueries({ queryKey: ['baseline-summary', uploadId] });
       queryClient.invalidateQueries({ queryKey: ['validation', uploadId] });
+      queryClient.invalidateQueries({ queryKey: ['migrations', uploadId, 'records', recordId] });
     },
   });
 }
@@ -153,6 +154,33 @@ export function useCreateBatchBaseline(uploadId: string) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['migrations'] });
       queryClient.invalidateQueries({ queryKey: ['baseline-summary', uploadId] });
+      queryClient.invalidateQueries({ queryKey: ['validation', uploadId] });
+    },
+  });
+}
+
+// ─── Record Detail & Correction (Story 8.0b) ───────────────────────
+
+export function useMigrationRecordDetail(uploadId: string, recordId: string | null) {
+  return useQuery<MigrationRecordDetail>({
+    queryKey: ['migrations', uploadId, 'records', recordId],
+    queryFn: () => apiClient<MigrationRecordDetail>(`/migrations/${uploadId}/records/${recordId}`),
+    enabled: !!uploadId && !!recordId,
+    staleTime: 15_000,
+  });
+}
+
+export function useCorrectMigrationRecord(uploadId: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation<MigrationRecordDetail, Error, { recordId: string; corrections: Record<string, unknown> }>({
+    mutationFn: ({ recordId, corrections }) =>
+      apiClient<MigrationRecordDetail>(`/migrations/${uploadId}/records/${recordId}/correct`, {
+        method: 'PATCH',
+        body: JSON.stringify(corrections),
+      }),
+    onSuccess: (_data, { recordId }) => {
+      queryClient.invalidateQueries({ queryKey: ['migrations', uploadId, 'records', recordId] });
       queryClient.invalidateQueries({ queryKey: ['validation', uploadId] });
     },
   });

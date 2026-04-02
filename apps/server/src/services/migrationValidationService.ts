@@ -4,8 +4,8 @@ import { db } from '../db/index';
 import { migrationUploads, migrationRecords } from '../db/schema';
 import { AppError } from '../lib/appError';
 import { withMdaScope } from '../lib/mdaScope';
-import { VOCABULARY } from '@vlprs/shared';
-import type { VarianceCategory, ValidationSummary, ValidationResultRecord } from '@vlprs/shared';
+import { VOCABULARY, inferTierFromPrincipal } from '@vlprs/shared';
+import type { VarianceCategory, ValidationSummary, ValidationResultRecord, MigrationRecordDetail } from '@vlprs/shared';
 import { computeRepaymentSchedule, computeSchemeExpected, inferTenureFromRate } from './computationEngine';
 import { detectMultiMda } from '../migration/mdaDelineation';
 
@@ -559,4 +559,289 @@ export async function getValidationResults(
       totalPages: Math.ceil(total / params.limit),
     },
   };
+}
+
+// ─── Record Detail (Story 8.0b) ────────────────────────────────────
+
+/**
+ * Get full detail for a single migration record including all three vectors.
+ */
+export async function getRecordDetail(
+  recordId: string,
+  uploadId: string,
+  mdaScope?: string | null,
+): Promise<MigrationRecordDetail> {
+  // Verify upload exists and is accessible
+  const [upload] = await db
+    .select()
+    .from(migrationUploads)
+    .where(
+      and(
+        eq(migrationUploads.id, uploadId),
+        withMdaScope(migrationUploads.mdaId, mdaScope),
+        isNull(migrationUploads.deletedAt),
+      ),
+    );
+
+  if (!upload) {
+    throw new AppError(404, 'UPLOAD_NOT_FOUND', VOCABULARY.MIGRATION_UPLOAD_NOT_FOUND);
+  }
+
+  // Fetch the specific record
+  const [record] = await db
+    .select()
+    .from(migrationRecords)
+    .where(
+      and(
+        eq(migrationRecords.id, recordId),
+        eq(migrationRecords.uploadId, uploadId),
+        isNull(migrationRecords.deletedAt),
+      ),
+    );
+
+  if (!record) {
+    throw new AppError(404, 'RECORD_NOT_FOUND', 'The requested migration record was not found.');
+  }
+
+  // Compute apparent rate (virtual field from computedRate via tier table)
+  let apparentRate: string | null = null;
+  if (record.computedRate) {
+    const inferredTenure = inferTenureFromRate(record.computedRate);
+    if (inferredTenure !== null) {
+      apparentRate = new Decimal('13.33').mul(inferredTenure).div(60).toDecimalPlaces(2, Decimal.ROUND_HALF_UP).toFixed(2);
+    }
+  }
+
+  return {
+    recordId: record.id,
+    uploadId: record.uploadId,
+    staffName: record.staffName,
+    staffId: record.employeeNo ?? null,
+    gradeLevel: record.gradeLevel ?? null,
+    station: record.station ?? null,
+    mdaText: record.mdaText ?? null,
+    serialNumber: record.serialNumber ?? null,
+    sheetName: record.sheetName,
+    sourceRow: record.sourceRow,
+    era: record.era,
+    periodYear: record.periodYear ?? null,
+    periodMonth: record.periodMonth ?? null,
+    varianceCategory: (record.varianceCategory ?? 'anomalous') as VarianceCategory,
+    varianceAmount: record.varianceAmount ?? null,
+    computedRate: record.computedRate ?? null,
+    apparentRate,
+    hasRateVariance: record.hasRateVariance,
+    declaredValues: {
+      principal: record.principal ?? null,
+      totalLoan: record.totalLoan ?? null,
+      monthlyDeduction: record.monthlyDeduction ?? null,
+      outstandingBalance: record.outstandingBalance ?? null,
+      interestTotal: record.interestTotal ?? null,
+      installmentCount: record.installmentCount ?? null,
+      installmentsPaid: record.installmentsPaid ?? null,
+      installmentsOutstanding: record.installmentsOutstanding ?? null,
+    },
+    computedValues: {
+      totalLoan: record.computedTotalLoan ?? null,
+      monthlyDeduction: record.computedMonthlyDeduction ?? null,
+      outstandingBalance: record.computedOutstandingBalance ?? null,
+    },
+    schemeExpectedValues: {
+      totalLoan: record.schemeExpectedTotalLoan ?? null,
+      monthlyDeduction: record.schemeExpectedMonthlyDeduction ?? null,
+      totalInterest: record.schemeExpectedTotalInterest ?? null,
+    },
+    // Grade inference from principal amount
+    inferredGrade: (() => {
+      if (!record.principal) return null;
+      const tier = inferTierFromPrincipal(record.principal);
+      if (!tier) return null;
+      return { tier: tier.tier, gradeLevels: tier.gradeLevels, maxPrincipal: tier.maxPrincipal };
+    })(),
+    isBaselineCreated: record.isBaselineCreated,
+    loanId: record.loanId ?? null,
+    // Correction fields
+    correctedValues: (record.correctedOutstandingBalance ?? record.correctedTotalLoan ?? record.correctedMonthlyDeduction ?? record.correctedInstallmentCount ?? record.correctedInstallmentsPaid ?? record.correctedInstallmentsOutstanding) != null
+      ? {
+          outstandingBalance: record.correctedOutstandingBalance ?? null,
+          totalLoan: record.correctedTotalLoan ?? null,
+          monthlyDeduction: record.correctedMonthlyDeduction ?? null,
+          installmentCount: record.correctedInstallmentCount ?? null,
+          installmentsPaid: record.correctedInstallmentsPaid ?? null,
+          installmentsOutstanding: record.correctedInstallmentsOutstanding ?? null,
+        }
+      : null,
+    originalValuesSnapshot: (record.originalValuesSnapshot as Record<string, unknown>) ?? null,
+    correctedBy: record.correctedBy ?? null,
+    correctedAt: record.correctedAt?.toISOString() ?? null,
+  };
+}
+
+// ─── Record Correction (Story 8.0b) ────────────────────────────────
+
+interface CorrectionInput {
+  outstandingBalance?: string;
+  totalLoan?: string;
+  monthlyDeduction?: string;
+  installmentsPaid?: number;
+  installmentsOutstanding?: number;
+  installmentCount?: number;
+}
+
+/**
+ * Apply corrections to a migration record before baseline establishment.
+ * Wrapped in a transaction to prevent race conditions with concurrent baseline attempts.
+ */
+export async function correctRecord(
+  recordId: string,
+  uploadId: string,
+  corrections: CorrectionInput,
+  userId: string,
+  mdaScope?: string | null,
+): Promise<MigrationRecordDetail> {
+  // Verify upload exists and is accessible (outside transaction — acceptable because the
+  // record lock inside the transaction prevents concurrent modification, and FK constraints
+  // ensure record integrity if upload is deleted between check and transaction start)
+  const [upload] = await db
+    .select()
+    .from(migrationUploads)
+    .where(
+      and(
+        eq(migrationUploads.id, uploadId),
+        withMdaScope(migrationUploads.mdaId, mdaScope),
+        isNull(migrationUploads.deletedAt),
+      ),
+    );
+
+  if (!upload) {
+    throw new AppError(404, 'UPLOAD_NOT_FOUND', VOCABULARY.MIGRATION_UPLOAD_NOT_FOUND);
+  }
+
+  await db.transaction(async (tx) => {
+    // Lock the record to prevent concurrent modification
+    const [record] = await tx
+      .select()
+      .from(migrationRecords)
+      .where(
+        and(
+          eq(migrationRecords.id, recordId),
+          eq(migrationRecords.uploadId, uploadId),
+          isNull(migrationRecords.deletedAt),
+        ),
+      )
+      .for('update');
+
+    if (!record) {
+      throw new AppError(404, 'RECORD_NOT_FOUND', 'The requested migration record was not found.');
+    }
+
+    // Cannot correct an already-baselined record
+    if (record.isBaselineCreated) {
+      throw new AppError(409, 'RECORD_ALREADY_BASELINED', 'This record already has an established baseline. Corrections can only be made before baseline establishment.');
+    }
+
+    // On first correction: snapshot original values (including variance)
+    const isFirstCorrection = record.originalValuesSnapshot === null;
+    const originalSnapshot = isFirstCorrection
+      ? {
+          outstandingBalance: record.outstandingBalance,
+          totalLoan: record.totalLoan,
+          monthlyDeduction: record.monthlyDeduction,
+          installmentCount: record.installmentCount,
+          installmentsPaid: record.installmentsPaid,
+          installmentsOutstanding: record.installmentsOutstanding,
+          varianceCategory: record.varianceCategory,
+          varianceAmount: record.varianceAmount,
+        }
+      : undefined;
+
+    // Build update payload
+    const updateData: Record<string, unknown> = {
+      correctedBy: userId,
+      correctedAt: new Date(),
+    };
+
+    if (isFirstCorrection && originalSnapshot) {
+      updateData.originalValuesSnapshot = originalSnapshot;
+    }
+
+    if (corrections.outstandingBalance !== undefined) {
+      updateData.correctedOutstandingBalance = corrections.outstandingBalance;
+    }
+    if (corrections.totalLoan !== undefined) {
+      updateData.correctedTotalLoan = corrections.totalLoan;
+    }
+    if (corrections.monthlyDeduction !== undefined) {
+      updateData.correctedMonthlyDeduction = corrections.monthlyDeduction;
+    }
+    if (corrections.installmentCount !== undefined) {
+      updateData.correctedInstallmentCount = corrections.installmentCount;
+    }
+    if (corrections.installmentsPaid !== undefined) {
+      updateData.correctedInstallmentsPaid = corrections.installmentsPaid;
+    }
+    if (corrections.installmentsOutstanding !== undefined) {
+      updateData.correctedInstallmentsOutstanding = corrections.installmentsOutstanding;
+
+      // Auto-recompute outstanding balance when installmentsOutstanding is corrected
+      // but outstandingBalance is NOT explicitly provided in this correction
+      if (corrections.outstandingBalance === undefined) {
+        const effectiveMonthly = corrections.monthlyDeduction ?? record.correctedMonthlyDeduction ?? record.monthlyDeduction;
+        if (effectiveMonthly) {
+          const autoOutstanding = new Decimal(effectiveMonthly).mul(corrections.installmentsOutstanding).toFixed(2);
+          updateData.correctedOutstandingBalance = autoOutstanding;
+        }
+      }
+    }
+
+    // Re-compute scheme expected if installmentCount changed
+    if (corrections.installmentCount !== undefined && record.principal) {
+      try {
+        const scheme = computeSchemeExpected(record.principal, corrections.installmentCount);
+        updateData.schemeExpectedTotalLoan = scheme.totalLoan;
+        updateData.schemeExpectedMonthlyDeduction = scheme.monthlyDeduction;
+        updateData.schemeExpectedTotalInterest = scheme.totalInterest;
+      } catch {
+        // Invalid values for scheme computation — leave existing scheme expected
+      }
+    }
+
+    // Re-compute variance using corrected values vs scheme expected
+    const effectiveOutstanding = (corrections.outstandingBalance ?? record.correctedOutstandingBalance ?? record.outstandingBalance);
+    const effectiveTotalLoan = (corrections.totalLoan ?? record.correctedTotalLoan ?? record.totalLoan);
+    const effectiveMonthlyDed = (corrections.monthlyDeduction ?? record.correctedMonthlyDeduction ?? record.monthlyDeduction);
+
+    // Use updated scheme expected if just recomputed, otherwise existing
+    const schemeExpTotalLoan = (updateData.schemeExpectedTotalLoan as string | undefined) ?? record.schemeExpectedTotalLoan;
+    const schemeExpMonthlyDed = (updateData.schemeExpectedMonthlyDeduction as string | undefined) ?? record.schemeExpectedMonthlyDeduction;
+
+    const diffs: Decimal[] = [];
+    if (schemeExpTotalLoan && effectiveTotalLoan) {
+      diffs.push(new Decimal(effectiveTotalLoan).minus(schemeExpTotalLoan).abs());
+    } else if (record.computedTotalLoan && effectiveTotalLoan) {
+      diffs.push(new Decimal(effectiveTotalLoan).minus(record.computedTotalLoan).abs());
+    }
+    if (schemeExpMonthlyDed && effectiveMonthlyDed) {
+      diffs.push(new Decimal(effectiveMonthlyDed).minus(schemeExpMonthlyDed).abs());
+    } else if (record.computedMonthlyDeduction && effectiveMonthlyDed) {
+      diffs.push(new Decimal(effectiveMonthlyDed).minus(record.computedMonthlyDeduction).abs());
+    }
+    if (effectiveOutstanding && record.computedOutstandingBalance) {
+      diffs.push(new Decimal(effectiveOutstanding).minus(record.computedOutstandingBalance).abs());
+    }
+
+    if (diffs.length > 0) {
+      const maxDiff = Decimal.max(...diffs);
+      updateData.varianceAmount = maxDiff.toFixed(2);
+      updateData.varianceCategory = categoriseByAmount(maxDiff);
+    }
+
+    await tx
+      .update(migrationRecords)
+      .set(updateData)
+      .where(eq(migrationRecords.id, recordId));
+  });
+
+  // Return updated record detail (after transaction commits so db sees changes)
+  return getRecordDetail(recordId, uploadId, mdaScope);
 }

@@ -3,8 +3,10 @@ stepsCompleted: [1, 2, 3, 4]
 lastStep: 4
 status: 'complete'
 completedAt: '2026-02-14'
-lastEdited: '2026-03-17'
+lastEdited: '2026-03-29'
 editHistory:
+  - date: '2026-03-29'
+    changes: 'Epic 15 — Beneficiary Onboarding & Verification Pipeline: Added new Epic 15 with 6 stories (15.1 Committee List Upload Pipeline, 15.2 Fuzzy Name Matching Engine, 15.3 Monthly Onboarding Scan, 15.4 Onboarding Pipeline Dashboard & Report, 15.5 Retirement & Deceased Verification Report, 15.6 Attention Items & Observation Integration). Added FR93-FR95 to FR coverage map. Extended FR85 coverage note (now Epic 3 + Epic 15). Added Epic 15 to sprint sequence as Sprint 15 (after E8 prep, parallel with E8 core). Updated critical path with E15 branch. Updated total: 15 sprints, 77 stories. Added Sprint 15 demonstrability milestone. Full specification in epic-15-beneficiary-onboarding-pipeline.md, team review in epic-15-team-review.md. Source: E7+E6 retro Planning Item A, PM discovery session with Awwal.'
   - date: '2026-03-17'
     changes: 'UAT Remediation Cascade — Story 11.0 split + FR91/FR92: Split Story 11.0 (UAT Enablement & Dashboard Remediation) into Story 11.0a (Dashboard Remediation & UAT Enablement — drill-down filtering bug fix, scheme fund config, historical period bypass, seed data, upload discoverability) and Story 11.0b (Migration Coverage Tracker — MDA x month matrix with CSV/PDF export, role-based scoping). Added FR91 (Migration Coverage Tracker) and FR92 (Scheme Fund Total Configuration) to requirements inventory and FR coverage map. Updated Epic 11 summary to include remediation scope. Updated Epic 11 FRs covered: added FR91, FR92. Updated sequence: 11.1 → 11.0a → 11.0b → 11.2 → 11.2b → 5.6 → 11.3 → 11.4. Updated sprint sequence table: Epic 11 stories 6→8. Updated total stories 67→71. Added missing edit history entries for 2026-03-16 (Story 5.6 move) and 2026-03-17 (Story 11.0 addition + split).'
   - date: '2026-03-16'
@@ -347,6 +349,10 @@ This document provides the complete epic and story breakdown for VLPRS, decompos
 | FR90 | Epic 3 | Intelligent Column Mapping (298+ header variants, 4 format eras) |
 | FR91 | Epic 11 | Migration Coverage Tracker (MDA x month matrix, CSV/PDF export) |
 | FR92 | Epic 11 | Scheme Fund Total Configuration (SUPER_ADMIN dialog, Fund Available computation) |
+| FR93 | Epic 15 | Committee List Upload Pipeline (two-track wizard: approval 3-step + retiree/deceased 5-step, MDA Alias Review, dual schema detection, flexible batch model) |
+| FR94 | Epic 15 | Onboarding Pipeline Dashboard (onboarding curve, per-MDA breakdown, historical rates, Executive Summary stub) |
+| FR95 | Epic 15 | Retirement & Deceased Verification Report (Pathway 4 integration, batch event filing, three-vector validation for 17-column data) |
+| FR85 | Epic 15 (extended) | Temporal onboarding tracking, fuzzy matching with confidence bands, monthly scan cycle (originally Epic 3 static cross-reference — now extended for Epic 15 pipeline) |
 
 ## Sprint Sequence (Solo Developer — 2-Week Sprints)
 
@@ -368,8 +374,9 @@ Implementation order derived from PRD Build Sequence (14 steps). Each sprint map
 | 12 | Epic 12: Early Exit Processing | 3 | Step 13 | Epic 8 (Auto-Stop Certificate generation) | Full loan completion paths operational |
 | 13 | Epic 9: Notifications & Alerts | 3 | Step 14 | Epic 8 (completion notifications) | Operational loop complete |
 | 14 | Epic 13: Staff ID Governance | 2 | Step 15 | Epic 1 (user management foundation) | Staff ID data quality self-sufficiency achieved |
+| 11 (parallel) | Epic 15: Beneficiary Onboarding & Verification | 6 | — | Epic 5 (submission pipeline), Epic 10/11 (temporal profile), Prep 8.0a (three-vector model for Story 15.5 only) | AG can answer "we approved X loans — are they all being deducted?" with per-MDA drill-down and onboarding curves |
 
-**Total:** 14 sprints, 71 stories, ~28 weeks (7 months). Epic 3 reshaped from 5 to 8 stories per sprint change proposal (FR87-FR90 additions). FR83-FR86 attach to existing epics — story count impact determined during sprint planning (may add 1-2 small stories or expand existing stories). Story 11.2b split from Story 11.3 Task 0 (eventFlagTypeEnum extension + ManualEntryForm event flag fields) per PM validation — keeps reconciliation engine story focused. Story 5.6 (Submission Detail View) moved from Epic 5 to Epic 11 sequence (after 11.2b, before 11.3) per PM validation 2026-03-16 — event flag enum must be extended before the detail view ships, and MDA Officers will not access the app until Epic 11 completes. Story 11.0 (UAT Enablement) added and split into 11.0a (Dashboard Remediation) + 11.0b (Migration Coverage Tracker) per PM decision 2026-03-17 — sizing guardrail applied, FR91/FR92 added.
+**Total:** 14 sprints (E15 parallel with E8 in Sprint 11), 101 stories, ~28 weeks (7 months). Epic 3 reshaped from 5 to 8 stories per sprint change proposal (FR87-FR90 additions). FR83-FR86 attach to existing epics — story count impact determined during sprint planning (may add 1-2 small stories or expand existing stories). Story 11.2b split from Story 11.3 Task 0 (eventFlagTypeEnum extension + ManualEntryForm event flag fields) per PM validation — keeps reconciliation engine story focused. Story 5.6 (Submission Detail View) moved from Epic 5 to Epic 11 sequence (after 11.2b, before 11.3) per PM validation 2026-03-16 — event flag enum must be extended before the detail view ships, and MDA Officers will not access the app until Epic 11 completes. Story 11.0 (UAT Enablement) added and split into 11.0a (Dashboard Remediation) + 11.0b (Migration Coverage Tracker) per PM decision 2026-03-17 — sizing guardrail applied, FR91/FR92 added.
 
 **Sequencing rationale (Sprints 7-10):** Submissions (E5) before Reports (E6). MDA officers start submitting in Sprint 7 — every month delayed is one less month of live data by launch. E11 immediately after E5 completes the submission experience (officers never use submissions without the pre-submission checkpoint). E7 after E5+E11 means the exception queue has both promoted observations from Epic 3 and submission variances to work with. E6 last in this block means reports contain migration data + 2-3 months of live submissions + event reconciliation + resolved exceptions — the AG hands the Commissioner a report that shows a living system, not a migration snapshot.
 
@@ -379,12 +386,14 @@ Implementation order derived from PRD Build Sequence (14 steps). Each sprint map
 Epic 1 → Epic 14 (public site — parallel-safe, no backend dependency)
 Epic 1 → Epic 2 → Epic 10 → Epic 3 → Epic 4 → Epic 5 → Epic 11
                                                        ↘ Epic 7 → Epic 6
-                                    Epic 2 → Epic 8 → Epic 12
-                                                     ↘ Epic 9
+                                    Epic 2 → Epic 8 prep → Epic 15 (15.1-15.4 parallel with E8 core)
+                                                         → Epic 15.5 (after 8.0a/8.0b)
+                                             Epic 8 → Epic 12
+                                                    ↘ Epic 9
                                     Epic 1 → Epic 13
 ```
 
-**Longest path:** Epic 1 → 2 → 10 → 3 → 4 → 5 → 11 (7 sprints / 14 weeks to full submission workflow). Epic 7 and Epic 6 follow on the same branch after E5. Epic 14 runs on a parallel track after Epic 1.
+**Longest path:** Epic 1 → 2 → 10 → 3 → 4 → 5 → 11 (7 sprints / 14 weeks to full submission workflow). Epic 7 and Epic 6 follow on the same branch after E5. Epic 14 runs on a parallel track after Epic 1. Epic 15 runs after E8 prep stories — Stories 15.1-15.4 parallel with E8 core, Story 15.5 depends on 8.0a/8.0b completion.
 
 ### Demonstrability Milestones
 
@@ -400,7 +409,8 @@ Epic 1 → Epic 2 → Epic 10 → Epic 3 → Epic 4 → Epic 5 → Epic 11
 | Sprint 9 | Exception queue operational — promoted observations from migration + submission variances flowing. Deputy AG investigation workflow complete. |
 | Sprint 10 | **Commissioner report** — branded PDFs containing migration data + live submissions + events + exceptions. Living-system proof, not a static snapshot. |
 | Sprint 11 | Auto-Stop Certificates — automatic deduction cessation at loan completion |
-| Sprint 14 | Full MVP — all 90 FRs, all 14 features, administrative self-sufficiency |
+| Sprint 11 | **Auto-Stop Certificates + Onboarding pipeline** — E8 core (zero-balance detection, certificate generation, dual notification) runs parallel with E15 (committee list upload, fuzzy matching, monthly scan, onboarding dashboard, retirement/deceased verification). AG can answer "we approved X loans, are they all being deducted?" with per-MDA onboarding curves. |
+| Sprint 14 | Full MVP — all 95 FRs, all 15 features, administrative self-sufficiency |
 
 ## Epic List
 
@@ -433,7 +443,7 @@ Admin can flag loan records as exceptions, investigate via a priority-sorted que
 **FRs covered:** FR55, FR56, FR57, FR58, FR59
 
 ### Epic 8: Auto-Stop Certificate & Loan Completion
-When a loan balance reaches zero, the system automatically generates an official Auto-Stop Certificate with verification code and QR, and sends it to both the beneficiary and MDA Reporting Officer with instruction to cease deductions. The "never over-deducted again" guarantee made tangible. Premium visual treatment.
+When a loan balance reaches zero, the system automatically generates an official Auto-Stop Certificate with verification code and QR, and sends it to both the beneficiary and MDA Reporting Officer with instruction to cease deductions. The "never over-deducted again" guarantee made tangible. Premium visual treatment. Prep stories include: scheme formula computation (8.0a), record detail & correction flow (8.0b), dashboard hygiene (8.0c), multi-sheet period handling with confirmation gate (8.0d), session resilience (8.0e), coverage tracker drill-down (8.0f), app documentation (8.0g), MoM metric snapshots (8.0h), correction-aware flags (8.0i), and selective baseline & MDA review handoff with bulk correction import/export (8.0j).
 **FRs covered:** FR7, FR8, FR9
 
 ### Epic 9: Notifications & Automated Alerts
@@ -455,6 +465,14 @@ Department Admin can compute a lump-sum payoff for active loans, record staff co
 ### Epic 13: Staff ID Governance
 MDA officers can manage Staff IDs within their assigned MDA; admin users can manage Staff IDs system-wide. Duplicate Staff ID detection warns before assignment. All changes audit-logged. Staff ID data quality self-sufficiency. (Note: User account management — FR72, FR73 — moved to Epic 1, Stories 1.9a/1.9b.)
 **FRs covered:** FR74, FR75
+
+### Epic 15: Beneficiary Onboarding & Verification Pipeline
+A living, month-over-month tracking pipeline that ingests approved beneficiary and retiree/deceased lists from the Committee, matches them against operational loan records using fuzzy name matching with confidence scoring, scans each month's MDA submissions to track when approved beneficiaries first appear, and surfaces "not yet operational" beneficiaries with aging and per-MDA drill-down. Two-track Committee Lists upload wizard: 3-step approval track (5-column auto-detect, MDA Alias Review with persistent saved mappings) and 5-step retiree/deceased track (17-column schema, three-vector validation, deceased detection via LATE prefix). Retirement verification feeds into existing Pathway 4 (gratuityProjectionService). Deceased verification is informational only (estate/guarantor recovery is policy-driven). Populates the Executive Summary onboarding stub. Does NOT build new settlement logic — Epic 15 is the on-ramp to existing infrastructure. Full specification: `_bmad-output/planning-artifacts/epic-15-beneficiary-onboarding-pipeline.md`.
+**FRs covered:** FR85 (extended), FR93, FR94, FR95
+
+### Epic 16: Cross-Month Data Integrity & Trend Analysis
+When sequential monthly submissions arrive, the system automatically compares them to detect anomalies invisible to manual spreadsheet review: disappearing beneficiaries, principal drift, deduction drift, phantom completions, and new mid-stream appearances. Transforms VLPRS from a migration/processing tool into an ongoing governance instrument. Per-MDA scoped views. Anomaly classification with severity. Drill-down to individual records. Dashboard surfacing via attention items. Requires ≥2 months of real submission data to be useful.
+**FRs covered:** TBD (discovery spike required before story breakdown)
 
 ### Epic 14: Public Website & Scheme Information Portal
 The institutional public face of VLPRS — a comprehensive, government-grade multi-page public website that the AG, IT Assessors, and the general public encounter before login. Homepage with hero section, Official Programme Notice, trust strip, 4-step "How It Works" beneficiary journey, loan category cards (4 tiers), repayment & settlement rules, key capabilities, and trust & compliance signals. Top-level About the Programme page with Mission, Vision, Core Values, Programme Leadership (role-title-prominent cards for AG, Deputy AG, Director), Programme Governance, and Institutional Story. Sub-pages for programme information, eligibility, repayment rules, FAQ, MDA submission guide, downloads, news, help & support, and legal/compliance pages. Responsive navigation with 2-level dropdown structure, "About" as top-level nav item, login modal, and 4-column footer with legal strip. All copy follows the neutral language rule — describes what VLPRS enables, never what was broken. Static content extracted to `src/content/*.ts` files for future Sanity CMS migration. Uses Sprint 1 design system — no backend API dependencies.
@@ -2711,6 +2729,161 @@ So that institutional knowledge is preserved and data corrections have a complet
 
 When a loan balance reaches zero, the system automatically generates an official Auto-Stop Certificate with verification code and QR, and sends it to both the beneficiary and MDA Reporting Officer with instruction to cease deductions.
 
+**Prep Stories (E7+E6 Retro 2026-03-29 — UAT-driven, zero-debt-forward)**
+
+Sequence: 8.0a → 8.0b → 8.0c → 8.0d → (8.0e + 8.0f parallel) → 8.0g → (8.0h + 8.0i + 8.0j parallel) → UAT checkpoint → 8.1
+
+### Story 8.0a: Migration Computation Model — Scheme Formula & Three-Vector Display
+
+As the **Accountant General**,
+I want the migration validation to compute loan figures using the authoritative scheme formula (P × 13.33% ÷ 60) and display three comparison vectors (Scheme Expected, Reverse Engineered, MDA Declared),
+So that I can see exactly where discrepancies originate — whether from the scheme rules, the MDA's spreadsheet, or the system's rate detection.
+
+**Origin:** UAT Findings #4, #5 from E7+E6 retro. Awwal's manual calculation exposed that VLPRS reverse-engineers rate from Excel's already-wrong data instead of computing from the authoritative scheme formula.
+
+### Story 8.0b: Record Detail View & Pre-Baseline Inspection/Correction Flow
+
+As a **Department Admin**,
+I want to click on any migration record row to see a detailed breakdown of declared vs computed values for every field, with the ability to correct discrepancies before establishing the baseline,
+So that I never accept impossible data (e.g. outstanding balance exceeding total loan) into the system where it cascades into every dashboard metric and report.
+
+**Origin:** UAT Findings #2, #6 from E7+E6 retro. Currently only "Establish Baseline" is clickable — no inspect, no correct, no guard against cascading wrong data.
+
+### Story 8.0c: Migration Dashboard Hygiene
+
+As a **Super Admin**,
+I want to discard incomplete/abandoned uploads from the Migration Dashboard, see clear variance labelling with MetricHelp tooltips, and have the test infrastructure updated,
+So that the dashboard only shows meaningful data and the variance figures are self-explanatory without needing to ask the development team.
+
+**Origin:** UAT Findings #3, #8 from E7+E6 retro. Includes: "Largest Variance" label + MetricHelp, discard/cancel action for uploads, abandoned upload cleanup, resetDb.ts table updates.
+
+### Story 8.0d: Multi-Sheet Period Handling
+
+As a **Department Admin**,
+I want each sheet in a multi-sheet Excel upload to have its period independently detected, displayed, and checked for overlap,
+So that uploading a file with August data in Sheet1 and September data in Sheet2 doesn't bypass safety checks on the second sheet.
+
+**Origin:** UAT Finding #9 from E7+E6 retro. Currently overlap detection only uses the first sheet's period.
+
+**Scope extension (PM triage 2026-04-02):** Add a period confirmation gate — after sheet detection, before processing begins, user must confirm: "Detected period: August 2024. [Confirm & Process] [This is wrong — let me re-select]". Prevents wrong-month uploads at the point of highest leverage. +1-2 subtasks.
+
+### Story 8.0e: Session Resilience — Background Token Refresh
+
+As **any admin user**,
+I want the system to keep my session alive while I'm actively working (even if I step away briefly to discuss findings),
+So that I'm not logged out mid-workflow during migration uploads or UAT sessions.
+
+**Origin:** UAT Finding #7 from E7+E6 retro. Current 30-minute inactivity timeout with no background keep-alive too aggressive for real workflows.
+
+### Story 8.0f: Coverage Tracker Drill-Down & CSV/Excel Download
+
+As the **Accountant General**,
+I want to click any cell in the MDA × Month Coverage Tracker grid to navigate to that month's data, and download as CSV or Excel,
+So that I can inspect and verify specific months of migrated data without navigating through multiple screens.
+
+**Origin:** UAT Finding #10 from E7+E6 retro. CSV/Excel preferred over PDF for wide-column data.
+
+### Story 8.0g: Comprehensive App Documentation
+
+As a **new developer or end user**,
+I want a comprehensive README and user guide explaining what each page does, what each card/table means, how figures are derived, and how pages connect,
+So that I can understand the system without needing to ask the development team.
+
+**Origin:** Planning Item B from E7+E6 retro. Two deliverables: End-User Guide + Developer Documentation.
+
+### Story 8.0h: Monthly Metric Snapshots & MoM Trend
+
+As the **Accountant General**,
+I want the Month-over-Month trend arrows on the Executive Summary to show real percentage changes based on historical data,
+So that I can see genuine progress (or decline) across Active Loans, Total Exposure, Monthly Recovery, and Completion Rate — not misleading 0% placeholders.
+
+**Origin:** Tech debt item #2 from E7+E6 retro. 3 of 4 MoM metrics show 0% because no historical snapshot exists. Zero-debt-forward principle: don't show broken data, fix it properly.
+
+**Scope:** New `metric_snapshots` table, monthly scheduled capture job (node-cron pattern from 7.0f/7.2), backfill current values as baseline, `executiveSummaryReportService` reads snapshots for MoM computation. Snapshot pattern reusable for future trend reporting.
+
+### Story 8.0i: Correction-Aware Flag Reading
+
+As a **Department Admin**,
+I want event flag corrections (filed in Story 7.3) to be respected by all downstream services — reconciliation engine, employment event service, inactive loan detector, and observation engine,
+So that correcting a flag actually changes how the system treats the loan, not just how it displays on the detail page.
+
+**Origin:** Tech debt item #4 from E7+E6 retro. Story 7.3 created the correction records but downstream services still read the original `submission_rows.eventFlag`. Zero-debt-forward: a correction that doesn't propagate is a half-delivered feature.
+
+**Scope:** `getEffectiveEventFlag(loanId)` helper function, applied to 4 service callsites (reconciliation, employment events, inactive detection, observations). Tests verify corrected flag is used in each pathway.
+
+### Story 8.0j: Selective Baseline & MDA Review Handoff
+
+As the **AG/Department Admin**,
+I want the batch baseline to auto-baseline clean records and flag variance records for MDA officer review, and as an **MDA Accounting Officer**, I want to review my MDA's flagged migration records and submit corrections with mandatory explanations — either individually through the system or by downloading a correction worksheet, correcting in Excel, and re-uploading,
+So that records are corrected by the person with actual domain knowledge before baselines are established, with a complete audit trail of who corrected what and why.
+
+**Origin:** Story 8.0b UAT escalations 2+3 (2026-04-01). The Alatishe case proved authority (DEPT_ADMIN) and knowledge (MDA_ADMIN) are separated — the Department Admin had to phone the MDA officer to learn that installments outstanding should be 22, not 42. The system must bridge this gap.
+
+**Dependency:** Story 8.0b (correction infrastructure — correction columns, correctRecord(), RecordDetailDrawer, audit trail). Runs parallel with 8.0h + 8.0i.
+
+**Three-Stage Pipeline:**
+
+```
+Stage 1: DEPT_ADMIN uploads → batch baseline auto-baselines Clean + Minor Variance →
+         flags Significant Variance + Structural Error + Anomalous for MDA review
+Stage 2: MDA_ADMIN reviews flagged records → corrects with mandatory explanation
+         (online one-by-one via drawer OR offline via download/correct/re-upload)
+Stage 3: DEPT_ADMIN verifies corrections → baselines individually or in batch
+```
+
+**Acceptance Criteria:**
+
+1. **Given** a batch baseline operation, **When** the DEPT_ADMIN clicks "Establish Baselines", **Then** the confirmation dialog shows a breakdown: "X records will be baselined immediately (Clean + Minor Variance). Y records will be flagged for MDA review (Significant Variance + Structural Error + Anomalous)." DEPT_ADMIN confirms to proceed.
+
+2. **Given** records flagged for MDA review, **When** the MDA Accounting Officer logs in, **Then** they see a "Migration Records Requiring Your Review" section on their dashboard, filtered to their MDA only. Shows record count and review deadline (14 days from flagging date).
+
+3. **Given** the MDA officer opens a flagged record, **When** they want to correct values, **Then** they can use the existing RecordDetailDrawer to edit financial fields with a **mandatory correction reason** (minimum 10 characters). The correction reason is required for ALL roles — DEPT_ADMIN and MDA_ADMIN alike.
+
+4. **Given** a record where the MDA officer determines the values are correct (variance is intentional), **When** the officer clicks "Mark Reviewed — Values Correct", **Then** the officer must provide a mandatory explanation (e.g., "₦600,000 approved as special case by PS — above GL08 standard entitlement"). The system sets `correctedBy`, `correctedAt`, `correctionReason` with corrected value columns remaining null — signaling "reviewed, no correction needed."
+
+5. **Given** flagged records for an MDA with high volume (50+ records), **When** the MDA officer clicks "Download Correction Worksheet", **Then** the system exports an .xlsx file with: (a) a "Corrections" sheet containing reference columns (Record ID, Staff Name, Staff ID, Grade, MDA, all declared values, scheme expected values, variance info — read-only context) and empty correction columns (Corrected Outstanding Balance, Corrected Total Loan, etc., Correction Reason), and (b) an "Instructions" sheet explaining which columns to fill in and the mandatory reason requirement. Download timestamp embedded for conflict detection.
+
+6. **Given** a completed correction worksheet is uploaded, **When** the system processes it, **Then** a preview is shown before applying: "X records with corrections ready to apply, Y records marked as reviewed (values correct), Z records unchanged (skipped), N records already baselined since download (cannot correct), M records with conflicts (modified by another user since download)." The officer reviews and clicks "Apply Corrections" to commit.
+
+7. **Given** the DEPT_ADMIN views the migration page after flagging, **When** MDA officers are reviewing, **Then** a per-MDA progress tracker is visible showing: MDA name, records reviewed / total flagged, completion percentage bar, days remaining in review window (e.g., "11 days remaining", "3 days remaining ⚠", "Overdue (2 days) — [Extend]").
+
+8. **Given** a 14-day review window per MDA (from flagging date), **When** 3 days remain (day 11), **Then** the MDA officer's dashboard shows a countdown badge ("3 days remaining") and the DEPT_ADMIN progress tracker shows an amber warning on that MDA.
+
+9. **Given** the review window expires, **When** the DEPT_ADMIN views the progress tracker, **Then** the MDA shows "Overdue (X days)" in amber with an [Extend] button. The system does NOT auto-escalate or auto-release — the DEPT_ADMIN decides: extend the window, correct directly (with mandatory reason), or follow up offline. Extension is logged (who, when, new deadline) but does not require a reason.
+
+10. **Given** MDA-reviewed records (corrections saved or "reviewed, values correct"), **When** the DEPT_ADMIN clicks a reviewed record, **Then** the RecordDetailDrawer shows: correction details (original → corrected values if any), correction reason, who reviewed, when. DEPT_ADMIN can then "Establish Baseline" individually or use "Baseline All Reviewed" for batch processing.
+
+**State Detection (no new status column):**
+
+| State | Detection Logic |
+|---|---|
+| Pending MDA Review | `isBaselineCreated = false` AND significant+ variance AND `correctedBy IS NULL` |
+| MDA Reviewed | `isBaselineCreated = false` AND `correctedBy IS NOT NULL` AND `correctionReason IS NOT NULL` |
+| Baselined | `isBaselineCreated = true` |
+
+**Separation of Duties:**
+
+| Action | DEPT_ADMIN | MDA_ADMIN |
+|---|---|---|
+| Upload migration file | Yes | No |
+| View all MDA records | Yes | No (own MDA only) |
+| Batch baseline (clean) | Yes | No |
+| Open RecordDetailDrawer | Yes | Yes (own MDA only) |
+| Submit corrections | Yes (reason mandatory) | Yes (reason mandatory) |
+| Mark reviewed (no correction) | Yes (reason mandatory) | Yes (reason mandatory) |
+| Download correction worksheet | Yes | Yes (own MDA only) |
+| Upload correction worksheet | Yes | Yes (own MDA only) |
+| Establish baseline | Yes | No |
+| Extend review window | Yes | No |
+
+**New schema:** `correction_reason` (text, nullable) column on `migration_records`. Review window tracked via `flagged_for_review_at` (timestamptz, nullable) on `migration_records` or batch-level metadata. Exact schema determined during story breakdown.
+
+**Notifications:** Dashboard indicators only in this story. Email/SMS notifications for review deadlines deferred to Epic 9 (Notifications & Automated Alerts) — extend, don't fork.
+
+**Sizing:** ~12-15 tasks. If breakdown exceeds 15, split at that point.
+
+---
+
 ### Story 8.1: Zero-Balance Detection & Auto-Stop Trigger
 
 As the **system**,
@@ -3231,3 +3404,272 @@ So that accidental duplicate assignments are caught before they cause data quali
 **Given** the duplicate warning
 **When** the user decides to cancel
 **Then** the Staff ID update is not applied and no audit entry is created
+
+---
+
+## Epic 15: Beneficiary Onboarding & Verification Pipeline
+
+A living, month-over-month tracking pipeline answering: "We approved X loans. Are they all being deducted? If not, which ones are missing and at which MDAs?"
+
+Full specification with data analysis, upload design, matching algorithm, settlement pathway connections, ALATISE dependency analysis, risk register, and decisions log: `_bmad-output/planning-artifacts/epic-15-beneficiary-onboarding-pipeline.md`
+
+Team review with data corrections, architectural decisions, and answered questions: `_bmad-output/planning-artifacts/epic-15-team-review.md`
+
+### Story 15.1: Committee List Upload Pipeline
+
+As a **Department Admin**,
+I want to upload approved beneficiary lists and retiree/deceased lists from the Committee,
+So that the system has a record of who was approved and who has retired/deceased, enabling onboarding tracking and retirement verification.
+
+**Acceptance Criteria:**
+
+**Given** a Department Admin navigates to "Committee Lists" in the admin area
+**Then** they see a dashboard showing all uploaded batches (label, year, list type, record count, upload date), separated into Approval Lists and Retiree/Deceased Lists sections, with "Upload New List" buttons
+
+**Given** the Department Admin clicks "Upload New List"
+**Then** they see batch options: "Create New Batch" (label, optional year, notes) or "Add to Existing Batch" (dropdown — addendum appends to existing batch)
+
+**Track 1 — Approval/Addendum (3 Steps):**
+
+**Given** an approval Excel file is uploaded (Step 1)
+**When** the system parses it
+**Then** it auto-detects the 5-column schema (S/N, Name, MDA, GL, Amount), handles files with or without header rows, displays a preview of first 10 rows, flags data quality issues (null GL, anomalous amounts) as amber indicators (non-blocking) (FR93)
+
+**Given** parsed MDA names (Step 2 — MDA Alias Review)
+**When** the system processes them
+**Then** each unique MDA string is matched against canonical MDAs and previously saved aliases. Auto-matched: ✅. Needs review: ⚠️. Unknown: ❌ (must select from dropdown). Confirmed mappings saved to `mda_aliases` table and reused for all future uploads. Unknown MDAs block confirmation (FR93)
+
+**Given** the Department Admin confirms (Step 3)
+**Then** records are created in `approved_beneficiaries` table with: name, mda_raw, mda_canonical_id, grade_level, approved_amount, batch_id (FK to `approval_batches`), list_type (APPROVAL or ADDENDUM), upload_date, uploaded_by, match_status (UNMATCHED), onboarding_status (NOT_YET_OPERATIONAL). Confirmation: "X beneficiaries registered for {batch label}" with per-MDA counts (FR93)
+
+**Track 2 — Retiree/Deceased (5 Steps):**
+
+**Given** a retiree/deceased Excel file is uploaded (Step 1)
+**When** the system parses it
+**Then** it detects the 17-column schema by column count and header matching, identifies multi-sheet structure, auto-skips "PAYMENT" sheets, detects "LATE" prefix names as DECEASED (FR93)
+
+**Given** parsed MDA names (Step 2)
+**Then** same MDA Alias Review as Track 1 — identical component, same saved mappings (FR93)
+
+**Given** 17-column financial data (Step 3 — Three-Vector Validation)
+**Then** for each record: Scheme Expected (P×13.33%÷60), Reverse Engineered (from file's own data), Committee Declared (raw values). Summary card: Clean / Variance / Requires Verification. Department Admin reviews and selects resolution per record (FR93, depends on prep story 8.0a)
+
+**Given** validated records (Step 4 — Match & Classify)
+**Then** system runs fuzzy matching (Story 15.2 engine). Shows: matched + active loan, matched + already retired/deceased, no match + full data (offer loan creation), no match + no data (FR93)
+
+**Given** the Department Admin confirms (Step 5)
+**Then** actions processed in individual transactions with provenance: `source: RETIREE_LIST_BATCH_IMPORT`, `uploadReference: <upload_id>`, `batchDate: <import_date>` (FR93)
+
+**Technical Notes:**
+- `approved_beneficiaries` table separate from `loans`
+- `mda_aliases` table for persistent MDA string → canonical mappings
+- `approval_batches` table: id, label, year (nullable), list_type, uploaded_at, uploaded_by, notes
+- Track 2 Steps 3-5 have hard dependency on prep story 8.0a (three-vector model)
+- Track 1 has NO dependency on 8.0a
+
+---
+
+### Story 15.2: Fuzzy Name Matching Engine
+
+As a **Department Admin**,
+I want the system to automatically match approved beneficiaries against operational loan records using intelligent name matching,
+So that I can see which approved people are already in the system without manually searching 2,500+ names.
+
+**Acceptance Criteria:**
+
+**Given** approved beneficiary records with UNMATCHED status
+**When** the matching engine runs
+**Then** it compares each name against loan records within the same canonical MDA using normalized token-set similarity (FR85 extended)
+
+**Given** a match scores ≥95% similarity with exact MDA match
+**Then** it is classified as HIGH confidence and auto-linked (match_status = MATCHED_HIGH, matched_loan_id populated). For common names within same MDA, approved_amount vs loan principal used as disambiguation tiebreaker (FR85 extended)
+
+**Given** a match scores 85-94% similarity with exact MDA, OR ≥95% with fuzzy MDA
+**Then** it is MEDIUM confidence — placed in human review queue (FR85 extended)
+
+**Given** a match scores <85%
+**Then** it is LOW confidence — flagged but not linked (FR85 extended)
+
+**Given** no plausible match found (no candidate above 70%)
+**Then** record remains UNMATCHED (FR85 extended)
+
+**Given** medium-confidence matches exist
+**When** Department Admin opens review queue
+**Then** they see: approved name, MDA, best-match loan (name, MDA, principal, status), confidence score, Confirm / Reject / Skip buttons (FR85 extended)
+
+**Given** a loan later gets a Staff ID populated (Epic 13)
+**When** the Staff ID matches a previously medium-confidence name match
+**Then** confidence auto-upgrades (FR85 extended)
+
+**Name Normalization:** uppercase, strip titles (Alhaji/Chief/Dr/Engr/etc.), strip punctuation, tokenize, compare order-independent token-set ratio.
+
+**Technical Notes:**
+- Implement both Jaro-Winkler and Levenshtein; benchmark against 20-record fixture from actual data; pick empirically
+- Performance: 2,500 records vs 5,000 loans in <30 seconds
+
+---
+
+### Story 15.3: Monthly Onboarding Scan
+
+As a **Super Admin**,
+I want the system to automatically scan each month's MDA submissions against the approved beneficiary list,
+So that I can track when each approved beneficiary's deductions actually started and see the onboarding pipeline fill up over time.
+
+**Acceptance Criteria:**
+
+**Given** an MDA submits monthly returns via Epic 5 pipeline
+**When** the submission is processed
+**Then** the system checks NOT_YET_OPERATIONAL approved beneficiaries for that MDA using the fuzzy matching engine (Story 15.2) (FR85 extended)
+
+**Given** a new HIGH-confidence match is found
+**Then** `first_deduction_month` set to submission period, `onboarding_status` → OPERATIONAL, `matched_loan_id` linked (FR85 extended)
+
+**Given** a new MEDIUM-confidence match
+**Then** added to review queue with context: "This name appeared in {MDA}'s {month} submission — confirm match?" (FR85 extended)
+
+**Given** a beneficiary NOT_YET_OPERATIONAL for ≥3 months (configurable)
+**Then** attention item generated: "{Name} approved in {batch_year}, {N} months without recorded deduction at {MDA}" — Amber status (FR33(l) extended)
+
+**Given** ≥6 months
+**Then** attention item escalates to Gold (review) status (FR33(l) extended)
+
+**Given** scan completes for a period
+**Then** summary logged and aggregate metrics updated: total operational %, per-MDA %, month-over-month change (FR85 extended)
+
+**Technical Notes:**
+- Fire-and-forget — submission processing not blocked by matcher. Results eventual, not transactional
+- Incremental: only checks NOT_YET_OPERATIONAL records
+
+---
+
+### Story 15.4: Onboarding Pipeline Dashboard & Report
+
+As a **Super Admin (AG)**,
+I want to see a dashboard showing the onboarding status of all approved beneficiaries across all MDAs,
+So that I can answer "how many approved loans are actually operational?" and identify which MDAs are slow to start deductions.
+
+**Acceptance Criteria:**
+
+**Given** a Super Admin or Department Admin navigates to the Onboarding Pipeline Dashboard
+**Then** they see: headline metrics (total approved, operational, awaiting, rate %), batch selector, onboarding curve chart (% operational over time, one line per batch year), per-MDA breakdown table (approved, operational, awaiting, rate %, avg months-to-first-deduction — sortable) (FR94)
+
+**Given** user clicks an MDA row
+**Then** drill-down shows all approved beneficiaries for that MDA: Name, GL, Amount, Status, First Deduction Month, Months Since Approval, Match Confidence (FR94)
+
+**Given** user clicks an individual beneficiary
+**Then** timeline view: Approved → Awaiting → First Deduction → Current Status, with matched loan details (FR94)
+
+**Given** historical data across batch years
+**Then** AG can view per-MDA approval-to-operational rates over time (FR94)
+
+**Given** user clicks "Export"
+**Then** branded PDF with Oyo State crest containing headline metrics, onboarding curve, per-MDA table, attention items (FR94)
+
+**Given** Executive Summary report (FR37) is generated
+**Then** Onboarding Pipeline Summary section (currently stubbed) is populated: total approved, operational, rate, top 5 slowest MDAs, count awaiting >3 months (FR94)
+
+**Non-punitive:** "Not yet operational" not "Missing". "Awaiting first deduction" not "Non-compliant". Factual averages, no rankings.
+
+---
+
+### Story 15.5: Retirement & Deceased Verification Report
+
+As a **Department Admin**,
+I want to cross-reference the Committee's retiree/deceased list against system records,
+So that I can identify retirees whose retirement events haven't been recorded, activate their gratuity settlement pathways, and record deceased beneficiaries for outstanding balance tracking.
+
+**Acceptance Criteria:**
+
+**Given** retiree/deceased records in `approved_beneficiaries`
+**When** Department Admin generates the Verification Report
+**Then** system matches against loan records using fuzzy matching engine (Story 15.2) (FR95)
+
+**Given** a retiree matches a loan with retirement event recorded
+**Then** status: "Retirement Recorded" with date and gratuity pathway status (FR95)
+
+**Given** a retiree matches active loan with NO retirement event
+**Then** status: "Retirement Not Yet Recorded — Action Required" with "Record Retirement Event" button (FR95)
+
+**Given** a retiree matches loan with stalled balance (3+ months) and no retirement event
+**Then** status: "High Priority — Likely Retirement Gap" with prominent styling (FR95)
+
+**Given** a deceased (LATE prefix) matches active loan
+**Then** status: "Deceased — Record Event" with outstanding balance. Note: "Estate/guarantor recovery — policy determination required" (FR95)
+
+**Given** no match but 17-column financial data exists
+**Then** status: "No Loan Record — Create from Committee Data?" with three-vector validation preview (FR95, depends on 8.0a)
+
+**Given** Department Admin selects retirees for batch processing
+**When** they click "Batch Record Retirements"
+**Then** preview shown, then RETIRED employment events filed → Pathway 4 (gratuityProjectionService) activates automatically. Individual transactions per record. Provenance tagged (FR95)
+
+**Given** deceased records selected
+**Then** DECEASED events filed → loan status DECEASED (terminal). Outstanding balance recorded, no auto-settlement (FR95)
+
+**Given** "No Match + Full Data" selected
+**Then** loan record created from three-vector validated data + immediate RETIRED/DECEASED status (FR95, depends on 8.0a)
+
+**Hard dependency:** Prep stories 8.0a and 8.0b must be complete before this story processes financial data.
+
+---
+
+### Story 15.6: Attention Items & Observation Integration
+
+As a **Super Admin (AG)**,
+I want the onboarding pipeline and retirement/deceased verification findings to surface in the existing attention and observation frameworks,
+So that the issues come to me on the executive dashboard.
+
+**Acceptance Criteria:**
+
+**Given** approved beneficiaries NOT_YET_OPERATIONAL ≥3 months
+**Then** attention item on dashboard: count awaiting grouped by MDA, Amber status (FR33(l) extended)
+
+**Given** ≥6 months
+**Then** escalates to Gold (review) status (FR33(l) extended)
+
+**Given** attention item clicked
+**Then** drills down to Onboarding Pipeline Dashboard filtered to relevant MDA (FR33(l) extended)
+
+**Given** retirees/deceased needing event recording (Story 15.5)
+**Then** attention item: "{N} retirees/deceased awaiting event recording" with link to Verification Report (FR95)
+
+**Given** FR87(5) "No Approval Match" observation generated
+**Then** includes temporal context: "Staff {name} in {MDA} deductions since {first_deduction_month}, no approval record for any batch year. {N} months without committee approval on file" (FR87(5) extended)
+
+---
+
+## Epic 16: Cross-Month Data Integrity & Trend Analysis
+
+When sequential monthly submissions arrive, the system compares them to detect anomalies invisible to manual spreadsheet review. Currently, if a beneficiary's principal changes between months, or a beneficiary disappears and reappears, nobody knows unless someone manually compares spreadsheets cell by cell. This epic makes the system do that comparison automatically and surface findings to the AG.
+
+**Status:** Backlog — discovery spike required before story breakdown.
+
+**Dependencies:** Epic 5 (MDA Submission — done), Story 8.0d (Multi-Sheet Period Handling). Requires ≥2 months of real submission data to be useful.
+
+**Placement:** Sprint 12, parallel with Epic 12 (Early Exit Processing). By sprint 12, the system will have multiple months of live MDA submissions flowing through the pipeline.
+
+**Origin:** Story 8.0b UAT escalation #4 (2026-04-01). Awwal: "If we get data for September 2024, we should be able to make comparison about the data and point out inconsistencies across months."
+
+**Estimated scope:** 3-5 stories (discovery spike will refine). Provisional story arc:
+
+1. **Cross-month diffing engine** — backend comparison logic that diffs submission N against submission N-1 for each MDA, detecting changes at the individual record level (matched by staff name/ID)
+2. **Anomaly classification & severity** — categorize detected changes into anomaly types with severity scoring, similar to the observation engine pattern
+3. **Anomaly drill-down & record timeline** — per-record view showing how values changed across months, with explanation request workflow
+4. **Dashboard surfacing & MDA-scoped views** — attention items for anomalies, per-MDA anomaly reports, AG-level trend overview
+5. **Cross-month aggregate trends** — portfolio-level trend analysis: total exposure trajectory, recovery rate trajectory, completion rate trajectory across months
+
+**Anomaly types to detect (from UAT evidence):**
+
+| Anomaly Type | Description | Example |
+|---|---|---|
+| Disappearing beneficiary | Name present in month N, absent in month N+1, reappears in month N+2+ | Staff stopped paying for 1 month — why? |
+| Principal drift | Approved loan amount changes between monthly submissions | ₦450,000 in Aug → ₦500,000 in Sep — data entry error or renegotiation? |
+| Deduction drift | Monthly deduction amount changes without clear reason | ₦16,999 in Aug → ₦15,000 in Sep — partial payment or error? |
+| Phantom completion | Staff disappears (assumed completed) but balance calculation shows payments remaining | Moshood pattern — vanishes from submissions but loan not fully repaid |
+| New mid-stream appearance | Staff appears for first time mid-stream (not in earlier months) | Late addition or different loan? |
+
+**Why not Epic 15:** E15 is about beneficiary *onboarding* — tracking new names from Committee approval lists to operational status. Cross-month anomaly detection covers ALL beneficiaries (existing + new) and is a fundamentally different analytical concern. Mixing them would blur E15's focus.
+
+**Non-punitive vocabulary:** "Variance observed between months" not "Inconsistency detected". "Review suggested" not "Error found". Amber indicators throughout.
+
+**Discovery spike scope:** Before committing to story breakdown, run a discovery session to: (a) validate the anomaly types above against Awwal's full expectations, (b) identify any additional anomaly patterns from real data, (c) determine whether MDA officers need an explanation/resolution workflow (similar to 8.0j's correction reasons), (d) size stories based on analytical complexity.

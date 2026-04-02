@@ -145,10 +145,15 @@ async function deriveLoanFromMigrationRecord(
   const derivedPrincipal = record.principal || derivePrincipal(record, rate);
   const principalAmount = derivedPrincipal || '0.00';
   const limitedComputation = principalAmount === '0.00';
-  const tenureMonths = inferTenure(record);
 
-  // Monthly deduction: declared or computed from schedule
-  let monthlyDeductionAmount = record.monthlyDeduction;
+  // Use corrected installmentCount for tenure inference if available (Story 8.0b)
+  const effectiveRecord = record.correctedInstallmentCount != null
+    ? { ...record, installmentCount: record.correctedInstallmentCount }
+    : record;
+  const tenureMonths = inferTenure(effectiveRecord);
+
+  // Monthly deduction: use corrected if available, else declared (Story 8.0b)
+  let monthlyDeductionAmount = record.correctedMonthlyDeduction ?? record.monthlyDeduction;
   if (!monthlyDeductionAmount) {
     const p = new Decimal(principalAmount);
     if (p.gt(0) && tenureMonths > 0) {
@@ -214,6 +219,45 @@ async function deriveLoanFromMigrationRecord(
   };
 }
 
+// ─── Baseline Eligibility Guard (Story 8.0b) ──────────────────────
+
+interface EligibilityResult {
+  eligible: boolean;
+  reason?: string;
+  code?: string;
+}
+
+/**
+ * Validate that a record is eligible for baseline creation.
+ * Uses effective values (corrected if available, else declared).
+ */
+export function validateBaselineEligibility(record: MigrationRecordRow): EligibilityResult {
+  const effectiveOutstanding = record.correctedOutstandingBalance ?? record.outstandingBalance;
+  // Use scheme expected total loan (most authoritative), fallback to computed, then declared
+  const referenceTotalLoan = record.schemeExpectedTotalLoan ?? record.computedTotalLoan ?? record.totalLoan;
+
+  if (effectiveOutstanding === null) {
+    return { eligible: false, reason: 'Missing outstanding balance — cannot establish baseline.', code: 'BASELINE_MISSING_BALANCE' };
+  }
+
+  if (referenceTotalLoan === null) {
+    return { eligible: true }; // No total loan to compare — allow (guard is specifically for outstanding > total)
+  }
+
+  const outstanding = new Decimal(effectiveOutstanding);
+  const totalLoan = new Decimal(referenceTotalLoan);
+
+  if (outstanding.greaterThan(totalLoan)) {
+    return {
+      eligible: false,
+      reason: `The outstanding balance (\u20A6${outstanding.toFixed(2)}) exceeds the total loan (\u20A6${totalLoan.toFixed(2)}). Please review and correct this value before establishing the baseline.`,
+      code: 'BASELINE_BALANCE_EXCEEDS_LOAN',
+    };
+  }
+
+  return { eligible: true };
+}
+
 function computeBaselineEntry(
   loanData: DerivedLoanData,
   record: MigrationRecordRow,
@@ -225,15 +269,13 @@ function computeBaselineEntry(
   const totalInterest = principal.mul(rate).div(100);
   const totalLoan = principal.plus(totalInterest);
 
-  const declaredOutstandingBalance = record.outstandingBalance
-    ? new Decimal(record.outstandingBalance)
-    : null;
-
-  if (declaredOutstandingBalance === null) {
-    return null; // Cannot create baseline without declared outstanding balance
+  // Use corrected outstanding balance if available, else declared (Story 8.0b)
+  const effectiveOutstandingBalance = record.correctedOutstandingBalance ?? record.outstandingBalance;
+  if (!effectiveOutstandingBalance) {
+    return null; // Cannot create baseline without outstanding balance
   }
 
-  const baselineAmount = totalLoan.minus(declaredOutstandingBalance);
+  const baselineAmount = totalLoan.minus(new Decimal(effectiveOutstandingBalance));
 
   // Principal/interest split
   let principalComponent: string;
@@ -320,6 +362,13 @@ export async function createBaseline(
       throw new AppError(409, 'BASELINE_ALREADY_EXISTS', VOCABULARY.BASELINE_ALREADY_EXISTS);
     }
 
+    // Validate baseline eligibility (Story 8.0b guard)
+    const eligibility = validateBaselineEligibility(record);
+    if (!eligibility.eligible) {
+      const statusCode = eligibility.code === 'BASELINE_BALANCE_EXCEEDS_LOAN' ? 422 : 400;
+      throw new AppError(statusCode, eligibility.code ?? 'BASELINE_MISSING_BALANCE', eligibility.reason!);
+    }
+
     // Derive loan data
     const loanData = await deriveLoanFromMigrationRecord(record, upload, 1);
 
@@ -335,11 +384,6 @@ export async function createBaseline(
       transitionedBy: actingUser.userId,
       reason: 'Migration baseline — legacy data imported as active loan',
     });
-
-    // Validate: outstanding balance required for baseline computation
-    if (!record.outstandingBalance) {
-      throw new AppError(400, 'BASELINE_MISSING_BALANCE', VOCABULARY.BASELINE_MISSING_BALANCE);
-    }
 
     // Compute and insert baseline ledger entry
     const entryData = computeBaselineEntry(loanData, record, uploadId, actingUser.userId);
@@ -378,6 +422,10 @@ export async function createBaseline(
       ledgerEntryId: entry.id,
       varianceCategory: record.varianceCategory as VarianceCategory | null,
       baselineAmount: entryData.amount,
+      correctionApplied: record.correctedOutstandingBalance != null
+        || record.correctedTotalLoan != null
+        || record.correctedMonthlyDeduction != null
+        || record.correctedInstallmentCount != null,
     };
   });
 }
@@ -426,15 +474,37 @@ export async function createBatchBaseline(
         loansCreated: 0,
         entriesCreated: 0,
         byCategory: {} as Record<string, number>,
+        skippedRecords: [],
         processingTimeMs: Date.now() - startTime,
       };
     }
 
-    // Pre-validate: all records must have outstanding balance for baseline
-    const missingBalance = records.filter(r => !r.outstandingBalance);
-    if (missingBalance.length > 0) {
-      throw new AppError(400, 'BASELINE_MISSING_BALANCE',
-        `${missingBalance.length} record(s) lack declared outstanding balance — cannot establish baselines.`);
+    // Pre-validate: check each record's baseline eligibility (skip ineligible, don't block batch)
+    const eligibleRecords: typeof records = [];
+    const skippedRecords: Array<{ recordId: string; staffName: string; reason: string }> = [];
+
+    for (const record of records) {
+      const eligibility = validateBaselineEligibility(record);
+      if (eligibility.eligible) {
+        eligibleRecords.push(record);
+      } else {
+        skippedRecords.push({
+          recordId: record.id,
+          staffName: record.staffName,
+          reason: eligibility.reason ?? 'Ineligible for baseline',
+        });
+      }
+    }
+
+    if (eligibleRecords.length === 0) {
+      return {
+        totalProcessed: 0,
+        loansCreated: 0,
+        entriesCreated: 0,
+        byCategory: {} as Record<string, number>,
+        skippedRecords,
+        processingTimeMs: Date.now() - startTime,
+      };
     }
 
     // Pre-generate sequential loan references inside transaction to avoid duplicates
@@ -449,8 +519,8 @@ export async function createBatchBaseline(
     let entriesCreated = 0;
     const byCategory: Record<string, number> = {};
 
-    for (let i = 0; i < records.length; i++) {
-      const record = records[i];
+    for (let i = 0; i < eligibleRecords.length; i++) {
+      const record = eligibleRecords[i];
 
       // Generate loan reference from pre-computed sequence
       const refSeq = refStartSeq + i;
@@ -489,17 +559,31 @@ export async function createBatchBaseline(
       byCategory[cat] = (byCategory[cat] || 0) + 1;
     }
 
-    // Update upload status to reconciled
-    await tx
-      .update(migrationUploads)
-      .set({ status: 'reconciled', updatedAt: new Date() })
-      .where(eq(migrationUploads.id, uploadId));
+    // Check if ALL records (including skipped) are now processed or skipped
+    const [remainingCount] = await tx
+      .select({ count: sql<string>`COUNT(*)` })
+      .from(migrationRecords)
+      .where(
+        and(
+          eq(migrationRecords.uploadId, uploadId),
+          eq(migrationRecords.isBaselineCreated, false),
+        ),
+      );
+
+    // Only advance to reconciled if NO unprocessed records remain (skipped records are still un-baselined)
+    if (parseInt(remainingCount.count, 10) === 0) {
+      await tx
+        .update(migrationUploads)
+        .set({ status: 'reconciled', updatedAt: new Date() })
+        .where(eq(migrationUploads.id, uploadId));
+    }
 
     return {
-      totalProcessed: records.length,
+      totalProcessed: eligibleRecords.length,
       loansCreated,
       entriesCreated,
       byCategory,
+      skippedRecords,
       processingTimeMs: Date.now() - startTime,
     };
   });

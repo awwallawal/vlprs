@@ -7,7 +7,7 @@ import { authorise } from '../middleware/authorise';
 import { scopeToMda } from '../middleware/scopeToMda';
 import { validate, validateQuery } from '../middleware/validate';
 import { auditLog } from '../middleware/auditLog';
-import { ROLES, migrationUploadQuerySchema, confirmMappingBodySchema, validationResultQuerySchema, createBaselineBodySchema, supersedeSchema } from '@vlprs/shared';
+import { ROLES, migrationUploadQuerySchema, confirmMappingBodySchema, validationResultQuerySchema, createBaselineBodySchema, correctMigrationRecordSchema, supersedeSchema } from '@vlprs/shared';
 import type { VarianceCategory } from '@vlprs/shared';
 import { AppError } from '../lib/appError';
 import { param } from '../lib/params';
@@ -175,6 +175,42 @@ router.get(
 
     const result = await migrationValidationService.getValidationResults(uploadId, params, req.mdaScope);
     res.json({ success: true, data: result });
+  },
+);
+
+// GET /api/migrations/:uploadId/records/:recordId — Record detail (Story 8.0b)
+router.get(
+  '/migrations/:uploadId/records/:recordId',
+  ...adminAuth,
+  async (req: Request, res: Response) => {
+    const uploadId = param(req.params.uploadId);
+    const recordId = param(req.params.recordId);
+
+    const detail = await migrationValidationService.getRecordDetail(recordId, uploadId, req.mdaScope);
+
+    res.json({ success: true, data: detail });
+  },
+);
+
+// PATCH /api/migrations/:uploadId/records/:recordId/correct — Apply correction (Story 8.0b)
+router.patch(
+  '/migrations/:uploadId/records/:recordId/correct',
+  ...adminAuth,
+  validate(correctMigrationRecordSchema),
+  auditLog,
+  async (req: Request, res: Response) => {
+    const uploadId = param(req.params.uploadId);
+    const recordId = param(req.params.recordId);
+
+    const detail = await migrationValidationService.correctRecord(
+      recordId,
+      uploadId,
+      req.body,
+      req.user!.userId,
+      req.mdaScope,
+    );
+
+    res.json({ success: true, data: detail });
   },
 );
 

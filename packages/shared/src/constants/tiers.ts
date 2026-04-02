@@ -21,3 +21,15 @@ export const LOAN_TIERS: LoanTierConfig[] = [
 export function getTierForGradeLevel(gradeLevel: number): LoanTierConfig | undefined {
   return LOAN_TIERS.find(t => gradeLevel >= t.minGradeLevel && gradeLevel <= t.maxGradeLevel);
 }
+
+/**
+ * Reverse lookup: given a principal amount, infer the minimum tier that could have approved it.
+ * Returns the lowest tier whose maxPrincipal >= the given principal.
+ * Returns undefined if the principal exceeds all tier limits.
+ */
+export function inferTierFromPrincipal(principal: string): LoanTierConfig | undefined {
+  const amount = Number(principal);
+  if (!amount || amount <= 0) return undefined;
+  // LOAN_TIERS is sorted by tier (ascending maxPrincipal) — find first tier that can cover this amount
+  return LOAN_TIERS.find(t => amount <= Number(t.maxPrincipal));
+}
