@@ -118,6 +118,18 @@ router.get(
   },
 );
 
+// PATCH /api/migrations/:id/discard — Discard an incomplete upload (Story 8.0c)
+router.patch(
+  '/migrations/:id/discard',
+  ...adminAuth,
+  auditLog,
+  async (req: Request, res: Response) => {
+    const uploadId = param(req.params.id);
+    const result = await migrationService.discardUpload(uploadId, req.mdaScope);
+    res.json({ success: true, data: result });
+  },
+);
+
 // GET /api/migrations — List uploads for MDA with pagination
 router.get(
   '/migrations',

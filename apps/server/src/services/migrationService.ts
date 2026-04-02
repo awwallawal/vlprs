@@ -606,6 +606,47 @@ export async function confirmOverlap(
   return { confirmed: true };
 }
 
+const DISCARDABLE_STATUSES = ['uploaded', 'mapped', 'failed'] as const;
+
+export async function discardUpload(
+  uploadId: string,
+  mdaScope: string | null | undefined,
+): Promise<{ discarded: true; recordsAffected: number }> {
+  const now = new Date();
+  let recordsAffected = 0;
+
+  await db.transaction(async (tx) => {
+    const [upload] = await tx.select()
+      .from(migrationUploads)
+      .where(and(
+        eq(migrationUploads.id, uploadId),
+        isNull(migrationUploads.deletedAt),
+        withMdaScope(migrationUploads.mdaId, mdaScope),
+      ));
+
+    if (!upload) {
+      throw new AppError(404, 'UPLOAD_NOT_FOUND', VOCABULARY.MIGRATION_UPLOAD_NOT_FOUND);
+    }
+
+    if (!(DISCARDABLE_STATUSES as readonly string[]).includes(upload.status)) {
+      throw new AppError(409, 'UPLOAD_CANNOT_BE_DISCARDED', VOCABULARY.UPLOAD_CANNOT_BE_DISCARDED);
+    }
+
+    // Soft-delete migration records
+    const result = await tx.update(migrationRecords)
+      .set({ deletedAt: now })
+      .where(and(eq(migrationRecords.uploadId, uploadId), isNull(migrationRecords.deletedAt)));
+    recordsAffected = result.rowCount ?? 0;
+
+    // Soft-delete the upload
+    await tx.update(migrationUploads)
+      .set({ deletedAt: now, updatedAt: now })
+      .where(eq(migrationUploads.id, uploadId));
+  });
+
+  return { discarded: true, recordsAffected };
+}
+
 export async function getUpload(uploadId: string, mdaScope: string | null | undefined) {
   const conditions = [
     eq(migrationUploads.id, uploadId),

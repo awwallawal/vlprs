@@ -503,6 +503,10 @@ export const observations = pgTable(
     // NOTE: Only guards record-level observations. Person-level observations (migrationRecordId=NULL)
     // are guarded by application-level dedup in observationEngine.batchInsertObservations
     uniqueIndex('idx_observations_type_record').on(table.type, table.migrationRecordId),
+    // Date-range filtering indexes (Story 8.0c — Debt Item #1)
+    index('idx_observations_created_at').on(table.createdAt),
+    index('idx_observations_reviewed_at').on(table.reviewedAt),
+    index('idx_observations_resolved_at').on(table.resolvedAt),
   ],
 );
 

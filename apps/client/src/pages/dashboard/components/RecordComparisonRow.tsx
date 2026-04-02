@@ -139,7 +139,12 @@ export function RecordComparisonHeader({ showBaseline }: { showBaseline?: boolea
       {/* Group header row */}
       <tr className="border-b border-border">
         <th className="py-2 px-3" rowSpan={2}>Staff Name</th>
-        <th className="py-2 px-3" rowSpan={2}>Category</th>
+        <th className="py-2 px-3" rowSpan={2}>
+          <span className="inline-flex items-center gap-1">
+            Variance Category
+            <MetricHelp metric="migration.varianceCategory" />
+          </span>
+        </th>
         <th className="py-1 px-3 text-center text-xs font-medium text-text-secondary border-b border-border/50" colSpan={3}>
           Total Loan
         </th>

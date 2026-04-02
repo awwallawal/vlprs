@@ -232,6 +232,8 @@ export const VOCABULARY = {
   ANNOTATION_LOAN_NOT_FOUND: 'The loan record could not be found or is not accessible.',
   CORRECTION_SAME_FLAG: 'New event flag must differ from the original.',
   CORRECTION_REASON_TOO_SHORT: 'Correction reason must be at least 10 characters.',
+  // Discard Upload (Story 8.0c)
+  UPLOAD_CANNOT_BE_DISCARDED: 'This upload has progressed beyond the mapping stage and cannot be discarded.',
 } as const;
 
 export const UI_COPY = {
