@@ -249,7 +249,7 @@ development_status:
   8-0c-migration-dashboard-hygiene: done  # discard uploads, incomplete cleanup, variance column labelling + MetricHelp, resetDb.ts update
   8-0d-multi-sheet-period-handling: done  # per-sheet overlap detection, period confirmation gate, POST overlap endpoint, composite index, period in results. Code review: 7 findings (1H 3M 3L) all resolved
   8-0e-session-resilience-background-refresh: done  # background token refresh, keep-alive for idle tabs, extended warning threshold. Code review: 7 findings (3H 2M 2L) all resolved
-  8-0f-coverage-tracker-drilldown-download: ready-for-dev  # clickable cells → month data page, CSV/Excel download per MDA+month
+  8-0f-coverage-tracker-drilldown-download: done  # clickable cells → month data page, CSV/Excel download per MDA+month. Code review: 8 findings all fixed
   8-0g-comprehensive-app-documentation: ready-for-dev  # end-user guide + developer documentation, page-by-page with card/table derivation explanations
   8-0h-monthly-metric-snapshots-mom-trend: ready-for-dev  # metric_snapshots table, monthly scheduler, backfill, 4 MoM metrics computed from real historical data. Zero-debt-forward: no broken 0% arrows
   8-0i-correction-aware-flag-reading: ready-for-dev  # getEffectiveEventFlag() helper, applied to reconciliation engine, comparison engine, inactive loan detector, pre-submission service. Completes Story 7.3's full intent

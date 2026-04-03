@@ -117,6 +117,38 @@ export interface CoverageMatrix {
   periodRange: { start: string; end: string };
 }
 
+// ─── Coverage Drill-Down (Story 8.0f) ──────────────────────────────
+
+export interface CoverageRecordItem {
+  id: string;
+  staffName: string;
+  employeeNo: string | null;
+  gradeLevel: string | null;
+  principal: string | null;
+  totalLoan: string | null;
+  monthlyDeduction: string | null;
+  outstandingBalance: string | null;
+  varianceCategory: string | null;
+  varianceAmount: string | null;
+  isBaselineCreated: boolean;
+  computedRate: string | null;
+  sheetName: string;
+}
+
+export interface CoverageRecordsSummary {
+  total: number;
+  baselinedCount: number;
+  mdaName: string;
+  mdaCode: string;
+  periodLabel: string;
+}
+
+export interface CoverageRecordsResponse {
+  records: CoverageRecordItem[];
+  pagination: { page: number; limit: number; totalPages: number; totalRecords: number };
+  summary: CoverageRecordsSummary;
+}
+
 export interface BeneficiaryListItem {
   staffName: string;
   staffId: string;

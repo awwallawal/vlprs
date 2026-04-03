@@ -120,6 +120,24 @@ export const coverageQuerySchema = z.object({
   extended: z.enum(['true', 'false']).optional().default('false'),
 });
 
+// ─── Coverage Records Drill-Down (Story 8.0f) ──────────────────────
+export const coverageRecordsQuerySchema = z.object({
+  mdaId: z.string().uuid(),
+  year: z.coerce.number().int().min(2000).max(2100),
+  month: z.coerce.number().int().min(1).max(12),
+  page: z.coerce.number().int().min(1).optional().default(1),
+  limit: z.coerce.number().int().min(1).max(100).optional().default(50),
+  sortBy: z.enum(['staffName', 'employeeNo', 'principal', 'totalLoan', 'monthlyDeduction', 'outstandingBalance', 'varianceCategory', 'isBaselineCreated']).optional().default('staffName'),
+  sortDir: z.enum(['asc', 'desc']).optional().default('asc'),
+});
+
+export const coverageRecordsExportSchema = z.object({
+  mdaId: z.string().uuid(),
+  year: z.coerce.number().int().min(2000).max(2100),
+  month: z.coerce.number().int().min(1).max(12),
+  format: z.enum(['csv', 'xlsx']),
+});
+
 // ─── Beneficiary Ledger Query (Story 3.5) ───────────────────────────
 export const beneficiaryQuerySchema = z.object({
   page: z.coerce.number().int().min(1).optional(),

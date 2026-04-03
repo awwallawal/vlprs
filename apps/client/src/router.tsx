@@ -282,6 +282,13 @@ export const router = createBrowserRouter([
               })),
           },
           {
+            path: 'migrations/coverage/:mdaId/:year/:month',
+            lazy: () =>
+              import('@/pages/dashboard/CoverageRecordsPage').then((m) => ({
+                Component: m.CoverageRecordsPage,
+              })),
+          },
+          {
             path: 'migration/upload',
             lazy: () =>
               import('@/pages/dashboard/MigrationUploadPage').then((m) => ({

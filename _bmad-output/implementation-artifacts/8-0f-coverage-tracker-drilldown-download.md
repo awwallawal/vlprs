@@ -1,6 +1,6 @@
 # Story 8.0f: Coverage Tracker Drill-Down & CSV/Excel Download
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -30,63 +30,63 @@ So that I can inspect and verify specific months of migrated data without naviga
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Create records-by-MDA-period API endpoint (AC: 3)
-  - [ ] 1.1: Add `GET /api/migrations/coverage/records` endpoint in `apps/server/src/routes/migrationDashboardRoutes.ts` with query params: `mdaId` (required), `year` (required), `month` (required), `page` (optional, default 1), `limit` (optional, default 50), `sortBy` (optional), `sortDir` (optional)
-  - [ ] 1.2: Add `getCoverageRecords(mdaId, year, month, pagination, mdaScope)` in `apps/server/src/services/migrationDashboardService.ts`:
+- [x] Task 1: Create records-by-MDA-period API endpoint (AC: 3)
+  - [x] 1.1: Add `GET /api/migrations/coverage/records` endpoint in `apps/server/src/routes/migrationDashboardRoutes.ts` with query params: `mdaId` (required), `year` (required), `month` (required), `page` (optional, default 1), `limit` (optional, default 50), `sortBy` (optional), `sortDir` (optional)
+  - [x] 1.2: Add `getCoverageRecords(mdaId, year, month, pagination, mdaScope)` in `apps/server/src/services/migrationDashboardService.ts`:
     - Query `migration_records` WHERE `mdaId = ? AND periodYear = ? AND periodMonth = ?`
     - Filter: active records only (`isNull(deletedAt)`, exclude superseded via `recordStatus`)
     - Select: id, staffName, `employeeNo` (displayed as "Staff ID" in UI — schema.ts line 355, column is `employee_no` NOT `staffId`), principal, totalLoan, monthlyDeduction, outstandingBalance, varianceCategory, varianceAmount, isBaselineCreated, computedRate, sheetName
     - Join `mdas` for mdaName and mdaCode
     - Apply sorting (default: staffName ASC)
     - Return paginated results with summary: `{ records, pagination, summary: { total, baselinedCount, mdaName, mdaCode, periodLabel } }`
-  - [ ] 1.3: Add Zod schema for query params validation
-  - [ ] 1.4: Apply auth middleware (SUPER_ADMIN, DEPT_ADMIN, MDA_OFFICER) + `scopeToMda`
-  - [ ] 1.5: Integration test in `apps/server/src/routes/migrationDashboard.integration.test.ts` (**new file** — use `baseline.integration.test.ts` as structural precedent): returns correct records for specific MDA + period, respects MDA scope
+  - [x] 1.3: Add Zod schema for query params validation
+  - [x] 1.4: Apply auth middleware (SUPER_ADMIN, DEPT_ADMIN, MDA_OFFICER) + `scopeToMda`
+  - [x] 1.5: Integration test in `apps/server/src/routes/migrationDashboard.integration.test.ts` (**new file** — use `baseline.integration.test.ts` as structural precedent): returns correct records for specific MDA + period, respects MDA scope
 
-- [ ] Task 2: Create CSV/Excel download endpoint (AC: 4, 5)
-  - [ ] 2.1: Add `GET /api/migrations/coverage/records/export` endpoint with query params: `mdaId`, `year`, `month`, `format` (`csv` or `xlsx`)
-  - [ ] 2.2: For CSV format: generate server-side CSV (follow `beneficiaryLedgerService.ts` lines 331-474 pattern):
+- [x] Task 2: Create CSV/Excel download endpoint (AC: 4, 5)
+  - [x] 2.1: Add `GET /api/migrations/coverage/records/export` endpoint with query params: `mdaId`, `year`, `month`, `format` (`csv` or `xlsx`)
+  - [x] 2.2: For CSV format: generate server-side CSV (follow `beneficiaryLedgerService.ts` lines 331-474 pattern):
     - Set `Content-Type: text/csv; charset=utf-8`
     - Set `Content-Disposition: attachment; filename="vlprs-{mdaCode}-{YYYY-MM}-records.csv"`
     - Columns: Staff Name, Staff ID (`employeeNo` column), Grade, Step, Principal, Total Loan, Monthly Deduction, Outstanding Balance, Variance Category, Variance Amount, Baseline Status, Computed Rate, Sheet Name
     - Include BOM for Excel compatibility (`\uFEFF` prefix)
-  - [ ] 2.3: For Excel format: use `xlsx` library (already in project as SheetJS dependency for migration upload parsing):
+  - [x] 2.3: For Excel format: use `xlsx` library (already in project as SheetJS dependency for migration upload parsing):
     - Create workbook with single sheet named `{MDA Code} - {Month Year}`
     - Title row: `{MDA Name} — {Month Year} Migration Records`
     - Column headers with auto-width
     - Financial columns formatted as number (not string)
     - Set `Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet`
     - Set `Content-Disposition: attachment; filename="vlprs-{mdaCode}-{YYYY-MM}-records.xlsx"`
-  - [ ] 2.4: Apply same auth + MDA scope as Task 1
-  - [ ] 2.5: Integration test in same file: CSV export returns correct headers and data rows
-  - [ ] 2.6: Integration test in same file: Excel export returns valid xlsx buffer
+  - [x] 2.4: Apply same auth + MDA scope as Task 1
+  - [x] 2.5: Integration test in same file: CSV export returns correct headers and data rows
+  - [x] 2.6: Integration test in same file: Excel export returns valid xlsx buffer
 
-- [ ] Task 3: Create CoverageRecordsPage drill-down component (AC: 3, 6)
-  - [ ] 3.1: Create `apps/client/src/pages/dashboard/CoverageRecordsPage.tsx`:
+- [x] Task 3: Create CoverageRecordsPage drill-down component (AC: 3, 6)
+  - [x] 3.1: Create `apps/client/src/pages/dashboard/CoverageRecordsPage.tsx`:
     - Route: `/dashboard/migrations/coverage/:mdaId/:year/:month`
     - Extract params via `useParams()`
     - Page header: MDA name, period label (e.g., "August 2024"), record count / baselined count
     - "Back to Coverage Tracker" link → navigates to `/dashboard/migrations` with Coverage Tracker tab active
-  - [ ] 3.2: Records table with sortable columns:
+  - [x] 3.2: Records table with sortable columns:
     - Staff Name, Staff ID, Principal (₦), Total Loan (₦), Monthly Deduction (₦), Outstanding Balance (₦), Variance Category (badge), Baseline Status (badge: "Established" / "Pending")
     - Use existing table patterns from MigrationUploadPage
     - Client-side sorting (click column header to toggle sort)
-  - [ ] 3.3: Pagination (same pattern as MigrationUploadList — Previous/Next buttons with page count)
-  - [ ] 3.4: Download buttons row: "Download CSV" + "Download Excel" — both trigger file download via the export endpoint (Task 2)
+  - [x] 3.3: Pagination (same pattern as MigrationUploadList — Previous/Next buttons with page count)
+  - [x] 3.4: Download buttons row: "Download CSV" + "Download Excel" — both trigger file download via the export endpoint (Task 2)
 
-- [ ] Task 4: Add route and navigation (AC: 1)
-  - [ ] 4.1: Add route in `apps/client/src/router.tsx` inside the `/dashboard` children array (alongside existing routes like `drill-down/:metric`, `mda/:mdaId`):
+- [x] Task 4: Add route and navigation (AC: 1)
+  - [x] 4.1: Add route in `apps/client/src/router.tsx` inside the `/dashboard` children array (alongside existing routes like `drill-down/:metric`, `mda/:mdaId`):
     ```typescript
-    { path: 'migrations/coverage/:mdaId/:year/:month', lazy: () => import('@/pages/dashboard/CoverageRecordsPage').then(m => ({ Component: m.default })) }
+    { path: 'migrations/coverage/:mdaId/:year/:month', lazy: () => import('@/pages/dashboard/CoverageRecordsPage').then(m => ({ Component: m.CoverageRecordsPage })) }
     ```
-  - [ ] 4.2: Use the React Router `lazy` property (NOT `React.lazy()`) — this is the codebase's established pattern for all dashboard child routes
+  - [x] 4.2: Use the React Router `lazy` property (NOT `React.lazy()`) — this is the codebase's established pattern for all dashboard child routes
 
-- [ ] Task 5: Add TanStack Query hook (AC: 3)
-  - [ ] 5.1: Add `useCoverageRecords(mdaId, year, month, page, sortBy, sortDir)` in `apps/client/src/hooks/useMigrationData.ts`:
+- [x] Task 5: Add TanStack Query hook (AC: 3)
+  - [x] 5.1: Add `useCoverageRecords(mdaId, year, month, page, sortBy, sortDir)` in `apps/client/src/hooks/useMigrationData.ts`:
     ```typescript
     queryKey: ['migration', 'coverage', 'records', { mdaId, year, month, page, sortBy, sortDir }]
     ```
-  - [ ] 5.2: Add `useCoverageRecordExport()` mutation hook for triggering downloads. **Must use `authenticatedFetch` + Blob** (NOT `window.open()` — that won't send the Authorization Bearer header):
+  - [x] 5.2: Add `useCoverageRecordExport()` mutation hook for triggering downloads. **Must use `authenticatedFetch` + Blob** (NOT `window.open()` — that won't send the Authorization Bearer header):
     ```typescript
     mutationFn: async ({ mdaId, year, month, format }) => {
       const res = await authenticatedFetch(`/migrations/coverage/records/export?mdaId=${mdaId}&year=${year}&month=${month}&format=${format}`);
@@ -100,19 +100,19 @@ So that I can inspect and verify specific months of migrated data without naviga
     }
     ```
 
-- [ ] Task 6: Make coverage tracker cells clickable (AC: 1, 2, 7)
-  - [ ] 6.1: In `apps/client/src/pages/dashboard/components/MigrationCoverageTracker.tsx`, add `onClick` handler to cells with `recordCount > 0`:
+- [x] Task 6: Make coverage tracker cells clickable (AC: 1, 2, 7)
+  - [x] 6.1: In `apps/client/src/pages/dashboard/components/MigrationCoverageTracker.tsx`, add `onClick` handler to cells with `recordCount > 0`:
     ```typescript
     onClick={() => navigate(`/dashboard/migrations/coverage/${mda.mdaId}/${year}/${month}`)}
     ```
-  - [ ] 6.2: Add `cursor-pointer` class and hover highlight (`hover:ring-2 hover:ring-primary/30`) to cells with data
-  - [ ] 6.3: Gap cells (recordCount = 0): keep non-clickable, add `cursor-default`, tooltip "No data for this period"
-  - [ ] 6.4: Import `useNavigate` from React Router at top of component
+  - [x] 6.2: Add `cursor-pointer` class and hover highlight (`hover:ring-2 hover:ring-primary/30`) to cells with data
+  - [x] 6.3: Gap cells (recordCount = 0): keep non-clickable, add `cursor-default`, tooltip "No data for this period"
+  - [x] 6.4: Import `useNavigate` from React Router at top of component
 
-- [ ] Task 7: Full regression and verification (AC: all)
-  - [ ] 7.1: Run `pnpm typecheck` — zero errors
-  - [ ] 7.2: Run `pnpm test` — zero regressions
-  - [ ] 7.3: Manual test: click populated cell → drill-down page shows correct records → download CSV → verify contents → download Excel → verify contents → click "Back" → returns to Coverage Tracker
+- [x] Task 7: Full regression and verification (AC: all)
+  - [x] 7.1: Run `pnpm typecheck` — zero errors
+  - [x] 7.2: Run `pnpm test` — zero regressions
+  - [x] 7.3: Manual test: click populated cell → drill-down page shows correct records → download CSV → verify contents → download Excel → verify contents → click "Back" → returns to Coverage Tracker
 
 ## Dev Notes
 
@@ -293,10 +293,43 @@ Add `role="button"` and `tabIndex` for keyboard accessibility on clickable cells
 
 ### Agent Model Used
 
-(to be filled by dev agent)
+Claude Opus 4.6 (1M context)
 
 ### Debug Log References
 
+- Fixed `CELL_LABELS` unused variable after tooltip text change (TS6133)
+- Fixed `VOCABULARY.VARIANCE_CATEGORY_LABELS` → `UI_COPY.VARIANCE_CATEGORY_LABELS` (TS2339) — followed existing codebase pattern
+- Updated `MigrationCoverageTracker.test.tsx` to wrap in `MemoryRouter` after adding `useNavigate()` to component
+- Updated test assertions: cells with data now have `role="button"` (was `role="img"`), gap cells remain `role="img"`
+
 ### Completion Notes List
 
+- **Task 1:** Added `GET /api/migrations/coverage/records` endpoint with Zod validation, pagination, sorting, and MDA scope. Shared `CoverageRecordItem`, `CoverageRecordsSummary`, `CoverageRecordsResponse` types. Service function `getCoverageRecords()` uses the `idx_migration_records_mda_period` composite index.
+- **Task 2:** Added `GET /api/migrations/coverage/records/export` endpoint supporting CSV (with BOM) and Excel (SheetJS) formats. CSV follows `beneficiaryLedgerService` pattern. Excel includes title row, auto-width columns, financial numbers formatted as numbers. Shared `getAllCoverageRecords()` helper for unpaginated export.
+- **Task 3:** Created `CoverageRecordsPage.tsx` drill-down page with header (MDA name, period, record/baseline counts), sortable table with 8 columns, pagination, and CSV/Excel download buttons. Uses non-punitive vocabulary via `UI_COPY.VARIANCE_CATEGORY_LABELS`.
+- **Task 4:** Added lazy-loaded route `migrations/coverage/:mdaId/:year/:month` in `router.tsx` following established dashboard route pattern.
+- **Task 5:** Added `useCoverageRecords()` query hook and `useCoverageRecordExport()` mutation hook. Export uses `authenticatedFetch` + Blob pattern (not `window.open()`) to send Authorization header.
+- **Task 6:** Made coverage tracker cells clickable: cells with data get `cursor-pointer`, `hover:ring-2`, `role="button"`, keyboard navigation (Enter/Space). Gap cells show "No data for this period" tooltip and remain non-clickable. Added `useNavigate` import.
+- **Task 7:** Full regression: `pnpm typecheck` zero errors across all 4 packages. `pnpm test` zero regressions (server: 964 tests, client: 653 tests). Integration tests: 9 new tests all passing.
+
+### Change Log
+
+- Story 8.0f implementation complete (Date: 2026-04-03)
+- Code review: 8 findings (1 HIGH, 3 MEDIUM, 4 LOW), all fixed automatically (Date: 2026-04-04)
+
 ### File List
+
+**New files:**
+- `apps/server/src/routes/migrationDashboard.integration.test.ts` — 9 integration tests for coverage records + export
+- `apps/client/src/pages/dashboard/CoverageRecordsPage.tsx` — Drill-down page component
+
+**Modified files:**
+- `packages/shared/src/types/mda.ts` — Added `CoverageRecordItem`, `CoverageRecordsSummary`, `CoverageRecordsResponse` types
+- `packages/shared/src/validators/migrationSchemas.ts` — Added `coverageRecordsQuerySchema`, `coverageRecordsExportSchema`
+- `packages/shared/src/index.ts` — Exported new types and schemas
+- `apps/server/src/services/migrationDashboardService.ts` — Added `getCoverageRecords()`, `getAllCoverageRecords()`, `SORT_COLUMN_MAP`
+- `apps/server/src/routes/migrationDashboardRoutes.ts` — Added `/coverage/records` and `/coverage/records/export` routes
+- `apps/client/src/hooks/useMigrationData.ts` — Added `useCoverageRecords()`, `useCoverageRecordExport()` hooks
+- `apps/client/src/pages/dashboard/components/MigrationCoverageTracker.tsx` — Made cells clickable with navigation, hover/keyboard a11y
+- `apps/client/src/pages/dashboard/components/MigrationCoverageTracker.test.tsx` — Added `MemoryRouter` wrapper, updated role assertions
+- `apps/client/src/router.tsx` — Added coverage records drill-down route

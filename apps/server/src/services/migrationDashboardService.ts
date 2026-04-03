@@ -1,11 +1,11 @@
-import { eq, and, isNull, sql, count } from 'drizzle-orm';
+import { eq, and, isNull, sql, count, asc, desc } from 'drizzle-orm';
 import Decimal from 'decimal.js';
 import { db } from '../db/index';
 import { mdas, migrationUploads, migrationRecords, loans, ledgerEntries, observations, deduplicationCandidates } from '../db/schema';
 import { isActiveRecord } from '../db/queryHelpers';
 import { computeBalanceForLoan } from './computationEngine';
 import { withMdaScope } from '../lib/mdaScope';
-import type { MigrationMdaStatus, MigrationStage, MigrationDashboardMetrics, CoverageMatrix } from '@vlprs/shared';
+import type { MigrationMdaStatus, MigrationStage, MigrationDashboardMetrics, CoverageMatrix, CoverageRecordsResponse } from '@vlprs/shared';
 
 // ─── Stage Derivation ────────────────────────────────────────────────
 
@@ -343,4 +343,165 @@ export async function getMigrationCoverage(
     })),
     periodRange: { start, end },
   };
+}
+
+// ─── Coverage Records Drill-Down (Story 8.0f) ──────────────────────
+
+const SORT_COLUMN_MAP = {
+  staffName: migrationRecords.staffName,
+  employeeNo: migrationRecords.employeeNo,
+  principal: migrationRecords.principal,
+  totalLoan: migrationRecords.totalLoan,
+  monthlyDeduction: migrationRecords.monthlyDeduction,
+  outstandingBalance: migrationRecords.outstandingBalance,
+  varianceCategory: migrationRecords.varianceCategory,
+  isBaselineCreated: migrationRecords.isBaselineCreated,
+} as const;
+
+export async function getCoverageRecords(
+  mdaId: string,
+  year: number,
+  month: number,
+  pagination: { page: number; limit: number },
+  sort: { sortBy: keyof typeof SORT_COLUMN_MAP; sortDir: 'asc' | 'desc' },
+  mdaScope?: string | null,
+): Promise<CoverageRecordsResponse> {
+  // Build conditions
+  const conditions = [
+    isActiveRecord()!,
+    eq(migrationRecords.mdaId, mdaId),
+    eq(migrationRecords.periodYear, year),
+    eq(migrationRecords.periodMonth, month),
+  ];
+
+  const scopeCondition = withMdaScope(migrationRecords.mdaId, mdaScope);
+  if (scopeCondition) conditions.push(scopeCondition);
+
+  // Count total and baselined records in a single query
+  const [countResult] = await db
+    .select({
+      total: sql<string>`COUNT(*)`,
+      baselined: sql<string>`COUNT(*) FILTER (WHERE ${migrationRecords.isBaselineCreated} = true)`,
+    })
+    .from(migrationRecords)
+    .where(and(...conditions));
+  const totalRecords = parseInt(countResult.total, 10);
+  const baselinedCount = parseInt(countResult.baselined, 10);
+
+  // Get MDA info
+  const [mdaInfo] = await db
+    .select({ name: mdas.name, code: mdas.code })
+    .from(mdas)
+    .where(eq(mdas.id, mdaId));
+
+  if (!mdaInfo) {
+    return {
+      records: [],
+      pagination: { page: 1, limit: pagination.limit, totalPages: 0, totalRecords: 0 },
+      summary: { total: 0, baselinedCount: 0, mdaName: '', mdaCode: '', periodLabel: '' },
+    };
+  }
+
+  // Period label e.g. "August 2024"
+  const periodLabel = new Date(year, month - 1).toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
+
+  // Fetch records with pagination and sorting
+  const sortColumn = SORT_COLUMN_MAP[sort.sortBy];
+  const sortFn = sort.sortDir === 'desc' ? desc : asc;
+  const offset = (pagination.page - 1) * pagination.limit;
+
+  const records = await db
+    .select({
+      id: migrationRecords.id,
+      staffName: migrationRecords.staffName,
+      employeeNo: migrationRecords.employeeNo,
+      gradeLevel: migrationRecords.gradeLevel,
+      principal: migrationRecords.principal,
+      totalLoan: migrationRecords.totalLoan,
+      monthlyDeduction: migrationRecords.monthlyDeduction,
+      outstandingBalance: migrationRecords.outstandingBalance,
+      varianceCategory: migrationRecords.varianceCategory,
+      varianceAmount: migrationRecords.varianceAmount,
+      isBaselineCreated: migrationRecords.isBaselineCreated,
+      computedRate: migrationRecords.computedRate,
+      sheetName: migrationRecords.sheetName,
+    })
+    .from(migrationRecords)
+    .where(and(...conditions))
+    .orderBy(sortFn(sortColumn))
+    .limit(pagination.limit)
+    .offset(offset);
+
+  const totalPages = Math.ceil(totalRecords / pagination.limit);
+
+  return {
+    records,
+    pagination: {
+      page: pagination.page,
+      limit: pagination.limit,
+      totalPages,
+      totalRecords,
+    },
+    summary: {
+      total: totalRecords,
+      baselinedCount,
+      mdaName: mdaInfo.name,
+      mdaCode: mdaInfo.code,
+      periodLabel,
+    },
+  };
+}
+
+/**
+ * Fetch ALL records for a given MDA + period (no pagination).
+ * Used by the export endpoint.
+ */
+export async function getAllCoverageRecords(
+  mdaId: string,
+  year: number,
+  month: number,
+  mdaScope?: string | null,
+): Promise<{ records: CoverageRecordsResponse['records']; mdaName: string; mdaCode: string; periodLabel: string }> {
+  const conditions = [
+    isActiveRecord()!,
+    eq(migrationRecords.mdaId, mdaId),
+    eq(migrationRecords.periodYear, year),
+    eq(migrationRecords.periodMonth, month),
+  ];
+
+  const scopeCondition = withMdaScope(migrationRecords.mdaId, mdaScope);
+  if (scopeCondition) conditions.push(scopeCondition);
+
+  const [mdaInfo] = await db
+    .select({ name: mdas.name, code: mdas.code })
+    .from(mdas)
+    .where(eq(mdas.id, mdaId));
+
+  if (!mdaInfo) {
+    return { records: [], mdaName: '', mdaCode: '', periodLabel: '' };
+  }
+
+  const periodLabel = new Date(year, month - 1).toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
+
+  const records = await db
+    .select({
+      id: migrationRecords.id,
+      staffName: migrationRecords.staffName,
+      employeeNo: migrationRecords.employeeNo,
+      gradeLevel: migrationRecords.gradeLevel,
+      principal: migrationRecords.principal,
+      totalLoan: migrationRecords.totalLoan,
+      monthlyDeduction: migrationRecords.monthlyDeduction,
+      outstandingBalance: migrationRecords.outstandingBalance,
+      varianceCategory: migrationRecords.varianceCategory,
+      varianceAmount: migrationRecords.varianceAmount,
+      isBaselineCreated: migrationRecords.isBaselineCreated,
+      computedRate: migrationRecords.computedRate,
+      sheetName: migrationRecords.sheetName,
+    })
+    .from(migrationRecords)
+    .where(and(...conditions))
+    .orderBy(asc(migrationRecords.staffName));
+
+  return { records, mdaName: mdaInfo.name, mdaCode: mdaInfo.code, periodLabel };
 }
