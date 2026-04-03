@@ -38,6 +38,7 @@ import {
 import { useAuthStore } from '@/stores/authStore';
 import { apiClient } from '@/lib/apiClient';
 import { useSessionTimeout } from '@/hooks/useSessionTimeout';
+import { useBackgroundRefresh } from '@/hooks/useBackgroundRefresh';
 import { NAV_ITEMS, ROLE_LABELS, ROLE_HOME_ROUTES } from './navItems';
 import { ScrollToTop } from './ScrollToTop';
 import { Breadcrumb } from './Breadcrumb';
@@ -66,7 +67,8 @@ export function DashboardLayout() {
   const clearAuth = useAuthStore((s) => s.clearAuth);
   const navigate = useNavigate();
   const location = useLocation();
-  const { showWarning, onContinue, onLogoutNow } = useSessionTimeout();
+  const { showWarning, warningMinutes, onContinue, onLogoutNow } = useSessionTimeout();
+  useBackgroundRefresh();
 
   // Focus management: move focus to page h1 on route change
   useEffect(() => {
@@ -317,10 +319,9 @@ export function DashboardLayout() {
           onInteractOutside={(e) => e.preventDefault()}
         >
           <DialogHeader>
-            <DialogTitle>Your session is expiring soon</DialogTitle>
+            <DialogTitle>Session Expiring</DialogTitle>
             <DialogDescription>
-              You&apos;ll be logged out due to inactivity. Click below to continue
-              working.
+              Your session will expire in {warningMinutes} {warningMinutes === 1 ? 'minute' : 'minutes'} due to inactivity.
             </DialogDescription>
           </DialogHeader>
           <div className="flex flex-col gap-2 sm:flex-row sm:justify-end">

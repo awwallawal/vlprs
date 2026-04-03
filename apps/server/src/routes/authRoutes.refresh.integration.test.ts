@@ -116,13 +116,13 @@ describe('POST /api/auth/refresh', () => {
     expect(res.body.error.code).toBe('REFRESH_TOKEN_EXPIRED');
   });
 
-  it('returns 401 for inactive session (>30 min, manipulate DB)', async () => {
+  it('returns 401 for inactive session (>60 min, manipulate DB)', async () => {
     const user = await createTestUser({ email: 'refresh-idle@test.com' });
     const tokens = await loginAndGetTokens(user.email);
 
-    // Set lastUsedAt to 31 min ago
+    // Set lastUsedAt to 65 min ago (beyond 60-min inactivity window)
     await db.update(refreshTokens)
-      .set({ lastUsedAt: new Date(Date.now() - 31 * 60 * 1000) })
+      .set({ lastUsedAt: new Date(Date.now() - 65 * 60 * 1000) })
       .where(eq(refreshTokens.userId, user.id));
 
     const res = await request(app)
