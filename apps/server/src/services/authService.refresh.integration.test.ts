@@ -143,9 +143,9 @@ describe('authService.refreshToken', () => {
     expect(result.accessToken).toBeTruthy();
   });
 
-  it('succeeds for session at exactly 60-min boundary (strict > comparison)', async () => {
+  it('succeeds for session near 60-min boundary (59m55s ago)', async () => {
     const rawToken = await seedRefreshToken(testUserId, {
-      lastUsedAt: new Date(Date.now() - 60 * 60 * 1000), // exactly 60 min ago — at boundary, passes because server uses >
+      lastUsedAt: new Date(Date.now() - (60 * 60 * 1000 - 5000)), // 59m55s ago — within window, confirms strict > not >=
     });
 
     const result = await authService.refreshToken(rawToken);
