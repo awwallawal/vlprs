@@ -1,0 +1,1 @@
+CREATE INDEX "idx_migration_records_mda_period" ON "migration_records" USING btree ("mda_id","period_year","period_month");

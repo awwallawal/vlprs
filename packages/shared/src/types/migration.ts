@@ -99,6 +99,25 @@ export interface SupersedeResponse {
   observationsRegenerated: boolean;
 }
 
+// ─── Multi-Sheet Overlap (Story 8.0d) ──────────────────────────────
+
+export interface SheetOverlapResult {
+  sheetNames: string[];        // sheets sharing this period
+  periodYear: number;
+  periodMonth: number;
+  periodLabel: string;         // e.g., "August 2024"
+  overlap: boolean;
+  existingUploadId?: string;
+  existingFilename?: string;
+  existingRecordCount?: number;
+}
+
+export interface MultiSheetOverlapResponse {
+  hasOverlap: boolean;                   // true if ANY sheet overlaps
+  results: SheetOverlapResult[];         // one per unique period
+  skippedSheets: Array<{ sheetName: string; reason: string }>;
+}
+
 export interface MigrationRecord {
   id: string;
   uploadId: string;
@@ -166,7 +185,7 @@ export interface MigrationUploadSummary {
 
 export interface MigrationUploadDetail extends MigrationUpload {
   mdaName: string;
-  recordsPerSheet: Array<{ sheetName: string; count: number; era: number }>;
+  recordsPerSheet: Array<{ sheetName: string; count: number; era: number; periodYear: number | null; periodMonth: number | null }>;
   skippedRows: Array<{ row: number; reason: string }>;
 }
 

@@ -247,7 +247,7 @@ development_status:
   8-0a-migration-computation-model-scheme-formula: done  # CRITICAL: scheme formula (P×13.33%÷60) + three-vector display (Scheme Expected / Reverse Engineered / MDA Declared)
   8-0b-record-detail-view-pre-baseline-inspection: done  # CRITICAL: clickable records, declared vs computed breakdown, correction flow before baseline acceptance
   8-0c-migration-dashboard-hygiene: done  # discard uploads, incomplete cleanup, variance column labelling + MetricHelp, resetDb.ts update
-  8-0d-multi-sheet-period-handling: ready-for-dev  # per-sheet overlap detection, sheet enable/disable, period display in results
+  8-0d-multi-sheet-period-handling: done  # per-sheet overlap detection, period confirmation gate, POST overlap endpoint, composite index, period in results. Code review: 7 findings (1H 3M 3L) all resolved
   8-0e-session-resilience-background-refresh: ready-for-dev  # background token refresh, keep-alive for idle tabs, extended warning threshold
   8-0f-coverage-tracker-drilldown-download: ready-for-dev  # clickable cells → month data page, CSV/Excel download per MDA+month
   8-0g-comprehensive-app-documentation: ready-for-dev  # end-user guide + developer documentation, page-by-page with card/table derivation explanations
@@ -318,11 +318,11 @@ development_status:
   #   - Progressive disclosure: portfolio → MDA → staff → finding detail
   #   - Auto-explain: link findings to employment events before surfacing to human
   epic-16: in-progress  # discovery spike (16.0) in pipeline 2026-04-02
-  16-0-cross-month-discovery-spike: ready-for-dev  # Sprint 11: validate anomaly types, design schema, map reuse surface, produce implementation stories. Preliminary analysis completed — formal pipeline validates with PO walkthrough
-  16-1-cross-month-diffing-engine: backlog  # Core backend: auto-diff on submission confirmation, 5 finding types, severity scoring, auto-link to employment events. Draft story exists — finalized after 16.0 pipeline completes
-  16-2-anomaly-resolution-event-context: backlog  # Review workflow: mark-expected + resolve + bulk-resolve, auto-resolution on event filing. Draft story exists — finalized after 16.0
-  16-3-cross-month-dashboard-drilldown: backlog  # Frontend: attention items, cross-month tab, per-MDA breakdown, staff timeline. Draft story exists — finalized after 16.0
-  16-4-portfolio-stability-metrics: backlog  # Aggregate: churn rate, deduction stability, trend charts, report integration. Draft story exists — finalized after 16.0
+  16-0-cross-month-discovery-spike: done  # Sprint 11: discovery completed 2026-04-02 — validated anomaly types, designed schema, mapped reuse surface, produced stories 16.1–16.4
+  16-1-cross-month-diffing-engine: ready-for-dev  # Core backend: auto-diff on submission confirmation, 5 finding types, severity scoring, auto-link to employment events. Story validated 2026-04-03
+  16-2-anomaly-resolution-event-context: ready-for-dev  # Review workflow: mark-expected + resolve + bulk-resolve, auto-resolution on event filing. Story validated 2026-04-03
+  16-3-cross-month-dashboard-drilldown: ready-for-dev  # Frontend: attention items, cross-month tab, per-MDA breakdown, staff timeline. Story validated 2026-04-03
+  16-4-portfolio-stability-metrics: ready-for-dev  # Aggregate: churn rate, deduction stability, trend charts, report integration. Story validated 2026-04-03
   epic-16-retrospective: optional
 
   # Epic 9: Notifications & Automated Alerts (Sprint 13)

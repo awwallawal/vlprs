@@ -1,8 +1,10 @@
 import { CheckCircle2, FileSpreadsheet, Layers } from 'lucide-react';
 
+const MONTH_NAMES = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+
 interface MigrationUploadResultProps {
   totalRecords: number;
-  recordsPerSheet: Array<{ sheetName: string; count: number; era: number }>;
+  recordsPerSheet: Array<{ sheetName: string; count: number; era: number; periodYear: number | null; periodMonth: number | null }>;
   filename: string;
   mdaName?: string;
   skippedRows?: Array<{ row: number; sheet: string; reason: string }>;
@@ -62,7 +64,11 @@ export function MigrationUploadResult({
               <span className="text-text-secondary">{sheet.sheetName}</span>
               <span className="text-text-muted">&middot;</span>
               <span className="text-text-primary font-medium">{sheet.count} records</span>
-              <span className="text-xs text-text-muted">(Era {sheet.era})</span>
+              {sheet.periodYear && sheet.periodMonth ? (
+                <span className="text-xs text-text-muted">({MONTH_NAMES[sheet.periodMonth - 1]} {sheet.periodYear})</span>
+              ) : (
+                <span className="text-xs text-text-muted">(Era {sheet.era})</span>
+              )}
             </div>
           ))}
         </div>

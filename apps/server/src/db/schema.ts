@@ -402,6 +402,7 @@ export const migrationRecords = pgTable(
     index('idx_migration_records_variance_category').on(table.varianceCategory),
     index('idx_migration_records_has_rate_variance').on(table.hasRateVariance),
     index('idx_migration_records_status').on(table.recordStatus),
+    index('idx_migration_records_mda_period').on(table.mdaId, table.periodYear, table.periodMonth),
   ],
 );
 

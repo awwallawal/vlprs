@@ -5,13 +5,19 @@ import { migrationUploads, migrationRecords, migrationExtraFields, mdas } from '
 import { AppError } from '../lib/appError';
 import { withMdaScope } from '../lib/mdaScope';
 import { VOCABULARY } from '@vlprs/shared';
-import type { MigrationUploadPreview, SheetPreview, ColumnMappingSuggestion, ConfirmedColumnMapping, SkippedSheet } from '@vlprs/shared';
+import type { MigrationUploadPreview, SheetPreview, ColumnMappingSuggestion, ConfirmedColumnMapping, SkippedSheet, MultiSheetOverlapResponse, SheetOverlapResult } from '@vlprs/shared';
 import { detectHeaderRow } from '../migration/headerDetect';
 import { mapColumns, extractRecord } from '../migration/columnMap';
 import { detectEra } from '../migration/eraDetect';
 import { extractPeriod, type Period } from '../migration/periodExtract';
 import { parseFinancialNumber, isSummaryRowMarker } from '../migration/parseUtils';
 import type { CanonicalField } from '@vlprs/shared';
+
+const MONTH_LABELS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+
+function formatPeriodLabel(year: number, month: number): string {
+  return `${MONTH_LABELS[month - 1] ?? 'Unknown'} ${year}`;
+}
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 const MAX_ROWS_PER_SHEET = 500;
@@ -212,7 +218,7 @@ export async function confirmMapping(
   uploadId: string,
   confirmedMappings: ConfirmedColumnMapping[],
   fileBuffer: Buffer,
-): Promise<{ totalRecords: number; recordsPerSheet: Array<{ sheetName: string; count: number; era: number }>; skippedRows: Array<{ row: number; sheet: string; reason: string }> }> {
+): Promise<{ totalRecords: number; recordsPerSheet: Array<{ sheetName: string; count: number; era: number; periodYear: number | null; periodMonth: number | null }>; skippedRows: Array<{ row: number; sheet: string; reason: string }> }> {
   // Verify upload exists and is in correct state
   const [upload] = await db.select()
     .from(migrationUploads)
@@ -231,16 +237,53 @@ export async function confirmMapping(
   // Use the MDA from the original upload record — not user-supplied
   const mdaId = upload.mdaId;
 
-  // Period overlap guard: check if overlapConfirmed is required but not set
-  const uploadMeta = upload.metadata as { sheets?: Array<{ period?: { year: number; month: number } | null }>; overlapConfirmed?: boolean } | null;
+  // Period overlap guard: check ALL sheet periods (Story 8.0d — multi-sheet)
+  const uploadMeta = upload.metadata as { sheets?: Array<{ name?: string; period?: { year: number; month: number } | null }>; overlapConfirmed?: boolean } | null;
   if (!uploadMeta?.overlapConfirmed) {
-    const periods = (uploadMeta?.sheets ?? []).map(s => s.period).filter(Boolean) as Array<{ year: number; month: number }>;
-    if (periods.length > 0) {
-      const { year, month } = periods[0];
-      const overlapResult = await checkPeriodOverlap(uploadId, year, month);
-      if (overlapResult && overlapResult.overlap) {
-        // Reset status back from processing and signal overlap to caller
-        throw new AppError(409, 'PERIOD_OVERLAP', `Existing upload found for ${overlapResult.period} at ${overlapResult.mdaName} with ${overlapResult.existingRecordCount} records. Confirm overlap before proceeding.`);
+    const sheetEntries = uploadMeta?.sheets ?? [];
+    // Collect unique periods from ALL sheets, deduplicating
+    const uniquePeriods = new Map<string, { periodYear: number; periodMonth: number; sheetNames: string[] }>();
+    const skippedSheets: Array<{ sheetName: string; reason: string }> = [];
+
+    for (const sheet of sheetEntries) {
+      const sheetName = sheet.name ?? 'Unknown';
+      if (!sheet.period) {
+        skippedSheets.push({ sheetName, reason: 'Period not detected' });
+        continue;
+      }
+      const key = `${sheet.period.year}-${sheet.period.month}`;
+      const existing = uniquePeriods.get(key);
+      if (existing) {
+        existing.sheetNames.push(sheetName);
+      } else {
+        uniquePeriods.set(key, { periodYear: sheet.period.year, periodMonth: sheet.period.month, sheetNames: [sheetName] });
+      }
+    }
+
+    if (uniquePeriods.size > 0) {
+      const results: SheetOverlapResult[] = [];
+      let hasOverlap = false;
+
+      for (const [, entry] of uniquePeriods) {
+        const overlapResult = await checkPeriodOverlap(uploadId, entry.periodYear, entry.periodMonth);
+        const overlaps = !!(overlapResult && overlapResult.overlap);
+        if (overlaps) hasOverlap = true;
+
+        results.push({
+          sheetNames: entry.sheetNames,
+          periodYear: entry.periodYear,
+          periodMonth: entry.periodMonth,
+          periodLabel: formatPeriodLabel(entry.periodYear, entry.periodMonth),
+          overlap: overlaps,
+          existingUploadId: overlapResult?.existingUploadId,
+          existingFilename: overlapResult?.existingFilename,
+          existingRecordCount: overlapResult?.existingRecordCount,
+        });
+      }
+
+      if (hasOverlap) {
+        const response: MultiSheetOverlapResponse = { hasOverlap, results, skippedSheets };
+        throw new AppError(409, 'PERIOD_OVERLAP', JSON.stringify(response));
       }
     }
   }
@@ -260,7 +303,7 @@ export async function confirmMapping(
     throw new AppError(400, 'FILE_PARSE_ERROR', VOCABULARY.MIGRATION_FILE_PARSE_ERROR);
   }
 
-  const recordsPerSheet: Array<{ sheetName: string; count: number; era: number }> = [];
+  const recordsPerSheet: Array<{ sheetName: string; count: number; era: number; periodYear: number | null; periodMonth: number | null }> = [];
   const skippedRows: Array<{ row: number; sheet: string; reason: string }> = [];
   let totalRecords = 0;
 
@@ -469,6 +512,8 @@ export async function confirmMapping(
           sheetName: sheetMapping.sheetName,
           count: sheetRecordInserts.length,
           era,
+          periodYear: period?.year ?? null,
+          periodMonth: period?.month ?? null,
         });
       }
 
@@ -512,6 +557,7 @@ export async function checkPeriodOverlap(
 ): Promise<{
   overlap: boolean;
   existingUploadId?: string;
+  existingFilename?: string;
   existingRecordCount?: number;
   newRecordCount?: number;
   period?: string;
@@ -550,12 +596,13 @@ export async function checkPeriodOverlap(
   const existingRecords = await db
     .select({
       uploadId: migrationRecords.uploadId,
+      filename: migrationUploads.filename,
       count: sql<number>`COUNT(*)::int`,
     })
     .from(migrationRecords)
     .innerJoin(migrationUploads, eq(migrationRecords.uploadId, migrationUploads.id))
     .where(and(...conditions))
-    .groupBy(migrationRecords.uploadId)
+    .groupBy(migrationRecords.uploadId, migrationUploads.filename)
     .limit(1);
 
   if (existingRecords.length === 0) {
@@ -573,6 +620,7 @@ export async function checkPeriodOverlap(
   return {
     overlap: true,
     existingUploadId: existingRecords[0].uploadId,
+    existingFilename: existingRecords[0].filename,
     existingRecordCount: existingRecords[0].count,
     newRecordCount,
     period,
@@ -604,6 +652,49 @@ export async function confirmOverlap(
     .where(eq(migrationUploads.id, uploadId));
 
   return { confirmed: true };
+}
+
+/**
+ * Check period overlap for multiple sheets at once (Story 8.0d).
+ * Used by the POST /check-overlap endpoint.
+ */
+export async function checkMultiSheetOverlap(
+  uploadId: string,
+  sheetPeriods: Array<{ sheetName: string; periodYear: number; periodMonth: number }>,
+): Promise<MultiSheetOverlapResponse> {
+  // Deduplicate periods across sheets
+  const uniquePeriods = new Map<string, { periodYear: number; periodMonth: number; sheetNames: string[] }>();
+  for (const sp of sheetPeriods) {
+    const key = `${sp.periodYear}-${sp.periodMonth}`;
+    const existing = uniquePeriods.get(key);
+    if (existing) {
+      existing.sheetNames.push(sp.sheetName);
+    } else {
+      uniquePeriods.set(key, { periodYear: sp.periodYear, periodMonth: sp.periodMonth, sheetNames: [sp.sheetName] });
+    }
+  }
+
+  const results: SheetOverlapResult[] = [];
+  let hasOverlap = false;
+
+  for (const [, entry] of uniquePeriods) {
+    const overlapResult = await checkPeriodOverlap(uploadId, entry.periodYear, entry.periodMonth);
+    const overlaps = !!(overlapResult && overlapResult.overlap);
+    if (overlaps) hasOverlap = true;
+
+    results.push({
+      sheetNames: entry.sheetNames,
+      periodYear: entry.periodYear,
+      periodMonth: entry.periodMonth,
+      periodLabel: formatPeriodLabel(entry.periodYear, entry.periodMonth),
+      overlap: overlaps,
+      existingUploadId: overlapResult?.existingUploadId,
+      existingFilename: overlapResult?.existingFilename,
+      existingRecordCount: overlapResult?.existingRecordCount,
+    });
+  }
+
+  return { hasOverlap, results, skippedSheets: [] };
 }
 
 const DISCARDABLE_STATUSES = ['uploaded', 'mapped', 'failed'] as const;
