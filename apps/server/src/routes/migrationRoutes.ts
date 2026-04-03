@@ -7,7 +7,7 @@ import { authorise } from '../middleware/authorise';
 import { scopeToMda } from '../middleware/scopeToMda';
 import { validate, validateQuery } from '../middleware/validate';
 import { auditLog } from '../middleware/auditLog';
-import { ROLES, migrationUploadQuerySchema, confirmMappingBodySchema, validationResultQuerySchema, createBaselineBodySchema, correctMigrationRecordSchema, supersedeSchema } from '@vlprs/shared';
+import { ROLES, migrationUploadQuerySchema, confirmMappingBodySchema, validationResultQuerySchema, createBaselineBodySchema, correctMigrationRecordSchema, supersedeSchema, checkOverlapBodySchema } from '@vlprs/shared';
 import type { VarianceCategory } from '@vlprs/shared';
 import { AppError } from '../lib/appError';
 import { param } from '../lib/params';
@@ -105,15 +105,15 @@ router.post(
   },
 );
 
-// GET /api/migrations/:id/check-overlap — Check if upload overlaps existing period+MDA data
-router.get(
+// POST /api/migrations/:id/check-overlap — Check if upload overlaps existing period+MDA data (Story 8.0d: multi-sheet)
+router.post(
   '/migrations/:id/check-overlap',
   ...adminAuth,
+  validate(checkOverlapBodySchema),
   async (req: Request, res: Response) => {
     const uploadId = param(req.params.id);
-    const periodYear = req.query.periodYear ? Number(req.query.periodYear) : undefined;
-    const periodMonth = req.query.periodMonth ? Number(req.query.periodMonth) : undefined;
-    const result = await migrationService.checkPeriodOverlap(uploadId, periodYear, periodMonth);
+    const { sheetPeriods } = req.body;
+    const result = await migrationService.checkMultiSheetOverlap(uploadId, sheetPeriods);
     res.json({ success: true, data: result });
   },
 );

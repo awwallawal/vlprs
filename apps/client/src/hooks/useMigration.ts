@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient, authenticatedFetch, parseJsonResponse } from '@/lib/apiClient';
-import type { MigrationUploadPreview, MigrationUploadSummary, MdaListItem, ValidationSummary, ValidationResult, VarianceCategory, BaselineResult, BatchBaselineResult, BaselineSummary, MigrationRecordDetail } from '@vlprs/shared';
+import type { MigrationUploadPreview, MigrationUploadSummary, MdaListItem, ValidationSummary, ValidationResult, VarianceCategory, BaselineResult, BatchBaselineResult, BaselineSummary, MigrationRecordDetail, MultiSheetOverlapResponse } from '@vlprs/shared';
 
 export function useUploadMigration() {
   const queryClient = useQueryClient();
@@ -28,7 +28,7 @@ export function useConfirmMapping() {
   const queryClient = useQueryClient();
 
   return useMutation<
-    { totalRecords: number; recordsPerSheet: Array<{ sheetName: string; count: number; era: number }> },
+    { totalRecords: number; recordsPerSheet: Array<{ sheetName: string; count: number; era: number; periodYear: number | null; periodMonth: number | null }> },
     Error,
     { uploadId: string; file: File; mdaId: string; sheets: Array<{ sheetName: string; mappings: Array<{ sourceIndex: number; canonicalField: string | null }> }> }
   >({
@@ -43,7 +43,7 @@ export function useConfirmMapping() {
         body: formData,
       });
       const body = await parseJsonResponse(res);
-      return body.data as { totalRecords: number; recordsPerSheet: Array<{ sheetName: string; count: number; era: number }> };
+      return body.data as { totalRecords: number; recordsPerSheet: Array<{ sheetName: string; count: number; era: number; periodYear: number | null; periodMonth: number | null }> };
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['migrations'] });
@@ -186,21 +186,19 @@ export function useCorrectMigrationRecord(uploadId: string) {
   });
 }
 
-// ─── Period Overlap Check (Story 7.0d) ───────────────────────────────
+// ─── Period Overlap Check (Story 8.0d) ───────────────────────────────
 
 export function useCheckOverlap() {
   return useMutation<
-    { overlap: boolean; existingUploadId?: string; existingRecordCount?: number; newRecordCount?: number; period?: string; mdaName?: string },
+    MultiSheetOverlapResponse,
     Error,
-    { uploadId: string; periodYear?: number; periodMonth?: number }
+    { uploadId: string; sheetPeriods: Array<{ sheetName: string; periodYear: number; periodMonth: number }> }
   >({
-    mutationFn: ({ uploadId, periodYear, periodMonth }) => {
-      const params = new URLSearchParams();
-      if (periodYear !== undefined) params.set('periodYear', String(periodYear));
-      if (periodMonth !== undefined) params.set('periodMonth', String(periodMonth));
-
-      return apiClient(`/migrations/${uploadId}/check-overlap?${params}`);
-    },
+    mutationFn: ({ uploadId, sheetPeriods }) =>
+      apiClient<MultiSheetOverlapResponse>(`/migrations/${uploadId}/check-overlap`, {
+        method: 'POST',
+        body: JSON.stringify({ sheetPeriods }),
+      }),
   });
 }
 

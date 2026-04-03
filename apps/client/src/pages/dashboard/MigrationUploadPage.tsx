@@ -14,7 +14,7 @@ import { usePageMeta } from '@/hooks/usePageMeta';
 import { Badge } from '@/components/ui/badge';
 import { FileDelineationPreview } from './components/FileDelineationPreview';
 import { useTriggerDelineation, useConfirmDelineation } from '@/hooks/useDeduplication';
-import type { MigrationUploadPreview, VarianceCategory, BatchBaselineResult, DelineationResult } from '@vlprs/shared';
+import type { MigrationUploadPreview, VarianceCategory, BatchBaselineResult, DelineationResult, MultiSheetOverlapResponse } from '@vlprs/shared';
 
 type Step = 'select-mda' | 'upload' | 'review' | 'processing' | 'complete' | 'delineation' | 'validating' | 'validated';
 type Tab = 'upload' | 'profiles';
@@ -32,7 +32,7 @@ export function MigrationUploadPage() {
   const [preview, setPreview] = useState<MigrationUploadPreview | null>(null);
   const [result, setResult] = useState<{
     totalRecords: number;
-    recordsPerSheet: Array<{ sheetName: string; count: number; era: number }>;
+    recordsPerSheet: Array<{ sheetName: string; count: number; era: number; periodYear: number | null; periodMonth: number | null }>;
     skippedRows?: Array<{ row: number; sheet: string; reason: string }>;
   } | null>(null);
   const [isAgricultureSelected, setIsAgricultureSelected] = useState(false);
@@ -43,14 +43,9 @@ export function MigrationUploadPage() {
   const [baselinedRecordIds, setBaselinedRecordIds] = useState<Set<string>>(new Set());
   const [baselineInProgressId, setBaselineInProgressId] = useState<string | null>(null);
   const [delineationResult, setDelineationResult] = useState<DelineationResult | null>(null);
-  const [overlapWarning, setOverlapWarning] = useState<{
-    existingUploadId?: string;
-    existingRecordCount?: number;
-    newRecordCount?: number;
-    period?: string;
-    mdaName?: string;
-  } | null>(null);
+  const [overlapWarning, setOverlapWarning] = useState<MultiSheetOverlapResponse | null>(null);
   const [pendingMappings, setPendingMappings] = useState<Array<{ sheetName: string; mappings: Array<{ sourceIndex: number; canonicalField: string | null }> }> | null>(null);
+  const [showPeriodConfirm, setShowPeriodConfirm] = useState(false);
   const [selectedRecordId, setSelectedRecordId] = useState<string | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
 
@@ -128,27 +123,54 @@ export function MigrationUploadPage() {
   ) => {
     if (!preview || !selectedFile) return;
 
-    // Check for period overlap before confirming
-    const firstSheet = preview.sheets[0];
-    const period = firstSheet?.period;
-    try {
-      const overlapResult = await checkOverlapMutation.mutateAsync({
-        uploadId: preview.uploadId,
-        periodYear: period?.year,
-        periodMonth: period?.month,
-      });
+    // Store mappings for the period confirmation gate (Task 7)
+    setPendingMappings(mappings);
+    setShowPeriodConfirm(true);
+  }, [preview, selectedFile]);
 
-      if (overlapResult.overlap) {
-        setOverlapWarning(overlapResult);
-        setPendingMappings(mappings);
-        return; // Show dialog instead of proceeding
+  const handlePeriodConfirm = useCallback(async () => {
+    if (!preview || !pendingMappings) return;
+    setShowPeriodConfirm(false);
+
+    // Collect periods from ALL sheets (Story 8.0d)
+    const sheetPeriods = preview.sheets
+      .filter(s => s.period !== null)
+      .map(s => ({ sheetName: s.sheetName, periodYear: s.period!.year, periodMonth: s.period!.month }));
+
+    // Build skippedSheets from sheets with no detected period (Story 8.0d — AC 7)
+    const sheetsWithNoPeriod = preview.sheets
+      .filter(s => s.period === null)
+      .map(s => ({ sheetName: s.sheetName, reason: 'Period not detected' }));
+
+    if (sheetPeriods.length > 0) {
+      try {
+        const overlapResult = await checkOverlapMutation.mutateAsync({
+          uploadId: preview.uploadId,
+          sheetPeriods,
+        });
+
+        if (overlapResult.hasOverlap) {
+          setOverlapWarning({
+            ...overlapResult,
+            skippedSheets: [...overlapResult.skippedSheets, ...sheetsWithNoPeriod],
+          });
+          return; // Show overlap dialog instead of proceeding
+        }
+      } catch {
+        // Overlap check failed — re-show period confirmation so user can retry or cancel
+        setShowPeriodConfirm(true);
+        return;
       }
-    } catch {
-      // If overlap check fails, proceed anyway (non-blocking)
     }
 
-    await proceedWithConfirm(mappings);
-  }, [preview, selectedFile, checkOverlapMutation, proceedWithConfirm]);
+    await proceedWithConfirm(pendingMappings);
+    setPendingMappings(null);
+  }, [preview, pendingMappings, checkOverlapMutation, proceedWithConfirm]);
+
+  const handlePeriodCancel = useCallback(() => {
+    setShowPeriodConfirm(false);
+    setPendingMappings(null);
+  }, []);
 
   const handleOverlapConfirm = useCallback(async () => {
     if (!preview || !pendingMappings) return;
@@ -227,6 +249,7 @@ export function MigrationUploadPage() {
     setDelineationResult(null);
     setOverlapWarning(null);
     setPendingMappings(null);
+    setShowPeriodConfirm(false);
   }, []);
 
   const handleConfirmDelineation = useCallback(async (
@@ -498,21 +521,107 @@ export function MigrationUploadPage() {
         </div>
       )}
 
-      {/* Period Overlap Warning Dialog */}
-      {overlapWarning && (
+      {/* Period Confirmation Gate (Story 8.0d — Task 7) */}
+      {showPeriodConfirm && preview && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg border border-border shadow-xl max-w-md w-full mx-4 p-6 space-y-4">
-            <h3 className="text-sm font-semibold text-text-primary">Existing Upload Found</h3>
+            <h3 className="text-sm font-semibold text-text-primary">Confirm Detected Periods</h3>
             <p className="text-sm text-text-secondary">
-              An existing upload was found for <span className="font-medium">{overlapWarning.period}</span> at{' '}
-              <span className="font-medium">{overlapWarning.mdaName}</span> with{' '}
-              <span className="font-medium">{overlapWarning.existingRecordCount}</span> records.
-              {overlapWarning.newRecordCount ? (
-                <> This upload contains <span className="font-medium">{overlapWarning.newRecordCount}</span> records.</>
-              ) : null}
+              Please verify the detected period for each sheet before processing:
             </p>
+            <div className="space-y-2">
+              {preview.sheets.map(sheet => (
+                <div key={sheet.sheetName} className="flex items-center gap-2 text-sm">
+                  {sheet.period ? (
+                    <>
+                      <span className="text-teal">&#10003;</span>
+                      <span className="text-text-primary">
+                        Sheet &lsquo;{sheet.sheetName}&rsquo;: <span className="font-semibold">
+                          {new Date(sheet.period.year, sheet.period.month - 1).toLocaleString('en', { month: 'long' })} {sheet.period.year}
+                        </span>
+                      </span>
+                    </>
+                  ) : (
+                    <>
+                      <span className="text-text-muted">&#9675;</span>
+                      <span className="text-text-muted">
+                        Sheet &lsquo;{sheet.sheetName}&rsquo;: period not detected
+                      </span>
+                    </>
+                  )}
+                </div>
+              ))}
+            </div>
+            {checkOverlapMutation.isError && (
+              <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+                Overlap check could not be completed. Please try again or cancel.
+              </p>
+            )}
+            <div className="flex justify-end gap-3 pt-2">
+              <button
+                type="button"
+                onClick={handlePeriodCancel}
+                className="px-4 py-2 text-sm border border-border rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                Cancel &mdash; periods are wrong
+              </button>
+              <button
+                type="button"
+                onClick={handlePeriodConfirm}
+                disabled={checkOverlapMutation.isPending}
+                className="px-4 py-2 text-sm bg-teal text-white rounded-lg hover:bg-teal-hover transition-colors disabled:opacity-50"
+              >
+                {checkOverlapMutation.isPending ? 'Checking...' : 'Confirm Periods & Process'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Period Overlap Warning Dialog (Story 8.0d — multi-sheet) */}
+      {overlapWarning && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg border border-border shadow-xl max-w-lg w-full mx-4 p-6 space-y-4">
+            <h3 className="text-sm font-semibold text-text-primary">Period Overlap Detected</h3>
+            <p className="text-sm text-text-secondary">
+              The following sheets conflict with existing uploads:
+            </p>
+            <div className="space-y-2">
+              {overlapWarning.results.map(r => (
+                <div key={`${r.periodYear}-${r.periodMonth}`} className="text-sm">
+                  {r.overlap ? (
+                    <div className="flex items-start gap-2">
+                      <span className="text-amber-500 mt-0.5">&#9888;</span>
+                      <div>
+                        <p className="text-text-primary">
+                          <span className="font-medium">{r.sheetNames.map(n => `'${n}'`).join(', ')}</span> &mdash; {r.periodLabel}
+                        </p>
+                        <p className="text-xs text-text-muted">
+                          Overlaps with: {r.existingFilename ?? 'existing upload'} ({r.existingRecordCount} existing records)
+                        </p>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      <span className="text-teal">&#10003;</span>
+                      <span className="text-text-secondary">
+                        {r.sheetNames.map(n => `'${n}'`).join(', ')} &mdash; {r.periodLabel}: No existing data for this period
+                      </span>
+                    </div>
+                  )}
+                </div>
+              ))}
+              {overlapWarning.skippedSheets.map(s => (
+                <div key={s.sheetName} className="flex items-center gap-2 text-sm">
+                  <span className="text-text-muted">&#9675;</span>
+                  <span className="text-text-muted">
+                    Sheet &lsquo;{s.sheetName}&rsquo;: period not detected &mdash; overlap check skipped
+                  </span>
+                </div>
+              ))}
+            </div>
             <p className="text-xs text-text-muted">
-              You may proceed — both uploads will be preserved for comparison. You can later designate which upload should be the canonical source.
+              Proceeding will add new records alongside existing data for the overlapping periods.
             </p>
             <div className="flex justify-end gap-3 pt-2">
               <button
@@ -528,7 +637,7 @@ export function MigrationUploadPage() {
                 disabled={confirmOverlapMutation.isPending}
                 className="px-4 py-2 text-sm bg-teal text-white rounded-lg hover:bg-teal-hover transition-colors disabled:opacity-50"
               >
-                {confirmOverlapMutation.isPending ? 'Confirming...' : 'Proceed Anyway'}
+                {confirmOverlapMutation.isPending ? 'Confirming...' : 'Confirm and Proceed'}
               </button>
             </div>
           </div>

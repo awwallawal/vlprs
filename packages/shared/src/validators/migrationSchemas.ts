@@ -106,6 +106,15 @@ export const correctMigrationRecordSchema = z.object({
   { message: 'At least one field must be provided for correction' },
 );
 
+// ─── Multi-Sheet Overlap Check (Story 8.0d) ────────────────────────
+export const checkOverlapBodySchema = z.object({
+  sheetPeriods: z.array(z.object({
+    sheetName: z.string(),
+    periodYear: z.number().int().min(2000).max(2100),
+    periodMonth: z.number().int().min(1).max(12),
+  })).min(1),
+});
+
 // ─── Coverage Tracker Query (Story 11.0b) ────────────────────────────
 export const coverageQuerySchema = z.object({
   extended: z.enum(['true', 'false']).optional().default('false'),
