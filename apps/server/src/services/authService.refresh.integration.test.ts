@@ -123,15 +123,33 @@ describe('authService.refreshToken', () => {
     });
   });
 
-  it('returns 401 for inactive session (>30 min since last_used_at)', async () => {
+  it('returns 401 for inactive session (>60 min since last_used_at)', async () => {
     const rawToken = await seedRefreshToken(testUserId, {
-      lastUsedAt: new Date(Date.now() - 31 * 60 * 1000), // 31 min ago
+      lastUsedAt: new Date(Date.now() - 65 * 60 * 1000), // 65 min ago
     });
 
     await expect(authService.refreshToken(rawToken)).rejects.toMatchObject({
       statusCode: 401,
       code: 'SESSION_INACTIVE',
     });
+  });
+
+  it('succeeds for session within 60-min inactivity window (45 min ago)', async () => {
+    const rawToken = await seedRefreshToken(testUserId, {
+      lastUsedAt: new Date(Date.now() - 45 * 60 * 1000), // 45 min ago — within 60-min window
+    });
+
+    const result = await authService.refreshToken(rawToken);
+    expect(result.accessToken).toBeTruthy();
+  });
+
+  it('succeeds for session at exactly 60-min boundary (strict > comparison)', async () => {
+    const rawToken = await seedRefreshToken(testUserId, {
+      lastUsedAt: new Date(Date.now() - 60 * 60 * 1000), // exactly 60 min ago — at boundary, passes because server uses >
+    });
+
+    const result = await authService.refreshToken(rawToken);
+    expect(result.accessToken).toBeTruthy();
   });
 
   it('REUSE DETECTION: revokes ALL user tokens when revoked token is presented', async () => {

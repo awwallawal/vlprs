@@ -4,8 +4,8 @@ import { toast } from 'sonner';
 import { useAuthStore } from '@/stores/authStore';
 import { apiClient } from '@/lib/apiClient';
 
-const WARNING_THRESHOLD_MS = 29 * 60 * 1000; // 29 minutes
-const LOGOUT_DELAY_MS = 60 * 1000; // 60 seconds after warning
+const WARNING_THRESHOLD_MS = 55 * 60 * 1000; // 55 minutes
+const LOGOUT_DELAY_MS = 5 * 60 * 1000; // 5 minutes after warning
 const ACTIVITY_EVENTS: (keyof WindowEventMap)[] = ['mousedown', 'keydown', 'scroll', 'touchstart'];
 const ACTIVITY_RESET_EVENT = 'vlprs:activity';
 
@@ -107,6 +107,7 @@ export function useSessionTimeout() {
 
   return {
     showWarning,
+    warningMinutes: LOGOUT_DELAY_MS / 60_000,
     onContinue: handleContinue,
     onLogoutNow: handleLogout,
   };

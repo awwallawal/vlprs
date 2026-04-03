@@ -7,7 +7,7 @@ const CSRF_COOKIE_NAME = '__csrf';
 const CSRF_HEADER_NAME = 'x-csrf-token';
 const MUTATION_METHODS = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
 
-let refreshPromise: Promise<boolean> | null = null;
+let refreshPromise: Promise<'ok' | 'auth_error' | 'network_error'> | null = null;
 
 function getCsrfToken(): string | null {
   const match = document.cookie
@@ -16,7 +16,11 @@ function getCsrfToken(): string | null {
   return match ? decodeURIComponent(match.split('=')[1]) : null;
 }
 
-async function refreshToken(): Promise<boolean> {
+/**
+ * Core refresh implementation — single source of truth for token refresh logic.
+ * Returns discriminated result. NOT exported; callers use refreshToken() or refreshTokenWithReason().
+ */
+async function refreshTokenCore(): Promise<'ok' | 'auth_error' | 'network_error'> {
   try {
     const csrfToken = getCsrfToken();
     const headers: Record<string, string> = {};
@@ -30,19 +34,55 @@ async function refreshToken(): Promise<boolean> {
       headers,
     });
 
-    if (!res.ok) return false;
+    if (!res.ok) return 'auth_error';
 
     const body = await res.json();
-    if (!body.success) return false;
+    if (!body.success) return 'auth_error';
 
     const currentUser = useAuthStore.getState().user;
     if (currentUser) {
       useAuthStore.getState().setAuth(body.data.accessToken, body.data.user ?? currentUser);
     }
-    return true;
+    return 'ok';
   } catch {
-    return false;
+    return 'network_error';
   }
+}
+
+/**
+ * Refresh the access token. Returns true on success, false on failure.
+ * Deduplicates concurrent calls via shared refreshPromise guard.
+ * Used internally by authenticatedFetch on 401 retry.
+ */
+async function refreshToken(): Promise<boolean> {
+  if (!refreshPromise) {
+    refreshPromise = refreshTokenCore().finally(() => {
+      refreshPromise = null;
+    });
+  }
+  const result = await refreshPromise;
+  return result === 'ok';
+}
+
+/**
+ * Refresh token with reason — distinguishes auth failure from network failure.
+ * Deduplicates concurrent calls via shared refreshPromise guard.
+ * Used by background refresh to decide whether to logout or retry.
+ */
+export async function refreshTokenWithReason(): Promise<'ok' | 'auth_error' | 'network_error'> {
+  if (!refreshPromise) {
+    refreshPromise = refreshTokenCore().finally(() => {
+      refreshPromise = null;
+    });
+  }
+  return refreshPromise;
+}
+
+/**
+ * Check if a token refresh is currently in progress.
+ */
+export function isRefreshInProgress(): boolean {
+  return refreshPromise !== null;
 }
 
 /**
@@ -92,13 +132,7 @@ export async function authenticatedFetch(
 
   // 401 → attempt silent refresh + retry
   if (res.status === 401 && accessToken) {
-    // Prevent multiple simultaneous refresh calls
-    if (!refreshPromise) {
-      refreshPromise = refreshToken().finally(() => {
-        refreshPromise = null;
-      });
-    }
-    const refreshed = await refreshPromise;
+    const refreshed = await refreshToken();
 
     if (refreshed) {
       // Retry with new token

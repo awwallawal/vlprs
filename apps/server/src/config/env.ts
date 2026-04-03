@@ -25,7 +25,7 @@ const envSchema = z.object({
   MAX_LOGIN_ATTEMPTS: z.coerce.number().default(5),
   LOCKOUT_DURATION_MINUTES: z.coerce.number().default(15),
   CSRF_SECRET: z.string().min(32).default('change-csrf-secret-in-production'),
-  INACTIVITY_TIMEOUT_MINUTES: z.coerce.number().default(30),
+  INACTIVITY_TIMEOUT_MINUTES: z.coerce.number().default(60),
   RESEND_API_KEY: z.string().optional(),
   EMAIL_FROM: z.string().default('noreply@vlprs.oyo.gov.ng'),
   APP_URL: z.string().default('http://localhost:5173'),
