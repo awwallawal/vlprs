@@ -250,9 +250,9 @@ development_status:
   8-0d-multi-sheet-period-handling: done  # per-sheet overlap detection, period confirmation gate, POST overlap endpoint, composite index, period in results. Code review: 7 findings (1H 3M 3L) all resolved
   8-0e-session-resilience-background-refresh: done  # background token refresh, keep-alive for idle tabs, extended warning threshold. Code review: 7 findings (3H 2M 2L) all resolved
   8-0f-coverage-tracker-drilldown-download: done  # clickable cells → month data page, CSV/Excel download per MDA+month. Code review: 8 findings all fixed
-  8-0g-comprehensive-app-documentation: ready-for-dev  # end-user guide + developer documentation, page-by-page with card/table derivation explanations
-  8-0h-monthly-metric-snapshots-mom-trend: ready-for-dev  # metric_snapshots table, monthly scheduler, backfill, 4 MoM metrics computed from real historical data. Zero-debt-forward: no broken 0% arrows
-  8-0i-correction-aware-flag-reading: ready-for-dev  # getEffectiveEventFlag() helper, applied to reconciliation engine, comparison engine, inactive loan detector, pre-submission service. Completes Story 7.3's full intent
+  8-0g-comprehensive-app-documentation: done  # developer documentation only (end-user guide moved to 13-5 per PO decision 2026-04-04). Code review: 6 findings (3H 2M 1L) all fixed
+  8-0h-monthly-metric-snapshots-mom-trend: review  # metric_snapshots table, monthly scheduler, backfill, 4 MoM metrics computed from real historical data. Zero-debt-forward: no broken 0% arrows
+  8-0i-correction-aware-flag-reading: review  # getEffectiveEventFlag() helper, applied to reconciliation engine, comparison engine, inactive loan detector, pre-submission service. Completes Story 7.3's full intent
   8-0j-selective-baseline-mda-review-handoff: ready-for-dev  # Three-stage pipeline: selective batch baseline (Clean+Minor auto, Significant+ flagged) → MDA officer review with mandatory reasons (online drawer or bulk download/upload) → DEPT_ADMIN verify + baseline. 14-day per-MDA review window with 3-day countdown. Depends on 8.0b. Parallel with 8.0h+8.0i. PM triage 2026-04-02
   8-1-zero-balance-detection-auto-stop-trigger: ready-for-dev
   8-2-auto-stop-certificate-generation: ready-for-dev
@@ -336,4 +336,5 @@ development_status:
   epic-13: backlog
   13-3-staff-id-management: backlog
   13-4-duplicate-staff-id-detection: backlog
+  13-5-comprehensive-end-user-guide: backlog  # moved from 8.0g per PO decision 2026-04-04. MUST be last story in E13 — all feature epics complete before execution
   epic-13-retrospective: optional

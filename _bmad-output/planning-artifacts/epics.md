@@ -3405,6 +3405,26 @@ So that accidental duplicate assignments are caught before they cause data quali
 **When** the user decides to cancel
 **Then** the Staff ID update is not applied and no audit entry is created
 
+### Story 13.5: Comprehensive End-User Guide
+
+As an **end user** (AG officer, MDA officer, Dept Admin),
+I want a comprehensive guide explaining what each page does, what each card/table means, how figures are derived, and how pages connect,
+So that I can understand the system without needing to ask the development team.
+
+> **Note:** Moved from Story 8.0g (E7+E6 retro Planning Item B) per PO decision 2026-04-04. Deferred to Epic 13 (last functional epic) so it's written once when all features are complete — avoids documentation going stale across ~30 remaining stories in E8/E15/E16/E12/E9/E13. Must be the LAST story executed in E13 (after 13.3 and 13.4). Dependencies: all feature epics (E8, E15, E16, E12, E9) complete.
+
+**Acceptance Criteria:**
+
+**Given** an end user, **When** they open the End-User Guide, **Then** they can find an explanation of every page they have access to: what it does, what each card/table/metric means, how figures are derived, and how pages connect to each other.
+
+**Given** the End-User Guide, **When** describing a metric card, **Then** the guide explains in plain language: what the number represents, what data it's computed from, what "good" vs "concerning" looks like, and what action to take.
+
+**Given** the End-User Guide, **When** describing role-based access, **Then** it clearly states which pages/features each role can access, matching the sidebar navigation configuration.
+
+**Given** the document, **When** referencing a specific metric or feature, **Then** the documentation uses the same non-punitive vocabulary as the application.
+
+> Full task breakdown (32 subtasks covering 7 parts: Getting Started, Executive Dashboard, Migration Dashboard, Submissions & Operations, Exceptions & Reconciliation, Reports, Administration) is preserved from the original 8.0g story. The create-story workflow should carry these forward when the story is created.
+
 ---
 
 ## Epic 15: Beneficiary Onboarding & Verification Pipeline
@@ -3642,34 +3662,239 @@ So that the issues come to me on the executive dashboard.
 
 When sequential monthly submissions arrive, the system compares them to detect anomalies invisible to manual spreadsheet review. Currently, if a beneficiary's principal changes between months, or a beneficiary disappears and reappears, nobody knows unless someone manually compares spreadsheets cell by cell. This epic makes the system do that comparison automatically and surface findings to the AG.
 
-**Status:** Backlog — discovery spike required before story breakdown.
+**This transforms VLPRS from a processing tool into a governance instrument.** Every monthly submission becomes a checkpoint, not just a data point. The AG gains continuous visibility into data evolution across the entire loan portfolio.
 
-**Dependencies:** Epic 5 (MDA Submission — done), Story 8.0d (Multi-Sheet Period Handling). Requires ≥2 months of real submission data to be useful.
+**Status:** In Progress — discovery spike (16.0) completed 2026-04-02. Stories 16.1–16.4 ready for dev.
 
-**Placement:** Sprint 12, parallel with Epic 12 (Early Exit Processing). By sprint 12, the system will have multiple months of live MDA submissions flowing through the pipeline.
+**Dependencies:** Epic 5 (MDA Submission — done), Story 8.0d (Multi-Sheet Period Handling — ready-for-dev). Engine built and tested with synthetic data; production validation requires ≥2 months of real MDA submissions.
 
-**Origin:** Story 8.0b UAT escalation #4 (2026-04-01). Awwal: "If we get data for September 2024, we should be able to make comparison about the data and point out inconsistencies across months."
+**Placement:** Discovery (16.0) in Sprint 11 parallel with E8+E15. Main stories (16.1–16.4) in Sprint 12, parallel with Epic 12 (Early Exit Processing).
 
-**Estimated scope:** 3-5 stories (discovery spike will refine). Provisional story arc:
+**Origin:** Story 8.0b UAT escalation #4 (2026-04-01). Awwal: "If we get data for September 2024, we should be able to make comparison about the data and point out inconsistencies across months." PM triage 2026-04-02.
 
-1. **Cross-month diffing engine** — backend comparison logic that diffs submission N against submission N-1 for each MDA, detecting changes at the individual record level (matched by staff name/ID)
-2. **Anomaly classification & severity** — categorize detected changes into anomaly types with severity scoring, similar to the observation engine pattern
-3. **Anomaly drill-down & record timeline** — per-record view showing how values changed across months, with explanation request workflow
-4. **Dashboard surfacing & MDA-scoped views** — attention items for anomalies, per-MDA anomaly reports, AG-level trend overview
-5. **Cross-month aggregate trends** — portfolio-level trend analysis: total exposure trajectory, recovery rate trajectory, completion rate trajectory across months
+**Story arc (refined from discovery spike 2026-04-02):**
 
-**Anomaly types to detect (from UAT evidence):**
+| # | Story | Scope | Dependencies |
+|---|---|---|---|
+| 16.0 | Cross-Month Discovery Spike | Analysis: validate anomaly types, design schema, map reuse surface, produce stories | None (done) |
+| 16.1 | Cross-Month Diffing Engine & Anomaly Detection | Core backend: auto-diff on submission confirmation, 5 finding types, severity, auto-link to employment events | 8.0d (periods) |
+| 16.2 | Anomaly Resolution & Event Context | Review workflow: mark-expected, resolve, bulk-resolve, auto-resolution, audit trail | 16.1 |
+| 16.3 | Cross-Month Dashboard & Drill-Down | Frontend: attention items, cross-month tab, per-MDA breakdown, per-staff timeline | 16.1, 16.2 |
+| 16.4 | Portfolio Stability Metrics & Trend Charts | Aggregate: churn rate, deduction stability, MDA consistency, trends, report integration | 16.1 (parallel with 16.3) |
 
-| Anomaly Type | Description | Example |
-|---|---|---|
-| Disappearing beneficiary | Name present in month N, absent in month N+1, reappears in month N+2+ | Staff stopped paying for 1 month — why? |
-| Principal drift | Approved loan amount changes between monthly submissions | ₦450,000 in Aug → ₦500,000 in Sep — data entry error or renegotiation? |
-| Deduction drift | Monthly deduction amount changes without clear reason | ₦16,999 in Aug → ₦15,000 in Sep — partial payment or error? |
-| Phantom completion | Staff disappears (assumed completed) but balance calculation shows payments remaining | Moshood pattern — vanishes from submissions but loan not fully repaid |
-| New mid-stream appearance | Staff appears for first time mid-stream (not in earlier months) | Late addition or different loan? |
+**Finding types (validated from discovery spike):**
 
-**Why not Epic 15:** E15 is about beneficiary *onboarding* — tracking new names from Committee approval lists to operational status. Cross-month anomaly detection covers ALL beneficiaries (existing + new) and is a fundamentally different analytical concern. Mixing them would blur E15's focus.
+| Finding Type | Detection Logic | Severity | Auto-Explanation |
+|---|---|---|---|
+| `disappearing_beneficiary` | Staff in month N, absent in N+1 | High if no event, Medium if event explains | Links to RETIREMENT, TRANSFER_OUT, DECEASED, DISMISSED, LWOP_START events |
+| `reappearing_beneficiary` | Staff absent in N, present in N+1, was in earlier months | Medium | "Staff returned after {gap} month absence" |
+| `deduction_change` | Same staff, `amountDeducted` differs between N and N+1 | Low (<₦500), Medium (₦500–₦5000), High (>₦5000) | Shows previous → current with ₦ difference |
+| `phantom_completion` | Staff absent + active loan with remaining balance > 0 + no completion event | High | "Loan balance ₦X remaining, no completion recorded" |
+| `new_midstream_appearance` | Staff present in current month, no prior submissions for this MDA | Medium | "First appearance — check if new beneficiary or data correction" |
 
-**Non-punitive vocabulary:** "Variance observed between months" not "Inconsistency detected". "Review suggested" not "Error found". Amber indicators throughout.
+**Reuse surface (from discovery analysis):**
 
-**Discovery spike scope:** Before committing to story breakdown, run a discovery session to: (a) validate the anomaly types above against Awwal's full expectations, (b) identify any additional anomaly patterns from real data, (c) determine whether MDA officers need an explanation/resolution workflow (similar to 8.0j's correction reasons), (d) size stories based on analytical complexity.
+| Existing Component | Reuse Strategy |
+|---|---|
+| `comparisonEngine.ts` | Variance thresholds (₦500 minor/significant) + Decimal.js precision |
+| `reconciliationEngine.ts` | Event matching pattern + date tolerance for auto-linking |
+| `attentionItemService.ts` | Add 3 new detectors to `Promise.all()` array, reuse `buildPerMdaItems()` |
+| `observationEngine.ts` | Idempotent generation pattern (separate table, not observation types) |
+| `submission_rows` indexes | `(staff_id, month)` composite already optimised for cross-month queries |
+| `employment_events` table | 11 event types for auto-explanation of staff disappearances |
+| Submission confirmation flow | Fire-and-forget hook after comparison engine in `processSubmissionRows()` |
+
+**Schema design (from discovery):**
+
+New table: `cross_month_findings` — stores individual findings per submission pair. New enums: `cross_month_finding_type` (5 types above), `finding_severity` (low/medium/high), `finding_status` (unreviewed/expected/resolved). Fields: current/previous submission refs, staff identification, finding type/severity, current/previous value JSONBs, variance amount, auto-linked event ref + explanation text, review status + audit trail.
+
+**Why not Epic 15:** E15 is about beneficiary *onboarding* — tracking new names from Committee approval lists to operational status. Cross-month detection covers ALL beneficiaries (existing + new) and is a fundamentally different analytical concern. Mixing them would blur E15's focus.
+
+**Non-punitive vocabulary:** "Variance observed between months" not "Inconsistency detected". "Review suggested" not "Error found". "Changes observed" not "Data drift". Amber indicators throughout.
+
+### Story 16.0: Cross-Month Discovery Spike & Story Breakdown
+
+**Status:** Done (2026-04-02)
+
+As the **Product Owner**, I want a structured discovery analysis of the cross-month data integrity domain, so that Epic 16 has a validated anomaly taxonomy, schema design, reuse plan, and fully specified implementation stories.
+
+**Deliverables (completed):**
+1. Validated 5 finding types against AG expectations and UAT evidence
+2. Designed `cross_month_findings` table schema with enums
+3. Mapped reuse surface: 6 existing components identified for extension
+4. Produced 4 implementation stories (16.1–16.4) with BDD acceptance criteria and task breakdowns
+5. Confirmed E15 soft dependency: disappearing beneficiary detection works from submission history alone; E15 enriches but doesn't block
+6. Confirmed trigger pattern: fire-and-forget after comparison engine in `processSubmissionRows()`
+
+### Story 16.1: Cross-Month Diffing Engine & Anomaly Detection
+
+As the **Accountant General / Department Admin**, I want the system to automatically compare consecutive monthly submissions for each MDA and detect anomalies at the individual record level, so that data integrity issues are surfaced proactively rather than requiring manual cell-by-cell spreadsheet comparison.
+
+**Acceptance Criteria:**
+
+1. **Auto-trigger on submission confirmation**
+   - **Given** a new MDA submission is confirmed (source: 'csv' or 'manual', not 'historical')
+   - **When** the comparison engine completes
+   - **Then** the cross-month diff runs automatically as fire-and-forget (non-blocking, failures logged but don't fail the submission)
+
+2. **Disappearing beneficiary detection**
+   - **Given** staff X appears in month N's confirmed submission for MDA Y
+   - **When** month N+1's submission for MDA Y is confirmed and staff X is absent
+   - **Then** a `disappearing_beneficiary` finding is created with severity based on employment event context (High if no explaining event, Medium if event on file)
+
+3. **Reappearing beneficiary detection**
+   - **Given** staff X was present in month N-1, absent in month N, present again in month N+1
+   - **When** month N+1's submission is confirmed
+   - **Then** a `reappearing_beneficiary` finding is created (Medium severity) noting the gap duration
+
+4. **Deduction change detection**
+   - **Given** staff X appears in both month N and N+1 submissions
+   - **When** `amountDeducted` differs between months
+   - **Then** a `deduction_change` finding is created with severity: Low (<₦500), Medium (₦500–₦5,000), High (>₦5,000)
+
+5. **Phantom completion detection**
+   - **Given** staff X was present in month N but absent in month N+1
+   - **When** the staff's active loan has remaining balance > 0 and no completion/write-off event exists
+   - **Then** a `phantom_completion` finding is created (High severity)
+
+6. **New mid-stream appearance detection**
+   - **Given** staff X appears in current month's submission
+   - **When** no prior confirmed submissions exist for this staff+MDA combination
+   - **Then** a `new_midstream_appearance` finding is created (Medium severity)
+
+7. **Auto-link to employment events**
+   - **Given** a `disappearing_beneficiary` finding for staff X
+   - **When** an employment event (RETIREMENT, TRANSFER_OUT, DECEASED, DISMISSED, LWOP_START) exists for staff X in the relevant MDA with effective date within 60 days of the submission period
+   - **Then** the finding is auto-populated with `autoLinkedEventId` and `autoExplanation` (e.g. "Staff retired on 2025-03-15 — RETIREMENT event filed"), and severity downgraded to Medium
+
+8. **First-submission baseline handling**
+   - **Given** an MDA's first-ever confirmed submission
+   - **When** no previous confirmed submission exists for this MDA
+   - **Then** no cross-month findings are generated (this submission establishes the baseline)
+
+9. **Gap-tolerant comparison**
+   - **Given** MDA Y submitted for January and March but not February
+   - **When** March submission is confirmed
+   - **Then** the diff compares March against January (most recent previous confirmed), not against a non-existent February
+
+10. **Idempotent execution**
+    - **Given** the diff has already run for a submission pair
+    - **When** re-triggered (e.g. reprocessing)
+    - **Then** existing findings for this pair are deleted and regenerated (idempotent)
+
+11. **Cross-month summary on submission**
+    - **Given** the diff completes for a submission
+    - **Then** `cross_month_findings_count` and `cross_month_findings_summary` (jsonb: byType, bySeverity, autoLinkedCount) are stored on the `mda_submissions` record for O(1) access
+
+### Story 16.2: Anomaly Resolution & Event Context
+
+As the **MDA Accounting Officer / Department Admin**, I want to review cross-month findings and mark them as expected (with explanation) or resolved, so that the system distinguishes between genuine issues and legitimate data changes, maintaining an audit trail of all review decisions.
+
+**Acceptance Criteria:**
+
+1. **Finding detail view**
+   - **Given** a cross-month finding is opened
+   - **Then** the detail shows: staff name/ID, MDA, finding type, severity, previous month values vs current month values (side-by-side), auto-linked event (if any), and auto-explanation text
+
+2. **"Mark Expected" with mandatory explanation**
+   - **Given** a finding where the change is legitimate (e.g. staff actually retired)
+   - **When** the reviewer clicks "Mark Expected"
+   - **Then** a mandatory explanation field (min 10 chars) is required. On save: status → 'expected', reviewedBy, reviewedAt, resolutionNote set
+
+3. **"Mark Resolved" with resolution note**
+   - **Given** a finding that requires follow-up action (e.g. MDA contacted, data corrected)
+   - **When** the reviewer clicks "Mark Resolved"
+   - **Then** a mandatory resolution note (min 10 chars) is required. On save: status → 'resolved', reviewedBy, reviewedAt, resolutionNote set
+
+4. **Bulk mark by type + MDA**
+   - **Given** multiple findings of the same type for the same MDA (e.g. 20 disappearing beneficiaries all explained by a retirement batch)
+   - **When** the reviewer selects multiple findings and clicks "Mark All Expected" or "Mark All Resolved"
+   - **Then** a single explanation/note is applied to all selected findings in one transaction
+
+5. **Auto-resolution on event filing**
+   - **Given** an unreviewed `disappearing_beneficiary` finding for staff X
+   - **When** an employment event (RETIREMENT, TRANSFER_OUT, DECEASED, etc.) is subsequently filed for staff X
+   - **Then** the finding is auto-updated: status → 'expected', autoLinkedEventId set, autoExplanation updated, resolutionNote = "Auto-resolved: {eventType} event filed on {date}"
+
+6. **MDA-scoped access**
+   - **Given** an MDA_OFFICER reviewing findings
+   - **Then** they see only findings for their assigned MDA (via `scopeToMda`). DEPT_ADMIN and SUPER_ADMIN see all MDAs
+
+7. **Resolution audit trail**
+   - **Given** any status change on a finding
+   - **Then** reviewedBy (userId), reviewedAt (timestamp), resolutionNote are immutably recorded
+
+### Story 16.3: Cross-Month Dashboard & Drill-Down
+
+As the **Accountant General**, I want cross-month findings surfaced on existing dashboards with progressive drill-down from portfolio to MDA to individual staff, so that I can govern data quality at scale without manually reviewing spreadsheets.
+
+**Acceptance Criteria:**
+
+1. **New attention item detectors**
+   - **Given** unreviewed cross-month findings exist
+   - **Then** 3 new detectors in `attentionItemService.ts`: `detectDisappearingBeneficiaries`, `detectDeductionChanges`, `detectPhantomCompletions` — following existing `buildPerMdaItems()` pattern (max 3 per MDA + "and N more")
+
+2. **Cross-Month tab on Submissions page**
+   - **Given** the user navigates to the Submissions page
+   - **When** cross-month findings exist for any submission
+   - **Then** a "Cross-Month Comparison" tab is visible showing aggregate findings across all MDAs
+
+3. **Per-MDA anomaly summary**
+   - **Given** the Cross-Month tab is active
+   - **Then** per-MDA cards show: MDA name, finding counts by type, severity distribution, review progress (reviewed/total), latest submission period compared
+
+4. **Anomaly list with filtering**
+   - **Given** the user clicks an MDA card
+   - **Then** a paginated list of findings with filters: finding type, severity, status (unreviewed/expected/resolved). Sortable by severity, date, staff name
+
+5. **Per-staff submission timeline**
+   - **Given** the user clicks a staff member in the finding list
+   - **Then** a timeline view shows all submissions for this staff across months: `amountDeducted` per month, presence/absence indicators, event flags, findings highlighted at change points
+
+6. **Progressive drill-down routing**
+   - **Given** an attention item for cross-month findings
+   - **When** clicked
+   - **Then** navigates to Cross-Month tab → filtered to relevant MDA → finding type
+
+7. **MDA-scoped views**
+   - **Given** MDA_OFFICER navigates to the Cross-Month tab
+   - **Then** they see only their MDA's findings (via `scopeToMda`)
+
+8. **Non-punitive vocabulary**
+   - All labels use non-punitive language: "Changes Observed" (tab heading), "Variance observed between months" (finding description), "Review suggested" (severity label), amber/teal indicators (never red)
+
+9. **MetricHelp integration**
+   - All cross-month metrics wrapped with `<MetricHelp>` tooltips explaining derivation
+
+### Story 16.4: Portfolio Stability Metrics & Trend Charts
+
+As the **Accountant General**, I want aggregate stability metrics and trend charts that show how the loan portfolio's data quality evolves over time, so that I can track governance improvements and identify MDAs needing attention.
+
+**Acceptance Criteria:**
+
+1. **Per-MDA stability metrics computed**
+   - **Given** cross-month findings exist for an MDA across multiple months
+   - **Then** the system computes: Beneficiary Churn Rate (% staff appearing/disappearing per month), Deduction Stability Index (% of amounts unchanged month-over-month), Submission Consistency (% of expected months submitted)
+
+2. **Portfolio-level aggregation**
+   - **Given** per-MDA metrics are computed
+   - **Then** a portfolio-level rollup shows: total churn rate, overall deduction stability, overall submission consistency across all MDAs
+
+3. **MDA ranking table**
+   - **Given** the portfolio view
+   - **Then** an MDA ranking table shows all MDAs sorted by stability score (composite of the 3 metrics), with ability to sort by any individual metric
+
+4. **Trend charts**
+   - **Given** ≥2 months of cross-month data exist
+   - **Then** line charts (Recharts) show metric trajectories over time: months on x-axis, metric values on y-axis. One chart per metric. MDA filter dropdown for per-MDA trends
+
+5. **Executive Summary integration**
+   - **Given** cross-month data exists
+   - **Then** the Executive Summary Report (Story 6.1) includes a "Cross-Month Data Quality" section with portfolio stability score, top 3 MDAs needing attention, and month-over-month trend direction
+
+6. **Weekly AG Report integration**
+   - **Given** the Weekly AG Report is generated (Story 6.3)
+   - **Then** a "Cross-Month Findings" section shows: new findings this week, resolution rate, top anomaly types
+
+7. **MetricHelp tooltips**
+   - All stability metrics wrapped with `<MetricHelp>` explaining: what the metric measures, how it's computed, what "good" vs "needs attention" looks like
