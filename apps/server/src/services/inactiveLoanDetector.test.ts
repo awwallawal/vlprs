@@ -56,6 +56,12 @@ vi.mock('./observationService', () => ({
   promoteToException: vi.fn().mockResolvedValue({ exceptionId: 'exc-new' }),
 }));
 
+// Story 8.0i: Mock the effective event flag helper
+const mockGetEffectiveEventFlags = vi.fn().mockResolvedValue(new Map());
+vi.mock('./effectiveEventFlagHelper', () => ({
+  getEffectiveEventFlags: (...args: unknown[]) => mockGetEffectiveEventFlags(...args),
+}));
+
 vi.mock('../lib/logger', () => ({
   logger: {
     info: vi.fn(),
@@ -258,6 +264,65 @@ describe('inactiveLoanDetector — detectInactiveLoans', () => {
 
     expect(capturedDescription).toContain('No deduction recorded for 112 days');
     expect(capturedDescription).toContain('Last deduction: 2025-12-01');
+  });
+
+  // Story 8.0i: Correction-aware flag reading tests
+  it('correction NONE→LEAVE_WITHOUT_PAY changes observation description (AC 3)', async () => {
+    mockGetEffectiveEventFlags.mockResolvedValueOnce(
+      new Map([['sr-1', 'LEAVE_WITHOUT_PAY']]),
+    );
+
+    setExecuteResults(
+      { rows: [{ loan_id: 'loan-corr', staff_id: 'S9', staff_name: 'Yusuf Bello', mda_id: 'mda9', mda_name: 'Housing', last_deduction_date: '2026-01-03', days_since: 79 }] },
+      { rows: [] },
+      // Submission: original NONE flag, will be corrected to LEAVE_WITHOUT_PAY
+      { rows: [{ id: 'sr-1', staff_id: 'S9', event_flag: 'NONE', amount_deducted: '0.00', mda_id: 'mda9' }] },
+    );
+
+    mockDb.select.mockReturnValueOnce(mockChain([]));
+
+    let capturedDescription = '';
+    mockDb.insert.mockReturnValueOnce({
+      values: vi.fn().mockImplementation((vals: Array<{ description: string }>) => {
+        capturedDescription = vals[0].description;
+        return {
+          returning: vi.fn().mockReturnValue(Promise.resolve([{ id: 'obs-corr' }])),
+        };
+      }),
+    });
+
+    await detectInactiveLoans(null, 'user-123');
+
+    // With correction applied, the effective flag is LEAVE_WITHOUT_PAY
+    expect(capturedDescription).toContain('LEAVE_WITHOUT_PAY');
+    expect(capturedDescription).toContain('verify event processing status');
+  });
+
+  it('no corrections → behavior unchanged for submission context (AC 6)', async () => {
+    mockGetEffectiveEventFlags.mockResolvedValueOnce(new Map());
+
+    setExecuteResults(
+      { rows: [{ loan_id: 'loan-nocorr', staff_id: 'S10', staff_name: 'Ade Folu', mda_id: 'mda10', mda_name: 'Transport', last_deduction_date: '2026-01-01', days_since: 82 }] },
+      { rows: [] },
+      { rows: [{ id: 'sr-2', staff_id: 'S10', event_flag: 'NONE', amount_deducted: '0.00', mda_id: 'mda10' }] },
+    );
+
+    mockDb.select.mockReturnValueOnce(mockChain([]));
+
+    let capturedDescription = '';
+    mockDb.insert.mockReturnValueOnce({
+      values: vi.fn().mockImplementation((vals: Array<{ description: string }>) => {
+        capturedDescription = vals[0].description;
+        return {
+          returning: vi.fn().mockReturnValue(Promise.resolve([{ id: 'obs-nocorr' }])),
+        };
+      }),
+    });
+
+    await detectInactiveLoans(null, 'user-123');
+
+    // No correction → original NONE flag used, ₦0.00 with NONE → payroll error message
+    expect(capturedDescription).toContain('MDA submitted ₦0 with no event flag');
   });
 
   it('submission cross-reference enhances description when ₦0 + NONE', async () => {

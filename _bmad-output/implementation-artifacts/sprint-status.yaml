@@ -252,7 +252,7 @@ development_status:
   8-0f-coverage-tracker-drilldown-download: done  # clickable cells → month data page, CSV/Excel download per MDA+month. Code review: 8 findings all fixed
   8-0g-comprehensive-app-documentation: done  # developer documentation only (end-user guide moved to 13-5 per PO decision 2026-04-04). Code review: 6 findings (3H 2M 1L) all fixed
   8-0h-monthly-metric-snapshots-mom-trend: done  # metric_snapshots table, monthly scheduler, backfill, 4 MoM metrics computed from real historical data. Code review: 5 findings (1H 2M 2L) all fixed
-  8-0i-correction-aware-flag-reading: review  # getEffectiveEventFlag() helper, applied to reconciliation engine, comparison engine, inactive loan detector, pre-submission service. Completes Story 7.3's full intent
+  8-0i-correction-aware-flag-reading: done  # getEffectiveEventFlag() helper, applied to reconciliation engine, comparison engine, inactive loan detector, pre-submission service. Code review: 3 findings (0H 2M 1L) all fixed
   8-0j-selective-baseline-mda-review-handoff: ready-for-dev  # Three-stage pipeline: selective batch baseline (Clean+Minor auto, Significant+ flagged) → MDA officer review with mandatory reasons (online drawer or bulk download/upload) → DEPT_ADMIN verify + baseline. 14-day per-MDA review window with 3-day countdown. Depends on 8.0b. Parallel with 8.0h+8.0i. PM triage 2026-04-02
   8-1-zero-balance-detection-auto-stop-trigger: ready-for-dev
   8-2-auto-stop-certificate-generation: ready-for-dev

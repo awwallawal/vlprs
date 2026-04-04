@@ -16,11 +16,18 @@ vi.mock('../db/index', () => ({
   db: {
     select: (...args: unknown[]) => mockDbChain.select(...args),
     update: (...args: unknown[]) => mockDbChain.update(...args),
+    execute: vi.fn().mockResolvedValue({ rows: [] }),
   },
 }));
 
 vi.mock('../lib/logger', () => ({
   logger: { info: vi.fn(), error: vi.fn(), warn: vi.fn() },
+}));
+
+// Story 8.0i: Mock the effective event flag helper
+const mockGetEffectiveEventFlags = vi.fn().mockResolvedValue(new Map());
+vi.mock('./effectiveEventFlagHelper', () => ({
+  getEffectiveEventFlags: (...args: unknown[]) => mockGetEffectiveEventFlags(...args),
 }));
 
 // ─── Imports (after mocks) ───────────────────────────────────────────
@@ -65,6 +72,7 @@ function buildMockTx(selectResults: unknown[][]) {
         }),
       })),
     })),
+    execute: vi.fn().mockResolvedValue({ rows: [] }),
   };
 
   return { tx: tx as unknown as TxHandle, updateCalls };
@@ -432,6 +440,43 @@ describe('reconcileSubmission', () => {
     expect(result.counts.newCsvEvent).toBe(1);    // STAFF-003 SUSPENSION → no employment event
     expect(result.counts.unconfirmed).toBe(1);    // STAFF-002 DECEASED → no CSV match
     expect(result.details).toHaveLength(3);
+  });
+
+  // Story 8.0i: Correction-aware flag reading tests
+  it('correction RETIREMENT→NONE causes row to be treated as regular deduction (AC 1)', async () => {
+    // Row has RETIREMENT flag but correction changes it to NONE → should be removed from event rows
+    mockGetEffectiveEventFlags.mockResolvedValueOnce(
+      new Map([['row-1', 'NONE']]),
+    );
+
+    const { tx } = buildMockTx([
+      // Query 1: CSV event rows — row-1 originally RETIREMENT
+      [{ id: 'row-1', staffId: 'STAFF-001', eventFlag: 'RETIREMENT', eventDate: new Date('2026-03-10') }],
+      // No employment events (would have been query 2 if there were event rows after correction)
+    ]);
+
+    const result = await reconcileSubmission(SUB_ID, MDA_ID, tx);
+
+    // Row was corrected to NONE → no event rows to process
+    expect(result.counts.matched).toBe(0);
+    expect(result.counts.newCsvEvent).toBe(0);
+    expect(result.details).toHaveLength(0);
+  });
+
+  it('no corrections → behavior unchanged (AC 6)', async () => {
+    // Empty correction map → uses original flags
+    mockGetEffectiveEventFlags.mockResolvedValueOnce(new Map());
+
+    const { tx } = buildMockTx([
+      [{ id: 'row-1', staffId: 'STAFF-001', eventFlag: 'RETIREMENT', eventDate: new Date('2026-03-10') }],
+      [{ id: 'evt-1', staffId: 'STAFF-001', eventType: 'RETIRED', effectiveDate: new Date('2026-03-08'), loanId: 'loan-1' }],
+      [{ staffId: 'STAFF-001', staffName: 'John Doe' }],
+    ]);
+
+    const result = await reconcileSubmission(SUB_ID, MDA_ID, tx);
+
+    expect(result.counts.matched).toBe(1);
+    expect(result.details[0].reconciliationStatus).toBe('matched');
   });
 
   it('staffName defaults to "Unknown" when loan record is missing', async () => {
