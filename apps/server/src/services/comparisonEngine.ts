@@ -4,6 +4,7 @@ import { db } from '../db/index';
 import { submissionRows, mdaSubmissions, loans } from '../db/schema';
 import { AppError } from '../lib/appError';
 import { withMdaScope } from '../lib/mdaScope';
+import { getEffectiveEventFlags } from './effectiveEventFlagHelper';
 import type { ComparisonSummary, ComparisonRow, ComparisonCategory } from '@vlprs/shared';
 
 export const MINOR_VARIANCE_THRESHOLD = new Decimal('500');
@@ -59,6 +60,7 @@ export async function compareSubmission(
 
   // Load all rows for this submission
   const rows = await db.select({
+    id: submissionRows.id,
     staffId: submissionRows.staffId,
     amountDeducted: submissionRows.amountDeducted,
     eventFlag: submissionRows.eventFlag,
@@ -67,10 +69,17 @@ export async function compareSubmission(
     .from(submissionRows)
     .where(eq(submissionRows.submissionId, submissionId));
 
+  // Story 8.0i: Apply event flag corrections before filtering
+  const rowIds = rows.map(r => r.id);
+  const correctionMap = rowIds.length > 0
+    ? await getEffectiveEventFlags(rowIds)
+    : new Map<string, string>();
+
   // Filter out rows that should be skipped
   const comparableRows = rows.filter((row) => {
-    // Skip event rows (not regular deductions)
-    if (row.eventFlag !== 'NONE') return false;
+    // Skip event rows (not regular deductions) — use effective flag
+    const effectiveFlag = correctionMap.get(row.id) ?? row.eventFlag;
+    if (effectiveFlag !== 'NONE') return false;
     // Skip cessation rows (₦0 with cessation reason)
     const amount = new Decimal(row.amountDeducted);
     if (amount.isZero() && row.cessationReason) return false;

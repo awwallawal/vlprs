@@ -52,10 +52,25 @@ export function BaselineResultSummary({ result, onViewLoans, onViewRecord }: Bas
         </div>
       )}
 
+      {result.flaggedForReview && result.flaggedForReview.count > 0 && (
+        <div className="bg-amber-50/60 border border-amber-200 rounded-lg p-3 mb-4">
+          <p className="text-xs font-medium text-amber-700 uppercase mb-2">
+            {result.flaggedForReview.count} record{result.flaggedForReview.count !== 1 ? 's' : ''} flagged for MDA review (14-day window)
+          </p>
+          <div className="flex flex-wrap gap-3">
+            {Object.entries(result.flaggedForReview.byCategory).map(([cat, count]) => (
+              <span key={cat} className="text-xs text-text-secondary">
+                {CATEGORY_LABELS[cat] || cat}: <strong>{count}</strong>
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+
       {result.skippedRecords.length > 0 && (
         <div className="bg-amber-50/60 border border-amber-200 rounded-lg p-3 mb-4">
           <p className="text-xs font-medium text-amber-700 uppercase mb-2">
-            {result.skippedRecords.length} record{result.skippedRecords.length !== 1 ? 's' : ''} require review
+            {result.skippedRecords.length} record{result.skippedRecords.length !== 1 ? 's' : ''} skipped (ineligible)
           </p>
           <div className="space-y-1">
             {result.skippedRecords.map((r) => (

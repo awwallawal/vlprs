@@ -13,6 +13,7 @@ import { eq, and, sql, inArray } from 'drizzle-orm';
 import { db } from '../db/index';
 import { observations, users } from '../db/schema';
 import { promoteToException } from './observationService';
+import { getEffectiveEventFlags } from './effectiveEventFlagHelper';
 import { logger } from '../lib/logger';
 import { env } from '../config/env';
 
@@ -218,7 +219,7 @@ async function getSubmissionContext(
 
   // Get latest confirmed submission per MDA
   const submissionResult = await db.execute(sql`
-    SELECT sr.staff_id, sr.event_flag, sr.amount_deducted, ms.mda_id
+    SELECT sr.id, sr.staff_id, sr.event_flag, sr.amount_deducted, ms.mda_id
     FROM submission_rows sr
     JOIN mda_submissions ms ON sr.submission_id = ms.id
     WHERE ms.status = 'confirmed'
@@ -231,10 +232,17 @@ async function getSubmissionContext(
       )
   `);
 
+  // Story 8.0i: Apply event flag corrections
+  const submissionRowIds = (submissionResult.rows as Array<{ id: string }>).map(r => r.id);
+  const correctionMap = submissionRowIds.length > 0
+    ? await getEffectiveEventFlags(submissionRowIds)
+    : new Map<string, string>();
+
   const submissionMap = new Map<string, { eventFlag: string; amountDeducted: string; mdaId: string }>();
-  for (const row of submissionResult.rows as Array<{ staff_id: string; event_flag: string; amount_deducted: string; mda_id: string }>) {
+  for (const row of submissionResult.rows as Array<{ id: string; staff_id: string; event_flag: string; amount_deducted: string; mda_id: string }>) {
+    const effectiveFlag = correctionMap.get(row.id) ?? row.event_flag;
     submissionMap.set(`${row.mda_id}:${row.staff_id}`, {
-      eventFlag: row.event_flag,
+      eventFlag: effectiveFlag,
       amountDeducted: row.amount_deducted,
       mdaId: row.mda_id,
     });

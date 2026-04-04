@@ -448,6 +448,10 @@ export interface MigrationRecordDetail {
   originalValuesSnapshot: Record<string, unknown> | null;
   correctedBy: string | null;
   correctedAt: string | null;
+  // MDA Review fields (Story 8.0j)
+  correctionReason: string | null;
+  flaggedForReviewAt: string | null;
+  reviewWindowDeadline: string | null;
 }
 
 // ─── Baseline Acknowledgment (Story 3.4) ────────────────────────────
@@ -468,6 +472,9 @@ export interface BatchBaselineResult {
   byCategory: Record<string, number>;
   skippedRecords: Array<{ recordId: string; staffName: string; reason: string }>;
   processingTimeMs: number;
+  // Selective baseline breakdown (Story 8.0j)
+  autoBaselined: { count: number; byCategory: Record<string, number> };
+  flaggedForReview: { count: number; byCategory: Record<string, number> };
 }
 
 export interface BaselineSummary {
@@ -477,4 +484,53 @@ export interface BaselineSummary {
   baselinesRemaining: number;
   byCategory: Record<string, number>;
   status: 'pending' | 'partial' | 'complete';
+}
+
+// ─── MDA Review Types (Story 8.0j) ─────────────────────────────────
+
+export type CountdownStatus = 'normal' | 'warning' | 'overdue';
+
+export interface FlaggedRecordSummary {
+  recordId: string;
+  staffName: string;
+  staffId: string | null;
+  gradeLevel: string | null;
+  mdaName: string | null;
+  varianceCategory: VarianceCategory | null;
+  varianceAmount: string | null;
+  flaggedAt: string;
+  reviewWindowDeadline: string;
+  daysRemaining: number;
+  countdownStatus: CountdownStatus;
+  correctedBy: string | null;
+  correctedAt: string | null;
+  correctionReason: string | null;
+}
+
+export interface MdaReviewProgress {
+  mdaId: string;
+  mdaName: string;
+  totalFlagged: number;
+  reviewed: number;
+  pending: number;
+  completionPct: number;
+  daysRemaining: number;
+  countdownStatus: CountdownStatus;
+  windowDeadline: string;
+}
+
+export interface CorrectionWorksheetPreview {
+  readyToApply: number;
+  reviewedNoCorrection: number;
+  skipped: number;
+  alreadyBaselined: number;
+  conflicts: number;
+  records: Array<{
+    recordId: string;
+    staffName: string;
+    category: 'ready' | 'reviewed' | 'skipped' | 'baselined' | 'conflict';
+    corrections?: Record<string, string | number | null>;
+    reason?: string;
+    conflictDetail?: string;
+  }>;
 }

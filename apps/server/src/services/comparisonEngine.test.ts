@@ -6,6 +6,12 @@ vi.mock('../db/index', () => ({
   },
 }));
 
+// Story 8.0i: Mock the effective event flag helper
+const mockGetEffectiveEventFlags = vi.fn().mockResolvedValue(new Map());
+vi.mock('./effectiveEventFlagHelper', () => ({
+  getEffectiveEventFlags: (...args: unknown[]) => mockGetEffectiveEventFlags(...args),
+}));
+
 import { db } from '../db/index';
 import { compareSubmission } from './comparisonEngine';
 
@@ -31,7 +37,7 @@ describe('compareSubmission', () => {
 
   function setupMocks(options: {
     submission?: { id: string; mdaId: string; referenceNumber: string } | null;
-    rows?: Array<{ staffId: string; amountDeducted: string; eventFlag: string; cessationReason: string | null }>;
+    rows?: Array<{ id?: string; staffId: string; amountDeducted: string; eventFlag: string; cessationReason: string | null }>;
     activeLoanRows?: Array<{ staffId: string; monthlyDeductionAmount: string }>;
   }) {
     const {
@@ -257,5 +263,48 @@ describe('compareSubmission', () => {
     expect(result.summary.varianceCount).toBe(1);
     expect(result.summary.totalRecords).toBe(4);
     expect(result.summary.rows).toHaveLength(2); // minor + variance rows only
+  });
+
+  // Story 8.0i: Correction-aware flag reading tests
+  it('correction NONE→TRANSFER_OUT causes row to be excluded from comparison (AC 2)', async () => {
+    // Row has NONE flag but correction changes it to TRANSFER_OUT → should be skipped
+    mockGetEffectiveEventFlags.mockResolvedValueOnce(
+      new Map([['row-2', 'TRANSFER_OUT']]),
+    );
+
+    setupMocks({
+      rows: [
+        { id: 'row-1', staffId: '3301', amountDeducted: '18333.33', eventFlag: 'NONE', cessationReason: null },
+        { id: 'row-2', staffId: '3302', amountDeducted: '5000.00', eventFlag: 'NONE', cessationReason: null },
+      ],
+      activeLoanRows: [
+        { staffId: '3301', monthlyDeductionAmount: '18333.33' },
+      ],
+    });
+
+    const result = await compareSubmission('sub-1', null);
+
+    // 3301 aligned, 3302 skipped (correction to event) → counted as aligned
+    expect(result.summary.alignedCount).toBe(2);
+    expect(result.summary.varianceCount).toBe(0);
+    expect(result.summary.totalRecords).toBe(2);
+  });
+
+  it('no corrections → behavior unchanged (AC 6)', async () => {
+    mockGetEffectiveEventFlags.mockResolvedValueOnce(new Map());
+
+    setupMocks({
+      rows: [
+        { staffId: '3301', amountDeducted: '18333.33', eventFlag: 'NONE', cessationReason: null },
+      ],
+      activeLoanRows: [
+        { staffId: '3301', monthlyDeductionAmount: '18333.33' },
+      ],
+    });
+
+    const result = await compareSubmission('sub-1', null);
+
+    expect(result.summary.alignedCount).toBe(1);
+    expect(result.summary.varianceCount).toBe(0);
   });
 });

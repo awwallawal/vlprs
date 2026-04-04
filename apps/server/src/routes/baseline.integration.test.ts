@@ -354,8 +354,8 @@ describe('Baseline Integration Tests (Story 3.4 AC 7)', () => {
           staffName: 'Batch Staff Two',
           employeeNo: 'BATCH-002',
           outstandingBalance: '200000.00',
-          varianceCategory: 'significant_variance' as const,
-          varianceAmount: '5000.00',
+          varianceCategory: 'minor_variance' as const,
+          varianceAmount: '2500.00',
           sourceRow: 3,
         },
       ]);
@@ -377,7 +377,7 @@ describe('Baseline Integration Tests (Story 3.4 AC 7)', () => {
       expect(data.processingTimeMs).toBeGreaterThan(0);
       expect(data.byCategory).toEqual({
         clean: 1,
-        significant_variance: 1,
+        minor_variance: 1,
       });
 
       // Verify both loans exist with unique references
@@ -456,7 +456,7 @@ describe('Baseline Integration Tests (Story 3.4 AC 7)', () => {
         principal: PRINCIPAL,
         totalLoan: TOTAL_LOAN,
         outstandingBalance: null,
-        varianceCategory: 'anomalous',
+        varianceCategory: 'clean' as const,
         hasRateVariance: false,
         sourceFile: 'fail-test.xlsx',
         sourceSheet: 'Sheet1',

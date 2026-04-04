@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient, authenticatedFetch, parseJsonResponse } from '@/lib/apiClient';
-import type { MigrationUploadPreview, MigrationUploadSummary, MdaListItem, ValidationSummary, ValidationResult, VarianceCategory, BaselineResult, BatchBaselineResult, BaselineSummary, MigrationRecordDetail, MultiSheetOverlapResponse } from '@vlprs/shared';
+import type { MigrationUploadPreview, MigrationUploadSummary, MdaListItem, ValidationSummary, ValidationResult, VarianceCategory, BaselineResult, BatchBaselineResult, BaselineSummary, MigrationRecordDetail, MultiSheetOverlapResponse, FlaggedRecordSummary, MdaReviewProgress, CorrectionWorksheetPreview } from '@vlprs/shared';
 
 export function useUploadMigration() {
   const queryClient = useQueryClient();
@@ -233,5 +233,145 @@ export function useBaselineSummary(uploadId: string) {
     queryFn: () => apiClient<BaselineSummary>(`/migrations/${uploadId}/baseline-summary`),
     enabled: !!uploadId,
     staleTime: 15_000,
+  });
+}
+
+// ─── MDA Review Hooks (Story 8.0j) ─────���───────────────────────────
+
+export function useFlaggedRecords(
+  uploadId: string,
+  filters?: { page?: number; limit?: number; status?: 'pending' | 'reviewed' | 'all' },
+) {
+  return useQuery<{ records: FlaggedRecordSummary[]; total: number; page: number; limit: number }>({
+    queryKey: ['migrations', uploadId, 'review', 'records', filters],
+    queryFn: async () => {
+      const params = new URLSearchParams();
+      if (filters?.page) params.set('page', String(filters.page));
+      if (filters?.limit) params.set('limit', String(filters.limit));
+      if (filters?.status) params.set('status', filters.status);
+
+      return apiClient<{ records: FlaggedRecordSummary[]; total: number; page: number; limit: number }>(
+        `/migrations/${uploadId}/review/records?${params}`,
+      );
+    },
+    enabled: !!uploadId,
+    staleTime: 15_000,
+  });
+}
+
+export function useMdaReviewProgress(uploadId: string) {
+  return useQuery<MdaReviewProgress[]>({
+    queryKey: ['migrations', uploadId, 'review', 'progress'],
+    queryFn: () => apiClient<MdaReviewProgress[]>(`/migrations/${uploadId}/review/progress`),
+    enabled: !!uploadId,
+    staleTime: 15_000,
+  });
+}
+
+export function useSubmitReview(uploadId: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation<MigrationRecordDetail, Error, { recordId: string; corrections: Record<string, unknown>; correctionReason: string }>({
+    mutationFn: ({ recordId, corrections, correctionReason }) =>
+      apiClient<MigrationRecordDetail>(`/migrations/${uploadId}/records/${recordId}/review`, {
+        method: 'PATCH',
+        body: JSON.stringify({ ...corrections, correctionReason }),
+      }),
+    onSuccess: (_data, { recordId }) => {
+      queryClient.invalidateQueries({ queryKey: ['migrations', uploadId, 'review'] });
+      queryClient.invalidateQueries({ queryKey: ['migrations', uploadId, 'records', recordId] });
+    },
+  });
+}
+
+export function useMarkReviewed(uploadId: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation<MigrationRecordDetail, Error, { recordId: string; correctionReason: string }>({
+    mutationFn: ({ recordId, correctionReason }) =>
+      apiClient<MigrationRecordDetail>(`/migrations/${uploadId}/records/${recordId}/mark-reviewed`, {
+        method: 'PATCH',
+        body: JSON.stringify({ correctionReason }),
+      }),
+    onSuccess: (_data, { recordId }) => {
+      queryClient.invalidateQueries({ queryKey: ['migrations', uploadId, 'review'] });
+      queryClient.invalidateQueries({ queryKey: ['migrations', uploadId, 'records', recordId] });
+    },
+  });
+}
+
+export function useExtendReviewWindow(uploadId: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation<{ message: string }, Error, { mdaId: string }>({
+    mutationFn: ({ mdaId }) =>
+      apiClient<{ message: string }>(`/migrations/${uploadId}/review/extend-window`, {
+        method: 'POST',
+        body: JSON.stringify({ mdaId }),
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['migrations', uploadId, 'review', 'progress'] });
+    },
+  });
+}
+
+export function useBaselineReviewed(uploadId: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation<{ baselinedCount: number }, Error>({
+    mutationFn: () =>
+      apiClient<{ baselinedCount: number }>(`/migrations/${uploadId}/baseline-reviewed`, {
+        method: 'POST',
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['migrations'] });
+      queryClient.invalidateQueries({ queryKey: ['migrations', uploadId, 'review'] });
+      queryClient.invalidateQueries({ queryKey: ['baseline-summary', uploadId] });
+    },
+  });
+}
+
+export function useDownloadWorksheet(uploadId: string) {
+  return useMutation<Blob, Error>({
+    mutationFn: async () => {
+      const res = await authenticatedFetch(`/migrations/${uploadId}/review/worksheet`);
+      if (!res.ok) {
+        const body = await res.json();
+        throw new Error(body.error?.message ?? 'Failed to download worksheet');
+      }
+      return res.blob();
+    },
+  });
+}
+
+export function useUploadWorksheet(uploadId: string) {
+  return useMutation<CorrectionWorksheetPreview, Error, { file: File }>({
+    mutationFn: async ({ file }) => {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const res = await authenticatedFetch(`/migrations/${uploadId}/review/worksheet`, {
+        method: 'POST',
+        body: formData,
+      });
+      const body = await parseJsonResponse(res);
+      return body.data as CorrectionWorksheetPreview;
+    },
+  });
+}
+
+export function useApplyWorksheet(uploadId: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation<{ applied: number; reviewed: number }, Error, CorrectionWorksheetPreview>({
+    mutationFn: (preview) =>
+      apiClient<{ applied: number; reviewed: number }>(`/migrations/${uploadId}/review/worksheet/apply`, {
+        method: 'POST',
+        body: JSON.stringify(preview),
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['migrations', uploadId, 'review'] });
+      queryClient.invalidateQueries({ queryKey: ['validation', uploadId] });
+    },
   });
 }

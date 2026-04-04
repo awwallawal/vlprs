@@ -12,13 +12,15 @@ import { ObservationsList } from './components/ObservationsList';
 import { DuplicateResolutionTable } from './components/DuplicateResolutionTable';
 import { MigrationCoverageTracker } from './components/MigrationCoverageTracker';
 import { MigrationUploadList } from './components/MigrationUploadList';
+import { MdaReviewProgressTracker } from './components/MdaReviewProgressTracker';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { usePageMeta } from '@/hooks/usePageMeta';
+import { useListMigrations } from '@/hooks/useMigration';
 import { ROLES, VOCABULARY } from '@vlprs/shared';
 
-type Tab = 'mda-progress' | 'beneficiary-ledger' | 'observations' | 'duplicates' | 'coverage' | 'uploads';
+type Tab = 'mda-progress' | 'beneficiary-ledger' | 'observations' | 'duplicates' | 'coverage' | 'uploads' | 'mda-review';
 
 export function MigrationPage() {
   usePageMeta({ title: VOCABULARY.MIGRATION_DASHBOARD_TITLE, description: 'Migration progress and beneficiary ledger' });
@@ -26,6 +28,9 @@ export function MigrationPage() {
   const navigate = useNavigate();
   const user = useAuthStore((s) => s.user);
   const canUpload = user?.role === ROLES.DEPT_ADMIN || user?.role === ROLES.SUPER_ADMIN;
+  const isAdminOrOfficer = canUpload || user?.role === ROLES.MDA_OFFICER;
+  const uploads = useListMigrations({ limit: 1 });
+  const latestUploadId = uploads.data?.data?.[0]?.id ?? '';
   const [activeTab, setActiveTab] = useState<Tab>('mda-progress');
   const [mdaFilter, setMdaFilter] = useState('');
 
@@ -168,6 +173,19 @@ export function MigrationPage() {
         >
           Uploads
         </button>
+        {isAdminOrOfficer && (
+          <button
+            type="button"
+            onClick={() => setActiveTab('mda-review')}
+            className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+              activeTab === 'mda-review'
+                ? 'border-teal text-teal'
+                : 'border-transparent text-text-muted hover:text-text-secondary'
+            }`}
+          >
+            MDA Review
+          </button>
+        )}
       </div>
 
       {/* MDA Progress Tab */}
@@ -244,6 +262,13 @@ export function MigrationPage() {
       {activeTab === 'uploads' && (
         <section aria-label="Migration Upload History">
           <MigrationUploadList />
+        </section>
+      )}
+
+      {/* MDA Review Tab (Story 8.0j) */}
+      {activeTab === 'mda-review' && latestUploadId && (
+        <section aria-label="MDA Review Progress">
+          <MdaReviewProgressTracker uploadId={latestUploadId} />
         </section>
       )}
     </div>

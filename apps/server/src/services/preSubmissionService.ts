@@ -5,6 +5,7 @@
 import { eq, and, sql, desc, lte, gt, isNotNull, inArray, ne } from 'drizzle-orm';
 import { db } from '../db/index';
 import { loans, mdaSubmissions, submissionRows } from '../db/schema';
+import { getEffectiveEventFlags } from './effectiveEventFlagHelper';
 import { differenceInDays, addMonths, endOfMonth, subMonths, format } from 'date-fns';
 import type { PreSubmissionCheckpoint, RetirementItem, ZeroDeductionItem, PendingEventItem } from '@vlprs/shared';
 
@@ -76,10 +77,12 @@ async function getZeroDeductionAlerts(mdaId: string, now: Date): Promise<ZeroDed
   const prevPeriod = format(prevMonth, 'yyyy-MM');
 
   // Find staff with zero deduction in previous month's submission (event_flag = 'NONE')
-  const zeroRows = await db.select({
+  const zeroNoneRows = await db.select({
+    id: submissionRows.id,
     staffId: submissionRows.staffId,
     staffName: loans.staffName,
     month: submissionRows.month,
+    eventFlag: submissionRows.eventFlag,
   })
     .from(submissionRows)
     .innerJoin(mdaSubmissions, eq(submissionRows.submissionId, mdaSubmissions.id))
@@ -96,6 +99,43 @@ async function getZeroDeductionAlerts(mdaId: string, now: Date): Promise<ZeroDed
         eq(submissionRows.eventFlag, 'NONE'),
       ),
     );
+
+  // Story 8.0i: Supplementary ��� rows with non-NONE flag + zero amount, corrected to NONE
+  const zeroEventRows = await db.select({
+    id: submissionRows.id,
+    staffId: submissionRows.staffId,
+    staffName: loans.staffName,
+    month: submissionRows.month,
+    eventFlag: submissionRows.eventFlag,
+  })
+    .from(submissionRows)
+    .innerJoin(mdaSubmissions, eq(submissionRows.submissionId, mdaSubmissions.id))
+    .innerJoin(loans, and(
+      eq(submissionRows.staffId, loans.staffId),
+      eq(loans.mdaId, mdaId),
+      eq(loans.status, 'ACTIVE'),
+    ))
+    .where(
+      and(
+        eq(mdaSubmissions.mdaId, mdaId),
+        eq(submissionRows.month, prevPeriod),
+        eq(submissionRows.amountDeducted, '0.00'),
+        sql`${submissionRows.eventFlag} != 'NONE'`,
+      ),
+    );
+
+  // Story 8.0i: Apply event flag corrections — single bulk lookup
+  const allZeroRows = [...zeroNoneRows, ...zeroEventRows];
+  const allZeroRowIds = allZeroRows.map(r => r.id);
+  const correctionMap = allZeroRowIds.length > 0
+    ? await getEffectiveEventFlags(allZeroRowIds)
+    : new Map<string, string>();
+
+  // Keep only rows where effective flag is NONE
+  const zeroRows = allZeroRows.filter(row => {
+    const effectiveFlag = correctionMap.get(row.id) ?? row.eventFlag;
+    return effectiveFlag === 'NONE';
+  });
 
   // Find active loan staff who have NO submission row at all for the previous month
   const missingRows = await db.select({

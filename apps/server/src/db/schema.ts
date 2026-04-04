@@ -383,6 +383,11 @@ export const migrationRecords = pgTable(
     originalValuesSnapshot: jsonb('original_values_snapshot'),
     correctedBy: uuid('corrected_by').references(() => users.id),
     correctedAt: timestamp('corrected_at', { withTimezone: true }),
+    // MDA Review fields (Story 8.0j) — selective baseline & review handoff
+    correctionReason: text('correction_reason'),
+    flaggedForReviewAt: timestamp('flagged_for_review_at', { withTimezone: true }),
+    reviewWindowDeadline: timestamp('review_window_deadline', { withTimezone: true }),
+    reviewWindowExtensions: jsonb('review_window_extensions').$type<Array<{ extendedBy: string; extendedAt: string; newDeadline: string }>>().default([]),
     loanId: uuid('loan_id').references(() => loans.id),
     isBaselineCreated: boolean('is_baseline_created').notNull().default(false),
     sourceFile: text('source_file').notNull(),
@@ -403,6 +408,7 @@ export const migrationRecords = pgTable(
     index('idx_migration_records_has_rate_variance').on(table.hasRateVariance),
     index('idx_migration_records_status').on(table.recordStatus),
     index('idx_migration_records_mda_period').on(table.mdaId, table.periodYear, table.periodMonth),
+    index('idx_migration_records_review').on(table.uploadId, table.flaggedForReviewAt),
   ],
 );
 

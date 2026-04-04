@@ -6,6 +6,7 @@ import { AppError } from '../lib/appError';
 import { logger } from '../lib/logger';
 import { EVENT_FLAG_TO_EMPLOYMENT_EVENT_MAP, VOCABULARY } from '@vlprs/shared';
 import type { TxHandle } from './loanTransitionService';
+import { getEffectiveEventFlags } from './effectiveEventFlagHelper';
 import type {
   ReconciliationSummary,
   ReconciliationCounts,
@@ -16,6 +17,39 @@ import type {
 } from '@vlprs/shared';
 
 const DATE_TOLERANCE_DAYS = 7;
+
+// Row shape shared by _reconcile and getReconciliationSummary event row arrays
+type EventRow = { id: string; staffId: string; eventFlag: EventFlagType; eventDate: Date | null };
+
+/**
+ * Find submission rows whose original eventFlag is NONE but have been corrected
+ * to an event flag. These rows were excluded by the initial WHERE eventFlag != 'NONE'
+ * but should now be included after correction.
+ */
+async function getCorrectedNoneToEventRows(
+  submissionId: string,
+  executor: { execute: typeof db.execute } = db,
+): Promise<EventRow[]> {
+  const result = await executor.execute(sql`
+    SELECT DISTINCT ON (lefc.submission_row_id)
+      sr.id, sr.staff_id, lefc.new_event_flag, sr.event_date
+    FROM loan_event_flag_corrections lefc
+    JOIN submission_rows sr ON lefc.submission_row_id = sr.id
+    WHERE sr.submission_id = ${submissionId}
+      AND sr.event_flag = 'NONE'
+      AND lefc.new_event_flag != 'NONE'
+    ORDER BY lefc.submission_row_id, lefc.created_at DESC
+  `);
+
+  return (result.rows as Array<{
+    id: string; staff_id: string; new_event_flag: string; event_date: string | null;
+  }>).map(r => ({
+    id: r.id,
+    staffId: r.staff_id,
+    eventFlag: r.new_event_flag as EventFlagType,
+    eventDate: r.event_date ? new Date(r.event_date) : null,
+  }));
+}
 
 // ─── reconcileSubmission ─────────────────────────────────────────────
 
@@ -58,8 +92,26 @@ async function _reconcile(
       ),
     );
 
-  // Early return if no event-flagged rows
-  if (csvEventRows.length === 0) {
+  // Story 8.0i: Apply event flag corrections for bidirectional accuracy
+  const eventRowIds = csvEventRows.map(r => r.id);
+  const correctionMap = eventRowIds.length > 0
+    ? await getEffectiveEventFlags(eventRowIds)
+    : new Map<string, EventFlagType>();
+
+  // Apply corrections: update flags and remove rows corrected to NONE
+  const correctedEventRows = csvEventRows
+    .map(row => ({
+      ...row,
+      eventFlag: (correctionMap.get(row.id) ?? row.eventFlag) as typeof row.eventFlag,
+    }))
+    .filter(row => row.eventFlag !== 'NONE');
+
+  // Supplementary: find submission rows originally NONE, corrected to event flag
+  const supplementaryRows = await getCorrectedNoneToEventRows(submissionId, executor);
+  const allEventRows: typeof csvEventRows = [...correctedEventRows, ...supplementaryRows];
+
+  // Early return if no event-flagged rows (after corrections)
+  if (allEventRows.length === 0) {
     const emptyCounts: ReconciliationCounts = {
       matched: 0,
       dateDiscrepancy: 0,
@@ -69,8 +121,8 @@ async function _reconcile(
     return { counts: emptyCounts, details: [] };
   }
 
-  // 2. Collect unique staff IDs from CSV event rows
-  const staffIds = [...new Set(csvEventRows.map((r) => r.staffId))];
+  // 2. Collect unique staff IDs from event rows
+  const staffIds = [...new Set(allEventRows.map((r) => r.staffId))];
 
   // 3. Batch query employment events — UNCONFIRMED only, same MDA (AC 5, 9)
   const unconfirmedEvents = await executor
@@ -124,7 +176,7 @@ async function _reconcile(
   const details: ReconciliationDetail[] = [];
   let newCsvEventCount = 0;
 
-  for (const csvRow of csvEventRows) {
+  for (const csvRow of allEventRows) {
     const mapping = EVENT_FLAG_TO_EMPLOYMENT_EVENT_MAP[csvRow.eventFlag as EventFlagType];
     if (mapping === null) continue; // NONE — skip
 
@@ -291,6 +343,7 @@ export async function getReconciliationSummary(
   // This reflects any subsequent discrepancy resolutions
   const csvEventRowsRaw = await db
     .select({
+      id: submissionRows.id,
       staffId: submissionRows.staffId,
       eventFlag: submissionRows.eventFlag,
       eventDate: submissionRows.eventDate,
@@ -303,11 +356,28 @@ export async function getReconciliationSummary(
       ),
     );
 
-  if (csvEventRowsRaw.length === 0) {
+  // Story 8.0i: Apply event flag corrections for bidirectional accuracy
+  const summaryRowIds = csvEventRowsRaw.map(r => r.id);
+  const summaryCorrectionMap = summaryRowIds.length > 0
+    ? await getEffectiveEventFlags(summaryRowIds)
+    : new Map<string, EventFlagType>();
+
+  const correctedSummaryRows = csvEventRowsRaw
+    .map(row => ({
+      ...row,
+      eventFlag: (summaryCorrectionMap.get(row.id) ?? row.eventFlag) as typeof row.eventFlag,
+    }))
+    .filter(row => row.eventFlag !== 'NONE');
+
+  // Supplementary: find submission rows originally NONE, corrected to event flag
+  const summarySupplementaryRows = await getCorrectedNoneToEventRows(submissionId);
+  const allSummaryEventRows: typeof csvEventRowsRaw = [...correctedSummaryRows, ...summarySupplementaryRows];
+
+  if (allSummaryEventRows.length === 0) {
     return { counts, details: [] };
   }
 
-  const staffIds = [...new Set(csvEventRowsRaw.map((r) => r.staffId))];
+  const staffIds = [...new Set(allSummaryEventRows.map((r) => r.staffId))];
 
   // Query reconciled employment events (MATCHED/DATE_DISCREPANCY) for this MDA + staff IDs
   const reconciledEvents = await db
@@ -370,7 +440,7 @@ export async function getReconciliationSummary(
     eventMap.set(key, arr);
   }
 
-  for (const csvRow of csvEventRowsRaw) {
+  for (const csvRow of allSummaryEventRows) {
     const mapping = EVENT_FLAG_TO_EMPLOYMENT_EVENT_MAP[csvRow.eventFlag as EventFlagType];
     if (mapping === null) continue;
 

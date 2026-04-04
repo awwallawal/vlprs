@@ -333,6 +333,17 @@ export const MIGRATION_HELP: Record<string, MetricDefinition> = {
     derivedFrom: 'Largest absolute difference between the scheme expected and MDA declared values for total loan, monthly deduction, and total interest.',
     guidance: 'Clean records can be baselined immediately. Records with variance should be reviewed before baseline acceptance.',
   },
+  reviewWindow: {
+    label: 'Review Window',
+    description: 'Each MDA has a 14-day window (from the flagging date) to review records flagged during selective batch baseline. MDA officers correct values or confirm them as correct.',
+    derivedFrom: 'flagged_for_review_at + 14 days. Countdown starts from the moment DEPT_ADMIN runs batch baseline.',
+    guidance: 'If the window expires, DEPT_ADMIN can extend it, correct records directly, or follow up offline.',
+  },
+  reviewProgress: {
+    label: 'Review Progress',
+    description: 'Percentage of flagged migration records that have been reviewed by the MDA officer — either corrected or confirmed correct.',
+    derivedFrom: 'Count of records with corrected_by IS NOT NULL divided by total flagged records per MDA.',
+  },
 };
 
 export const LOAN_HELP: Record<string, MetricDefinition> = {

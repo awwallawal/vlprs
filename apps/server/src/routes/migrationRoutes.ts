@@ -7,7 +7,7 @@ import { authorise } from '../middleware/authorise';
 import { scopeToMda } from '../middleware/scopeToMda';
 import { validate, validateQuery } from '../middleware/validate';
 import { auditLog } from '../middleware/auditLog';
-import { ROLES, migrationUploadQuerySchema, confirmMappingBodySchema, validationResultQuerySchema, createBaselineBodySchema, correctMigrationRecordSchema, supersedeSchema, checkOverlapBodySchema } from '@vlprs/shared';
+import { ROLES, migrationUploadQuerySchema, confirmMappingBodySchema, validationResultQuerySchema, createBaselineBodySchema, correctMigrationRecordSchema, supersedeSchema, checkOverlapBodySchema, submitReviewSchema, markReviewedSchema, extendWindowSchema, flaggedRecordsQuerySchema, worksheetApplySchema } from '@vlprs/shared';
 import type { VarianceCategory } from '@vlprs/shared';
 import { AppError } from '../lib/appError';
 import { param } from '../lib/params';
@@ -15,6 +15,8 @@ import * as migrationService from '../services/migrationService';
 import * as migrationValidationService from '../services/migrationValidationService';
 import * as baselineService from '../services/baselineService';
 import * as supersedeService from '../services/supersedeService';
+import * as mdaReviewService from '../services/mdaReviewService';
+import * as correctionWorksheetService from '../services/correctionWorksheetService';
 
 const router = Router();
 
@@ -294,6 +296,182 @@ router.post(
       req.body.replacementUploadId,
       req.body.reason,
       req.user!.userId,
+    );
+
+    res.json({ success: true, data: result });
+  },
+);
+
+// ─── MDA Review Routes (Story 8.0j) ────────────────────────────────
+
+// Middleware stack: includes MDA_OFFICER for review actions
+const reviewAuth = [
+  authenticate,
+  requirePasswordChange,
+  authorise(ROLES.SUPER_ADMIN, ROLES.DEPT_ADMIN, ROLES.MDA_OFFICER),
+  scopeToMda,
+];
+
+// GET /api/migrations/:uploadId/review/records — Paginated flagged records (reviewAuth)
+router.get(
+  '/migrations/:uploadId/review/records',
+  ...reviewAuth,
+  validateQuery(flaggedRecordsQuerySchema),
+  async (req: Request, res: Response) => {
+    const uploadId = param(req.params.uploadId);
+    const { page, limit, status } = req.query as unknown as { page: number; limit: number; status: 'pending' | 'reviewed' | 'all' };
+
+    const result = await mdaReviewService.getFlaggedRecords(uploadId, req.mdaScope, { page, limit, status });
+
+    res.json({ success: true, data: result });
+  },
+);
+
+// PATCH /api/migrations/:uploadId/records/:recordId/review — Submit review with corrections + mandatory reason (reviewAuth)
+router.patch(
+  '/migrations/:uploadId/records/:recordId/review',
+  ...reviewAuth,
+  validate(submitReviewSchema),
+  auditLog,
+  async (req: Request, res: Response) => {
+    const uploadId = param(req.params.uploadId);
+    const recordId = param(req.params.recordId);
+    const { correctionReason, ...corrections } = req.body;
+
+    const result = await mdaReviewService.submitReview(
+      recordId,
+      uploadId,
+      corrections,
+      correctionReason,
+      req.user!.userId,
+      req.mdaScope,
+    );
+
+    res.json({ success: true, data: result });
+  },
+);
+
+// PATCH /api/migrations/:uploadId/records/:recordId/mark-reviewed — Mark reviewed without corrections (reviewAuth)
+router.patch(
+  '/migrations/:uploadId/records/:recordId/mark-reviewed',
+  ...reviewAuth,
+  validate(markReviewedSchema),
+  auditLog,
+  async (req: Request, res: Response) => {
+    const uploadId = param(req.params.uploadId);
+    const recordId = param(req.params.recordId);
+
+    const result = await mdaReviewService.markReviewedNoCorrection(
+      recordId,
+      uploadId,
+      req.body.correctionReason,
+      req.user!.userId,
+      req.mdaScope,
+    );
+
+    res.json({ success: true, data: result });
+  },
+);
+
+// GET /api/migrations/:uploadId/review/progress — Per-MDA progress tracker (adminAuth — DEPT_ADMIN/SUPER_ADMIN only)
+router.get(
+  '/migrations/:uploadId/review/progress',
+  ...adminAuth,
+  async (req: Request, res: Response) => {
+    const uploadId = param(req.params.uploadId);
+
+    const result = await mdaReviewService.getMdaReviewProgress(uploadId);
+
+    res.json({ success: true, data: result });
+  },
+);
+
+// POST /api/migrations/:uploadId/review/extend-window — Extend review window for specific MDA (adminAuth)
+router.post(
+  '/migrations/:uploadId/review/extend-window',
+  ...adminAuth,
+  validate(extendWindowSchema),
+  auditLog,
+  async (req: Request, res: Response) => {
+    const uploadId = param(req.params.uploadId);
+
+    await mdaReviewService.extendReviewWindow(uploadId, req.body.mdaId, req.user!.userId);
+
+    res.json({ success: true, data: { message: 'Review window extended by 14 days.' } });
+  },
+);
+
+// GET /api/migrations/:uploadId/review/worksheet — Download correction worksheet XLSX (reviewAuth)
+router.get(
+  '/migrations/:uploadId/review/worksheet',
+  ...reviewAuth,
+  async (req: Request, res: Response) => {
+    const uploadId = param(req.params.uploadId);
+
+    const buffer = await correctionWorksheetService.generateCorrectionWorksheet(uploadId, req.mdaScope);
+
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', `attachment; filename="correction-worksheet-${uploadId.slice(0, 8)}.xlsx"`);
+    res.send(buffer);
+  },
+);
+
+// POST /api/migrations/:uploadId/review/worksheet — Upload correction worksheet + return preview (reviewAuth)
+router.post(
+  '/migrations/:uploadId/review/worksheet',
+  ...reviewAuth,
+  upload.single('file'),
+  async (req: Request, res: Response) => {
+    const uploadId = param(req.params.uploadId);
+
+    if (!req.file) {
+      throw new AppError(400, 'NO_FILE', 'No file was uploaded.');
+    }
+
+    const preview = await correctionWorksheetService.parseCorrectionWorksheet(
+      req.file.buffer,
+      uploadId,
+      req.mdaScope,
+    );
+
+    res.json({ success: true, data: preview });
+  },
+);
+
+// POST /api/migrations/:uploadId/review/worksheet/apply — Apply parsed worksheet corrections (reviewAuth)
+router.post(
+  '/migrations/:uploadId/review/worksheet/apply',
+  ...reviewAuth,
+  validate(worksheetApplySchema),
+  auditLog,
+  async (req: Request, res: Response) => {
+    const uploadId = param(req.params.uploadId);
+    const preview = req.body;
+
+    const result = await correctionWorksheetService.applyCorrectionWorksheet(
+      uploadId,
+      preview,
+      req.user!.userId,
+      req.mdaScope,
+    );
+
+    res.json({ success: true, data: result });
+  },
+);
+
+// POST /api/migrations/:uploadId/baseline-reviewed — Baseline all reviewed records (adminAuth — Stage 3)
+router.post(
+  '/migrations/:uploadId/baseline-reviewed',
+  ...adminAuth,
+  auditLog,
+  async (req: Request, res: Response) => {
+    const uploadId = param(req.params.uploadId);
+
+    const result = await mdaReviewService.baselineReviewedRecords(
+      uploadId,
+      req.mdaScope,
+      req.user!.userId,
+      req.user!.role,
     );
 
     res.json({ success: true, data: result });
