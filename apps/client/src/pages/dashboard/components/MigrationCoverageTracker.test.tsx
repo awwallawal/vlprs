@@ -1,6 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { MemoryRouter } from 'react-router';
 import { describe, expect, it, vi } from 'vitest';
 import { MigrationCoverageTracker } from './MigrationCoverageTracker';
 
@@ -61,9 +62,11 @@ function renderComponent() {
     defaultOptions: { queries: { retry: false } },
   });
   return render(
-    <QueryClientProvider client={queryClient}>
-      <MigrationCoverageTracker />
-    </QueryClientProvider>,
+    <MemoryRouter>
+      <QueryClientProvider client={queryClient}>
+        <MigrationCoverageTracker />
+      </QueryClientProvider>
+    </MemoryRouter>,
   );
 }
 
@@ -92,15 +95,15 @@ describe('MigrationCoverageTracker', () => {
   it('renders cells with correct color-coded indicators', () => {
     renderComponent();
 
-    // Education 2024-01: all baselined → complete (green)
-    const completeCells = screen.getAllByRole('img').filter(
+    // Education 2024-01: all baselined → complete (green) — now role="button" since clickable
+    const completeCells = screen.getAllByRole('button').filter(
       (el) => el.getAttribute('aria-label')?.includes('2024-01: 3 records'),
     );
     expect(completeCells.length).toBe(1);
     expect(completeCells[0]).toHaveClass('bg-emerald-500');
 
     // Education 2024-02: partial → amber
-    const partialCells = screen.getAllByRole('img').filter(
+    const partialCells = screen.getAllByRole('button').filter(
       (el) => el.getAttribute('aria-label')?.includes('2024-02: 2 records'),
     );
     expect(partialCells.length).toBe(1);
@@ -110,9 +113,9 @@ describe('MigrationCoverageTracker', () => {
   it('shows gap cells for missing periods', () => {
     renderComponent();
 
-    // Agriculture has no periods → all gap cells
+    // Agriculture has no periods → all gap cells (role="img", not clickable)
     const gapCells = screen.getAllByRole('img').filter(
-      (el) => el.getAttribute('aria-label')?.includes('No data'),
+      (el) => el.getAttribute('aria-label')?.includes('No data for this period'),
     );
     // Agriculture: 3 gap months, Health: 2 gap months (2024-02, 2024-03), Education: 1 gap month (2024-03) = 6
     expect(gapCells.length).toBe(6);
@@ -168,9 +171,11 @@ describe('MigrationCoverageTracker', () => {
       defaultOptions: { queries: { retry: false } },
     });
     const { container } = render(
-      <QueryClientProvider client={queryClient}>
-        <MigrationCoverageTracker />
-      </QueryClientProvider>,
+      <MemoryRouter>
+        <QueryClientProvider client={queryClient}>
+          <MigrationCoverageTracker />
+        </QueryClientProvider>
+      </MemoryRouter>,
     );
 
     const skeletons = container.querySelectorAll('[class*="animate-pulse"], [class*="skeleton"]');
@@ -188,9 +193,11 @@ describe('MigrationCoverageTracker', () => {
       defaultOptions: { queries: { retry: false } },
     });
     render(
-      <QueryClientProvider client={queryClient}>
-        <MigrationCoverageTracker />
-      </QueryClientProvider>,
+      <MemoryRouter>
+        <QueryClientProvider client={queryClient}>
+          <MigrationCoverageTracker />
+        </QueryClientProvider>
+      </MemoryRouter>,
     );
 
     expect(screen.getByText('Unable to load coverage data. Please try again later.')).toBeInTheDocument();
@@ -206,9 +213,11 @@ describe('MigrationCoverageTracker', () => {
       defaultOptions: { queries: { retry: false } },
     });
     render(
-      <QueryClientProvider client={queryClient}>
-        <MigrationCoverageTracker />
-      </QueryClientProvider>,
+      <MemoryRouter>
+        <QueryClientProvider client={queryClient}>
+          <MigrationCoverageTracker />
+        </QueryClientProvider>
+      </MemoryRouter>,
     );
 
     expect(screen.getByText('No migration data available.')).toBeInTheDocument();

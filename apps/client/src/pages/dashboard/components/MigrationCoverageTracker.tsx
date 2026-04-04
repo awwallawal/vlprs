@@ -1,4 +1,5 @@
 import { useState, useMemo, useCallback } from 'react';
+import { useNavigate } from 'react-router';
 import { toast } from 'sonner';
 import { useMigrationCoverage } from '@/hooks/useMigrationData';
 import { useAuthStore } from '@/stores/authStore';
@@ -35,12 +36,6 @@ const CELL_COLORS = {
   complete: 'bg-emerald-500',
   partial: 'bg-amber-400',
   gap: 'bg-gray-100',
-} as const;
-
-const CELL_LABELS = {
-  complete: 'Data migrated and baselined',
-  partial: 'Data exists, not yet baselined',
-  gap: 'No data',
 } as const;
 
 // ─── CSV Export ──────────────────────────────────────────────────────
@@ -152,6 +147,7 @@ export function MigrationCoverageTracker() {
   const [extended, setExtended] = useState(false);
   const { data, isPending, isError } = useMigrationCoverage(extended);
   const user = useAuthStore((s) => s.user);
+  const navigate = useNavigate();
 
   const months = useMemo(() => {
     if (!data) return [];
@@ -318,16 +314,26 @@ export function MigrationCoverageTracker() {
                     {months.map((month) => {
                       const status = cellStatus(mda, month);
                       const periodData = mda.periods[month];
-                      const tooltip = periodData && periodData.recordCount > 0
-                        ? `${month}: ${periodData.recordCount} records (${periodData.baselinedCount} baselined)`
-                        : `${month}: ${CELL_LABELS[status]}`;
+                      const hasData = periodData && periodData.recordCount > 0;
+                      const tooltip = hasData
+                        ? `${month}: ${periodData.recordCount} records (${periodData.baselinedCount} baselined) — click to view`
+                        : `${month}: No data for this period`;
+                      const [cellYear, cellMonth] = month.split('-');
                       return (
                         <td key={month} className="px-0.5 py-0.5 text-center">
                           <div
-                            className={`w-5 h-4 rounded-sm mx-auto ${CELL_COLORS[status]} ${status === 'gap' ? 'border border-gray-200' : ''}`}
+                            className={`w-5 h-4 rounded-sm mx-auto ${CELL_COLORS[status]} ${status === 'gap' ? 'border border-gray-200' : ''} ${hasData ? 'cursor-pointer hover:ring-2 hover:ring-primary/30 transition-all' : 'cursor-default'}`}
                             title={tooltip}
-                            role="img"
+                            role={hasData ? 'button' : 'img'}
+                            tabIndex={hasData ? 0 : undefined}
                             aria-label={tooltip}
+                            onClick={hasData ? () => navigate(`/dashboard/migrations/coverage/${mda.mdaId}/${cellYear}/${cellMonth}`) : undefined}
+                            onKeyDown={hasData ? (e) => {
+                              if (e.key === 'Enter' || e.key === ' ') {
+                                e.preventDefault();
+                                navigate(`/dashboard/migrations/coverage/${mda.mdaId}/${cellYear}/${cellMonth}`);
+                              }
+                            } : undefined}
                           />
                         </td>
                       );
