@@ -65,6 +65,14 @@ export interface DashboardMetrics {
   earlyExitRecoveryAmount: string;
   gratuityReceivableExposure: string;
   staffIdCoverage: { covered: number; total: number };
+
+  // MoM trends (Story 8.0h)
+  trends?: {
+    activeLoans: { direction: 'up' | 'down' | 'flat'; label: string };
+    totalExposure: { direction: 'up' | 'down' | 'flat'; label: string };
+    monthlyRecovery: { direction: 'up' | 'down' | 'flat'; label: string };
+    completionRate: { direction: 'up' | 'down' | 'flat'; label: string };
+  };
 }
 
 export type AttentionItemType =

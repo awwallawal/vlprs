@@ -774,6 +774,26 @@ export const loanEventFlagCorrections = pgTable(
   ],
 );
 
+// ─── Metric Snapshots (Story 8.0h) ─────────────────────────────────
+// Monthly point-in-time captures of key dashboard metrics for MoM trend computation.
+// Upsert on (year, month) ensures idempotency — scheduler can run daily without duplicates.
+export const metricSnapshots = pgTable(
+  'metric_snapshots',
+  {
+    id: uuid('id').primaryKey().$defaultFn(generateUuidv7),
+    snapshotYear: integer('snapshot_year').notNull(),
+    snapshotMonth: integer('snapshot_month').notNull(),
+    activeLoans: integer('active_loans').notNull(),
+    totalExposure: numeric('total_exposure', { precision: 15, scale: 2 }).notNull(),
+    monthlyRecovery: numeric('monthly_recovery', { precision: 15, scale: 2 }).notNull(),
+    completionRate: numeric('completion_rate', { precision: 5, scale: 2 }).notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    uniqueIndex('idx_metric_snapshots_year_month').on(table.snapshotYear, table.snapshotMonth),
+  ],
+);
+
 // ─── Audit Log (Story 1.5) ─────────────────────────────────────────
 // Append-only, immutable audit trail. No updated_at, no deleted_at.
 // Immutability enforced by DB trigger (fn_prevent_modification).

@@ -120,8 +120,8 @@ export interface TopVarianceRow {
 
 export interface TrendMetric {
   current: number;
-  previous: number;
-  changePercent: number;
+  previous: number | null;
+  changePercent: number | null;
 }
 
 export interface MonthOverMonthTrend {

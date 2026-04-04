@@ -5,6 +5,7 @@ import { runMigrations } from './db/migrate';
 import { seedReferenceMdas } from './db/seedReferenceMdas';
 import { startIntegrityChecker, stopIntegrityChecker } from './services/integrityChecker';
 import { startInactiveLoanScheduler, stopInactiveLoanScheduler } from './services/inactiveLoanDetector';
+import { startMetricSnapshotScheduler, stopMetricSnapshotScheduler } from './services/metricSnapshotService';
 
 async function start(): Promise<void> {
   // Apply database migrations BEFORE accepting traffic
@@ -31,6 +32,9 @@ async function start(): Promise<void> {
     // Start inactive loan detection scheduler (5min delay, then every 6 hours)
     startInactiveLoanScheduler();
 
+    // Start metric snapshot scheduler (5min delay, then daily check)
+    startMetricSnapshotScheduler();
+
     // In development, auto-seed the database if the users table is empty.
     // This prevents the recurring "can't login" issue after Docker volume wipes.
     if (env.NODE_ENV === 'development') {
@@ -43,6 +47,7 @@ async function start(): Promise<void> {
     logger.info(`${signal} received — shutting down gracefully`);
     stopIntegrityChecker();
     stopInactiveLoanScheduler();
+    stopMetricSnapshotScheduler();
     server.close(() => {
       logger.info('Server closed');
       process.exit(0);
