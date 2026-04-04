@@ -59,8 +59,8 @@ export const shareReportSchema = z.object({
 
 const trendMetricSchema = z.object({
   current: z.number(),
-  previous: z.number(),
-  changePercent: z.number(),
+  previous: z.number().nullable(),
+  changePercent: z.number().nullable(),
 });
 
 export const executiveSummaryReportSchema = z.object({
