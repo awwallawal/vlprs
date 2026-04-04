@@ -8,6 +8,7 @@ import { withMdaScope } from '../lib/mdaScope';
 import { autoSplitDeduction, computeRetirementDate } from './computationEngine';
 import { VOCABULARY } from '@vlprs/shared';
 import type { BaselineResult, BatchBaselineResult, BaselineSummary, VarianceCategory } from '@vlprs/shared';
+import { checkAndTriggerAutoStop } from './autoStopService';
 
 // ─── Types ───────────────────────────────────────────────────────────
 
@@ -346,7 +347,7 @@ export async function createBaseline(
     throw new AppError(400, 'BASELINE_UPLOAD_NOT_VALIDATED', VOCABULARY.BASELINE_UPLOAD_NOT_VALIDATED);
   }
 
-  return db.transaction(async (tx) => {
+  const result = await db.transaction(async (tx) => {
     // Load the record with row lock
     const [record] = await tx
       .select()
@@ -428,6 +429,11 @@ export async function createBaseline(
         || record.correctedInstallmentCount != null,
     };
   });
+
+  // Story 8.1: Check for auto-stop AFTER transaction commits (balance now visible)
+  checkAndTriggerAutoStop(result.loanId, result.ledgerEntryId).catch(() => {});
+
+  return result;
 }
 
 export async function createBatchBaseline(
@@ -454,6 +460,9 @@ export async function createBatchBaseline(
   if (upload.status !== 'validated' && upload.status !== 'reconciled') {
     throw new AppError(400, 'BASELINE_UPLOAD_NOT_VALIDATED', VOCABULARY.BASELINE_UPLOAD_NOT_VALIDATED);
   }
+
+  // Story 8.1: Track created loans + ledger entries for post-commit auto-stop check
+  const createdEntries: Array<{ loanId: string; ledgerEntryId: string }> = [];
 
   const result = await db.transaction(async (tx) => {
     // Load all records that haven't had baselines created yet and aren't flagged for review
@@ -589,6 +598,7 @@ export async function createBatchBaseline(
       const entryData = computeBaselineEntry(loanData, record, uploadId, actingUser.userId)!;
       await tx.insert(ledgerEntries).values(entryData);
       entriesCreated++;
+      createdEntries.push({ loanId: loanData.id, ledgerEntryId: entryData.id });
 
       // Link record
       await tx
@@ -632,6 +642,13 @@ export async function createBatchBaseline(
       flaggedForReview: { count: flagForReviewRecords.length, byCategory: flaggedByCategory },
     };
   });
+
+  // Story 8.1: Check auto-stop AFTER transaction commits (sequential to limit DB load)
+  void (async () => {
+    for (const { loanId, ledgerEntryId } of createdEntries) {
+      await checkAndTriggerAutoStop(loanId, ledgerEntryId).catch(() => {});
+    }
+  })();
 
   return result;
 }

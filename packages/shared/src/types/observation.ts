@@ -9,7 +9,8 @@ export type ObservationType =
   | 'grade_tier_mismatch'
   | 'three_way_variance'
   | 'manual_exception'
-  | 'inactive_loan';
+  | 'inactive_loan'
+  | 'post_completion_deduction';
 
 export type ObservationStatus = 'unreviewed' | 'reviewed' | 'resolved' | 'promoted';
 

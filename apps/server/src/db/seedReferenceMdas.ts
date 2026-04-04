@@ -1,7 +1,8 @@
 import { eq } from 'drizzle-orm';
 import { db } from './index';
-import { mdas, mdaAliases } from './schema';
+import { mdas, mdaAliases, users } from './schema';
 import { generateUuidv7 } from '../lib/uuidv7';
+import { hashPassword } from '../lib/password';
 import { MDA_LIST, MDA_ALIASES } from '@vlprs/shared';
 import { logger } from '../lib/logger';
 
@@ -72,4 +73,35 @@ export async function seedReferenceMdas(): Promise<void> {
   if (mdaCount > 0) {
     logger.info(`seedReferenceMdas: seeded ${mdaCount} new MDAs`);
   }
+
+  // Story 8.1: Seed system user for automated transitions (idempotent)
+  await seedSystemUser();
+}
+
+/**
+ * Seeds a system user for automated processes (auto-stop, inactive loan detection).
+ * Email: system@vlprs.local, role: super_admin.
+ * Idempotent — skips if user already exists.
+ */
+async function seedSystemUser(): Promise<void> {
+  const [existing] = await db
+    .select({ id: users.id })
+    .from(users)
+    .where(eq(users.email, 'system@vlprs.local'))
+    .limit(1);
+
+  if (existing) return;
+
+  const hashedPw = await hashPassword('SYSTEM_NO_LOGIN_' + Date.now());
+  await db.insert(users).values({
+    id: generateUuidv7(),
+    email: 'system@vlprs.local',
+    hashedPassword: hashedPw,
+    firstName: 'System',
+    lastName: '(Auto-Stop)',
+    role: 'super_admin',
+    isActive: false, // System user must never log in — only used for audit trail IDs
+    mustChangePassword: false,
+  });
+  logger.info('seedReferenceMdas: seeded system user (system@vlprs.local)');
 }

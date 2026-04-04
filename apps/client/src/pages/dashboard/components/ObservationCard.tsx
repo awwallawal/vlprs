@@ -18,6 +18,7 @@ const TYPE_LABELS: Record<ObservationType, string> = {
   three_way_variance: 'Three-Way Variance',
   manual_exception: 'Manual Exception',
   inactive_loan: 'Inactive Loan',
+  post_completion_deduction: 'Post-Completion Deduction',
 };
 
 const STATUS_VARIANT: Record<ObservationStatus, 'review' | 'info' | 'complete' | 'variance'> = {

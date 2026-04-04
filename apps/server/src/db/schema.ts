@@ -457,7 +457,7 @@ export const personMatches = pgTable(
 
 // ─── Observation Type Enum (Story 3.6) ──────────────────────────────
 export const observationTypeEnum = pgEnum('observation_type', [
-  'rate_variance', 'stalled_balance', 'negative_balance', 'multi_mda', 'no_approval_match', 'consecutive_loan', 'period_overlap', 'grade_tier_mismatch', 'three_way_variance', 'manual_exception', 'inactive_loan',
+  'rate_variance', 'stalled_balance', 'negative_balance', 'multi_mda', 'no_approval_match', 'consecutive_loan', 'period_overlap', 'grade_tier_mismatch', 'three_way_variance', 'manual_exception', 'inactive_loan', 'post_completion_deduction',
 ]);
 
 // ─── Observation Status Enum (Story 3.6) ────────────────────────────
@@ -797,6 +797,29 @@ export const metricSnapshots = pgTable(
   },
   (table) => [
     uniqueIndex('idx_metric_snapshots_year_month').on(table.snapshotYear, table.snapshotMonth),
+  ],
+);
+
+// ─── Loan Completions (Story 8.1) ──────────────────────────────────
+// Records the financial summary at the moment a loan reaches zero balance.
+// One row per loan — the completion record is the trigger for certificate generation (Story 8.2).
+export const loanCompletions = pgTable(
+  'loan_completions',
+  {
+    id: uuid('id').primaryKey().$defaultFn(generateUuidv7),
+    loanId: uuid('loan_id').notNull().references(() => loans.id),
+    completionDate: timestamp('completion_date', { withTimezone: true }).notNull(),
+    finalBalance: numeric('final_balance', { precision: 15, scale: 2 }).notNull(),
+    totalPaid: numeric('total_paid', { precision: 15, scale: 2 }).notNull(),
+    totalPrincipalPaid: numeric('total_principal_paid', { precision: 15, scale: 2 }).notNull(),
+    totalInterestPaid: numeric('total_interest_paid', { precision: 15, scale: 2 }).notNull(),
+    triggerSource: varchar('trigger_source', { length: 50 }).notNull(), // 'ledger_entry' | 'background_scan' | 'manual'
+    triggerLedgerEntryId: uuid('trigger_ledger_entry_id').references(() => ledgerEntries.id),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    uniqueIndex('idx_loan_completions_loan_id').on(table.loanId),
+    index('idx_loan_completions_completion_date').on(table.completionDate),
   ],
 );
 

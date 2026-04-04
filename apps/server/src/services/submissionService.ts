@@ -10,6 +10,7 @@ import { compareSubmission } from './comparisonEngine';
 import { reconcileSubmission } from './reconciliationEngine';
 import { checkPayrollExists, triggerThreeWayReconciliation } from './threeWayReconciliationService';
 import { sendReconciliationAlertEmail } from '../lib/email';
+import { detectPostCompletionDeductions } from './autoStopService';
 import { VOCABULARY, submissionRowSchema } from '@vlprs/shared';
 import type {
   SubmissionRow,
@@ -458,6 +459,9 @@ export async function processSubmissionRows(
       })
       .catch(() => { /* fire-and-forget */ });
   }
+
+  // Story 8.1: Fire-and-forget post-completion deduction detection
+  detectPostCompletionDeductions(submissionId).catch(() => { /* fire-and-forget */ });
 
   // Run comparison engine and persist aggregate counts.
   // Wrapped in try/catch: if comparison fails, the submission is still valid

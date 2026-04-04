@@ -85,6 +85,12 @@ export const OBSERVATION_HELP: Record<ObservationType, MetricDefinition> = {
     derivedFrom: 'Gap between today and the most recent ledger entry, filtered for employment events that explain the gap.',
     guidance: 'Review loan status and contact the MDA for clarification on deduction status.',
   },
+  post_completion_deduction: {
+    label: 'Post-Completion Deduction',
+    description: 'A deduction was declared for a staff member whose loan has already been fully repaid.',
+    derivedFrom: 'Cross-reference of submission rows against loans with COMPLETED status.',
+    guidance: 'Notify the MDA to cease deductions immediately. Issue Auto-Stop Certificate if not already generated.',
+  },
 };
 
 /**
@@ -163,6 +169,12 @@ export const ATTENTION_HELP: Record<AttentionItemType, MetricDefinition> = {
     description: 'An MDA that was recently onboarded but has not yet submitted their first return.',
     derivedFrom: 'Time elapsed since MDA registration without any submission activity.',
     guidance: 'Follow up with the MDA administrator to assist with their first submission.',
+  },
+  post_completion_deduction: {
+    label: 'Post-Completion Deduction',
+    description: 'Staff members with completed loans who still have deductions declared in recent MDA submissions.',
+    derivedFrom: 'Cross-reference of submission rows against loans with COMPLETED status.',
+    guidance: 'Notify the affected MDAs to cease deductions and verify auto-stop certificates have been issued.',
   },
 };
 

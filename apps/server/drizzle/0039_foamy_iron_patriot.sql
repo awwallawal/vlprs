@@ -1,0 +1,1 @@
+ALTER TYPE "public"."observation_type" ADD VALUE 'post_completion_deduction';
