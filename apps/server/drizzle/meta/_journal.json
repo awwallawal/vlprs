@@ -253,6 +253,13 @@
       "when": 1775151858758,
       "tag": "0035_old_nehzno",
       "breakpoints": true
+    },
+    {
+      "idx": 36,
+      "version": "7",
+      "when": 1775261747127,
+      "tag": "0036_jittery_kree",
+      "breakpoints": true
     }
   ]
 }

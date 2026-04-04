@@ -12,6 +12,7 @@ import { db } from '../db';
  */
 export async function resetDb(): Promise<void> {
   await db.execute(sql`TRUNCATE
+    metric_snapshots,
     loan_annotations,
     loan_event_flag_corrections,
     baseline_annotations,

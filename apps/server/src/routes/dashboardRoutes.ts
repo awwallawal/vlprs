@@ -23,6 +23,7 @@ import { computeBalanceSumForIds } from '../services/attentionItemService';
 import * as mdaAggregationService from '../services/mdaAggregationService';
 import * as submissionCoverageService from '../services/submissionCoverageService';
 import { listMdas } from '../services/mdaService';
+import * as metricSnapshotService from '../services/metricSnapshotService';
 
 const router = Router();
 
@@ -194,6 +195,26 @@ router.get(
       ? `${actualRecovery.periodYear}-${String(actualRecovery.periodMonth).padStart(2, '0')}`
       : '';
 
+    // MoM trends from metric snapshots
+    const now = new Date();
+    const snapshot = await metricSnapshotService.getPreviousMonthSnapshot(now.getFullYear(), now.getMonth() + 1);
+
+    function computeTrend(current: number, previous: number | null): { direction: 'up' | 'down' | 'flat'; label: string } {
+      if (previous === null) return { direction: 'flat', label: '\u2014' };
+      if (previous === 0) return { direction: current > 0 ? 'up' : 'flat', label: current > 0 ? 'New' : '\u2014' };
+      const pct = new Decimal(current).minus(previous).div(previous).mul(100).toDecimalPlaces(1).toNumber();
+      if (pct > 0) return { direction: 'up', label: `+${pct}%` };
+      if (pct < 0) return { direction: 'down', label: `${pct}%` };
+      return { direction: 'flat', label: '0%' };
+    }
+
+    const trends = {
+      activeLoans: computeTrend(activeLoansResult, snapshot?.activeLoans ?? null),
+      totalExposure: computeTrend(totalExposureResult.toNumber(), snapshot ? new Decimal(snapshot.totalExposure).toNumber() : null),
+      monthlyRecovery: computeTrend(new Decimal(actualRecovery.amount).toNumber(), snapshot ? new Decimal(snapshot.monthlyRecovery).toNumber() : null),
+      completionRate: computeTrend(completionRateLifetime, snapshot ? new Decimal(snapshot.completionRate).toNumber() : null),
+    };
+
     // Assemble response — all numeric aggregates, no arrays
     const metrics = {
       // Primary Hero Row
@@ -217,6 +238,9 @@ router.get(
       earlyExitRecoveryAmount: '0.00',
       gratuityReceivableExposure: gratuityExposure,
       staffIdCoverage: { covered: 0, total: 0 },
+
+      // MoM trends
+      trends,
     };
 
     res.json({ success: true, data: metrics });

@@ -25,6 +25,14 @@ export const dashboardMetricsSchema = z.object({
     covered: z.number().int().min(0),
     total: z.number().int().min(0),
   }),
+
+  // MoM trends (Story 8.0h)
+  trends: z.object({
+    activeLoans: z.object({ direction: z.enum(['up', 'down', 'flat']), label: z.string() }),
+    totalExposure: z.object({ direction: z.enum(['up', 'down', 'flat']), label: z.string() }),
+    monthlyRecovery: z.object({ direction: z.enum(['up', 'down', 'flat']), label: z.string() }),
+    completionRate: z.object({ direction: z.enum(['up', 'down', 'flat']), label: z.string() }),
+  }).optional(),
 });
 
 export type DashboardMetricsResponse = z.infer<typeof dashboardMetricsSchema>;

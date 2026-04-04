@@ -18,9 +18,11 @@ function healthBadge(band: string) {
 }
 
 function TrendIndicator({ metric, label }: { metric: TrendMetric; label: string }) {
-  const isUp = metric.changePercent > 0;
-  const isDown = metric.changePercent < 0;
-  const isFlat = metric.changePercent === 0;
+  const cp = metric.changePercent;
+  const hasData = cp !== null;
+  const isUp = cp !== null && cp > 0;
+  const isDown = cp !== null && cp < 0;
+  const isFlat = cp !== null && cp === 0;
 
   return (
     <div className="flex items-center gap-2">
@@ -30,12 +32,13 @@ function TrendIndicator({ metric, label }: { metric: TrendMetric; label: string 
           ? metric.current.toFixed(1)
           : metric.current}
       </span>
+      {!hasData && <span className="text-xs text-text-muted">No prior data</span>}
       {isFlat && <Minus className="h-4 w-4 text-gray-400" />}
       {isUp && <TrendingUp className="h-4 w-4 text-teal-600" />}
       {isDown && <TrendingDown className="h-4 w-4 text-amber-600" />}
-      {!isFlat && (
+      {hasData && !isFlat && (
         <span className={`text-xs ${isUp ? 'text-teal-600' : 'text-amber-600'}`}>
-          {isUp ? '+' : ''}{metric.changePercent.toFixed(1)}%
+          {isUp ? '+' : ''}{metric.changePercent!.toFixed(1)}%
         </span>
       )}
     </div>

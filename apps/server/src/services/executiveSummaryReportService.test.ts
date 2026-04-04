@@ -9,6 +9,7 @@ vi.mock('./loanClassificationService', async (importOriginal) => {
     ...actual,
     classifyAllLoans: vi.fn(),
     getLoanCompletionRate: vi.fn(),
+    getLoanCompletionRateLifetime: vi.fn(),
   };
 });
 
@@ -33,6 +34,10 @@ vi.mock('./observationService', () => ({
 
 vi.mock('./schemeConfigService', () => ({
   getSchemeConfig: vi.fn(),
+}));
+
+vi.mock('./metricSnapshotService', () => ({
+  getPreviousMonthSnapshot: vi.fn(),
 }));
 
 // Recursive chainable mock: every method returns a new chain that is also a thenable (resolves to [])
@@ -76,6 +81,7 @@ import * as revenueProjectionService from './revenueProjectionService';
 import * as submissionCoverageService from './submissionCoverageService';
 import * as observationService from './observationService';
 import * as schemeConfigService from './schemeConfigService';
+import * as metricSnapshotService from './metricSnapshotService';
 
 describe('executiveSummaryReportService', () => {
   const mockClassifications = new Map<string, LoanClassification>([
@@ -124,6 +130,8 @@ describe('executiveSummaryReportService', () => {
 
     vi.mocked(loanClassificationService.classifyAllLoans).mockResolvedValue(mockClassifications);
     vi.mocked(loanClassificationService.getLoanCompletionRate).mockResolvedValue(40.0);
+    vi.mocked(loanClassificationService.getLoanCompletionRateLifetime).mockResolvedValue(15.0);
+    vi.mocked(metricSnapshotService.getPreviousMonthSnapshot).mockResolvedValue(null);
     vi.mocked(mdaAggregationService.getMdaBreakdown).mockResolvedValue(mockMdaBreakdown);
     vi.mocked(revenueProjectionService.getActualMonthlyRecovery).mockResolvedValue({
       amount: '30000.00',
@@ -236,5 +244,52 @@ describe('executiveSummaryReportService', () => {
       expect(tier.loanCount).toBe(0);
       expect(tier.totalAmount).toBe('0.00');
     }
+  });
+
+  it('computes real MoM percentage when previous snapshot exists', async () => {
+    vi.mocked(metricSnapshotService.getPreviousMonthSnapshot).mockResolvedValue({
+      activeLoans: 90,
+      totalExposure: '650000.00',
+      monthlyRecovery: '28000.00',
+      completionRate: '12.0',
+    });
+
+    const { generateExecutiveSummaryReport } = await import('./executiveSummaryReportService');
+    const report = await generateExecutiveSummaryReport(null);
+
+    // activeLoans: current is 0 (from mocked DB), previous is 90 from snapshot
+    expect(report.monthOverMonthTrend.activeLoans.previous).toBe(90);
+    expect(report.monthOverMonthTrend.activeLoans.changePercent).not.toBeNull();
+  });
+
+  it('returns null changePercent when no previous snapshot exists', async () => {
+    vi.mocked(metricSnapshotService.getPreviousMonthSnapshot).mockResolvedValue(null);
+
+    const { generateExecutiveSummaryReport } = await import('./executiveSummaryReportService');
+    const report = await generateExecutiveSummaryReport(null);
+
+    // activeLoans, totalExposure, completionRate should have null previous/changePercent
+    expect(report.monthOverMonthTrend.activeLoans.previous).toBeNull();
+    expect(report.monthOverMonthTrend.activeLoans.changePercent).toBeNull();
+    expect(report.monthOverMonthTrend.totalExposure.previous).toBeNull();
+    expect(report.monthOverMonthTrend.totalExposure.changePercent).toBeNull();
+    expect(report.monthOverMonthTrend.completionRate.previous).toBeNull();
+    expect(report.monthOverMonthTrend.completionRate.changePercent).toBeNull();
+  });
+
+  it('monthlyRecovery still uses ledger-based computation (not snapshot)', async () => {
+    vi.mocked(metricSnapshotService.getPreviousMonthSnapshot).mockResolvedValue({
+      activeLoans: 90,
+      totalExposure: '650000.00',
+      monthlyRecovery: '99999.00',
+      completionRate: '12.0',
+    });
+
+    const { generateExecutiveSummaryReport } = await import('./executiveSummaryReportService');
+    const report = await generateExecutiveSummaryReport(null);
+
+    // monthlyRecovery previous should NOT be the snapshot value (99999)
+    // It should come from the ledger-based getPreviousPeriodRecovery
+    expect(report.monthOverMonthTrend.monthlyRecovery.previous).not.toBe(99999);
   });
 });

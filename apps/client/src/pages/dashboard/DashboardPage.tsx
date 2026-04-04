@@ -148,6 +148,7 @@ export function DashboardPage() {
             label="Active Loans"
             value={metrics.data?.activeLoans ?? 0}
             format="count"
+            trend={metrics.data?.trends?.activeLoans}
             isPending={metrics.isPending}
             onClick={() => navigate('/dashboard/drill-down/active-loans')}
           />
@@ -155,6 +156,7 @@ export function DashboardPage() {
             label="Total Exposure"
             value={metrics.data?.totalExposure ?? '0'}
             format="currency"
+            trend={metrics.data?.trends?.totalExposure}
             isPending={metrics.isPending}
             helpKey="dashboard.totalExposure"
             onClick={() => navigate('/dashboard/drill-down/total-exposure')}
@@ -214,6 +216,7 @@ export function DashboardPage() {
               label="Monthly Recovery"
               value={metrics.data?.monthlyRecovery ?? '0'}
               format="currency"
+              trend={metrics.data?.trends?.monthlyRecovery}
               isPending={metrics.isPending}
               helpKey="dashboard.monthlyRecovery"
               onClick={() => navigate('/dashboard/drill-down/monthly-recovery')}
@@ -282,6 +285,7 @@ export function DashboardPage() {
             label="Completion Rate (All-Time)"
             value={metrics.data?.loanCompletionRateLifetime ?? 0}
             format="percentage"
+            trend={metrics.data?.trends?.completionRate}
             isPending={metrics.isPending}
             helpKey="dashboard.completionRateLifetime"
             onClick={() => navigate('/dashboard/drill-down/completion-rate-lifetime')}

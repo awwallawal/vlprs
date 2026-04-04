@@ -17,11 +17,19 @@ import {
 } from './reportPdfComponents';
 import { View, Text } from '@react-pdf/renderer';
 
-function TrendLine({ label, current, changePercent }: { label: string; current: number; changePercent: number }) {
+function TrendLine({ label, current, changePercent }: { label: string; current: number; changePercent: number | null }) {
+  const displayValue = typeof current === 'number' && current % 1 !== 0 ? current.toFixed(1) : current;
+  if (changePercent === null) {
+    return (
+      <Text style={{ fontSize: 8, color: '#374151', marginBottom: 2 }}>
+        {label}: {displayValue} — No prior data
+      </Text>
+    );
+  }
   const arrow = changePercent > 0 ? '\u2191' : changePercent < 0 ? '\u2193' : '\u2192';
   return (
     <Text style={{ fontSize: 8, color: '#374151', marginBottom: 2 }}>
-      {label}: {typeof current === 'number' && current % 1 !== 0 ? current.toFixed(1) : current} {arrow} {changePercent > 0 ? '+' : ''}{changePercent.toFixed(1)}%
+      {label}: {displayValue} {arrow} {changePercent > 0 ? '+' : ''}{changePercent.toFixed(1)}%
     </Text>
   );
 }
