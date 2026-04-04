@@ -18,12 +18,14 @@ const OBSERVATION_TYPES: ObservationType[] = [
   'rate_variance', 'stalled_balance', 'negative_balance', 'multi_mda',
   'no_approval_match', 'consecutive_loan', 'period_overlap',
   'grade_tier_mismatch', 'three_way_variance', 'manual_exception', 'inactive_loan',
+  'post_completion_deduction',
 ];
 
 const ATTENTION_ITEM_TYPES: AttentionItemType[] = [
   'zero_deduction', 'post_retirement_active', 'missing_staff_id', 'overdue_loans',
   'stalled_deductions', 'quick_win', 'submission_variance', 'overdue_submission',
   'pending_auto_stop', 'pending_early_exit', 'dark_mda', 'onboarding_lag',
+  'post_completion_deduction',
 ];
 
 const DRILL_DOWN_METRICS: DrillDownMetric[] = [

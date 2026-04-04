@@ -1,6 +1,6 @@
 import Decimal from 'decimal.js';
 import { db } from '../db';
-import { loans, ledgerEntries, mdas, mdaSubmissions } from '../db/schema';
+import { loans, ledgerEntries, mdas, mdaSubmissions, loanCompletions, observations } from '../db/schema';
 import { eq, and, sql, inArray } from 'drizzle-orm';
 import { withMdaScope } from '../lib/mdaScope';
 import { generateUuidv7 } from '../lib/uuidv7';
@@ -28,6 +28,7 @@ export async function getAttentionItems(
     detectSubmissionVariance(mdaScope),
     detectOverdueSubmissions(mdaScope),
     detectPendingAutoStop(mdaScope),
+    detectPostCompletionDeductionItems(mdaScope),
     detectPendingEarlyExit(mdaScope),
     detectDarkMdas(mdaScope),
     detectOnboardingLag(mdaScope),
@@ -457,9 +458,69 @@ async function detectOverdueSubmissions(mdaScope?: string | null): Promise<Atten
   }];
 }
 
-// TODO: Wire in Epic 8 when auto-stop certificates exist
-async function detectPendingAutoStop(_mdaScope?: string | null): Promise<AttentionItem[]> {
-  return [];
+async function detectPendingAutoStop(mdaScope?: string | null): Promise<AttentionItem[]> {
+  // Query completed loans that don't have certificates yet (all completions until Story 8.2)
+  const scopeCondition = withMdaScope(loans.mdaId, mdaScope);
+  const conditions = [eq(loans.status, 'COMPLETED')];
+  if (scopeCondition) conditions.push(scopeCondition);
+
+  const rows = await db
+    .select({
+      mda_id: mdas.id,
+      mda_name: mdas.name,
+      affected_count: sql<number>`COUNT(*)::int`,
+    })
+    .from(loans)
+    .innerJoin(loanCompletions, eq(loanCompletions.loanId, loans.id))
+    .innerJoin(mdas, eq(mdas.id, loans.mdaId))
+    .where(and(...conditions))
+    .groupBy(mdas.id, mdas.name)
+    .orderBy(sql`COUNT(*) DESC`);
+
+  if (rows.length === 0) return [];
+
+  return buildPerMdaItems(
+    rows,
+    'pending_auto_stop',
+    'complete',
+    5,
+    (row) => `Auto-Stop: ${row.affected_count} loan${row.affected_count === 1 ? '' : 's'} completed — certificate${row.affected_count === 1 ? '' : 's'} pending`,
+    (row) => `/dashboard/loans?status=COMPLETED&mdaId=${row.mda_id}`,
+    '/dashboard/loans?status=COMPLETED',
+  );
+}
+
+async function detectPostCompletionDeductionItems(mdaScope?: string | null): Promise<AttentionItem[]> {
+  const scopeCondition = withMdaScope(observations.mdaId, mdaScope);
+  const conditions = [
+    eq(observations.type, 'post_completion_deduction'),
+    eq(observations.status, 'unreviewed'),
+  ];
+  if (scopeCondition) conditions.push(scopeCondition);
+
+  const rows = await db
+    .select({
+      mda_id: mdas.id,
+      mda_name: mdas.name,
+      affected_count: sql<number>`COUNT(*)::int`,
+    })
+    .from(observations)
+    .innerJoin(mdas, eq(mdas.id, observations.mdaId))
+    .where(and(...conditions))
+    .groupBy(mdas.id, mdas.name)
+    .orderBy(sql`COUNT(*) DESC`);
+
+  if (rows.length === 0) return [];
+
+  return buildPerMdaItems(
+    rows,
+    'post_completion_deduction',
+    'review',
+    8,
+    (row) => `${row.affected_count} staff ${row.affected_count === 1 ? 'has' : 'have'} deductions declared after loan completion`,
+    (row) => `/dashboard/observations?type=post_completion_deduction&mdaId=${row.mda_id}`,
+    '/dashboard/observations?type=post_completion_deduction',
+  );
 }
 
 // TODO: Wire in Epic 12 when early exit processing exists

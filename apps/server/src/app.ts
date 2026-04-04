@@ -28,6 +28,7 @@ import payrollRoutes from './routes/payrollRoutes';
 import threeWayReconciliationRoutes from './routes/threeWayReconciliationRoutes';
 import exceptionRoutes from './routes/exceptionRoutes';
 import annotationRoutes from './routes/annotationRoutes';
+import autoStopRoutes from './routes/autoStopRoutes';
 import { AppError } from './lib/appError';
 import { VOCABULARY } from '@vlprs/shared';
 import { requestLogger } from './middleware/requestLogger';
@@ -90,6 +91,7 @@ app.use('/api', payrollRoutes);
 app.use('/api', threeWayReconciliationRoutes);
 app.use('/api', annotationRoutes);
 app.use('/api', exceptionRoutes);
+app.use('/api', autoStopRoutes);
 
 // 404 handler
 app.use((_req: Request, res: Response) => {

@@ -87,7 +87,8 @@ export type AttentionItemType =
   | 'pending_auto_stop'        // (d) future: Epic 8
   | 'pending_early_exit'       // (f) future: Epic 12
   | 'dark_mda'                 // (k) future: Epic 5
-  | 'onboarding_lag';          // (l) future: Epic 5
+  | 'onboarding_lag'           // (l) future: Epic 5
+  | 'post_completion_deduction';  // (m) Epic 8: deductions after loan completion
 
 export interface AttentionItem {
   id: string;

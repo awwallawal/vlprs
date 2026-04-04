@@ -1,9 +1,17 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-const { mockInsert, mockSelect, mockUpdate } = vi.hoisted(() => ({
+const { mockInsert, mockSelect, mockUpdate, mockDbSelectChain, mockDbInsertChain } = vi.hoisted(() => ({
   mockInsert: vi.fn(),
   mockSelect: vi.fn(),
   mockUpdate: vi.fn(),
+  mockDbSelectChain: {
+    from: vi.fn().mockReturnThis(),
+    where: vi.fn().mockReturnThis(),
+    limit: vi.fn().mockResolvedValue([]),
+  },
+  mockDbInsertChain: {
+    values: vi.fn().mockResolvedValue(undefined),
+  },
 }));
 
 const mockTx = {
@@ -15,12 +23,19 @@ const mockTx = {
 vi.mock('./index', () => ({
   db: {
     transaction: vi.fn((fn: (tx: typeof mockTx) => Promise<void>) => fn(mockTx)),
+    select: vi.fn().mockReturnValue(mockDbSelectChain),
+    insert: vi.fn().mockReturnValue(mockDbInsertChain),
   },
+}));
+
+vi.mock('../lib/password', () => ({
+  hashPassword: vi.fn().mockResolvedValue('$2b$12$mock_hashed_password'),
 }));
 
 vi.mock('./schema', () => ({
   mdas: { code: 'mdas.code', id: 'mdas.id' },
   mdaAliases: {},
+  users: { id: 'users.id', email: 'users.email' },
 }));
 
 function mockChain(result: unknown) {
