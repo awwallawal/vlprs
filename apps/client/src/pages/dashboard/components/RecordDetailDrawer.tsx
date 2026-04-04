@@ -9,7 +9,7 @@ import { UI_COPY, getTierForGradeLevel } from '@vlprs/shared';
 import type { MigrationRecordDetail, VarianceCategory } from '@vlprs/shared';
 import { formatNairaOrDash } from '@/lib/formatters';
 import { MetricHelp } from '@/components/shared/MetricHelp';
-import { useMigrationRecordDetail, useCorrectMigrationRecord, useCreateBaseline } from '@/hooks/useMigration';
+import { useMigrationRecordDetail, useCorrectMigrationRecord, useCreateBaseline, useSubmitReview, useMarkReviewed } from '@/hooks/useMigration';
 
 // ─── Financial Comparison Utilities ──────────────────────────────────
 // Convert monetary strings to integer cents to avoid floating-point precision issues.
@@ -317,8 +317,11 @@ function CorrectionForm({ detail, uploadId }: { detail: MigrationRecordDetail; u
   const [installmentCount, setInstallmentCount] = useState('');
   const [installmentsPaid, setInstallmentsPaid] = useState('');
   const [installmentsOutstanding, setInstallmentsOutstanding] = useState('');
+  const [correctionReason, setCorrectionReason] = useState('');
 
+  const isFlagged = !!detail.flaggedForReviewAt;
   const correctMutation = useCorrectMigrationRecord(uploadId);
+  const reviewMutation = useSubmitReview(uploadId);
 
   // Auto-recompute outstanding balance preview when installmentsOutstanding changes
   const effectiveMonthly = monthlyDeduction || detail.correctedValues?.monthlyDeduction || detail.declaredValues.monthlyDeduction;
@@ -333,6 +336,7 @@ function CorrectionForm({ detail, uploadId }: { detail: MigrationRecordDetail; u
     setInstallmentCount(String(detail.correctedValues?.installmentCount ?? detail.declaredValues.installmentCount ?? ''));
     setInstallmentsPaid(String(detail.correctedValues?.installmentsPaid ?? detail.declaredValues.installmentsPaid ?? ''));
     setInstallmentsOutstanding(String(detail.correctedValues?.installmentsOutstanding ?? detail.declaredValues.installmentsOutstanding ?? ''));
+    setCorrectionReason('');
     setEditing(true);
   };
 
@@ -352,15 +356,23 @@ function CorrectionForm({ detail, uploadId }: { detail: MigrationRecordDetail; u
     if (installmentsPaid && installmentsPaid !== currentIP) corrections.installmentsPaid = Number(installmentsPaid);
     if (installmentsOutstanding && installmentsOutstanding !== currentIO) corrections.installmentsOutstanding = Number(installmentsOutstanding);
 
-    if (Object.keys(corrections).length === 0) {
-      setEditing(false);
-      return;
+    if (isFlagged) {
+      // Flagged records require correctionReason (min 10 chars)
+      if (correctionReason.length < 10) return;
+      reviewMutation.mutate(
+        { recordId: detail.recordId, corrections, correctionReason },
+        { onSuccess: () => setEditing(false) },
+      );
+    } else {
+      if (Object.keys(corrections).length === 0) {
+        setEditing(false);
+        return;
+      }
+      correctMutation.mutate(
+        { recordId: detail.recordId, corrections },
+        { onSuccess: () => setEditing(false) },
+      );
     }
-
-    correctMutation.mutate(
-      { recordId: detail.recordId, corrections },
-      { onSuccess: () => setEditing(false) },
-    );
   };
 
   if (!editing) {
@@ -466,17 +478,36 @@ function CorrectionForm({ detail, uploadId }: { detail: MigrationRecordDetail; u
         </div>
       )}
 
-      {correctMutation.isError && (
-        <p className="text-xs text-amber-600">{correctMutation.error?.message ?? 'Correction could not be saved. Please check values and try again.'}</p>
+      {/* Correction reason — required for flagged records */}
+      {isFlagged && (
+        <div>
+          <label className="text-xs text-text-secondary block mb-1">
+            Additional context <span className="text-amber-600">(required, min 10 characters)</span>
+          </label>
+          <textarea
+            value={correctionReason}
+            onChange={(e) => setCorrectionReason(e.target.value)}
+            placeholder="Explain why these values are being corrected..."
+            rows={2}
+            className="w-full px-2 py-1.5 text-sm border border-border rounded focus:outline-none focus:ring-1 focus:ring-teal resize-none"
+          />
+          {correctionReason.length > 0 && correctionReason.length < 10 && (
+            <p className="text-[11px] text-amber-600 mt-0.5">{10 - correctionReason.length} more character{10 - correctionReason.length !== 1 ? 's' : ''} needed</p>
+          )}
+        </div>
+      )}
+
+      {(correctMutation.isError || reviewMutation.isError) && (
+        <p className="text-xs text-amber-600">{(correctMutation.error ?? reviewMutation.error)?.message ?? 'Correction could not be saved. Please check values and try again.'}</p>
       )}
       <div className="flex gap-2">
         <button
           type="button"
           onClick={handleSave}
-          disabled={correctMutation.isPending}
+          disabled={correctMutation.isPending || reviewMutation.isPending || (isFlagged && correctionReason.length < 10)}
           className="px-3 py-1.5 text-xs bg-teal text-white rounded hover:bg-teal/90 disabled:opacity-50"
         >
-          {correctMutation.isPending ? 'Saving...' : 'Save Correction'}
+          {(correctMutation.isPending || reviewMutation.isPending) ? 'Saving...' : 'Save Correction'}
         </button>
         <button
           type="button"
@@ -549,6 +580,114 @@ function CorrectionHistory({ detail }: { detail: MigrationRecordDetail }) {
         <p className="text-xs text-text-tertiary mt-2">
           Corrected on {new Date(detail.correctedAt).toLocaleString()}
         </p>
+      )}
+    </Section>
+  );
+}
+
+function MarkReviewedButton({ detail, uploadId }: { detail: MigrationRecordDetail; uploadId: string }) {
+  const [showReason, setShowReason] = useState(false);
+  const [reason, setReason] = useState('');
+  const markReviewedMutation = useMarkReviewed(uploadId);
+
+  // Only show for flagged records that haven't been reviewed yet
+  if (!detail.flaggedForReviewAt || detail.correctedBy) return null;
+
+  if (!showReason) {
+    return (
+      <button
+        type="button"
+        onClick={() => setShowReason(true)}
+        className="w-full mt-2 px-3 py-2 text-xs border border-teal/30 text-teal rounded-lg hover:bg-teal/5"
+      >
+        Mark Reviewed — Values Correct
+      </button>
+    );
+  }
+
+  return (
+    <div className="mt-2 bg-gray-50 rounded-lg p-3 space-y-2">
+      <p className="text-xs text-text-secondary">
+        Confirm these values are correct. Provide context for this determination:
+      </p>
+      <textarea
+        value={reason}
+        onChange={(e) => setReason(e.target.value)}
+        placeholder="e.g. Values verified against source documents — no correction needed"
+        rows={2}
+        className="w-full px-2 py-1.5 text-sm border border-border rounded focus:outline-none focus:ring-1 focus:ring-teal resize-none"
+      />
+      {reason.length > 0 && reason.length < 10 && (
+        <p className="text-[11px] text-amber-600">{10 - reason.length} more character{10 - reason.length !== 1 ? 's' : ''} needed</p>
+      )}
+      {markReviewedMutation.isError && (
+        <p className="text-xs text-amber-600">{markReviewedMutation.error?.message}</p>
+      )}
+      <div className="flex gap-2">
+        <button
+          type="button"
+          onClick={() => markReviewedMutation.mutate(
+            { recordId: detail.recordId, correctionReason: reason },
+            { onSuccess: () => setShowReason(false) },
+          )}
+          disabled={markReviewedMutation.isPending || reason.length < 10}
+          className="px-3 py-1.5 text-xs bg-teal text-white rounded hover:bg-teal/90 disabled:opacity-50"
+        >
+          {markReviewedMutation.isPending ? 'Submitting...' : 'Confirm — Values Correct'}
+        </button>
+        <button
+          type="button"
+          onClick={() => setShowReason(false)}
+          className="px-3 py-1.5 text-xs border border-border rounded hover:bg-gray-50"
+        >
+          Cancel
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function ReviewMetadata({ detail }: { detail: MigrationRecordDetail }) {
+  if (!detail.flaggedForReviewAt) return null;
+
+  return (
+    <Section title="Review Status">
+      {detail.correctedBy ? (
+        <div className="space-y-1">
+          <div className="flex items-center gap-2">
+            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-teal/10 text-teal border border-teal/20">
+              Reviewed
+            </span>
+          </div>
+          {detail.correctionReason && (
+            <div className="text-sm">
+              <span className="text-text-secondary">Context:</span>{' '}
+              <span className="text-text-primary">{detail.correctionReason}</span>
+            </div>
+          )}
+          {detail.correctedValues ? (
+            <p className="text-xs text-text-tertiary">Corrections applied</p>
+          ) : (
+            <p className="text-xs text-text-tertiary">No corrections — values confirmed correct</p>
+          )}
+          {detail.correctedAt && (
+            <p className="text-xs text-text-tertiary">
+              Reviewed on {new Date(detail.correctedAt).toLocaleString()}
+            </p>
+          )}
+        </div>
+      ) : (
+        <div className="space-y-1">
+          <div className="flex items-center gap-2">
+            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-amber-100 text-amber-800 border border-amber-200">
+              Pending Review
+            </span>
+          </div>
+          <p className="text-xs text-text-tertiary">
+            Flagged on {new Date(detail.flaggedForReviewAt).toLocaleDateString()}
+            {detail.reviewWindowDeadline && ` — Deadline: ${new Date(detail.reviewWindowDeadline).toLocaleDateString()}`}
+          </p>
+        </div>
       )}
     </Section>
   );
@@ -676,8 +815,16 @@ export function RecordDetailDrawer({ uploadId, recordId, open, onOpenChange }: R
                 )}
               </Section>
 
+              {/* Review Status (Story 8.0j) — visible for flagged records */}
+              <ReviewMetadata detail={detail} />
+
               {/* Correction History */}
               <CorrectionHistory detail={detail} />
+
+              {/* Mark Reviewed — Values Correct (Story 8.0j) */}
+              {!detail.isBaselineCreated && (
+                <MarkReviewedButton detail={detail} uploadId={uploadId} />
+              )}
 
               {/* Baseline */}
               <BaselineSection detail={detail} uploadId={uploadId} />

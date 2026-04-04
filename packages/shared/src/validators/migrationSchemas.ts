@@ -138,6 +138,48 @@ export const coverageRecordsExportSchema = z.object({
   format: z.enum(['csv', 'xlsx']),
 });
 
+// ─── MDA Review Schemas (Story 8.0j) ───────────────────────────────
+
+export const submitReviewSchema = z.object({
+  outstandingBalance: z.string().regex(/^\d+(\.\d{1,2})?$/, 'Must be a valid decimal amount').optional(),
+  totalLoan: z.string().regex(/^\d+(\.\d{1,2})?$/, 'Must be a valid decimal amount').optional(),
+  monthlyDeduction: z.string().regex(/^\d+(\.\d{1,2})?$/, 'Must be a valid decimal amount').optional(),
+  installmentCount: z.number().int().min(1).max(120).optional(),
+  installmentsPaid: z.number().int().min(0).max(120).optional(),
+  installmentsOutstanding: z.number().int().min(0).max(120).optional(),
+  correctionReason: z.string().min(10, 'Correction reason must be at least 10 characters'),
+});
+
+export const markReviewedSchema = z.object({
+  correctionReason: z.string().min(10, 'Explanation must be at least 10 characters'),
+});
+
+export const extendWindowSchema = z.object({
+  mdaId: z.string().uuid(),
+});
+
+export const flaggedRecordsQuerySchema = z.object({
+  page: z.coerce.number().int().min(1).optional().default(1),
+  limit: z.coerce.number().int().min(1).max(100).optional().default(50),
+  status: z.enum(['pending', 'reviewed', 'all']).optional().default('all'),
+});
+
+export const worksheetApplySchema = z.object({
+  readyToApply: z.number().int().min(0),
+  reviewedNoCorrection: z.number().int().min(0),
+  skipped: z.number().int().min(0),
+  alreadyBaselined: z.number().int().min(0),
+  conflicts: z.number().int().min(0),
+  records: z.array(z.object({
+    recordId: z.string(),
+    staffName: z.string(),
+    category: z.enum(['ready', 'reviewed', 'skipped', 'baselined', 'conflict']),
+    corrections: z.record(z.string(), z.union([z.string(), z.number(), z.null()])).optional(),
+    reason: z.string().optional(),
+    conflictDetail: z.string().optional(),
+  })),
+});
+
 // ─── Beneficiary Ledger Query (Story 3.5) ───────────────────────────
 export const beneficiaryQuerySchema = z.object({
   page: z.coerce.number().int().min(1).optional(),

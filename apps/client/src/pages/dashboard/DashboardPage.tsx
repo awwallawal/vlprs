@@ -19,6 +19,7 @@ import { MetricHelp } from '@/components/shared/MetricHelp';
 import { useAuthStore } from '@/stores/authStore';
 import { ROLES } from '@vlprs/shared';
 import { SchemeFundDialog } from './components/SchemeFundDialog';
+import { MdaReviewSection } from './components/MdaReviewSection';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -334,6 +335,11 @@ export function DashboardPage() {
             </div>
           </div>
         </section>
+      )}
+
+      {/* MDA Review Section — visible to MDA_OFFICER only (Story 8.0j) */}
+      {user?.role === ROLES.MDA_OFFICER && (
+        <MdaReviewSection onNavigateToReview={() => navigate('/dashboard/migration')} />
       )}
 
       {/* Attention items */}

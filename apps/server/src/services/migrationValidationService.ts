@@ -1,6 +1,8 @@
 import Decimal from 'decimal.js';
 import { eq, and, isNull, desc, asc, sql } from 'drizzle-orm';
 import { db } from '../db/index';
+
+
 import { migrationUploads, migrationRecords } from '../db/schema';
 import { AppError } from '../lib/appError';
 import { withMdaScope } from '../lib/mdaScope';
@@ -674,6 +676,10 @@ export async function getRecordDetail(
     originalValuesSnapshot: (record.originalValuesSnapshot as Record<string, unknown>) ?? null,
     correctedBy: record.correctedBy ?? null,
     correctedAt: record.correctedAt?.toISOString() ?? null,
+    // MDA Review fields (Story 8.0j)
+    correctionReason: record.correctionReason ?? null,
+    flaggedForReviewAt: record.flaggedForReviewAt?.toISOString() ?? null,
+    reviewWindowDeadline: record.reviewWindowDeadline?.toISOString() ?? null,
   };
 }
 
@@ -686,6 +692,7 @@ interface CorrectionInput {
   installmentsPaid?: number;
   installmentsOutstanding?: number;
   installmentCount?: number;
+  correctionReason?: string;
 }
 
 /**
@@ -698,11 +705,14 @@ export async function correctRecord(
   corrections: CorrectionInput,
   userId: string,
   mdaScope?: string | null,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  externalTx?: any,
 ): Promise<MigrationRecordDetail> {
   // Verify upload exists and is accessible (outside transaction — acceptable because the
   // record lock inside the transaction prevents concurrent modification, and FK constraints
   // ensure record integrity if upload is deleted between check and transaction start)
-  const [upload] = await db
+  const queryRunner = externalTx ?? db;
+  const [upload] = await queryRunner
     .select()
     .from(migrationUploads)
     .where(
@@ -717,7 +727,9 @@ export async function correctRecord(
     throw new AppError(404, 'UPLOAD_NOT_FOUND', VOCABULARY.MIGRATION_UPLOAD_NOT_FOUND);
   }
 
-  await db.transaction(async (tx) => {
+  // Transaction body — lock, validate, update
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const runCorrection = async (tx: any) => {
     // Lock the record to prevent concurrent modification
     const [record] = await tx
       .select()
@@ -760,6 +772,10 @@ export async function correctRecord(
       correctedBy: userId,
       correctedAt: new Date(),
     };
+
+    if (corrections.correctionReason !== undefined) {
+      updateData.correctionReason = corrections.correctionReason;
+    }
 
     if (isFirstCorrection && originalSnapshot) {
       updateData.originalValuesSnapshot = originalSnapshot;
@@ -840,7 +856,14 @@ export async function correctRecord(
       .update(migrationRecords)
       .set(updateData)
       .where(eq(migrationRecords.id, recordId));
-  });
+  };
+
+  // Run within external transaction or create a new one
+  if (externalTx) {
+    await runCorrection(externalTx);
+  } else {
+    await db.transaction(runCorrection);
+  }
 
   // Return updated record detail (after transaction commits so db sees changes)
   return getRecordDetail(recordId, uploadId, mdaScope);

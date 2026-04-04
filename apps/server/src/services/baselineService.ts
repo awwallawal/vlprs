@@ -1,4 +1,4 @@
-import { eq, and, sql } from 'drizzle-orm';
+import { eq, and, sql, isNull, inArray } from 'drizzle-orm';
 import Decimal from 'decimal.js';
 import { db } from '../db/index';
 import { loans, ledgerEntries, loanStateTransitions, migrationRecords, migrationUploads } from '../db/schema';
@@ -456,7 +456,7 @@ export async function createBatchBaseline(
   }
 
   const result = await db.transaction(async (tx) => {
-    // Load all records that haven't had baselines created yet
+    // Load all records that haven't had baselines created yet and aren't flagged for review
     const records = await tx
       .select()
       .from(migrationRecords)
@@ -464,6 +464,7 @@ export async function createBatchBaseline(
         and(
           eq(migrationRecords.uploadId, uploadId),
           eq(migrationRecords.isBaselineCreated, false),
+          isNull(migrationRecords.flaggedForReviewAt),
         ),
       )
       .for('update');
@@ -476,14 +477,53 @@ export async function createBatchBaseline(
         byCategory: {} as Record<string, number>,
         skippedRecords: [],
         processingTimeMs: Date.now() - startTime,
+        autoBaselined: { count: 0, byCategory: {} },
+        flaggedForReview: { count: 0, byCategory: {} },
       };
     }
 
-    // Pre-validate: check each record's baseline eligibility (skip ineligible, don't block batch)
+    // Partition by variance category: auto-baseline clean/minor, flag significant+ for MDA review
+    const autoBaselineCategories = new Set(['clean', 'minor_variance']);
+    const autoBaselineRecords: typeof records = [];
+    const flagForReviewRecords: typeof records = [];
+
+    for (const record of records) {
+      const cat = record.varianceCategory || null;
+      if (cat && autoBaselineCategories.has(cat)) {
+        autoBaselineRecords.push(record);
+      } else {
+        // significant_variance, structural_error, anomalous, or null → flag for review
+        flagForReviewRecords.push(record);
+      }
+    }
+
+    // Flag significant+ records for MDA review
+    const flaggedByCategory: Record<string, number> = {};
+    if (flagForReviewRecords.length > 0) {
+      const now = new Date();
+      const deadline = new Date(now);
+      deadline.setDate(deadline.getDate() + 14);
+
+      const flagIds = flagForReviewRecords.map(r => r.id);
+      await tx
+        .update(migrationRecords)
+        .set({
+          flaggedForReviewAt: now,
+          reviewWindowDeadline: deadline,
+        })
+        .where(inArray(migrationRecords.id, flagIds));
+
+      for (const record of flagForReviewRecords) {
+        const cat = record.varianceCategory || 'anomalous';
+        flaggedByCategory[cat] = (flaggedByCategory[cat] || 0) + 1;
+      }
+    }
+
+    // Pre-validate auto-baseline records: check each record's baseline eligibility (skip ineligible, don't block batch)
     const eligibleRecords: typeof records = [];
     const skippedRecords: Array<{ recordId: string; staffName: string; reason: string }> = [];
 
-    for (const record of records) {
+    for (const record of autoBaselineRecords) {
       const eligibility = validateBaselineEligibility(record);
       if (eligibility.eligible) {
         eligibleRecords.push(record);
@@ -504,6 +544,8 @@ export async function createBatchBaseline(
         byCategory: {} as Record<string, number>,
         skippedRecords,
         processingTimeMs: Date.now() - startTime,
+        autoBaselined: { count: 0, byCategory: {} },
+        flaggedForReview: { count: flagForReviewRecords.length, byCategory: flaggedByCategory },
       };
     }
 
@@ -570,7 +612,8 @@ export async function createBatchBaseline(
         ),
       );
 
-    // Only advance to reconciled if NO unprocessed records remain (skipped records are still un-baselined)
+    // Only advance to reconciled if NO unprocessed records remain
+    // (skipped + flagged-for-review records are still un-baselined)
     if (parseInt(remainingCount.count, 10) === 0) {
       await tx
         .update(migrationUploads)
@@ -585,6 +628,8 @@ export async function createBatchBaseline(
       byCategory,
       skippedRecords,
       processingTimeMs: Date.now() - startTime,
+      autoBaselined: { count: eligibleRecords.length, byCategory },
+      flaggedForReview: { count: flagForReviewRecords.length, byCategory: flaggedByCategory },
     };
   });
 

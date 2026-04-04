@@ -260,6 +260,13 @@
       "when": 1775261747127,
       "tag": "0036_jittery_kree",
       "breakpoints": true
+    },
+    {
+      "idx": 37,
+      "version": "7",
+      "when": 1775293495105,
+      "tag": "0037_mysterious_anthem",
+      "breakpoints": true
     }
   ]
 }
