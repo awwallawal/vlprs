@@ -1,4 +1,4 @@
-import { useQuery, useMutation } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient, authenticatedFetch, isApiError } from '@/lib/apiClient';
 
 interface CertificateMetadata {
@@ -11,6 +11,15 @@ interface CertificateMetadata {
   loanReference: string;
   completionDate: string;
   generatedAt: string;
+  notifiedMdaAt: string | null;
+  notifiedBeneficiaryAt: string | null;
+  notificationNotes: string | null;
+}
+
+interface ResendResult {
+  mdaOfficersNotified: number;
+  beneficiaryNotified: boolean;
+  notes: string[];
 }
 
 /**
@@ -59,6 +68,22 @@ export function useDownloadCertificatePdf(loanId: string) {
       a.click();
       document.body.removeChild(a);
       window.URL.revokeObjectURL(url);
+    },
+  });
+}
+
+/**
+ * Resend Auto-Stop Certificate notifications (SUPER_ADMIN only).
+ * Invalidates certificate query on success to refresh notification timestamps.
+ */
+export function useResendNotifications(loanId: string) {
+  const queryClient = useQueryClient();
+  return useMutation<ResendResult, Error>({
+    mutationFn: async () => {
+      return apiClient<ResendResult>(`/certificates/${loanId}/resend`, { method: 'POST' });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['certificates', loanId] });
     },
   });
 }

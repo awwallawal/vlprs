@@ -5,12 +5,13 @@ import { requirePasswordChange } from '../middleware/requirePasswordChange';
 import { authorise } from '../middleware/authorise';
 import { scopeToMda } from '../middleware/scopeToMda';
 import { auditLog } from '../middleware/auditLog';
-import { readLimiter, verificationLimiter } from '../middleware/rateLimiter';
+import { readLimiter, writeLimiter, verificationLimiter } from '../middleware/rateLimiter';
 import { ROLES } from '@vlprs/shared';
 import { detectAndTriggerAutoStop } from '../services/autoStopService';
 import { db } from '../db';
 import { autoStopCertificates, loans } from '../db/schema';
 import { buildCertificatePdfData } from '../services/autoStopCertificateService';
+import { sendAutoStopNotifications } from '../services/autoStopNotificationService';
 import { param } from '../lib/params';
 
 const router = Router();
@@ -99,6 +100,9 @@ router.get(
         loanReference: cert.loanReference,
         completionDate: cert.completionDate,
         generatedAt: cert.generatedAt,
+        notifiedMdaAt: cert.notifiedMdaAt,
+        notifiedBeneficiaryAt: cert.notifiedBeneficiaryAt,
+        notificationNotes: cert.notificationNotes,
       },
     });
   },
@@ -143,6 +147,44 @@ router.get(
       'Content-Length': String(pdfBuffer.length),
     });
     res.send(pdfBuffer);
+  },
+);
+
+// POST /api/certificates/:loanId/resend — Resend notifications (SUPER_ADMIN only)
+router.post(
+  '/certificates/:loanId/resend',
+  authenticate,
+  requirePasswordChange,
+  authorise(ROLES.SUPER_ADMIN),
+  writeLimiter,
+  auditLog,
+  async (req: Request, res: Response) => {
+    const loanId = param(req.params.loanId);
+
+    const [cert] = await db
+      .select()
+      .from(autoStopCertificates)
+      .where(eq(autoStopCertificates.loanId, loanId))
+      .limit(1);
+
+    if (!cert) {
+      res.status(404).json({
+        success: false,
+        error: { code: 'NOT_FOUND', message: 'Certificate not found' },
+      });
+      return;
+    }
+
+    const result = await sendAutoStopNotifications(cert.id);
+
+    res.json({
+      success: true,
+      data: {
+        mdaOfficersNotified: result.mdaOfficersNotified,
+        beneficiaryNotified: result.beneficiaryNotified,
+        notes: result.notes,
+      },
+    });
   },
 );
 

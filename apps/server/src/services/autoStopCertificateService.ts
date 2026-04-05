@@ -13,6 +13,7 @@ import { eq, sql, desc } from 'drizzle-orm';
 import { generateUuidv7 } from '../lib/uuidv7';
 import { logger } from '../lib/logger';
 import { env } from '../config/env';
+import { sendAutoStopNotifications } from './autoStopNotificationService';
 
 // ─── Types ──────────────────────────────────────────────────────────
 
@@ -152,6 +153,11 @@ export async function generateCertificate(loanId: string) {
       logger.info(
         { loanId, certificateId, staffName: loan.staffName },
         'Auto-Stop Certificate generated',
+      );
+
+      // Fire-and-forget notification — don't await, don't block certificate generation
+      sendAutoStopNotifications(certificate.id).catch(err =>
+        logger.error({ err, certificateId: certificate.id }, 'Auto-stop notification failed'),
       );
 
       return certificate;

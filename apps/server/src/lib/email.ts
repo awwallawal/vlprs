@@ -457,6 +457,132 @@ export async function sendHistoricalVarianceAlert(params: HistoricalVarianceAler
   }
 }
 
+// ─── Auto-Stop MDA Notification (Story 8.3) ────────────────────────
+
+interface AutoStopMdaEmailParams {
+  to: string;
+  officerName: string;
+  staffName: string;
+  staffId: string;
+  mdaName: string;
+  loanReference: string;
+  completionDate: string;
+  certificateId: string;
+  pdfBuffer: Buffer;
+  pdfFilename: string;
+}
+
+/**
+ * Send Auto-Stop Certificate notification to MDA Reporting Officer.
+ * Fire-and-forget: logs errors, never throws.
+ */
+export async function sendAutoStopMdaNotification(params: AutoStopMdaEmailParams): Promise<void> {
+  const subject = `Action Required: Cease Deduction for Staff ID ${params.staffId}`;
+  const html = `<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; margin: 0; padding: 20px; background: #f5f5f5;">
+  <div style="max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 8px; padding: 40px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+    <h1 style="color: #1a1a1a; font-size: 24px; margin-bottom: 16px;">Cease Deduction Notice — VLPRS</h1>
+    <p style="color: #333; font-size: 16px; line-height: 1.5;">Dear ${escapeHtml(params.officerName)},</p>
+    <p style="color: #333; font-size: 16px; line-height: 1.5;">This is to inform you that the vehicle loan for <strong>${escapeHtml(params.staffName)}</strong> (Staff ID: ${escapeHtml(params.staffId)}) has been fully repaid as of ${escapeHtml(params.completionDate)}.</p>
+    <p style="color: #333; font-size: 16px; line-height: 1.5;"><strong>Please ensure that payroll deductions for this staff member are ceased immediately.</strong></p>
+    <p style="color: #333; font-size: 16px; line-height: 1.5;">The attached Auto-Stop Certificate (ID: ${escapeHtml(params.certificateId)}) serves as official notification.</p>
+    <p style="color: #333; font-size: 16px; line-height: 1.5;">You can verify this certificate at: <a href="${env.APP_URL}/verify/${encodeURIComponent(params.certificateId)}">${env.APP_URL}/verify/${escapeHtml(params.certificateId)}</a></p>
+    <p style="color: #999; font-size: 12px; margin-top: 32px;">This is an automated message from the Vehicle Loan Processing &amp; Receivables System.</p>
+  </div>
+</body>
+</html>`;
+
+  if (!env.RESEND_API_KEY) {
+    logger.info(
+      { to: params.to, staffId: params.staffId, certificateId: params.certificateId },
+      '[DEV EMAIL] Auto-stop MDA notification — Staff %s, Certificate %s',
+      params.staffId,
+      params.certificateId,
+    );
+    return;
+  }
+
+  try {
+    const resend = await getResendClient();
+    await resend!.emails.send({
+      from: env.EMAIL_FROM,
+      to: params.to,
+      subject,
+      html,
+      attachments: [{ filename: params.pdfFilename, content: params.pdfBuffer }],
+    });
+    logger.info({ to: params.to, certificateId: params.certificateId }, 'Auto-stop MDA notification sent');
+  } catch (err) {
+    logger.error({ err, to: params.to, certificateId: params.certificateId }, 'Failed to send auto-stop MDA notification');
+  }
+}
+
+// ─── Auto-Stop Beneficiary Notification (Story 8.3) ────────────────
+
+interface AutoStopBeneficiaryEmailParams {
+  to: string;
+  beneficiaryName: string;
+  loanReference: string;
+  totalPaid: string;
+  completionDate: string;
+  certificateId: string;
+  pdfBuffer: Buffer;
+  pdfFilename: string;
+}
+
+/**
+ * Send congratulatory Auto-Stop Certificate to beneficiary.
+ * Fire-and-forget: logs errors, never throws.
+ */
+export async function sendAutoStopBeneficiaryNotification(params: AutoStopBeneficiaryEmailParams): Promise<void> {
+  const subject = 'Congratulations! Your Vehicle Loan is Fully Repaid';
+  const html = `<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; margin: 0; padding: 20px; background: #f5f5f5;">
+  <div style="max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 8px; padding: 40px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+    <h1 style="color: #2e7d32; font-size: 24px; margin-bottom: 16px;">Congratulations!</h1>
+    <p style="color: #333; font-size: 16px; line-height: 1.5;">Dear ${escapeHtml(params.beneficiaryName)},</p>
+    <p style="color: #333; font-size: 16px; line-height: 1.5;">Congratulations! Your vehicle loan (Reference: ${escapeHtml(params.loanReference)}) has been fully repaid.</p>
+    <div style="background: #f0f4f8; border-radius: 6px; padding: 20px; margin: 24px 0;">
+      <p style="margin: 0 0 8px 0;"><strong>Total amount paid:</strong> \u20A6${escapeHtml(params.totalPaid)}</p>
+      <p style="margin: 0;"><strong>Completion date:</strong> ${escapeHtml(params.completionDate)}</p>
+    </div>
+    <p style="color: #333; font-size: 16px; line-height: 1.5;">As of ${escapeHtml(params.completionDate)}, no further payroll deductions should be made for this loan.</p>
+    <p style="color: #333; font-size: 16px; line-height: 1.5;">Your Auto-Stop Certificate (ID: ${escapeHtml(params.certificateId)}) is attached to this email. You can also verify it at: <a href="${env.APP_URL}/verify/${encodeURIComponent(params.certificateId)}">${env.APP_URL}/verify/${escapeHtml(params.certificateId)}</a></p>
+    <p style="color: #333; font-size: 16px; line-height: 1.5;">If deductions continue after this date, please present this certificate to your MDA payroll office.</p>
+    <p style="color: #999; font-size: 12px; margin-top: 32px;">This is an automated message from the Vehicle Loan Processing &amp; Receivables System.</p>
+  </div>
+</body>
+</html>`;
+
+  if (!env.RESEND_API_KEY) {
+    logger.info(
+      { to: params.to, loanReference: params.loanReference, certificateId: params.certificateId },
+      '[DEV EMAIL] Auto-stop beneficiary notification — Loan %s, Certificate %s',
+      params.loanReference,
+      params.certificateId,
+    );
+    return;
+  }
+
+  try {
+    const resend = await getResendClient();
+    await resend!.emails.send({
+      from: env.EMAIL_FROM,
+      to: params.to,
+      subject,
+      html,
+      attachments: [{ filename: params.pdfFilename, content: params.pdfBuffer }],
+    });
+    logger.info({ to: params.to, certificateId: params.certificateId }, 'Auto-stop beneficiary notification sent');
+  } catch (err) {
+    logger.error({ err, to: params.to, certificateId: params.certificateId }, 'Failed to send auto-stop beneficiary notification');
+  }
+}
+
 // ─── HTML Escape Helper ────────────────────────────────────────────
 
 function escapeHtml(str: string): string {

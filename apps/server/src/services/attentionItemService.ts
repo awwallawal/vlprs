@@ -1,6 +1,6 @@
 import Decimal from 'decimal.js';
 import { db } from '../db';
-import { loans, ledgerEntries, mdas, mdaSubmissions, loanCompletions, observations } from '../db/schema';
+import { loans, ledgerEntries, mdas, mdaSubmissions, loanCompletions, observations, autoStopCertificates } from '../db/schema';
 import { eq, and, sql, inArray } from 'drizzle-orm';
 import { withMdaScope } from '../lib/mdaScope';
 import { generateUuidv7 } from '../lib/uuidv7';
@@ -459,7 +459,7 @@ async function detectOverdueSubmissions(mdaScope?: string | null): Promise<Atten
 }
 
 async function detectPendingAutoStop(mdaScope?: string | null): Promise<AttentionItem[]> {
-  // Query completed loans that don't have certificates yet (all completions until Story 8.2)
+  // Query completed loans — join with certificates to show notification status
   const scopeCondition = withMdaScope(loans.mdaId, mdaScope);
   const conditions = [eq(loans.status, 'COMPLETED')];
   if (scopeCondition) conditions.push(scopeCondition);
@@ -469,25 +469,63 @@ async function detectPendingAutoStop(mdaScope?: string | null): Promise<Attentio
       mda_id: mdas.id,
       mda_name: mdas.name,
       affected_count: sql<number>`COUNT(*)::int`,
+      notified_count: sql<number>`COUNT(${autoStopCertificates.notifiedMdaAt})::int`,
+      certified_count: sql<number>`COUNT(${autoStopCertificates.id})::int`,
+      staff_name: sql<string | null>`CASE WHEN COUNT(*)::int = 1 THEN MIN(${loans.staffName}) ELSE NULL END`,
     })
     .from(loans)
     .innerJoin(loanCompletions, eq(loanCompletions.loanId, loans.id))
     .innerJoin(mdas, eq(mdas.id, loans.mdaId))
+    .leftJoin(autoStopCertificates, eq(autoStopCertificates.loanId, loans.id))
     .where(and(...conditions))
     .groupBy(mdas.id, mdas.name)
     .orderBy(sql`COUNT(*) DESC`);
 
   if (rows.length === 0) return [];
 
-  return buildPerMdaItems(
-    rows,
-    'pending_auto_stop',
-    'complete',
-    5,
-    (row) => `Auto-Stop: ${row.affected_count} loan${row.affected_count === 1 ? '' : 's'} completed — certificate${row.affected_count === 1 ? '' : 's'} pending`,
-    (row) => `/dashboard/loans?status=COMPLETED&mdaId=${row.mda_id}`,
-    '/dashboard/loans?status=COMPLETED',
-  );
+  const items: AttentionItem[] = [];
+  const maxItems = 3;
+  const now = new Date().toISOString();
+
+  for (let i = 0; i < Math.min(rows.length, maxItems); i++) {
+    const row = rows[i];
+    const isLast = i === maxItems - 1;
+    const remaining = rows.length - maxItems;
+
+    // Determine description based on notification status
+    // AC 6: use staff name when a single loan, count when multiple
+    const nameOrCount = row.staff_name ?? `${row.affected_count} loan${row.affected_count === 1 ? '' : 's'}`;
+    let description: string;
+    if (row.notified_count === row.affected_count && row.notified_count > 0) {
+      // All certificates issued and MDA notified
+      description = `Auto-Stop Certificate issued — ${nameOrCount}, ${row.mda_name}. MDA notified.`;
+    } else if (row.certified_count > 0 && row.notified_count < row.certified_count) {
+      description = `Auto-Stop Certificate issued — ${nameOrCount}, ${row.mda_name}. Notification pending.`;
+    } else {
+      description = `Auto-Stop: ${nameOrCount} completed — certificate${row.affected_count === 1 ? '' : 's'} pending`;
+    }
+
+    if (isLast && remaining > 0) {
+      description = `${description}, and ${remaining} more MDA${remaining === 1 ? '' : 's'}`;
+    }
+
+    items.push({
+      id: generateUuidv7(),
+      type: 'pending_auto_stop',
+      description,
+      mdaName: row.mda_name,
+      category: 'complete',
+      priority: 5,
+      count: row.affected_count,
+      drillDownUrl: isLast && remaining > 0
+        ? '/dashboard/loans?status=COMPLETED'
+        : `/dashboard/loans?status=COMPLETED&mdaId=${row.mda_id}`,
+      timestamp: now,
+      ...(isLast && remaining > 0 ? { hasMore: remaining } : {}),
+    });
+  }
+
+  return items;
 }
 
 async function detectPostCompletionDeductionItems(mdaScope?: string | null): Promise<AttentionItem[]> {

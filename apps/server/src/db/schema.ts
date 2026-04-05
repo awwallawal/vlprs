@@ -127,6 +127,7 @@ export const loans = pgTable(
     dateOfFirstAppointment: date('date_of_first_appointment', { mode: 'date' }),
     computedRetirementDate: date('computed_retirement_date', { mode: 'date' }),
     limitedComputation: boolean('limited_computation').notNull().default(false),
+    beneficiaryEmail: varchar('beneficiary_email', { length: 255 }),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
   },
@@ -843,6 +844,9 @@ export const autoStopCertificates = pgTable(
     totalInterestPaid: numeric('total_interest_paid', { precision: 15, scale: 2 }).notNull(),
     completionDate: timestamp('completion_date', { withTimezone: true }).notNull(),
     generatedAt: timestamp('generated_at', { withTimezone: true }).notNull().defaultNow(),
+    notifiedMdaAt: timestamp('notified_mda_at', { withTimezone: true }),
+    notifiedBeneficiaryAt: timestamp('notified_beneficiary_at', { withTimezone: true }),
+    notificationNotes: text('notification_notes'),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   },
   (table) => [

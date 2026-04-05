@@ -295,6 +295,13 @@
       "when": 1775391053043,
       "tag": "0041_cooing_bullseye",
       "breakpoints": true
+    },
+    {
+      "idx": 42,
+      "version": "7",
+      "when": 1775401919747,
+      "tag": "0042_nappy_starhawk",
+      "breakpoints": true
     }
   ]
 }
