@@ -823,6 +823,36 @@ export const loanCompletions = pgTable(
   ],
 );
 
+// ─── Auto-Stop Certificates (Story 8.2) ────────────────────────────
+// Official certificate proving a loan is fully repaid.
+// One row per loan — generated automatically when a loan reaches COMPLETED status.
+export const autoStopCertificates = pgTable(
+  'auto_stop_certificates',
+  {
+    id: uuid('id').primaryKey().$defaultFn(generateUuidv7),
+    loanId: uuid('loan_id').notNull().references(() => loans.id),
+    certificateId: varchar('certificate_id', { length: 50 }).notNull(),
+    verificationToken: varchar('verification_token', { length: 64 }).notNull(),
+    beneficiaryName: varchar('beneficiary_name', { length: 255 }).notNull(),
+    staffId: varchar('staff_id', { length: 50 }).notNull(),
+    mdaId: uuid('mda_id').notNull().references(() => mdas.id),
+    mdaName: varchar('mda_name', { length: 255 }).notNull(),
+    loanReference: varchar('loan_reference', { length: 50 }).notNull(),
+    originalPrincipal: numeric('original_principal', { precision: 15, scale: 2 }).notNull(),
+    totalPaid: numeric('total_paid', { precision: 15, scale: 2 }).notNull(),
+    totalInterestPaid: numeric('total_interest_paid', { precision: 15, scale: 2 }).notNull(),
+    completionDate: timestamp('completion_date', { withTimezone: true }).notNull(),
+    generatedAt: timestamp('generated_at', { withTimezone: true }).notNull().defaultNow(),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    uniqueIndex('idx_auto_stop_certificates_loan_id').on(table.loanId),
+    uniqueIndex('idx_auto_stop_certificates_certificate_id').on(table.certificateId),
+    uniqueIndex('idx_auto_stop_certificates_verification_token').on(table.verificationToken),
+    index('idx_auto_stop_certificates_generated_at').on(table.generatedAt),
+  ],
+);
+
 // ─── Audit Log (Story 1.5) ─────────────────────────────────────────
 // Append-only, immutable audit trail. No updated_at, no deleted_at.
 // Immutability enforced by DB trigger (fn_prevent_modification).

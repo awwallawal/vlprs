@@ -1,7 +1,7 @@
 import { useAuthStore } from '@/stores/authStore';
 import { resetActivityTimer } from '@/hooks/useSessionTimeout';
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+export const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
 
 const CSRF_COOKIE_NAME = '__csrf';
 const CSRF_HEADER_NAME = 'x-csrf-token';
@@ -196,4 +196,12 @@ export async function apiClient<T>(
   const res = await authenticatedFetch(endpoint, options);
   const body = await parseJsonResponse(res);
   return body.data as T;
+}
+
+/**
+ * Type guard for API errors thrown by parseJsonResponse / apiClient.
+ * Error shape: Error & { code: string; status: number; details?: unknown }
+ */
+export function isApiError(err: unknown): err is Error & { code: string; status: number } {
+  return err instanceof Error && 'status' in err && typeof (err as { status: unknown }).status === 'number';
 }

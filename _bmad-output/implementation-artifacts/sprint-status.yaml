@@ -255,7 +255,7 @@ development_status:
   8-0i-correction-aware-flag-reading: done  # getEffectiveEventFlag() helper, applied to reconciliation engine, comparison engine, inactive loan detector, pre-submission service. Code review: 3 findings (0H 2M 1L) all fixed
   8-0j-selective-baseline-mda-review-handoff: done  # Three-stage pipeline: selective batch baseline (Clean+Minor auto, Significant+ flagged) → MDA officer review with mandatory reasons (online drawer or bulk download/upload) → DEPT_ADMIN verify + baseline. 14-day per-MDA review window with 3-day countdown. Depends on 8.0b. Parallel with 8.0h+8.0i. PM triage 2026-04-02. CODE REVIEW: all 11 findings fixed, 11 integration tests added
   8-1-zero-balance-detection-auto-stop-trigger: done
-  8-2-auto-stop-certificate-generation: ready-for-dev
+  8-2-auto-stop-certificate-generation: done
   8-3-auto-stop-dual-notification: ready-for-dev
   epic-8-retrospective: optional
 

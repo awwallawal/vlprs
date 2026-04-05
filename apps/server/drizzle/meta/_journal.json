@@ -281,6 +281,20 @@
       "when": 1775321260681,
       "tag": "0039_foamy_iron_patriot",
       "breakpoints": true
+    },
+    {
+      "idx": 40,
+      "version": "7",
+      "when": 1775337908580,
+      "tag": "0040_third_tarantula",
+      "breakpoints": true
+    },
+    {
+      "idx": 41,
+      "version": "7",
+      "when": 1775391053043,
+      "tag": "0041_cooing_bullseye",
+      "breakpoints": true
     }
   ]
 }

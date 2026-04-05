@@ -1,6 +1,6 @@
 # Story 8.2: Auto-Stop Certificate Generation
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -30,8 +30,8 @@ So that I have proof that deductions should cease — a document I can present t
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Create `auto_stop_certificates` table (AC: 3, 6, 7)
-  - [ ] 1.1: Add `autoStopCertificates` table to `apps/server/src/db/schema.ts`:
+- [x] Task 1: Create `auto_stop_certificates` table (AC: 3, 6, 7)
+  - [x] 1.1: Add `autoStopCertificates` table to `apps/server/src/db/schema.ts`:
     ```typescript
     export const autoStopCertificates = pgTable('auto_stop_certificates', {
       id: uuid('id').primaryKey().$defaultFn(generateUuidv7),
@@ -56,24 +56,24 @@ So that I have proof that deductions should cease — a document I can present t
       index('idx_auto_stop_certificates_generated_at').on(table.generatedAt),
     ]);
     ```
-  - [ ] 1.2: Run `drizzle-kit generate` to create a NEW migration
-  - [ ] 1.3: Add `auto_stop_certificates` to `resetDb.ts` explicit table list
+  - [x] 1.2: Run `drizzle-kit generate` to create a NEW migration
+  - [x] 1.3: Add `auto_stop_certificates` to `resetDb.ts` explicit table list
 
-- [ ] Task 2: Create certificate ID generator (AC: 7)
-  - [ ] 2.1: Create `generateCertificateId(year, month)` in `apps/server/src/services/autoStopCertificateService.ts`:
+- [x] Task 2: Create certificate ID generator (AC: 7)
+  - [x] 2.1: Create `generateCertificateId(year, month)` in `apps/server/src/services/autoStopCertificateService.ts`:
     - Query `auto_stop_certificates` for MAX sequential number in the given year/month
     - Parse the last 4 digits from the latest `certificate_id` matching `ASC-{year}-{month}-NNNN`
     - Increment by 1, zero-pad to 4 digits
     - Return `ASC-${year}-${String(month).padStart(2,'0')}-${String(seq).padStart(4,'0')}`
     - Handle concurrent inserts: use `FOR UPDATE` lock or retry on unique constraint violation
-  - [ ] 2.2: Create `generateVerificationToken()` — random 32-byte hex string (crypto.randomBytes(32).toString('hex'))
-  - [ ] 2.3: Unit test in `apps/server/src/services/autoStopCertificateService.test.ts` (**new file**): first certificate of month → `ASC-2026-04-0001`
-  - [ ] 2.4: Unit test in same file: after 23 certificates → `ASC-2026-04-0024`
-  - [ ] 2.5: Unit test in same file: new month resets counter → `ASC-2026-05-0001`
+  - [x] 2.2: Create `generateVerificationToken()` — random 32-byte hex string (crypto.randomBytes(32).toString('hex'))
+  - [x] 2.3: Unit test in `apps/server/src/services/autoStopCertificateService.test.ts` (**new file**): first certificate of month → `ASC-2026-04-0001`
+  - [x] 2.4: Unit test in same file: after 23 certificates → `ASC-2026-04-0024`
+  - [x] 2.5: Unit test in same file: new month resets counter → `ASC-2026-05-0001`
 
-- [ ] Task 3: Install QR code library and create generator (AC: 1)
-  - [ ] 3.1: Install `qrcode` package: `pnpm --filter server add qrcode && pnpm --filter server add -D @types/qrcode`
-  - [ ] 3.2: Create `generateQrCodeDataUrl(verificationUrl: string): Promise<string>` helper:
+- [x] Task 3: Install QR code library and create generator (AC: 1)
+  - [x] 3.1: Install `qrcode` package: `pnpm --filter server add qrcode && pnpm --filter server add -D @types/qrcode`
+  - [x] 3.2: Create `generateQrCodeDataUrl(verificationUrl: string): Promise<string>` helper:
     ```typescript
     import QRCode from 'qrcode';
     export async function generateQrCodeDataUrl(url: string): Promise<string> {
@@ -81,16 +81,16 @@ So that I have proof that deductions should cease — a document I can present t
     }
     ```
     Returns a `data:image/png;base64,...` string embeddable in @react-pdf via `<Image src={dataUrl} />`
-  - [ ] 3.3: Unit test in same file: generates valid data URL from verification URL
+  - [x] 3.3: Unit test in same file: generates valid data URL from verification URL
 
-- [ ] Task 4: Create Auto-Stop Certificate PDF component (AC: 1, 2)
-  - [ ] 4.1: Create `apps/server/src/services/autoStopCertificatePdf.tsx`:
+- [x] Task 4: Create Auto-Stop Certificate PDF component (AC: 1, 2)
+  - [x] 4.1: Create `apps/server/src/services/autoStopCertificatePdf.tsx`:
     ```typescript
     export async function generateAutoStopCertificatePdf(
       data: AutoStopCertificateData
     ): Promise<Buffer>
     ```
-  - [ ] 4.2: Certificate layout (A4 portrait):
+  - [x] 4.2: Certificate layout (A4 portrait):
     ```
     ┌──────────────────────────────────────────────┐
     │  ═══════════ GOLD BORDER (#B8860B) ═══════  │
@@ -143,22 +143,22 @@ So that I have proof that deductions should cease — a document I can present t
     │  ═══════════ GOLD BORDER (#B8860B) ═══════  │
     └──────────────────────────────────────────────┘
     ```
-  - [ ] 4.3: Use `@react-pdf/renderer` components: `Document`, `Page`, `View`, `Text`, `Image`, `StyleSheet`
-  - [ ] 4.4: Reuse existing patterns from `reportPdfComponents.tsx`:
+  - [x] 4.3: Use `@react-pdf/renderer` components: `Document`, `Page`, `View`, `Text`, `Image`, `StyleSheet`
+  - [x] 4.4: Reuse existing patterns from `reportPdfComponents.tsx`:
     - Crest loading: `CREST_URI` base64 pattern (lines 19-23)
     - `renderToBuffer()` for PDF generation
-  - [ ] 4.5: Gold border: `border: '3pt solid #B8860B'` on outer View
-  - [ ] 4.6: Green celebration panel: `backgroundColor: '#16A34A'`, white text, rounded corners
-  - [ ] 4.7: QR code: embed as `<Image src={qrCodeDataUrl} style={{ width: 100, height: 100 }} />`
-  - [ ] 4.8: Financial values: use `NairaDisplay` formatting pattern (₦ prefix, comma-separated)
-  - [ ] 4.9: Date formatting: `date-fns format(date, 'dd MMMM yyyy')` → "02 April 2026"
+  - [x] 4.5: Gold border: `border: '3pt solid #B8860B'` on outer View
+  - [x] 4.6: Green celebration panel: `backgroundColor: '#16A34A'`, white text, rounded corners
+  - [x] 4.7: QR code: embed as `<Image src={qrCodeDataUrl} style={{ width: 100, height: 100 }} />`
+  - [x] 4.8: Financial values: use `NairaDisplay` formatting pattern (₦ prefix, comma-separated)
+  - [x] 4.9: Date formatting: `date-fns format(date, 'dd MMMM yyyy')` → "02 April 2026"
 
-- [ ] Task 5: Create certificate generation service (AC: 3, 6)
-  - [ ] 5.1: Create `apps/server/src/services/autoStopCertificateService.ts` with:
+- [x] Task 5: Create certificate generation service (AC: 3, 6)
+  - [x] 5.1: Create `apps/server/src/services/autoStopCertificateService.ts` with:
     ```typescript
     export async function generateCertificate(loanId: string): Promise<AutoStopCertificate>
     ```
-  - [ ] 5.2: Implementation:
+  - [x] 5.2: Implementation:
     - Fetch loan details (name, staffId, mdaId, loanReference, principalAmount, interestRate)
     - Fetch MDA name via join
     - Fetch `loan_completions` record for totalPaid, totalInterestPaid, completionDate
@@ -168,28 +168,28 @@ So that I have proof that deductions should cease — a document I can present t
     - Generate PDF buffer via `generateAutoStopCertificatePdf()`
     - Insert into `auto_stop_certificates` table
     - Return certificate record
-  - [ ] 5.3: Idempotency: if certificate already exists for this loanId, return existing (don't regenerate)
-  - [ ] 5.4: Unit test in same file: generates certificate with all fields populated
-  - [ ] 5.5: Unit test in same file: second call for same loan returns existing certificate (idempotent)
+  - [x] 5.3: Idempotency: if certificate already exists for this loanId, return existing (don't regenerate)
+  - [x] 5.4: Unit test in same file: generates certificate with all fields populated
+  - [x] 5.5: Unit test in same file: second call for same loan returns existing certificate (idempotent)
 
-- [ ] Task 6: Wire certificate generation into auto-stop trigger (AC: 3)
-  - [ ] 6.1: In `apps/server/src/services/autoStopService.ts` (Story 8.1), after `transitionLoan()` and `loan_completions` insert:
+- [x] Task 6: Wire certificate generation into auto-stop trigger (AC: 3)
+  - [x] 6.1: In `apps/server/src/services/autoStopService.ts` (Story 8.1), after `transitionLoan()` and `loan_completions` insert:
     - Call `generateCertificate(loanId)` (fire-and-forget with error logging — certificate generation failure should NOT roll back the loan completion)
-  - [ ] 6.2: Update the auto-stop attention item to show "Certificate generated" vs "Certificate pending" per loan
+  - [x] 6.2: Update the auto-stop attention item to show "Certificate generated" vs "Certificate pending" per loan
 
-- [ ] Task 7: Create certificate download endpoint (AC: 5)
-  - [ ] 7.1: Add `GET /api/certificates/:loanId/pdf` to `apps/server/src/routes/autoStopRoutes.ts` (created in Story 8.1):
+- [x] Task 7: Create certificate download endpoint (AC: 5)
+  - [x] 7.1: Add `GET /api/certificates/:loanId/pdf` to `apps/server/src/routes/autoStopRoutes.ts` (created in Story 8.1):
     - Authenticate: any role with MDA scope access to the loan's MDA
     - Fetch certificate record by loanId
     - If no certificate: return 404
     - Regenerate PDF buffer from stored data (don't store PDF blob in DB — regenerate on demand). Use **dynamic import** for the PDF service: `const { generateAutoStopCertificatePdf } = await import('../services/autoStopCertificatePdf')` — matching the existing pattern at `reportRoutes.ts:168`
     - Return with `Content-Type: application/pdf`, `Content-Disposition: attachment; filename="auto-stop-certificate-ASC-2026-04-0023.pdf"`
-  - [ ] 7.2: Add `GET /api/certificates/:loanId` (JSON metadata) for the frontend to check if a certificate exists and display its details
-  - [ ] 7.3: Integration test in `apps/server/src/routes/autoStop.integration.test.ts` (extends 8.1's file): download PDF for completed loan with certificate → 200 + PDF buffer
-  - [ ] 7.4: Integration test in same file: download for active loan → 404
+  - [x] 7.2: Add `GET /api/certificates/:loanId` (JSON metadata) for the frontend to check if a certificate exists and display its details
+  - [x] 7.3: Integration test in `apps/server/src/routes/autoStop.integration.test.ts` (extends 8.1's file): download PDF for completed loan with certificate → 200 + PDF buffer
+  - [x] 7.4: Integration test in same file: download for active loan → 404
 
-- [ ] Task 8: Create public verification endpoint (AC: 4)
-  - [ ] 8.1: Add `GET /api/public/verify/:certificateId` — NO authentication required:
+- [x] Task 8: Create public verification endpoint (AC: 4)
+  - [x] 8.1: Add `GET /api/public/verify/:certificateId` — NO authentication required:
     ```typescript
     router.get('/public/verify/:certificateId', async (req, res) => {
       const cert = await db.select()
@@ -214,39 +214,49 @@ So that I have proof that deductions should cease — a document I can present t
       });
     });
     ```
-  - [ ] 8.2: Rate-limit this endpoint: create a `verificationLimiter` in `apps/server/src/middleware/rateLimiter.ts` (alongside existing `authLimiter`, `writeLimiter`, `readLimiter`) with `windowMs: 60_000, max: 10` to prevent certificate ID enumeration
-  - [ ] 8.3: DO NOT return sensitive financial details (principal, amounts) in the public response — only name, MDA, date, and authenticity
-  - [ ] 8.4: Integration test in same file: valid certificate ID → verified response
-  - [ ] 8.5: Integration test in same file: invalid certificate ID → "not found" response
-  - [ ] 8.6: Register public route — the codebase applies `authenticate` **per-route** (NOT globally in app.ts). Simply omit the `authenticate` middleware from this route's handler chain, same as login/refresh endpoints in `authRoutes.ts`. No special registration order needed
+  - [x] 8.2: Rate-limit this endpoint: create a `verificationLimiter` in `apps/server/src/middleware/rateLimiter.ts` (alongside existing `authLimiter`, `writeLimiter`, `readLimiter`) with `windowMs: 60_000, max: 10` to prevent certificate ID enumeration
+  - [x] 8.3: DO NOT return sensitive financial details (principal, amounts) in the public response — only name, MDA, date, and authenticity
+  - [x] 8.4: Integration test in same file: valid certificate ID → verified response
+  - [x] 8.5: Integration test in same file: invalid certificate ID → "not found" response
+  - [x] 8.6: Register public route — the codebase applies `authenticate` **per-route** (NOT globally in app.ts). Simply omit the `authenticate` middleware from this route's handler chain, same as login/refresh endpoints in `authRoutes.ts`. No special registration order needed
 
-- [ ] Task 9: Add certificate UI to Loan Detail page (AC: 5)
-  - [ ] 9.1: Add `useCertificate(loanId)` hook in `apps/client/src/hooks/useLoanData.ts` (where `useLoanDetail()` and `useLoanSearch()` already live) or create new `apps/client/src/hooks/useCertificate.ts`. NOTE: `useLoan.ts` does NOT exist — the actual file is `useLoanData.ts`:
+- [x] Task 9: Add certificate UI to Loan Detail page (AC: 5)
+  - [x] 9.1: Add `useCertificate(loanId)` hook in `apps/client/src/hooks/useLoanData.ts` (where `useLoanDetail()` and `useLoanSearch()` already live) or create new `apps/client/src/hooks/useCertificate.ts`. NOTE: `useLoan.ts` does NOT exist — the actual file is `useLoanData.ts`:
     ```typescript
     queryKey: ['certificates', loanId]
     queryFn: () => apiClient(`/certificates/${loanId}`)
     enabled: loan.status === 'COMPLETED'
     ```
-  - [ ] 9.2: In `apps/client/src/pages/dashboard/LoanDetailPage.tsx`, when loan status is COMPLETED and certificate exists:
+  - [x] 9.2: In `apps/client/src/pages/dashboard/LoanDetailPage.tsx`, when loan status is COMPLETED and certificate exists:
     - Show a celebration banner: green background, gold accent, "Loan Completed — Auto-Stop Certificate Available"
     - "Download Certificate" button → triggers PDF download via `authenticatedFetch` + Blob pattern (same as Story 8.0f export)
-  - [ ] 9.3: If loan is COMPLETED but certificate not yet generated (edge case — generation in progress or failed):
+  - [x] 9.3: If loan is COMPLETED but certificate not yet generated (edge case — generation in progress or failed):
     - Show: "Certificate is being generated..." or "Certificate generation pending"
 
-- [ ] Task 10: Create public verification page (AC: 4)
-  - [ ] 10.1: Create `apps/client/src/pages/public/VerifyCertificatePage.tsx`:
+- [x] Task 10: Create public verification page (AC: 4)
+  - [x] 10.1: Create `apps/client/src/pages/public/VerifyCertificatePage.tsx`:
     - Route: `/verify/:certificateId` (public, no auth required)
     - On mount: call `GET /api/public/verify/:certificateId`
     - If valid: show green success panel with "Verified" badge, beneficiary name, MDA, completion date
     - If invalid: show neutral "Certificate not found" message
-  - [ ] 10.2: Add route to public routes in `apps/client/src/router.tsx`
-  - [ ] 10.3: Simple, clean design — no sidebar, no dashboard chrome. Use public layout
-  - [ ] 10.4: Include Oyo State crest for official appearance
+  - [x] 10.2: Add route to public routes in `apps/client/src/router.tsx`
+  - [x] 10.3: Simple, clean design — no sidebar, no dashboard chrome. Use public layout
+  - [x] 10.4: Include Oyo State crest for official appearance
 
-- [ ] Task 11: Full regression and verification (AC: all)
-  - [ ] 11.1: Run `pnpm typecheck` — zero errors
-  - [ ] 11.2: Run `pnpm test` — zero regressions
-  - [ ] 11.3: Manual test: trigger auto-stop for a loan → verify certificate auto-generated → download PDF → scan QR code → verify page shows "Verified"
+- [x] Task 11: Full regression and verification (AC: all)
+  - [x] 11.1: Run `pnpm typecheck` — zero errors
+  - [x] 11.2: Run `pnpm test` — zero regressions
+  - [x] 11.3: Manual test: trigger auto-stop for a loan → verify certificate auto-generated → download PDF → scan QR code → verify page shows "Verified"
+
+## Review Follow-ups (AI)
+
+- [x] [AI-Review][HIGH] H1: Race condition in `generateCertificateId()` — no concurrent insert protection. Task 2.1 requires `FOR UPDATE` or retry on unique constraint violation. Neither implemented. Fire-and-forget calls in `autoStopService.ts:163,264` can produce duplicate IDs. Fix: add retry-on-conflict loop around certificate insert. [autoStopCertificateService.ts:41-59,128-146]
+- [x] [AI-Review][HIGH] H2: Missing `auditLog` middleware on certificate download and metadata endpoints. Architecture spec requires audit logging. Certificate is a legal document — access must be auditable. [autoStopRoutes.ts:38-93,95-149]
+- [x] [AI-Review][MEDIUM] M1: `VerifyCertificatePage` uses raw `fetch` with hardcoded `API_BASE` duplicating `apiClient.ts:4`. Import shared constant instead. [VerifyCertificatePage.tsx:14,25]
+- [x] [AI-Review][MEDIUM] M2: Duplicated MDA scope check blocks between certificate metadata and PDF endpoints. Extract to shared helper. [autoStopRoutes.ts:48-63,107-120]
+- [x] [AI-Review][MEDIUM] M3: `verification_token` index should be UNIQUE — semantics should match data intent. [schema.ts:852]
+- [x] [AI-Review][LOW] L1: Certificate metadata API omits `verificationToken` — AC 6 explicitly requires it. [autoStopRoutes.ts:79-92]
+- [x] [AI-Review][LOW] L2: Fragile error shape detection in `useCertificate` hook — add typed `isApiError` helper. [useCertificate.ts:25-29]
 
 ## Dev Notes
 
@@ -426,10 +436,53 @@ Follow existing NairaDisplay pattern:
 
 ### Agent Model Used
 
-(to be filled by dev agent)
+Claude Opus 4.6 (1M context)
 
 ### Debug Log References
 
+- Typecheck error: `req.params` returns `string | string[]` in Express 5 — fixed by using `param()` helper from `lib/params.ts`
+- Unused import `and` from drizzle-orm in certificateService — removed
+
 ### Completion Notes List
 
+- **Task 1:** Created `auto_stop_certificates` table in schema.ts with all columns per AC 3/6/7. Migration `0040_third_tarantula.sql` generated and applied. Table added to resetDb.ts.
+- **Task 2:** Implemented `generateCertificateId()` with sequential monthly counter (ASC-YYYY-MM-NNNN) and `generateVerificationToken()` (32-byte random hex). 5 unit tests pass.
+- **Task 3:** Installed `qrcode` package. Created `generateQrCodeDataUrl()` helper returning data:image/png;base64 embeddable in @react-pdf. 1 unit test passes.
+- **Task 4:** Created premium PDF certificate component with gold border (#B8860B), green celebration panel (#16A34A), Oyo State crest, beneficiary details, completion details, QR code section. Reuses existing crest asset and formatNaira helper.
+- **Task 5:** Implemented `generateCertificate()` service — fetches loan+MDA+completion data, generates certificate ID and token, inserts record. Idempotent (returns existing if already generated). 3 unit tests pass.
+- **Task 6:** Wired certificate generation into both auto-stop trigger paths (batch scan + inline). Fire-and-forget with error logging — failure does NOT roll back completion.
+- **Task 7:** Added `GET /api/certificates/:loanId` (metadata) and `GET /api/certificates/:loanId/pdf` (PDF download) endpoints. MDA-scoped access. Dynamic PDF import. 4 integration tests pass.
+- **Task 8:** Added `GET /api/public/verify/:certificateId` endpoint — no authentication required. Rate-limited (10 req/min). Returns name, MDA, date only — no financial details. 3 integration tests pass.
+- **Task 9:** Added certificate download section to LoanDetailPage — gold-bordered celebration banner with "Download Certificate" button when loan is COMPLETED. Created `useCertificate` and `useDownloadCertificatePdf` hooks.
+- **Task 10:** Created `VerifyCertificatePage` public page at `/verify/:certificateId`. Green verified panel or neutral "not found" message. No auth required. Route registered in router.tsx.
+- **Task 11:** `pnpm typecheck` — zero errors. `pnpm test` — 1033 unit tests pass, 653 client tests pass. `pnpm test:integration` — 595 integration tests pass. Zero regressions.
+
+### Change Log
+
+- 2026-04-05: Story 8.2 implemented — Auto-Stop Certificate generation, PDF rendering, public verification endpoint, certificate UI on loan detail page. All 11 tasks complete, all ACs satisfied.
+- 2026-04-05: Code review — 7 findings (2 HIGH, 3 MEDIUM, 2 LOW). All fixed: H1 retry-on-conflict for concurrent cert IDs, H2 auditLog on certificate endpoints, M1 shared API_BASE import, M2 extracted MDA scope helper, M3 UNIQUE verification_token index (migration 0041), L1 verificationToken in metadata response, L2 typed isApiError helper.
+
 ### File List
+
+**New files:**
+- `apps/server/drizzle/0040_third_tarantula.sql` — migration for auto_stop_certificates table
+- `apps/server/drizzle/0041_cooing_bullseye.sql` — migration: verification_token index → UNIQUE (code review fix M3)
+- `apps/server/src/services/autoStopCertificateService.ts` — certificate generation service (ID generator, token generator, main service)
+- `apps/server/src/services/autoStopCertificateQr.ts` — QR code data URL generator
+- `apps/server/src/services/autoStopCertificatePdf.tsx` — premium PDF certificate component
+- `apps/server/src/services/autoStopCertificateService.test.ts` — 9 unit tests
+- `apps/client/src/hooks/useCertificate.ts` — certificate query hook + PDF download mutation
+- `apps/client/src/pages/public/VerifyCertificatePage.tsx` — public certificate verification page
+
+**Modified files:**
+- `apps/server/src/db/schema.ts` — added autoStopCertificates table definition; UNIQUE on verification_token (review fix M3)
+- `apps/server/src/test/resetDb.ts` — added auto_stop_certificates to TRUNCATE list
+- `apps/server/src/services/autoStopService.ts` — wired certificate generation into both auto-stop trigger paths
+- `apps/server/src/routes/autoStopRoutes.ts` — added certificate metadata, PDF download, and public verify endpoints; added auditLog (H2), extracted MDA scope helper (M2), added verificationToken to response (L1)
+- `apps/server/src/middleware/rateLimiter.ts` — added verificationLimiter (10 req/min)
+- `apps/server/src/routes/autoStop.integration.test.ts` — added 7 integration tests for certificate endpoints; added verificationToken assertion (L1)
+- `apps/client/src/pages/dashboard/LoanDetailPage.tsx` — added certificate download section for COMPLETED loans
+- `apps/client/src/router.tsx` — added /verify/:certificateId public route
+- `apps/client/src/lib/apiClient.ts` — exported API_BASE (M1), added isApiError type guard (L2)
+- `apps/server/package.json` — added qrcode dependency
+- `apps/server/drizzle/meta/_journal.json` — updated migration journal

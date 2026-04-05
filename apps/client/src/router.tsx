@@ -185,6 +185,13 @@ export const router = createBrowserRouter([
             Component: m.EoiPage,
           })),
       },
+      {
+        path: '/verify/:certificateId',
+        lazy: () =>
+          import('@/pages/public/VerifyCertificatePage').then((m) => ({
+            Component: m.VerifyCertificatePage,
+          })),
+      },
     ],
   },
   // Protected routes
