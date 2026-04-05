@@ -21,6 +21,7 @@ import {
   ledgerEntries,
   loanStateTransitions,
   loanCompletions,
+  autoStopCertificates,
   observations,
   mdaSubmissions,
   submissionRows,
@@ -375,5 +376,236 @@ describe('detectPostCompletionDeductions', () => {
 
     const result = await detectPostCompletionDeductions(submissionId);
     expect(result.created).toBe(0);
+  });
+});
+
+// ─── Certificate Endpoints (Story 8.2) ───────────────────────────────
+
+describe('GET /api/certificates/:loanId', () => {
+  let certLoanId: string;
+
+  beforeAll(async () => {
+    // Create a completed loan with certificate for these tests
+    certLoanId = generateUuidv7();
+    await db.insert(loans).values({
+      id: certLoanId,
+      staffId: 'CERT-INT-001',
+      staffName: 'Certificate Test Staff',
+      gradeLevel: 'GL-10',
+      mdaId: testMdaId,
+      principalAmount: PRINCIPAL,
+      interestRate: RATE,
+      tenureMonths: TENURE,
+      monthlyDeductionAmount: '3148.06',
+      approvalDate: new Date('2024-01-01'),
+      firstDeductionDate: new Date('2024-02-01'),
+      loanReference: 'VLC-CERT-INT-001',
+      status: 'COMPLETED',
+      limitedComputation: false,
+    });
+
+    await db.insert(loanStateTransitions).values([
+      {
+        id: generateUuidv7(),
+        loanId: certLoanId,
+        fromStatus: 'APPLIED',
+        toStatus: 'ACTIVE',
+        transitionedBy: testUserId,
+        reason: 'Test',
+      },
+      {
+        id: generateUuidv7(),
+        loanId: certLoanId,
+        fromStatus: 'ACTIVE',
+        toStatus: 'COMPLETED',
+        transitionedBy: testUserId,
+        reason: 'Auto-stop',
+      },
+    ]);
+
+    await db.insert(loanCompletions).values({
+      id: generateUuidv7(),
+      loanId: certLoanId,
+      completionDate: new Date('2026-04-05'),
+      finalBalance: '0.00',
+      totalPaid: TOTAL_LOAN,
+      totalPrincipalPaid: PRINCIPAL,
+      totalInterestPaid: INTEREST,
+      triggerSource: 'manual',
+    });
+
+    // Create certificate directly for deterministic testing
+    await db.insert(autoStopCertificates).values({
+      id: generateUuidv7(),
+      loanId: certLoanId,
+      certificateId: 'ASC-2026-04-9001',
+      verificationToken: 'a'.repeat(64),
+      beneficiaryName: 'Certificate Test Staff',
+      staffId: 'CERT-INT-001',
+      mdaId: testMdaId,
+      mdaName: 'Auto-Stop Integration MDA',
+      loanReference: 'VLC-CERT-INT-001',
+      originalPrincipal: PRINCIPAL,
+      totalPaid: TOTAL_LOAN,
+      totalInterestPaid: INTEREST,
+      completionDate: new Date('2026-04-05'),
+    });
+  });
+
+  it('returns certificate metadata for completed loan', async () => {
+    const res = await request(app)
+      .get(`/api/certificates/${certLoanId}`)
+      .set('Authorization', `Bearer ${adminToken}`);
+
+    expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
+    expect(res.body.data.certificateId).toBe('ASC-2026-04-9001');
+    expect(res.body.data.verificationToken).toBe('a'.repeat(64));
+    expect(res.body.data.beneficiaryName).toBe('Certificate Test Staff');
+    expect(res.body.data.mdaName).toBe('Auto-Stop Integration MDA');
+    expect(res.body.data.loanReference).toBe('VLC-CERT-INT-001');
+  });
+
+  it('returns 404 for active loan without certificate', async () => {
+    const activeLoanId = generateUuidv7();
+    await db.insert(loans).values({
+      id: activeLoanId,
+      staffId: 'CERT-NOEXIST-001',
+      staffName: 'No Cert Staff',
+      gradeLevel: 'GL-08',
+      mdaId: testMdaId,
+      principalAmount: '50000.00',
+      interestRate: RATE,
+      tenureMonths: TENURE,
+      monthlyDeductionAmount: '0.00',
+      approvalDate: new Date('2024-01-01'),
+      firstDeductionDate: new Date('2024-02-01'),
+      loanReference: 'VLC-CERT-INT-NOEXIST',
+      status: 'ACTIVE',
+      limitedComputation: false,
+    });
+
+    const res = await request(app)
+      .get(`/api/certificates/${activeLoanId}`)
+      .set('Authorization', `Bearer ${adminToken}`);
+
+    expect(res.status).toBe(404);
+  });
+});
+
+describe('GET /api/certificates/:loanId/pdf', () => {
+  let certLoanId: string;
+
+  beforeAll(async () => {
+    certLoanId = generateUuidv7();
+    await db.insert(loans).values({
+      id: certLoanId,
+      staffId: 'CERT-PDF-001',
+      staffName: 'PDF Test Staff',
+      gradeLevel: 'GL-10',
+      mdaId: testMdaId,
+      principalAmount: PRINCIPAL,
+      interestRate: RATE,
+      tenureMonths: TENURE,
+      monthlyDeductionAmount: '3148.06',
+      approvalDate: new Date('2024-01-01'),
+      firstDeductionDate: new Date('2024-02-01'),
+      loanReference: 'VLC-CERT-PDF-001',
+      status: 'COMPLETED',
+      limitedComputation: false,
+    });
+
+    await db.insert(autoStopCertificates).values({
+      id: generateUuidv7(),
+      loanId: certLoanId,
+      certificateId: 'ASC-2026-04-9002',
+      verificationToken: 'b'.repeat(64),
+      beneficiaryName: 'PDF Test Staff',
+      staffId: 'CERT-PDF-001',
+      mdaId: testMdaId,
+      mdaName: 'Auto-Stop Integration MDA',
+      loanReference: 'VLC-CERT-PDF-001',
+      originalPrincipal: PRINCIPAL,
+      totalPaid: TOTAL_LOAN,
+      totalInterestPaid: INTEREST,
+      completionDate: new Date('2026-04-05'),
+    });
+  });
+
+  it('downloads PDF for completed loan with certificate', async () => {
+    const res = await request(app)
+      .get(`/api/certificates/${certLoanId}/pdf`)
+      .set('Authorization', `Bearer ${adminToken}`);
+
+    expect(res.status).toBe(200);
+    expect(res.headers['content-type']).toBe('application/pdf');
+    expect(res.headers['content-disposition']).toContain('auto-stop-certificate-ASC-2026-04-9002.pdf');
+    expect(res.body).toBeTruthy();
+  }, 30000);
+
+  it('returns 404 for loan without certificate', async () => {
+    const noCertLoanId = generateUuidv7();
+    await db.insert(loans).values({
+      id: noCertLoanId,
+      staffId: 'CERT-PDF-NONE-001',
+      staffName: 'No PDF Staff',
+      gradeLevel: 'GL-08',
+      mdaId: testMdaId,
+      principalAmount: '50000.00',
+      interestRate: RATE,
+      tenureMonths: TENURE,
+      monthlyDeductionAmount: '0.00',
+      approvalDate: new Date('2024-01-01'),
+      firstDeductionDate: new Date('2024-02-01'),
+      loanReference: 'VLC-CERT-PDF-NONE',
+      status: 'ACTIVE',
+      limitedComputation: false,
+    });
+
+    const res = await request(app)
+      .get(`/api/certificates/${noCertLoanId}/pdf`)
+      .set('Authorization', `Bearer ${adminToken}`);
+
+    expect(res.status).toBe(404);
+  });
+});
+
+// ─── Public Verification Endpoint (Story 8.2, Task 8) ────────────────
+
+describe('GET /api/public/verify/:certificateId', () => {
+  it('verifies a valid certificate', async () => {
+    const res = await request(app)
+      .get('/api/public/verify/ASC-2026-04-9001');
+
+    expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
+    expect(res.body.data.valid).toBe(true);
+    expect(res.body.data.message).toContain('Verified');
+    expect(res.body.data.message).toContain('ASC-2026-04-9001');
+    expect(res.body.data.beneficiaryName).toBe('Certificate Test Staff');
+    expect(res.body.data.mdaName).toBe('Auto-Stop Integration MDA');
+    expect(res.body.data.completionDate).toBeTruthy();
+    // AC: 4 — should NOT contain financial details
+    expect(res.body.data.originalPrincipal).toBeUndefined();
+    expect(res.body.data.totalPaid).toBeUndefined();
+  });
+
+  it('returns not-found for invalid certificate', async () => {
+    const res = await request(app)
+      .get('/api/public/verify/ASC-9999-99-9999');
+
+    expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
+    expect(res.body.data.valid).toBe(false);
+    expect(res.body.data.message).toBe('Certificate not found');
+  });
+
+  it('does not require authentication', async () => {
+    // No Authorization header — should still succeed
+    const res = await request(app)
+      .get('/api/public/verify/ASC-2026-04-9001');
+
+    expect(res.status).toBe(200);
+    expect(res.body.data.valid).toBe(true);
   });
 });

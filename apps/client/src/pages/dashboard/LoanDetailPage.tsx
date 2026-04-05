@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router';
-import { ArrowLeft, Clock, AlertTriangle } from 'lucide-react';
+import { ArrowLeft, Clock, AlertTriangle, Download, Loader2 } from 'lucide-react';
 import { formatDate } from '@/lib/formatters';
 import { useLoanDetail } from '@/hooks/useLoanData';
+import { useCertificate, useDownloadCertificatePdf } from '@/hooks/useCertificate';
 import { NairaDisplay } from '@/components/shared/NairaDisplay';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -39,6 +40,9 @@ export function LoanDetailPage() {
   const { mdaId, loanId } = useParams<{ mdaId: string; loanId: string }>();
   const navigate = useNavigate();
   const loanDetail = useLoanDetail(loanId!);
+  const isCompleted = loanDetail.data?.status === 'COMPLETED';
+  const certificate = useCertificate(loanId!, isCompleted);
+  const downloadPdf = useDownloadCertificatePdf(loanId!);
   const [flagOpen, setFlagOpen] = useState(false);
   const user = useAuthStore((s) => s.user);
   const canFlag = user?.role === 'super_admin' || user?.role === 'dept_admin';
@@ -174,6 +178,48 @@ export function LoanDetailPage() {
           </div>
         </section>
       ) : null}
+
+      {/* Auto-Stop Certificate (Story 8.2) */}
+      {isCompleted && (
+        <section aria-label="Auto-Stop Certificate">
+          {certificate.data ? (
+            <div className="rounded-lg border-2 border-[#B8860B] bg-gradient-to-r from-green-50 to-white p-6">
+              <div className="flex flex-wrap items-center justify-between gap-4">
+                <div>
+                  <h3 className="text-lg font-bold text-green-700">
+                    Loan Completed — Auto-Stop Certificate Available
+                  </h3>
+                  <p className="mt-1 text-sm text-text-secondary">
+                    Certificate {certificate.data.certificateId} — generated{' '}
+                    {formatDate(certificate.data.generatedAt)}
+                  </p>
+                </div>
+                <Button
+                  onClick={() => downloadPdf.mutate()}
+                  disabled={downloadPdf.isPending}
+                >
+                  {downloadPdf.isPending ? (
+                    <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                  ) : (
+                    <Download className="h-4 w-4 mr-1" />
+                  )}
+                  Download Certificate
+                </Button>
+              </div>
+            </div>
+          ) : certificate.isPending ? (
+            <div className="rounded-lg border bg-white p-6">
+              <Skeleton className="h-6 w-64" />
+            </div>
+          ) : (
+            <div className="rounded-lg border bg-white p-6">
+              <p className="text-sm text-text-secondary">
+                Certificate is being generated...
+              </p>
+            </div>
+          )}
+        </section>
+      )}
 
       {/* Exception flagging */}
       {canFlag && loanDetail.data && (

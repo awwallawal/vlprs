@@ -19,6 +19,7 @@ import { transitionLoan } from './loanTransitionService';
 import { generateUuidv7 } from '../lib/uuidv7';
 import { logger } from '../lib/logger';
 import { env } from '../config/env';
+import { generateCertificate } from './autoStopCertificateService';
 import type { BalanceResult } from '@vlprs/shared';
 
 // ─── Types ──────────────────────────────────────────────────────────
@@ -158,6 +159,11 @@ export async function detectAndTriggerAutoStop(
           'Auto-stop triggered',
         );
 
+        // Fire-and-forget certificate generation — failure does NOT roll back completion
+        generateCertificate(candidate.id).catch((err) => {
+          logger.error({ err, loanId: candidate.id }, 'Auto-stop certificate generation failed');
+        });
+
         results.push({
           loanId: candidate.id,
           staffName: candidate.staffName,
@@ -253,6 +259,11 @@ export async function checkAndTriggerAutoStop(
         { loanId, staffName: loan.staffName, finalBalance: balance.computedBalance, triggerLedgerEntryId },
         'Auto-stop triggered (inline)',
       );
+
+      // Fire-and-forget certificate generation — failure does NOT roll back completion
+      generateCertificate(loanId).catch((err) => {
+        logger.error({ err, loanId }, 'Auto-stop certificate generation failed (inline)');
+      });
 
       return {
         triggered: true,

@@ -1,0 +1,2 @@
+DROP INDEX "idx_auto_stop_certificates_verification_token";--> statement-breakpoint
+CREATE UNIQUE INDEX "idx_auto_stop_certificates_verification_token" ON "auto_stop_certificates" USING btree ("verification_token");
