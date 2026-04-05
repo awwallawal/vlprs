@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router';
-import { ArrowLeft, Clock, AlertTriangle, Download, Loader2 } from 'lucide-react';
+import { ArrowLeft, Clock, AlertTriangle, Download, Loader2, Send } from 'lucide-react';
 import { formatDate } from '@/lib/formatters';
 import { useLoanDetail } from '@/hooks/useLoanData';
-import { useCertificate, useDownloadCertificatePdf } from '@/hooks/useCertificate';
+import { useCertificate, useDownloadCertificatePdf, useResendNotifications } from '@/hooks/useCertificate';
 import { NairaDisplay } from '@/components/shared/NairaDisplay';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -43,9 +43,11 @@ export function LoanDetailPage() {
   const isCompleted = loanDetail.data?.status === 'COMPLETED';
   const certificate = useCertificate(loanId!, isCompleted);
   const downloadPdf = useDownloadCertificatePdf(loanId!);
+  const resendNotifications = useResendNotifications(loanId!);
   const [flagOpen, setFlagOpen] = useState(false);
   const user = useAuthStore((s) => s.user);
   const canFlag = user?.role === 'super_admin' || user?.role === 'dept_admin';
+  const isSuperAdmin = user?.role === 'super_admin';
 
   return (
     <div className="space-y-8">
@@ -179,7 +181,7 @@ export function LoanDetailPage() {
         </section>
       ) : null}
 
-      {/* Auto-Stop Certificate (Story 8.2) */}
+      {/* Auto-Stop Certificate (Story 8.2 + 8.3 notifications) */}
       {isCompleted && (
         <section aria-label="Auto-Stop Certificate">
           {certificate.data ? (
@@ -193,18 +195,48 @@ export function LoanDetailPage() {
                     Certificate {certificate.data.certificateId} — generated{' '}
                     {formatDate(certificate.data.generatedAt)}
                   </p>
+                  <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-text-secondary">
+                    <span>
+                      {certificate.data.notifiedMdaAt
+                        ? `MDA notified on ${formatDate(certificate.data.notifiedMdaAt)}`
+                        : 'MDA notification pending'}
+                    </span>
+                    <span>
+                      {certificate.data.notifiedBeneficiaryAt
+                        ? `Beneficiary notified on ${formatDate(certificate.data.notifiedBeneficiaryAt)}`
+                        : certificate.data.notificationNotes?.includes('no_email_on_file')
+                          ? 'No beneficiary email on file'
+                          : 'Beneficiary notification pending'}
+                    </span>
+                  </div>
                 </div>
-                <Button
-                  onClick={() => downloadPdf.mutate()}
-                  disabled={downloadPdf.isPending}
-                >
-                  {downloadPdf.isPending ? (
-                    <Loader2 className="h-4 w-4 mr-1 animate-spin" />
-                  ) : (
-                    <Download className="h-4 w-4 mr-1" />
+                <div className="flex gap-2">
+                  <Button
+                    onClick={() => downloadPdf.mutate()}
+                    disabled={downloadPdf.isPending}
+                  >
+                    {downloadPdf.isPending ? (
+                      <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                    ) : (
+                      <Download className="h-4 w-4 mr-1" />
+                    )}
+                    Download Certificate
+                  </Button>
+                  {isSuperAdmin && (
+                    <Button
+                      variant="outline"
+                      onClick={() => resendNotifications.mutate()}
+                      disabled={resendNotifications.isPending}
+                    >
+                      {resendNotifications.isPending ? (
+                        <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                      ) : (
+                        <Send className="h-4 w-4 mr-1" />
+                      )}
+                      Resend Notifications
+                    </Button>
                   )}
-                  Download Certificate
-                </Button>
+                </div>
               </div>
             </div>
           ) : certificate.isPending ? (
