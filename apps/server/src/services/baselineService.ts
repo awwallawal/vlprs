@@ -9,6 +9,8 @@ import { autoSplitDeduction, computeRetirementDate } from './computationEngine';
 import { VOCABULARY } from '@vlprs/shared';
 import type { BaselineResult, BatchBaselineResult, BaselineSummary, VarianceCategory } from '@vlprs/shared';
 import { checkAndTriggerAutoStop } from './autoStopService';
+import { generateObservations } from './observationEngine';
+import { logger } from '../lib/logger';
 
 // ─── Types ───────────────────────────────────────────────────────────
 
@@ -328,6 +330,7 @@ export async function createBaseline(
   uploadId: string,
   recordId: string,
   mdaScope: string | null | undefined,
+  options?: { skipObservationGeneration?: boolean },
 ): Promise<BaselineResult> {
   // Load the upload
   const uploadConditions = [eq(migrationUploads.id, uploadId)];
@@ -432,6 +435,13 @@ export async function createBaseline(
 
   // Story 8.1: Check for auto-stop AFTER transaction commits (balance now visible)
   checkAndTriggerAutoStop(result.loanId, result.ledgerEntryId).catch(() => {});
+
+  // Story 15.0b: Fire-and-forget observation generation (skipped when called in a loop)
+  if (!options?.skipObservationGeneration) {
+    generateObservations(uploadId, actingUser.userId).catch((err) =>
+      logger.error({ err, uploadId }, 'Observation generation failed after baseline'),
+    );
+  }
 
   return result;
 }
@@ -649,6 +659,13 @@ export async function createBatchBaseline(
       await checkAndTriggerAutoStop(loanId, ledgerEntryId).catch(() => {});
     }
   })();
+
+  // Story 15.0b: Fire-and-forget observation generation for newly baselined records
+  if (result.loansCreated > 0) {
+    generateObservations(uploadId, actingUser.userId).catch((err) =>
+      logger.error({ err, uploadId }, 'Observation generation failed after batch baseline'),
+    );
+  }
 
   return result;
 }
