@@ -19,7 +19,7 @@ import { MetricHelp } from '@/components/shared/MetricHelp';
 import { useAuthStore } from '@/stores/authStore';
 import { ROLES } from '@vlprs/shared';
 import { SchemeFundDialog } from './components/SchemeFundDialog';
-import { MdaReviewSection } from './components/MdaReviewSection';
+import { MdaOfficerDashboard } from './MdaOfficerDashboard';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -44,7 +44,7 @@ function sortComplianceRows(rows: MdaComplianceRow[]): MdaComplianceRow[] {
   return [...pending, ...submitted];
 }
 
-export function DashboardPage() {
+function AdminDashboard() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const user = useAuthStore((s) => s.user);
@@ -337,11 +337,6 @@ export function DashboardPage() {
         </section>
       )}
 
-      {/* MDA Review Section — visible to MDA_OFFICER only (Story 8.0j) */}
-      {user?.role === ROLES.MDA_OFFICER && (
-        <MdaReviewSection onNavigateToReview={() => navigate('/dashboard/migration')} />
-      )}
-
       {/* Attention items */}
       <section aria-label="Items requiring attention">
         <h2 className="mb-4 text-lg font-semibold text-text-primary">
@@ -607,6 +602,14 @@ export function DashboardPage() {
       )}
     </div>
   );
+}
+
+export function DashboardPage() {
+  const user = useAuthStore((s) => s.user);
+  if (user?.role === ROLES.MDA_OFFICER) {
+    return <MdaOfficerDashboard />;
+  }
+  return <AdminDashboard />;
 }
 
 export { DashboardPage as Component };

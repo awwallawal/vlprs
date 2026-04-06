@@ -44,6 +44,7 @@ export interface SubmissionRecord {
   alignedCount: number;
   varianceCount: number;
   status: SubmissionRecordStatus;
+  period: string;
 }
 
 export interface SubmissionUploadResponse {
