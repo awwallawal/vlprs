@@ -375,3 +375,34 @@ export function useApplyWorksheet(uploadId: string) {
     },
   });
 }
+
+// ─── Federated Upload: Approve/Reject (Story 15.0f) ────────────────
+
+export function useApproveUpload() {
+  const queryClient = useQueryClient();
+
+  return useMutation<{ uploadId: string; status: 'validated' }, Error, { uploadId: string }>({
+    mutationFn: ({ uploadId }) =>
+      apiClient<{ uploadId: string; status: 'validated' }>(`/migrations/${uploadId}/approve`, {
+        method: 'PATCH',
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['migrations'] });
+    },
+  });
+}
+
+export function useRejectUpload() {
+  const queryClient = useQueryClient();
+
+  return useMutation<{ uploadId: string; status: 'rejected'; reason: string }, Error, { uploadId: string; reason: string }>({
+    mutationFn: ({ uploadId, reason }) =>
+      apiClient<{ uploadId: string; status: 'rejected'; reason: string }>(`/migrations/${uploadId}/reject`, {
+        method: 'PATCH',
+        body: JSON.stringify({ reason }),
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['migrations'] });
+    },
+  });
+}

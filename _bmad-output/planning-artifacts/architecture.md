@@ -1653,3 +1653,56 @@ type DomainEvents = {
 2. Database schema (Drizzle schema with immutability triggers, temporal profile fields, employment events, early exit computations)
 3. Auth system (JWT + bcrypt + RBAC middleware)
 4. Computation engine (including retirement date computation and early exit payoff calculations)
+
+---
+
+## Architectural Decision Record — E8 Retro (2026-04-06)
+
+### ADR-E8-1: Federated Upload Model
+
+**Context:** The current migration upload is AG/Department Admin only. With 63 MDAs, the AG uploading on behalf of every MDA is a bottleneck. E8 retro UAT (Finding #28) confirmed MDA officers need to upload their own data.
+
+**Decision:** Allow MDA officers to use the existing migration upload engine (three-vector validation, period detection, column mapping), scoped to their MDA via `scopeToMda` middleware. MDA-initiated uploads enter `pending_verification` status and are NOT auto-baselined. Department Admin or AG reviews quality score and approves → proceeds to selective baseline (existing 8.0j pipeline). Upload source tracked as `mda_upload` vs `admin_upload` in `migration_uploads` table. Coverage Tracker displays source attribution per cell.
+
+**Consequences:**
+- Migration upload route adds `mda_officer` to role list with `scopeToMda` enforcement
+- New `pending_verification` status in upload lifecycle (before `validated`)
+- Coverage Tracker gains source column (admin/MDA/both)
+- E15 beneficiary onboarding can follow the same federated pattern
+- All 63 MDAs become first-class data contributors
+
+### ADR-E8-2: MDA Officer Role Expansion
+
+**Context:** MDA officers currently have 5 sidebar items (Submit, History, Historical Upload, Employment Events, Reconciliation) and no dashboard. E8 retro surfaced 8 findings (#20, #22, #25, #26, #27, #28, #29, #43) showing the role is under-served.
+
+**Decision:** MDA officers get a purpose-built dashboard (FR97) with: hero metrics, migration quality score, action items, pre-submission checkpoint (as paginated table), gap-aware submission history, quick actions. Sidebar expanded to 7 items: My Dashboard, Upload Data, Submit Monthly, My Reviews, Employment Events, Reconciliation, My Reports. MDA-scoped Beneficiary Ledger with lifecycle awareness (active/completed/transferred/consecutive).
+
+**Consequences:**
+- New `MdaOfficerDashboardPage` component
+- Sidebar navigation configuration expanded in `navItems.ts`
+- Existing APIs serve MDA-scoped data (no new backend queries needed for most metrics)
+- Pre-submission checkpoint upgraded from plain text list to paginated table
+
+### ADR-E8-3: DevAutoSeed Separation
+
+**Context:** Docker volume resets on Windows (WSL2/Docker Desktop) trigger `devAutoSeed` which seeds admin users AND demo loans together. After Awwal uploaded 171 real BIR records and the volume reset, all real data was replaced by 7 fake loans (Finding #39).
+
+**Decision:** Separate `devAutoSeed` into two concerns: (1) Always seed admin users + MDA registry (required for login), (2) Demo loans + scheme config only via explicit `pnpm seed:demo` command (never automatic). A volume reset restores login ability without polluting real data.
+
+**Consequences:**
+- `devAutoSeed` only creates admin user accounts
+- `runDemoSeed()` becomes manual-only (not called from auto-seed)
+- Development workflow: volume reset → can login → must explicitly seed demo data if wanted
+
+### ADR-E8-4: Universal Click-Through Principle
+
+**Context:** E8 retro surfaced 7+ "dead-end metrics" — numbers visible on dashboards with no drill-down navigation. AG mental model: "I see it, I click it, I see the names."
+
+**Decision:** Team Agreement #11: "Every number is a doorway." All visible counts, amounts, and percentages across all dashboards and reports must be clickable and navigate to a drill-down showing the records behind the number. No exceptions. This applies retroactively to existing components and proactively to all new features.
+
+**Consequences:**
+- All `HeroMetricCard` instances must have `onClick` handlers
+- All table rows with aggregate data must navigate to detail views
+- `MetricDrillDownPage` gets "View All Loans" shortcut
+- Reports components (Recovery Potential, MDA Scorecard) get click handlers
+- Pre-submission checkpoint sections become clickable cards leading to paginated tables

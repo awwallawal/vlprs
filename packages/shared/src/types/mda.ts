@@ -103,6 +103,7 @@ export interface MigrationDashboardMetrics {
 export interface CoveragePeriodData {
   recordCount: number;
   baselinedCount: number;
+  uploadSource?: 'admin' | 'mda_officer' | 'mixed';
 }
 
 export interface CoverageMdaRow {

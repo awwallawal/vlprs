@@ -196,6 +196,10 @@ So that I can identify retirees whose retirement events haven't been recorded, a
 
 ## Dev Notes
 
+### Prep Story Context (15.0a–15.0n)
+
+- **15.0k:** MDA Beneficiary Ledger now has lifecycle awareness (active/completed/transferred). Retirement verification results should update the ledger's lifecycle status — coordinate with the `loanStatus` field on `BeneficiaryListItem`.
+
 ### The Six Verification Statuses
 
 | Status | Badge | Meaning | Action |

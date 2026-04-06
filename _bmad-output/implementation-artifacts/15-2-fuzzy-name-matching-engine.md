@@ -159,6 +159,10 @@ So that I can see which approved people are already in the system without manual
 
 ## Dev Notes
 
+### Prep Story Context (15.0a–15.0n)
+
+- **15.0l:** Cross-MDA dedup now auto-triggers after upload validation (fire-and-forget). The fuzzy matching engine in this story (15.2) is for beneficiary onboarding matching — different scope but same algorithmic domain. Reuse Levenshtein/Jaro-Winkler benchmarks from dedup service if applicable.
+
 ### Existing Infrastructure to Reuse
 
 Story 15.2 builds on established patterns — NOT from scratch:

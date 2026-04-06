@@ -329,6 +329,12 @@ So that the system has a record of who was approved and who has retired/deceased
 
 ## Dev Notes
 
+### Prep Story Context (15.0a–15.0n)
+
+- **15.0a:** `apiClient` unwrap bug fixed. For paginated endpoints with FLAT response format (pagination at top level), use `authenticatedFetch + parseJsonResponse` pattern — not `apiClient`. See `useMdaData.ts` for the corrected pattern.
+- **15.0f:** Federated upload adds `pending_verification` status + `uploadSource` column to `migration_uploads`. If MDA officers can upload committee lists, follow the same pattern: `uploadSource: 'mda_officer'`, admin approval before processing.
+- **15.0m:** New `within_file_duplicate` observation type added to enum. Any upload pipeline that creates migration records should be aware of the within-file dedup detector that runs during `generateObservations()`.
+
 ### Design Decision Record: Global MDA Alias Enhancement
 
 #### Analysis (How We Got Here)

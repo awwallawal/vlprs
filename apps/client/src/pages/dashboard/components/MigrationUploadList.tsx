@@ -8,10 +8,12 @@
 
 import { useState } from 'react';
 import { toast } from 'sonner';
-import { useListMigrations, useDiscardMigration } from '@/hooks/useMigration';
+import { useListMigrations, useDiscardMigration, useApproveUpload, useRejectUpload } from '@/hooks/useMigration';
+import { useAuthStore } from '@/stores/authStore';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Textarea } from '@/components/ui/textarea';
 import {
   AlertDialog,
   AlertDialogCancel,
@@ -21,7 +23,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { ChevronLeft, ChevronRight, FileSpreadsheet, Trash2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, FileSpreadsheet, Trash2, Check, X } from 'lucide-react';
+import { ROLES } from '@vlprs/shared';
 import type { MigrationUploadSummary, MigrationUploadStatus } from '@vlprs/shared';
 
 const STATUS_LABELS: Record<MigrationUploadStatus, string> = {
@@ -29,9 +32,11 @@ const STATUS_LABELS: Record<MigrationUploadStatus, string> = {
   mapped: 'Mapped',
   processing: 'Processing',
   completed: 'Completed',
+  pending_verification: 'Pending Admin Approval',
   validated: 'Validated',
   reconciled: 'Reconciled',
   failed: 'Failed',
+  rejected: 'Rejected',
 };
 
 const STATUS_VARIANTS: Record<MigrationUploadStatus, 'default' | 'secondary' | 'destructive' | 'outline'> = {
@@ -39,9 +44,11 @@ const STATUS_VARIANTS: Record<MigrationUploadStatus, 'default' | 'secondary' | '
   mapped: 'outline',
   processing: 'secondary',
   completed: 'default',
+  pending_verification: 'secondary',
   validated: 'default',
   reconciled: 'default',
   failed: 'destructive',
+  rejected: 'destructive',
 };
 
 function formatDate(iso: string): string {
@@ -57,10 +64,16 @@ const DISCARDABLE_STATUSES: MigrationUploadStatus[] = ['uploaded', 'mapped', 'fa
 export function MigrationUploadList() {
   const [page, setPage] = useState(1);
   const [discardTarget, setDiscardTarget] = useState<MigrationUploadSummary | null>(null);
+  const [rejectTarget, setRejectTarget] = useState<MigrationUploadSummary | null>(null);
+  const [rejectReason, setRejectReason] = useState('');
   const limit = 15;
 
+  const user = useAuthStore((s) => s.user);
+  const isAdmin = user?.role === ROLES.SUPER_ADMIN || user?.role === ROLES.DEPT_ADMIN;
   const { data, isPending, isError } = useListMigrations({ page, limit });
   const discardMutation = useDiscardMigration();
+  const approveMutation = useApproveUpload();
+  const rejectMutation = useRejectUpload();
 
   const uploads = data?.data ?? [];
   const pagination = data?.pagination;
@@ -73,6 +86,29 @@ export function MigrationUploadList() {
       setDiscardTarget(null);
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : 'Failed to discard upload';
+      toast.error(message);
+    }
+  };
+
+  const handleApprove = async (upload: MigrationUploadSummary) => {
+    try {
+      await approveMutation.mutateAsync({ uploadId: upload.id });
+      toast.success(`Upload "${upload.filename}" approved`);
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Failed to approve upload';
+      toast.error(message);
+    }
+  };
+
+  const handleReject = async () => {
+    if (!rejectTarget) return;
+    try {
+      await rejectMutation.mutateAsync({ uploadId: rejectTarget.id, reason: rejectReason });
+      toast.success(`Upload "${rejectTarget.filename}" rejected`);
+      setRejectTarget(null);
+      setRejectReason('');
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Failed to reject upload';
       toast.error(message);
     }
   };
@@ -120,7 +156,14 @@ export function MigrationUploadList() {
           </thead>
           <tbody>
             {uploads.map((upload) => (
-              <UploadRow key={upload.id} upload={upload} onDiscard={setDiscardTarget} />
+              <UploadRow
+                key={upload.id}
+                upload={upload}
+                isAdmin={isAdmin}
+                onDiscard={setDiscardTarget}
+                onApprove={handleApprove}
+                onReject={setRejectTarget}
+              />
             ))}
           </tbody>
         </table>
@@ -174,13 +217,51 @@ export function MigrationUploadList() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Reject Upload Dialog (Story 15.0f) */}
+      <AlertDialog open={!!rejectTarget} onOpenChange={(open) => { if (!open) { setRejectTarget(null); setRejectReason(''); } }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Reject Upload</AlertDialogTitle>
+            <AlertDialogDescription>
+              Reject <strong>{rejectTarget?.filename}</strong> uploaded by MDA officer. Please provide a reason (visible to the officer).
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <Textarea
+            placeholder="Reason for rejection (min 10 characters)..."
+            value={rejectReason}
+            onChange={(e) => setRejectReason(e.target.value)}
+            className="min-h-[80px]"
+          />
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <Button
+              onClick={handleReject}
+              disabled={rejectMutation.isPending || rejectReason.length < 10}
+              variant="destructive"
+            >
+              {rejectMutation.isPending ? 'Rejecting...' : 'Reject Upload'}
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
 
-function UploadRow({ upload, onDiscard }: { upload: MigrationUploadSummary; onDiscard: (upload: MigrationUploadSummary) => void }) {
+function UploadRow({ upload, isAdmin, onDiscard, onApprove, onReject }: {
+  upload: MigrationUploadSummary;
+  isAdmin: boolean;
+  onDiscard: (upload: MigrationUploadSummary) => void;
+  onApprove: (upload: MigrationUploadSummary) => void;
+  onReject: (upload: MigrationUploadSummary) => void;
+}) {
   const isSuperseded = !!upload.supersededBy;
   const canDiscard = DISCARDABLE_STATUSES.includes(upload.status);
+  const isPendingVerification = upload.status === 'pending_verification';
+  const isRejected = upload.status === 'rejected';
+  const rejectionReason = isRejected && upload.metadata?.rejectionReason ? String(upload.metadata.rejectionReason) : null;
+  const isMdaOfficerUpload = upload.uploadSource === 'mda_officer';
 
   return (
     <tr
@@ -196,9 +277,21 @@ function UploadRow({ upload, onDiscard }: { upload: MigrationUploadSummary; onDi
               Superseded by {upload.supersededByFilename} on {formatDate(upload.supersededAt)}
             </span>
           )}
+          {rejectionReason && (
+            <span className="text-xs text-destructive">
+              Reason: {rejectionReason}
+            </span>
+          )}
         </div>
       </td>
-      <td className="px-4 py-3 text-text-secondary">{upload.mdaName}</td>
+      <td className="px-4 py-3 text-text-secondary">
+        <div className="flex flex-col gap-0.5">
+          <span>{upload.mdaName}</span>
+          {isMdaOfficerUpload && (
+            <span className="text-xs text-text-muted">Uploaded by MDA Officer</span>
+          )}
+        </div>
+      </td>
       <td className="px-4 py-3 text-right tabular-nums text-text-secondary">
         {upload.totalRecords.toLocaleString()}
       </td>
@@ -218,16 +311,38 @@ function UploadRow({ upload, onDiscard }: { upload: MigrationUploadSummary; onDi
         {formatDate(upload.createdAt)}
       </td>
       <td className="px-4 py-3">
-        {canDiscard && (
-          <button
-            type="button"
-            onClick={() => onDiscard(upload)}
-            className="p-1.5 rounded-md text-text-muted hover:text-destructive hover:bg-destructive/10 transition-colors"
-            title="Discard upload"
-          >
-            <Trash2 className="h-4 w-4" />
-          </button>
-        )}
+        <div className="flex items-center gap-1">
+          {canDiscard && (
+            <button
+              type="button"
+              onClick={() => onDiscard(upload)}
+              className="p-1.5 rounded-md text-text-muted hover:text-destructive hover:bg-destructive/10 transition-colors"
+              title="Discard upload"
+            >
+              <Trash2 className="h-4 w-4" />
+            </button>
+          )}
+          {isPendingVerification && isAdmin && (
+            <>
+              <button
+                type="button"
+                onClick={() => onApprove(upload)}
+                className="p-1.5 rounded-md text-teal hover:bg-teal/10 transition-colors"
+                title="Approve upload"
+              >
+                <Check className="h-4 w-4" />
+              </button>
+              <button
+                type="button"
+                onClick={() => onReject(upload)}
+                className="p-1.5 rounded-md text-text-muted hover:text-destructive hover:bg-destructive/10 transition-colors"
+                title="Reject upload"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </>
+          )}
+        </div>
       </td>
     </tr>
   );

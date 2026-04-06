@@ -1,4 +1,6 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
+import { useAuthStore } from '@/stores/authStore';
+import { ROLES } from '@vlprs/shared';
 import { FileUploadZone } from '@/components/shared/FileUploadZone';
 import { ColumnMappingReview } from './components/ColumnMappingReview';
 import { MigrationUploadResult } from './components/MigrationUploadResult';
@@ -68,6 +70,20 @@ export function MigrationUploadPage() {
   const { data: mdaList, isLoading: mdaLoading } = useMdaList();
   const personList = usePersonList({ page: personPage, limit: 20 });
   const matchPersonsMutation = useMatchPersons();
+
+  // MDA officer auto-fill: skip MDA selection step (Story 15.0f)
+  const user = useAuthStore((s) => s.user);
+  const isMdaOfficer = user?.role === ROLES.MDA_OFFICER;
+  useEffect(() => {
+    if (isMdaOfficer && user?.mdaId && mdaList && step === 'select-mda') {
+      const officerMda = mdaList.find((m) => m.id === user.mdaId);
+      if (officerMda) {
+        setSelectedMdaId(officerMda.id);
+        setSelectedMdaName(officerMda.name);
+        setStep('upload');
+      }
+    }
+  }, [isMdaOfficer, user?.mdaId, mdaList, step]);
 
   const handleMdaSelect = useCallback((mdaId: string, mdaName: string) => {
     setSelectedMdaId(mdaId);
@@ -233,9 +249,14 @@ export function MigrationUploadPage() {
   }, []);
 
   const handleReset = useCallback(() => {
-    setStep('select-mda');
-    setSelectedMdaId('');
-    setSelectedMdaName('');
+    if (isMdaOfficer) {
+      // MDA officers stay on their MDA — just reset the upload state
+      setStep('upload');
+    } else {
+      setStep('select-mda');
+      setSelectedMdaId('');
+      setSelectedMdaName('');
+    }
     setSelectedFile(null);
     setPreview(null);
     setResult(null);
@@ -443,12 +464,12 @@ export function MigrationUploadPage() {
       {/* Step Indicator */}
       <div className="flex items-center gap-2 text-xs text-text-muted">
         {([
-          { key: 'select-mda', label: '1. Select MDA', active: ['select-mda'] as Step[] },
-          { key: 'upload', label: '2. Upload File', active: ['upload'] as Step[] },
-          { key: 'review', label: '3. Review Mapping', active: ['review'] as Step[] },
-          { key: 'complete', label: '4. Extract', active: ['processing', 'complete'] as Step[] },
-          { key: 'delineation', label: '5. Delineation', active: ['delineation'] as Step[] },
-          { key: 'validated', label: '6. Comparison', active: ['validating', 'validated'] as Step[] },
+          ...(!isMdaOfficer ? [{ key: 'select-mda', label: '1. Select MDA', active: ['select-mda'] as Step[] }] : []),
+          { key: 'upload', label: `${isMdaOfficer ? '1' : '2'}. Upload File`, active: ['upload'] as Step[] },
+          { key: 'review', label: `${isMdaOfficer ? '2' : '3'}. Review Mapping`, active: ['review'] as Step[] },
+          { key: 'complete', label: `${isMdaOfficer ? '3' : '4'}. Extract`, active: ['processing', 'complete'] as Step[] },
+          { key: 'delineation', label: `${isMdaOfficer ? '4' : '5'}. Delineation`, active: ['delineation'] as Step[] },
+          { key: 'validated', label: `${isMdaOfficer ? '5' : '6'}. Comparison`, active: ['validating', 'validated'] as Step[] },
         ]).map((s, i) => (
           <div key={s.key} className="flex items-center gap-2">
             {i > 0 && <span className="text-border">/</span>}

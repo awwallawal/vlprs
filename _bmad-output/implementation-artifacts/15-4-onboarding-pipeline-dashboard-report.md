@@ -197,6 +197,11 @@ So that I can answer "how many approved loans are actually operational?" and ide
 
 ## Dev Notes
 
+### Prep Story Context (15.0a–15.0n)
+
+- **15.0e:** MDA officer now has a purpose-built dashboard (`MdaOfficerDashboard.tsx`). Onboarding metrics from this story should surface on that dashboard — add an "Onboarding Status" section or integrate into the existing hero metrics.
+- **15.0a:** For any new paginated hooks, check whether the server endpoint uses FLAT (pagination at top level) or WRAPPED (pagination inside `data`). Use `authenticatedFetch + parseJsonResponse` for FLAT, `apiClient` for WRAPPED.
+
 ### First Recharts Usage in the Codebase
 
 Recharts (`^3.7.0`) is installed but has ZERO active usage. This story introduces the first chart. Keep it simple:

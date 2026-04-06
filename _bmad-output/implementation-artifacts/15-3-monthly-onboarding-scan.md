@@ -120,6 +120,10 @@ So that I can track when each approved beneficiary's deductions actually started
 
 ## Dev Notes
 
+### Prep Story Context (15.0a–15.0n)
+
+- **15.0b:** Observations now auto-generate after baseline creation (fire-and-forget). The onboarding scan hooks into the submission pipeline similarly — follow the same fire-and-forget pattern for scan triggers.
+
 ### The Monthly Scanning Model
 
 From the epic spec:
