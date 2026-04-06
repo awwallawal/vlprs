@@ -9,7 +9,6 @@ interface VerificationResult {
   beneficiaryName?: string;
   mdaName?: string;
   completionDate?: string;
-  generatedAt?: string;
 }
 
 export function VerifyCertificatePage() {
@@ -17,11 +16,13 @@ export function VerifyCertificatePage() {
   const [result, setResult] = useState<VerificationResult | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [imgError, setImgError] = useState(false);
 
   useEffect(() => {
     if (!certificateId) return;
+    const controller = new AbortController();
 
-    fetch(`${API_BASE}/public/verify/${encodeURIComponent(certificateId)}`)
+    fetch(`${API_BASE}/public/verify/${encodeURIComponent(certificateId)}`, { signal: controller.signal })
       .then(async (res) => {
         const body = await res.json();
         if (body.success) {
@@ -30,8 +31,13 @@ export function VerifyCertificatePage() {
           setError('Unable to verify certificate');
         }
       })
-      .catch(() => setError('Unable to connect to verification service'))
+      .catch((err) => {
+        if (err.name === 'AbortError') return;
+        setError('Unable to connect to verification service');
+      })
       .finally(() => setLoading(false));
+
+    return () => controller.abort();
   }, [certificateId]);
 
   const completionDateStr = result?.completionDate
@@ -47,12 +53,14 @@ export function VerifyCertificatePage() {
       <div className="mx-auto max-w-md w-full">
         {/* Header */}
         <div className="text-center mb-8">
-          <img
-            src="/oyo-crest.png"
-            alt="Oyo State Government Crest"
-            className="mx-auto h-16 w-16 mb-4"
-            onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
-          />
+          {!imgError && (
+            <img
+              src="/oyo-crest.png"
+              alt="Oyo State Government Crest"
+              className="mx-auto h-16 w-16 mb-4"
+              onError={() => setImgError(true)}
+            />
+          )}
           <h1 className="text-xl font-bold text-text-primary">
             Certificate Verification
           </h1>
