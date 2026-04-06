@@ -5,6 +5,8 @@ import { AppError } from '../lib/appError';
 import { VOCABULARY } from '@vlprs/shared';
 import type { FlaggedRecordSummary, MdaReviewProgress, CountdownStatus } from '@vlprs/shared';
 import { correctRecord, getRecordDetail } from './migrationValidationService';
+import { generateObservations } from './observationEngine';
+import { logger } from '../lib/logger';
 import type { MigrationRecordDetail } from '@vlprs/shared';
 
 // ─── Review Window Helpers ──────────────────────────────────────────
@@ -349,11 +351,18 @@ export async function baselineReviewedRecords(
 
   for (const record of reviewedRecords) {
     try {
-      await createBaseline(actingUser, uploadId, record.id, mdaScope);
+      await createBaseline(actingUser, uploadId, record.id, mdaScope, { skipObservationGeneration: true });
       baselinedCount++;
     } catch {
       // Skip records that fail baseline (e.g. eligibility issues) — don't block batch
     }
+  }
+
+  // Story 15.0b: Fire-and-forget observation generation once for all newly baselined records
+  if (baselinedCount > 0) {
+    generateObservations(uploadId, userId).catch((err) =>
+      logger.error({ err, uploadId }, 'Observation generation failed after reviewed baseline'),
+    );
   }
 
   return { baselinedCount };

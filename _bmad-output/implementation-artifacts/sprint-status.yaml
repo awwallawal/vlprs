@@ -260,7 +260,9 @@ development_status:
   epic-8-retrospective: done  # retro 2026-04-06 — 43 UAT findings, 14 prep stories, 4 new team agreements (total 14), federated upload discovery. Prep sprint required before E15+E16. Detail: epic-8-retro-2026-04-06.md + epic-8-uat-findings-2026-04-06.md
 
   # Epic 15 Preparation (from Epic 8 retrospective 2026-04-06)
-  # 43 UAT findings → 14 prep stories. Zero-debt-forward principle.
+  # 43 UAT findings → 14 prep stories (15.0c already done in 8.2). Zero-debt-forward principle.
+  # Sequence: 15.0a → 15.0b → 15.0c (done) → 15.0d (quick) → 15.0e + 15.0f (parallel) → 15.0g + 15.0h (parallel) → 15.0i + 15.0j (parallel) → 15.0k → 15.0l + 15.0m (parallel) → 15.0n → UAT checkpoint → E15 core + E16 core
+  #
   # CRITICAL — must complete before Story 15.1:
   #   1. apiClient unwrap fix (15.0a) — Critical, all roles affected
   #   2. Observation auto-generation (15.0b) — Critical, workflow disconnected
@@ -284,23 +286,24 @@ development_status:
   #
   # MDA COUNT: 63 (not 47 — 47 is legacy data coverage only)
   15-0a-api-response-consistency-loans-table-fix: done  # CRITICAL: apiClient unwrap bug — UAT #5, #32. Code review: 6 findings (1H 2M 3L), 4 fixed, 2 deferred (pre-existing)
-  15-0b-observation-auto-generation-after-baseline: ready-for-dev  # CRITICAL: wire generateObservations() to baseline commit — UAT #8
+  15-0b-observation-auto-generation-after-baseline: done  # CRITICAL: wire generateObservations() to baseline commit — UAT #8. Code review: 4 findings (0H 1M 3L), all fixed
   15-0c-public-certificate-verification-page: done  # Already implemented in Story 8.2 (commit 11229aa). UAT #33 recorded against stale deployment
   15-0d-dev-auto-seed-separation: ready-for-dev  # HIGH: separate admin users from demo loans — UAT #39
   15-0e-mda-officer-dashboard-sidebar-redesign: ready-for-dev  # HIGH: purpose-built dashboard, 7 sidebar items — UAT #20, #25, #29
   15-0f-federated-upload-mda-officer-migration: ready-for-dev  # HIGH: role gate + verification step + source attribution — UAT #28, #27
   15-0g-drill-down-completeness: ready-for-dev  # HIGH: View All Loans, Zero Deduction table, MDA Review discoverability — UAT #2, #21, #22
-  15-0h-clickable-cards-reports-drilldown: backlog  # MEDIUM: Recovery Potential, MDA Scorecard, Ops Hub — UAT #16, #17, #31
-  15-0i-certificate-admin-preview-completed-loans: backlog  # MEDIUM: certificate list/preview/resend — UAT #34
-  15-0j-quick-fixes-bundle: backlog  # MEDIUM: MetricHelp, empty states, breadcrumb, MoM layout, period column, fund total, Top Variances pagination — UAT #3,4,6,7,9,11,12,13,14,15,23,24
-  15-0k-mda-beneficiary-ledger-lifecycle: backlog  # MEDIUM: MDA-scoped ledger with active/completed/transferred grouping — UAT #35, #37
-  15-0l-duplicates-auto-trigger-drilldown: backlog  # MEDIUM: auto-run detection + side-by-side comparison — UAT #18, #19
-  15-0m-within-file-deduplication-check: backlog  # MEDIUM: same-person-same-period in single file — UAT #36
-  15-0n-supersede-data-comparison-correction-reason: backlog  # HIGH+MEDIUM: record-level diff preview + mandatory reason for all corrections — UAT #40, #42
+  15-0h-clickable-cards-reports-drilldown: ready-for-dev  # MEDIUM: Recovery Potential, MDA Scorecard, Ops Hub — UAT #16, #17, #31
+  15-0i-certificate-admin-preview-completed-loans: ready-for-dev  # MEDIUM: certificate list/preview/resend — UAT #34
+  15-0j-quick-fixes-bundle: ready-for-dev  # MEDIUM: MetricHelp, empty states, breadcrumb, MoM layout, period column, fund total, Top Variances pagination — UAT #3,4,6,7,9,11,12,13,14,15,23,24
+  15-0k-mda-beneficiary-ledger-lifecycle: ready-for-dev  # MEDIUM: MDA-scoped ledger with active/completed/transferred grouping — UAT #35, #37
+  15-0l-duplicates-auto-trigger-drilldown: ready-for-dev  # MEDIUM: auto-run detection + side-by-side comparison — UAT #18, #19
+  15-0m-within-file-deduplication-check: ready-for-dev  # MEDIUM: same-person-same-period in single file — UAT #36
+  15-0n-supersede-data-comparison-correction-reason: ready-for-dev  # HIGH+MEDIUM: record-level diff preview + mandatory reason for all corrections — UAT #40, #42
 
-  # Epic 15: Beneficiary Onboarding & Verification Pipeline (Sprint 11 — parallel with E8 core after E8 prep)
-  # Stories 15.1-15.4 can start after E8 prep (8.0a-8.0i). Story 15.5 has hard dependency on 8.0a/8.0b (three-vector model).
-  # Sequence: 15.1 → 15.2 → 15.3 + 15.4 (parallel) → 15.5 (after 8.0a/8.0b) → 15.6
+  # Epic 15: Beneficiary Onboarding & Verification Pipeline (Sprint 12 — after E15 prep sprint)
+  # BLOCKED BY: E15 prep stories (15.0a–15.0n). All critical + high prep stories must complete before 15.1.
+  # Story 15.5 has additional hard dependency on 8.0a/8.0b (three-vector model — already done).
+  # Sequence: [E15 prep complete] → 15.1 → 15.2 → 15.3 + 15.4 (parallel) → 15.5 → 15.6
   # Full specification: _bmad-output/planning-artifacts/epic-15-beneficiary-onboarding-pipeline.md
   # Team review: _bmad-output/planning-artifacts/epic-15-team-review.md
   #
@@ -332,16 +335,17 @@ development_status:
   12-3-early-exit-dashboard-history: backlog
   epic-12-retrospective: optional
 
-  # Epic 16: Cross-Month Data Integrity & Trend Analysis (Sprint 12 — parallel with E12)
+  # Epic 16: Cross-Month Data Integrity & Trend Analysis (Sprint 12 — parallel with E12, after E15 prep)
   # Transforms VLPRS from a processing tool into a governance instrument. Every monthly submission
   # becomes a checkpoint — the system automatically compares consecutive submissions per MDA to detect
   # anomalies invisible to manual spreadsheet review.
   #
-  # DEPENDENCIES: Epic 5 (MDA Submission — done), Story 8.0d (periods — ready-for-dev).
+  # DEPENDENCIES: Epic 5 (MDA Submission — done), Story 8.0d (periods — done).
+  #   E15 prep stories (15.0a–15.0n) establish patterns (fire-and-forget, MetricHelp, empty states, clickable cards) that E16 must follow.
   #   Engine can be built and tested with synthetic data; production use requires ≥2 months real submissions.
   # ORIGIN: Story 8.0b UAT escalation #4 (2026-04-01), PM triage 2026-04-02, discovery spike 2026-04-02
   #
-  # Sequence: 16.0 (Sprint 11 discovery, done) → 16.1 → 16.2 → 16.3 + 16.4 (parallel)
+  # Sequence: [E15 prep complete] → 16.1 → 16.2 → 16.3 + 16.4 (parallel)
   #
   # REUSE SURFACE (from discovery):
   #   - comparisonEngine.ts: variance thresholds + categorisation → reuse for MoM change severity
