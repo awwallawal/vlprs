@@ -1,11 +1,12 @@
-import { Info, CheckCircle2, ChevronDown } from 'lucide-react';
+import { useState, useMemo, useEffect } from 'react';
+import { Info, CheckCircle2, ChevronDown, ChevronLeft, ChevronRight, ArrowUp, ArrowDown, ArrowUpDown } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/ui/collapsible';
 import { Skeleton } from '@/components/ui/skeleton';
 import { UI_COPY, VOCABULARY } from '@vlprs/shared';
 import type { PreSubmissionCheckpoint as CheckpointData, RetirementItem, ZeroDeductionItem, PendingEventItem } from '@vlprs/shared';
 
-const MAX_ITEMS_PER_SECTION = 50;
+const PAGE_SIZE = 25;
 
 interface PreSubmissionCheckpointProps {
   data: CheckpointData | undefined;
@@ -54,13 +55,9 @@ export function PreSubmissionCheckpoint({
           iconColor="text-[#0D7377]"
           bgColor="bg-teal-50"
           isEmpty={retirementCount === 0}
+          emptyMessage={UI_COPY.CHECKPOINT_EMPTY_RETIREMENT}
         >
-          {data.approachingRetirement.slice(0, MAX_ITEMS_PER_SECTION).map((item) => (
-            <RetirementRow key={item.staffId} item={item} />
-          ))}
-          {retirementCount > MAX_ITEMS_PER_SECTION && (
-            <OverflowFooter total={retirementCount} shown={MAX_ITEMS_PER_SECTION} />
-          )}
+          <RetirementTable items={data.approachingRetirement} />
         </CheckpointSection>
 
         {/* Zero Deduction Review */}
@@ -70,13 +67,9 @@ export function PreSubmissionCheckpoint({
           iconColor="text-[#D4A017]"
           bgColor="bg-amber-50"
           isEmpty={zeroDeductionCount === 0}
+          emptyMessage={UI_COPY.CHECKPOINT_EMPTY_ZERO_DEDUCTION}
         >
-          {data.zeroDeduction.slice(0, MAX_ITEMS_PER_SECTION).map((item) => (
-            <ZeroDeductionRow key={item.staffId} item={item} />
-          ))}
-          {zeroDeductionCount > MAX_ITEMS_PER_SECTION && (
-            <OverflowFooter total={zeroDeductionCount} shown={MAX_ITEMS_PER_SECTION} />
-          )}
+          <ZeroDeductionTable items={data.zeroDeduction} />
         </CheckpointSection>
 
         {/* Pending Events */}
@@ -86,13 +79,9 @@ export function PreSubmissionCheckpoint({
           iconColor="text-[#0D7377]"
           bgColor="bg-teal-50"
           isEmpty={pendingEventsCount === 0}
+          emptyMessage={UI_COPY.CHECKPOINT_EMPTY_PENDING_EVENTS}
         >
-          {data.pendingEvents.slice(0, MAX_ITEMS_PER_SECTION).map((item, i) => (
-            <PendingEventRow key={`${item.staffName}-${item.effectiveDate}-${i}`} item={item} />
-          ))}
-          {pendingEventsCount > MAX_ITEMS_PER_SECTION && (
-            <OverflowFooter total={pendingEventsCount} shown={MAX_ITEMS_PER_SECTION} />
-          )}
+          <PendingEventsTable items={data.pendingEvents} />
         </CheckpointSection>
       </div>
 
@@ -120,10 +109,11 @@ interface CheckpointSectionProps {
   iconColor: string;
   bgColor: string;
   isEmpty: boolean;
+  emptyMessage: string;
   children: React.ReactNode;
 }
 
-function CheckpointSection({ heading, count, iconColor, bgColor, isEmpty, children }: CheckpointSectionProps) {
+function CheckpointSection({ heading, count, iconColor, bgColor, isEmpty, emptyMessage, children }: CheckpointSectionProps) {
   return (
     <Collapsible defaultOpen>
       <Card>
@@ -144,10 +134,10 @@ function CheckpointSection({ heading, count, iconColor, bgColor, isEmpty, childr
             {isEmpty ? (
               <div className="flex items-center gap-2 rounded-md bg-green-50 p-3">
                 <CheckCircle2 className="h-4 w-4 text-[#16A34A]" aria-hidden="true" />
-                <span className="text-sm text-text-secondary">{UI_COPY.CHECKPOINT_EMPTY_SECTION}</span>
+                <span className="text-sm text-text-secondary">{emptyMessage}</span>
               </div>
             ) : (
-              <div className={`rounded-md ${bgColor} p-3 space-y-2`}>
+              <div className={`rounded-md ${bgColor} p-3`}>
                 {children}
               </div>
             )}
@@ -158,58 +148,202 @@ function CheckpointSection({ heading, count, iconColor, bgColor, isEmpty, childr
   );
 }
 
-// ─── Row renderers ────────────────────────────────────────────────
+// ─── Generic sort / pagination helpers ───────────────────────────
 
-function RetirementRow({ item }: { item: RetirementItem }) {
+type SortOrder = 'asc' | 'desc';
+
+function useSortedPaginated<T>(items: T[], defaultSortKey: string & keyof T) {
+  const [sortBy, setSortBy] = useState<string>(defaultSortKey as string);
+  const [sortOrder, setSortOrder] = useState<SortOrder>('desc');
+  const [page, setPage] = useState(1);
+
+  // Reset to page 1 when items change (e.g., re-fetch returns fewer items)
+  useEffect(() => { setPage(1); }, [items.length]);
+
+  const sorted = useMemo(() => {
+    const copy = [...items];
+    copy.sort((a, b) => {
+      const aVal = a[sortBy as keyof T];
+      const bVal = b[sortBy as keyof T];
+      if (aVal == null && bVal == null) return 0;
+      if (aVal == null) return 1;
+      if (bVal == null) return -1;
+      if (typeof aVal === 'number' && typeof bVal === 'number') {
+        return sortOrder === 'asc' ? aVal - bVal : bVal - aVal;
+      }
+      const aStr = String(aVal);
+      const bStr = String(bVal);
+      return sortOrder === 'asc' ? aStr.localeCompare(bStr) : bStr.localeCompare(aStr);
+    });
+    return copy;
+  }, [items, sortBy, sortOrder]);
+
+  const totalPages = Math.ceil(items.length / PAGE_SIZE);
+  const paginated = sorted.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
+  function handleSort(key: string) {
+    if (sortBy === key) {
+      setSortOrder((o) => (o === 'asc' ? 'desc' : 'asc'));
+    } else {
+      setSortBy(key);
+      setSortOrder('asc');
+    }
+    setPage(1);
+  }
+
+  function sortIcon(key: string) {
+    if (sortBy !== key) return <ArrowUpDown className="ml-1 inline h-3 w-3 text-text-secondary/50" />;
+    return sortOrder === 'asc'
+      ? <ArrowUp className="ml-1 inline h-3 w-3 text-text-primary" />
+      : <ArrowDown className="ml-1 inline h-3 w-3 text-text-primary" />;
+  }
+
+  return { paginated, page, setPage, totalPages, handleSort, sortIcon, showPagination: totalPages > 1 };
+}
+
+function PaginationControls({ page, totalPages, setPage }: { page: number; totalPages: number; setPage: (p: number) => void }) {
   return (
-    <div className="flex items-start gap-3">
-      <Info className="h-4 w-4 shrink-0 text-[#0D7377] mt-0.5" aria-hidden="true" />
-      <div className="text-sm text-text-primary">
-        <span className="font-medium">{item.staffName}</span>
-        <span className="text-text-secondary"> ({item.staffId})</span>
-        <span className="text-text-secondary"> — Retirement: {item.retirementDate}</span>
-        <span className="text-text-muted"> ({item.daysUntilRetirement} days)</span>
-      </div>
+    <div className="flex items-center justify-between pt-2">
+      <button
+        type="button"
+        className="flex items-center gap-1 text-xs text-text-secondary hover:text-text-primary disabled:opacity-40 disabled:cursor-not-allowed"
+        disabled={page <= 1}
+        onClick={() => setPage(page - 1)}
+      >
+        <ChevronLeft className="h-3 w-3" /> Previous
+      </button>
+      <span className="text-xs text-text-secondary">
+        Page {page} of {totalPages}
+      </span>
+      <button
+        type="button"
+        className="flex items-center gap-1 text-xs text-text-secondary hover:text-text-primary disabled:opacity-40 disabled:cursor-not-allowed"
+        disabled={page >= totalPages}
+        onClick={() => setPage(page + 1)}
+      >
+        Next <ChevronRight className="h-3 w-3" />
+      </button>
     </div>
   );
 }
 
-function ZeroDeductionRow({ item }: { item: ZeroDeductionItem }) {
+// ─── Retirement table ────────────────────────────────────────────
+
+function RetirementTable({ items }: { items: RetirementItem[] }) {
+  const { paginated, page, setPage, totalPages, handleSort, sortIcon, showPagination } = useSortedPaginated(items, 'daysUntilRetirement');
+
   return (
-    <div className="flex items-start gap-3">
-      <Info className="h-4 w-4 shrink-0 text-[#D4A017] mt-0.5" aria-hidden="true" />
-      <div className="text-sm text-text-primary">
-        <span className="font-medium">{item.staffName}</span>
-        <span className="text-text-secondary"> ({item.staffId})</span>
-        <span className="text-text-secondary"> — Last deduction: {item.lastDeductionDate}</span>
-        {item.daysSinceLastDeduction !== null && (
-          <span className="text-text-muted"> ({item.daysSinceLastDeduction} days ago)</span>
-        )}
-      </div>
-    </div>
+    <>
+      <table className="w-full text-sm" role="table">
+        <thead>
+          <tr className="border-b bg-white/50">
+            <th className="px-3 py-2 text-left font-medium text-text-secondary cursor-pointer select-none" onClick={() => handleSort('staffName')}>
+              Staff Name {sortIcon('staffName')}
+            </th>
+            <th className="px-3 py-2 text-left font-medium text-text-secondary cursor-pointer select-none" onClick={() => handleSort('staffId')}>
+              Staff ID {sortIcon('staffId')}
+            </th>
+            <th className="px-3 py-2 text-left font-medium text-text-secondary cursor-pointer select-none" onClick={() => handleSort('retirementDate')}>
+              Retirement Date {sortIcon('retirementDate')}
+            </th>
+            <th className="px-3 py-2 text-right font-medium text-text-secondary cursor-pointer select-none" onClick={() => handleSort('daysUntilRetirement')}>
+              Days Until {sortIcon('daysUntilRetirement')}
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          {paginated.map((item) => (
+            <tr key={item.staffId} className="border-b last:border-b-0 hover:bg-white/30">
+              <td className="px-3 py-2 font-medium">{item.staffName}</td>
+              <td className="px-3 py-2 font-mono text-text-secondary">{item.staffId}</td>
+              <td className="px-3 py-2 text-text-secondary">{item.retirementDate}</td>
+              <td className="px-3 py-2 text-right font-mono">{item.daysUntilRetirement}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      {showPagination && <PaginationControls page={page} totalPages={totalPages} setPage={setPage} />}
+    </>
   );
 }
 
-function PendingEventRow({ item }: { item: PendingEventItem }) {
+// ─── Zero Deduction table ────────────────────────────────────────
+
+function ZeroDeductionTable({ items }: { items: ZeroDeductionItem[] }) {
+  const { paginated, page, setPage, totalPages, handleSort, sortIcon, showPagination } = useSortedPaginated(items, 'daysSinceLastDeduction');
+
   return (
-    <div className="flex items-start gap-3">
-      <Info className="h-4 w-4 shrink-0 text-[#0D7377] mt-0.5" aria-hidden="true" />
-      <div className="text-sm text-text-primary">
-        <span className="font-medium">{item.eventType}</span>
-        <span className="text-text-secondary"> — {item.staffName}</span>
-        <span className="text-text-secondary"> ({item.effectiveDate})</span>
-      </div>
-    </div>
+    <>
+      <table className="w-full text-sm" role="table">
+        <thead>
+          <tr className="border-b bg-white/50">
+            <th className="px-3 py-2 text-left font-medium text-text-secondary cursor-pointer select-none" onClick={() => handleSort('staffName')}>
+              Staff Name {sortIcon('staffName')}
+            </th>
+            <th className="px-3 py-2 text-left font-medium text-text-secondary cursor-pointer select-none" onClick={() => handleSort('staffId')}>
+              Staff ID {sortIcon('staffId')}
+            </th>
+            <th className="px-3 py-2 text-left font-medium text-text-secondary cursor-pointer select-none" onClick={() => handleSort('lastDeductionDate')}>
+              Last Deduction {sortIcon('lastDeductionDate')}
+            </th>
+            <th className="px-3 py-2 text-right font-medium text-text-secondary cursor-pointer select-none" onClick={() => handleSort('daysSinceLastDeduction')}>
+              Days Since {sortIcon('daysSinceLastDeduction')}
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          {paginated.map((item) => (
+            <tr key={item.staffId} className="border-b last:border-b-0 hover:bg-white/30">
+              <td className="px-3 py-2 font-medium">{item.staffName}</td>
+              <td className="px-3 py-2 font-mono text-text-secondary">{item.staffId}</td>
+              <td className="px-3 py-2 text-text-secondary">{item.lastDeductionDate}</td>
+              <td className="px-3 py-2 text-right font-mono">{item.daysSinceLastDeduction ?? '—'}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      {showPagination && <PaginationControls page={page} totalPages={totalPages} setPage={setPage} />}
+    </>
   );
 }
 
-// ─── Overflow footer ──────────────────────────────────────────────
+// ─── Pending Events table ────────────────────────────────────────
 
-function OverflowFooter({ total, shown }: { total: number; shown: number }) {
+function PendingEventsTable({ items }: { items: PendingEventItem[] }) {
+  const { paginated, page, setPage, totalPages, handleSort, sortIcon, showPagination } = useSortedPaginated(items, 'effectiveDate');
+
   return (
-    <p className="text-xs text-text-muted pt-1">
-      ...and {total - shown} more
-    </p>
+    <>
+      <table className="w-full text-sm" role="table">
+        <thead>
+          <tr className="border-b bg-white/50">
+            <th className="px-3 py-2 text-left font-medium text-text-secondary cursor-pointer select-none" onClick={() => handleSort('eventType')}>
+              Event Type {sortIcon('eventType')}
+            </th>
+            <th className="px-3 py-2 text-left font-medium text-text-secondary cursor-pointer select-none" onClick={() => handleSort('staffName')}>
+              Staff Name {sortIcon('staffName')}
+            </th>
+            <th className="px-3 py-2 text-left font-medium text-text-secondary cursor-pointer select-none" onClick={() => handleSort('effectiveDate')}>
+              Effective Date {sortIcon('effectiveDate')}
+            </th>
+            <th className="px-3 py-2 text-left font-medium text-text-secondary cursor-pointer select-none" onClick={() => handleSort('reconciliationStatus')}>
+              Status {sortIcon('reconciliationStatus')}
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          {paginated.map((item) => (
+            <tr key={`${item.staffName}-${item.effectiveDate}-${item.reconciliationStatus}`} className="border-b last:border-b-0 hover:bg-white/30">
+              <td className="px-3 py-2 font-medium">{item.eventType}</td>
+              <td className="px-3 py-2 text-text-secondary">{item.staffName}</td>
+              <td className="px-3 py-2 text-text-secondary">{item.effectiveDate}</td>
+              <td className="px-3 py-2 text-text-secondary">{item.reconciliationStatus}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      {showPagination && <PaginationControls page={page} totalPages={totalPages} setPage={setPage} />}
+    </>
   );
 }
 

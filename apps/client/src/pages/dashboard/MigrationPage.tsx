@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router';
+import { useState, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router';
 import { Upload } from 'lucide-react';
 import { useMigrationStatus, useMigrationDashboardMetrics } from '@/hooks/useMigrationData';
 import { useAuthStore } from '@/stores/authStore';
@@ -22,6 +22,12 @@ import { ROLES, VOCABULARY } from '@vlprs/shared';
 
 type Tab = 'mda-progress' | 'beneficiary-ledger' | 'observations' | 'duplicates' | 'coverage' | 'uploads' | 'mda-review';
 
+const VALID_TABS = new Set<Tab>(['mda-progress', 'beneficiary-ledger', 'observations', 'duplicates', 'coverage', 'uploads', 'mda-review']);
+
+function parseTab(raw: string | null): Tab | null {
+  return raw && VALID_TABS.has(raw as Tab) ? (raw as Tab) : null;
+}
+
 export function MigrationPage() {
   usePageMeta({ title: VOCABULARY.MIGRATION_DASHBOARD_TITLE, description: 'Migration progress and beneficiary ledger' });
 
@@ -29,10 +35,20 @@ export function MigrationPage() {
   const user = useAuthStore((s) => s.user);
   const canUpload = user?.role === ROLES.DEPT_ADMIN || user?.role === ROLES.SUPER_ADMIN || user?.role === ROLES.MDA_OFFICER;
   const isAdminOrOfficer = canUpload || user?.role === ROLES.MDA_OFFICER;
+  const [searchParams] = useSearchParams();
+  const isOfficer = user?.role === ROLES.MDA_OFFICER;
   const uploads = useListMigrations({ limit: 1 });
   const latestUploadId = uploads.data?.data?.[0]?.id ?? '';
-  const [activeTab, setActiveTab] = useState<Tab>('mda-progress');
+  const [activeTab, setActiveTab] = useState<Tab>(
+    parseTab(searchParams.get('tab')) ?? (isOfficer ? 'mda-review' : 'mda-progress'),
+  );
   const [mdaFilter, setMdaFilter] = useState('');
+
+  // Sync tab state when URL search params change (e.g., sidebar re-click)
+  useEffect(() => {
+    const tab = parseTab(searchParams.get('tab'));
+    if (tab) setActiveTab(tab);
+  }, [searchParams]);
 
   const { data: migrationData, isPending: isMigrationPending } = useMigrationStatus();
   const { data: metrics, isPending: isMetricsPending } = useMigrationDashboardMetrics();
