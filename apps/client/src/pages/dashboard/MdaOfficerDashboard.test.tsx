@@ -92,20 +92,20 @@ const mockSubmissions = {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const mockUseDashboardMetrics = vi.fn((): any => ({ data: mockMetrics, isPending: false }));
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-const mockUseMdaDetail = vi.fn((): any => ({ data: mockMdaDetail, isPending: false }));
+const mockUseMdaDetail = vi.fn((_mdaId?: string): any => ({ data: mockMdaDetail, isPending: false }));
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const mockUseMigrationStatus = vi.fn((): any => ({ data: mockMigration, isPending: false }));
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-const mockUsePreSubmissionCheckpoint = vi.fn((): any => ({ data: null, isPending: false }));
+const mockUsePreSubmissionCheckpoint = vi.fn((_mdaId?: string | undefined): any => ({ data: null, isPending: false }));
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-const mockUseSubmissionHistory = vi.fn((): any => ({ data: mockSubmissions, isPending: false }));
+const mockUseSubmissionHistory = vi.fn((_mdaId?: string, _page?: number, _pageSize?: number): any => ({ data: mockSubmissions, isPending: false }));
 
 vi.mock('@/hooks/useDashboardData', () => ({
   useDashboardMetrics: () => mockUseDashboardMetrics(),
 }));
 
 vi.mock('@/hooks/useMdaData', () => ({
-  useMdaDetail: (...args: unknown[]) => mockUseMdaDetail(...args),
+  useMdaDetail: (mdaId: string) => mockUseMdaDetail(mdaId),
 }));
 
 vi.mock('@/hooks/useMigrationData', () => ({
@@ -113,11 +113,11 @@ vi.mock('@/hooks/useMigrationData', () => ({
 }));
 
 vi.mock('@/hooks/usePreSubmissionCheckpoint', () => ({
-  usePreSubmissionCheckpoint: (...args: unknown[]) => mockUsePreSubmissionCheckpoint(...args),
+  usePreSubmissionCheckpoint: (mdaId: string | undefined) => mockUsePreSubmissionCheckpoint(mdaId),
 }));
 
 vi.mock('@/hooks/useSubmissionData', () => ({
-  useSubmissionHistory: (...args: unknown[]) => mockUseSubmissionHistory(...args),
+  useSubmissionHistory: (mdaId?: string, page?: number, pageSize?: number) => mockUseSubmissionHistory(mdaId, page, pageSize),
 }));
 
 vi.mock('./components/MdaReviewSection', () => ({
