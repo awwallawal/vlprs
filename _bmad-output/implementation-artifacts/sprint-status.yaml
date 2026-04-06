@@ -288,7 +288,7 @@ development_status:
   15-0a-api-response-consistency-loans-table-fix: done  # CRITICAL: apiClient unwrap bug — UAT #5, #32. Code review: 6 findings (1H 2M 3L), 4 fixed, 2 deferred (pre-existing)
   15-0b-observation-auto-generation-after-baseline: done  # CRITICAL: wire generateObservations() to baseline commit — UAT #8. Code review: 4 findings (0H 1M 3L), all fixed
   15-0c-public-certificate-verification-page: done  # Already implemented in Story 8.2 (commit 11229aa). UAT #33 recorded against stale deployment
-  15-0d-dev-auto-seed-separation: ready-for-dev  # HIGH: separate admin users from demo loans — UAT #39
+  15-0d-dev-auto-seed-separation: done  # HIGH: separate admin users from demo loans — UAT #39. Code review: 4 findings (0H 1M 3L), all resolved
   15-0e-mda-officer-dashboard-sidebar-redesign: ready-for-dev  # HIGH: purpose-built dashboard, 7 sidebar items — UAT #20, #25, #29
   15-0f-federated-upload-mda-officer-migration: ready-for-dev  # HIGH: role gate + verification step + source attribution — UAT #28, #27
   15-0g-drill-down-completeness: ready-for-dev  # HIGH: View All Loans, Zero Deduction table, MDA Review discoverability — UAT #2, #21, #22

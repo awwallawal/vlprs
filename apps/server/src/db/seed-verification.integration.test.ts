@@ -4,7 +4,7 @@ import { resolve } from 'node:path';
 import { sql } from 'drizzle-orm';
 import { db } from './index';
 import { mdas } from './schema';
-import { runDemoSeed } from './seed-demo';
+import { seedReferenceMdas } from './seedReferenceMdas';
 
 /**
  * Seed verification test (Task 8.5):
@@ -47,7 +47,7 @@ describe('Seed verification: MDAs match authoritative list', () => {
   beforeAll(async () => {
     authEntries = parseAuthoritativeList(authListPath);
     await db.execute(sql`TRUNCATE loans, refresh_tokens, audit_log, users, mdas CASCADE`);
-    await runDemoSeed();
+    await seedReferenceMdas();
   });
 
   afterAll(async () => {
