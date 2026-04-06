@@ -6,12 +6,11 @@ import {
   FileText,
   FileSpreadsheet,
   Upload,
-  Clock,
-  Database,
   Users,
   UserCog,
   Activity,
   ArrowRightLeft,
+  ClipboardCheck,
 } from 'lucide-react';
 import type { ComponentType } from 'react';
 
@@ -25,13 +24,16 @@ export interface NavItem {
 export const NAV_ITEMS: NavItem[] = [
   { label: 'Dashboard', path: '/dashboard', icon: LayoutDashboard, roles: [ROLES.SUPER_ADMIN] },
   { label: 'Operations', path: '/dashboard/operations', icon: Settings, roles: [ROLES.DEPT_ADMIN] },
-  { label: 'Submit', path: '/dashboard/submissions', icon: Upload, roles: [ROLES.MDA_OFFICER] },
-  { label: 'History', path: '/dashboard/submissions', icon: Clock, roles: [ROLES.MDA_OFFICER] },
-  { label: 'Historical Upload', path: '/dashboard/historical-upload', icon: FileText, roles: [ROLES.MDA_OFFICER, ROLES.DEPT_ADMIN] },
+  // MDA Officer navigation (Story 15.0e — 6 items)
+  { label: 'My Dashboard', path: '/dashboard', icon: LayoutDashboard, roles: [ROLES.MDA_OFFICER] },
+  { label: 'Upload Data', path: '/dashboard/submissions', icon: Upload, roles: [ROLES.MDA_OFFICER] },
+  { label: 'My Reviews', path: '/dashboard/migration', icon: ClipboardCheck, roles: [ROLES.MDA_OFFICER] },
+  { label: 'Historical Upload', path: '/dashboard/historical-upload', icon: FileText, roles: [ROLES.DEPT_ADMIN] },
   { label: 'Payroll Upload', path: '/dashboard/payroll-upload', icon: FileSpreadsheet, roles: [ROLES.SUPER_ADMIN] },
   { label: 'Employment Events', path: '/dashboard/employment-events', icon: UserCog, roles: [ROLES.SUPER_ADMIN, ROLES.DEPT_ADMIN, ROLES.MDA_OFFICER] },
-  { label: 'Migration', path: '/dashboard/migration', icon: Database, roles: [ROLES.SUPER_ADMIN, ROLES.DEPT_ADMIN] },
+  { label: 'Migration', path: '/dashboard/migration', icon: ClipboardCheck, roles: [ROLES.SUPER_ADMIN, ROLES.DEPT_ADMIN] },
   { label: 'Reconciliation', path: '/dashboard/reconciliation/three-way', icon: ArrowRightLeft, roles: [ROLES.SUPER_ADMIN, ROLES.DEPT_ADMIN, ROLES.MDA_OFFICER] },
+  { label: 'My Reports', path: '/dashboard/reports', icon: FileText, roles: [ROLES.MDA_OFFICER] },
   { label: 'Reports', path: '/dashboard/reports', icon: FileText, roles: [ROLES.SUPER_ADMIN, ROLES.DEPT_ADMIN] },
   { label: 'Exceptions', path: '/dashboard/exceptions', icon: AlertCircle, roles: [ROLES.SUPER_ADMIN, ROLES.DEPT_ADMIN] },
   { label: 'User Management', path: '/dashboard/admin', icon: Users, roles: [ROLES.SUPER_ADMIN, ROLES.DEPT_ADMIN] },
@@ -47,5 +49,5 @@ export const ROLE_LABELS: Record<Role, string> = {
 export const ROLE_HOME_ROUTES: Record<Role, string> = {
   [ROLES.SUPER_ADMIN]: '/dashboard',
   [ROLES.DEPT_ADMIN]: '/dashboard/operations',
-  [ROLES.MDA_OFFICER]: '/dashboard/submissions',
+  [ROLES.MDA_OFFICER]: '/dashboard',
 };

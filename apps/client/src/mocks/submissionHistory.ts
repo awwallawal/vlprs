@@ -12,6 +12,7 @@ export const MOCK_SUBMISSION_HISTORY: Record<string, SubmissionRecord[]> = {
       alignedCount: 140,
       varianceCount: 2,
       status: 'confirmed',
+      period: '2026-02',
     },
     {
       id: 'sub-mof-002',
@@ -21,6 +22,7 @@ export const MOCK_SUBMISSION_HISTORY: Record<string, SubmissionRecord[]> = {
       alignedCount: 138,
       varianceCount: 2,
       status: 'confirmed',
+      period: '2026-01',
     },
     {
       id: 'sub-mof-003',
@@ -30,6 +32,7 @@ export const MOCK_SUBMISSION_HISTORY: Record<string, SubmissionRecord[]> = {
       alignedCount: 136,
       varianceCount: 2,
       status: 'confirmed',
+      period: '2025-12',
     },
   ],
   'mda-002': [
@@ -41,6 +44,7 @@ export const MOCK_SUBMISSION_HISTORY: Record<string, SubmissionRecord[]> = {
       alignedCount: 205,
       varianceCount: 5,
       status: 'confirmed',
+      period: '2026-02',
     },
     {
       id: 'sub-moe-002',
@@ -50,6 +54,7 @@ export const MOCK_SUBMISSION_HISTORY: Record<string, SubmissionRecord[]> = {
       alignedCount: 204,
       varianceCount: 4,
       status: 'confirmed',
+      period: '2026-01',
     },
     {
       id: 'sub-moe-003',
@@ -59,6 +64,7 @@ export const MOCK_SUBMISSION_HISTORY: Record<string, SubmissionRecord[]> = {
       alignedCount: 202,
       varianceCount: 3,
       status: 'confirmed',
+      period: '2025-12',
     },
   ],
   'mda-003': [
@@ -70,6 +76,7 @@ export const MOCK_SUBMISSION_HISTORY: Record<string, SubmissionRecord[]> = {
       alignedCount: 175,
       varianceCount: 3,
       status: 'confirmed',
+      period: '2026-02',
     },
     {
       id: 'sub-moh-002',
@@ -79,6 +86,7 @@ export const MOCK_SUBMISSION_HISTORY: Record<string, SubmissionRecord[]> = {
       alignedCount: 174,
       varianceCount: 2,
       status: 'confirmed',
+      period: '2026-01',
     },
     {
       id: 'sub-moh-003',
@@ -88,6 +96,7 @@ export const MOCK_SUBMISSION_HISTORY: Record<string, SubmissionRecord[]> = {
       alignedCount: 172,
       varianceCount: 2,
       status: 'confirmed',
+      period: '2025-12',
     },
   ],
 };
