@@ -1,7 +1,8 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { MdaDetailPage } from './MdaDetailPage';
 
 const mockMdaDetail = {
@@ -62,11 +63,19 @@ vi.mock('react-router', async () => {
   };
 });
 
+const { mockUseMdaLoans } = vi.hoisted(() => {
+  const mockUseMdaLoans = vi.fn();
+  return { mockUseMdaLoans };
+});
+
 vi.mock('@/hooks/useMdaData', () => ({
   useMdaDetail: () => ({ data: mockMdaDetail, isPending: false }),
   useMdaComplianceGrid: () => ({ data: [], isPending: false }),
-  useMdaLoans: () => ({ data: mockLoans, isPending: false }),
+  useMdaLoans: (...args: unknown[]) => mockUseMdaLoans(...args),
 }));
+
+// Default mock — single page, no pagination controls rendered
+mockUseMdaLoans.mockReturnValue({ data: mockLoans, isPending: false });
 
 vi.mock('@/hooks/useSubmissionData', () => ({
   useSubmissionHistory: () => ({
@@ -89,6 +98,10 @@ function renderPage(initialEntries = ['/dashboard/mda/mda-003']) {
 }
 
 describe('MdaDetailPage', () => {
+  beforeEach(() => {
+    mockUseMdaLoans.mockReturnValue({ data: mockLoans, isPending: false });
+  });
+
   it('renders MDA name heading', () => {
     renderPage();
     expect(
@@ -141,5 +154,45 @@ describe('MdaDetailPage', () => {
   it('renders variance information', () => {
     renderPage();
     expect(screen.getByText(/below expected/)).toBeInTheDocument();
+  });
+
+  it('does not render pagination when totalPages is 1', () => {
+    renderPage();
+    expect(screen.queryByText(/Previous/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Next/)).not.toBeInTheDocument();
+  });
+
+  it('renders pagination controls when totalPages > 1', () => {
+    mockUseMdaLoans.mockReturnValue({
+      data: {
+        data: mockLoans.data,
+        pagination: { page: 1, pageSize: 25, totalItems: 171, totalPages: 7 },
+      },
+      isPending: false,
+    });
+    renderPage();
+    expect(screen.getByText(/Showing 1–25 of 171 loans/)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Previous' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Next' })).toBeEnabled();
+  });
+
+  it('clicking Next advances the loan page', async () => {
+    const user = userEvent.setup();
+    mockUseMdaLoans.mockReturnValue({
+      data: {
+        data: mockLoans.data,
+        pagination: { page: 1, pageSize: 25, totalItems: 171, totalPages: 7 },
+      },
+      isPending: false,
+    });
+    renderPage();
+
+    await user.click(screen.getByRole('button', { name: 'Next' }));
+
+    // useMdaLoans should be re-called with page=2
+    await waitFor(() => {
+      const lastCall = mockUseMdaLoans.mock.calls[mockUseMdaLoans.mock.calls.length - 1];
+      expect(lastCall[2]).toBe(2);
+    });
   });
 });

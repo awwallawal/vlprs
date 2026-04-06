@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import type { MdaSummary, LoanSearchResult, ComplianceResponse } from '@vlprs/shared';
-import { apiClient } from '@/lib/apiClient';
+import { apiClient, authenticatedFetch, parseJsonResponse } from '@/lib/apiClient';
 
 /**
  * Fetches MDA compliance grid data including heatmap and summary.
@@ -53,7 +53,14 @@ export function useMdaLoans(mdaId: string, classification?: string, page = 1) {
 
   return useQuery<MdaLoansResponse>({
     queryKey: ['mda', mdaId, 'loans', classification, page],
-    queryFn: () => apiClient<MdaLoansResponse>(`/loans?${params.toString()}`),
+    queryFn: async () => {
+      const res = await authenticatedFetch(`/loans?${params.toString()}`);
+      const body = await parseJsonResponse(res);
+      return {
+        data: body.data as LoanSearchResult[],
+        pagination: body.pagination as MdaLoansResponse['pagination'],
+      };
+    },
     enabled: !!mdaId,
     staleTime: 30_000,
   });

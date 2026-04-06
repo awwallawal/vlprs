@@ -5,7 +5,7 @@
 # story_location: _bmad-output/implementation-artifacts
 # sprint_sequence: 1→E1, 2→E14, 3→E2, 4→E10, 5→E3, 6→E4, 7→E5, 8→E11, 9→E7, 10→E6, 11→E8+E15(parallel)+16.0(discovery), 12→E12+E16(parallel), 13→E9, 14→E13
 # total_epics: 16
-# total_stories: 107 (Epic 1: 12, Epic 14: 3, Epic 2: 8 incl. 2.0, Epic 3: 10 incl. 3.0a+3.0b prep from E10 retro, Epic 5: 5 (5.6 moved to E11), Epic 11: 8 incl. 11.0a+11.0b UAT remediation split + 11.2b split + 5.6 moved here, Epic 7: 13 incl. 7.0a-7.0i prep from E3-E11 mega-retro, Epic 6: 4, Epic 8: 13 incl. 8.0a-8.0j prep from E7+E6 retro + 8.0b UAT triage, Epic 10: 4, Epic 4: 4, Epic 12: 3, Epic 9: 3, Epic 13: 2, Epic 15: 6, Epic 16: 5 incl. 16.0 discovery spike (from E16 discovery 2026-04-02) — FR72/FR73 moved from Epic 13 to Epic 1, Story 2.0 added from Epic 1+14 retro, Epic 3 reshaped per PM alignment cascade 2026-03-01, Stories 3.0a+3.0b added per Epic 10 retro 2026-03-05, Story 5.6 moved from E5 to E11 sequence per PM validation 2026-03-16, Story 11.0 added then split into 11.0a+11.0b per PM decision 2026-03-17, FR91+FR92 added, Stories 7.0a-7.0g added per E3-E11 mega-retro 2026-03-20, Stories 7.0h+7.0i added during E7 prep, Stories 8.0a-8.0i added per E7+E6 retro 2026-03-29, Epic 15 added per E7+E6 retro planning item A 2026-03-29 — FR93-FR95 added, Stories 8.0h+8.0i added per Awwal zero-debt-forward mandate 2026-03-29, Story 8.0j added per PM triage of 8.0b UAT escalations 2026-04-02, Epic 16 added per PM triage 2026-04-02 — FRs TBD)
+# total_stories: 121 (Epic 1: 12, Epic 14: 3, Epic 2: 8 incl. 2.0, Epic 3: 10 incl. 3.0a+3.0b prep from E10 retro, Epic 5: 5 (5.6 moved to E11), Epic 11: 8 incl. 11.0a+11.0b UAT remediation split + 11.2b split + 5.6 moved here, Epic 7: 13 incl. 7.0a-7.0i prep from E3-E11 mega-retro, Epic 6: 4, Epic 8: 13 incl. 8.0a-8.0j prep from E7+E6 retro + 8.0b UAT triage, Epic 10: 4, Epic 4: 4, Epic 12: 3, Epic 9: 3, Epic 13: 2, Epic 15: 20 incl. 15.0a-15.0n prep from E8 retro, Epic 16: 5 incl. 16.0 discovery spike (from E16 discovery 2026-04-02) — FR72/FR73 moved from Epic 13 to Epic 1, Story 2.0 added from Epic 1+14 retro, Epic 3 reshaped per PM alignment cascade 2026-03-01, Stories 3.0a+3.0b added per Epic 10 retro 2026-03-05, Story 5.6 moved from E5 to E11 sequence per PM validation 2026-03-16, Story 11.0 added then split into 11.0a+11.0b per PM decision 2026-03-17, FR91+FR92 added, Stories 7.0a-7.0g added per E3-E11 mega-retro 2026-03-20, Stories 7.0h+7.0i added during E7 prep, Stories 8.0a-8.0i added per E7+E6 retro 2026-03-29, Epic 15 added per E7+E6 retro planning item A 2026-03-29 — FR93-FR95 added, Stories 8.0h+8.0i added per Awwal zero-debt-forward mandate 2026-03-29, Story 8.0j added per PM triage of 8.0b UAT escalations 2026-04-02, Epic 16 added per PM triage 2026-04-02 — FRs TBD)
 
 # STATUS DEFINITIONS:
 # ==================
@@ -257,7 +257,46 @@ development_status:
   8-1-zero-balance-detection-auto-stop-trigger: done
   8-2-auto-stop-certificate-generation: done
   8-3-auto-stop-dual-notification: done
-  epic-8-retrospective: optional
+  epic-8-retrospective: done  # retro 2026-04-06 — 43 UAT findings, 14 prep stories, 4 new team agreements (total 14), federated upload discovery. Prep sprint required before E15+E16. Detail: epic-8-retro-2026-04-06.md + epic-8-uat-findings-2026-04-06.md
+
+  # Epic 15 Preparation (from Epic 8 retrospective 2026-04-06)
+  # 43 UAT findings → 14 prep stories. Zero-debt-forward principle.
+  # CRITICAL — must complete before Story 15.1:
+  #   1. apiClient unwrap fix (15.0a) — Critical, all roles affected
+  #   2. Observation auto-generation (15.0b) — Critical, workflow disconnected
+  #   3. Certificate verification page (15.0c) — Critical, QR codes link to broken page
+  #   4. devAutoSeed separation (15.0d) — High, prevents data loss on volume reset
+  #
+  # PARALLEL — during early prep:
+  #   5. MDA officer dashboard + sidebar (15.0e) — High, role redesign
+  #   6. Federated upload (15.0f) — High, significant discovery from retro
+  #
+  # TEAM AGREEMENTS (E8 retro 2026-04-06):
+  #   11. Every number is a doorway — if visible, must be clickable with drill-down
+  #   12. Role-specific UAT — test from AG, Dept Admin, AND MDA Officer before retro
+  #   13. Empty states are UX — blank sections need contextual messages
+  #   14. Prep sprint threshold — >5 high-severity UAT findings triggers mandatory prep sprint
+  #
+  # UAT CHECKPOINTS:
+  #   - After 15.0a: Verify loans table populates for all 3 roles
+  #   - After 15.0f: MDA officer uploads BIR file, sees three-vector validation, admin verifies
+  #   - After 15.0j: Clean-room UAT — all 3 roles, verify every dashboard number
+  #
+  # MDA COUNT: 63 (not 47 — 47 is legacy data coverage only)
+  15-0a-api-response-consistency-loans-table-fix: done  # CRITICAL: apiClient unwrap bug — UAT #5, #32. Code review: 6 findings (1H 2M 3L), 4 fixed, 2 deferred (pre-existing)
+  15-0b-observation-auto-generation-after-baseline: ready-for-dev  # CRITICAL: wire generateObservations() to baseline commit — UAT #8
+  15-0c-public-certificate-verification-page: done  # Already implemented in Story 8.2 (commit 11229aa). UAT #33 recorded against stale deployment
+  15-0d-dev-auto-seed-separation: ready-for-dev  # HIGH: separate admin users from demo loans — UAT #39
+  15-0e-mda-officer-dashboard-sidebar-redesign: ready-for-dev  # HIGH: purpose-built dashboard, 7 sidebar items — UAT #20, #25, #29
+  15-0f-federated-upload-mda-officer-migration: ready-for-dev  # HIGH: role gate + verification step + source attribution — UAT #28, #27
+  15-0g-drill-down-completeness: ready-for-dev  # HIGH: View All Loans, Zero Deduction table, MDA Review discoverability — UAT #2, #21, #22
+  15-0h-clickable-cards-reports-drilldown: backlog  # MEDIUM: Recovery Potential, MDA Scorecard, Ops Hub — UAT #16, #17, #31
+  15-0i-certificate-admin-preview-completed-loans: backlog  # MEDIUM: certificate list/preview/resend — UAT #34
+  15-0j-quick-fixes-bundle: backlog  # MEDIUM: MetricHelp, empty states, breadcrumb, MoM layout, period column, fund total, Top Variances pagination — UAT #3,4,6,7,9,11,12,13,14,15,23,24
+  15-0k-mda-beneficiary-ledger-lifecycle: backlog  # MEDIUM: MDA-scoped ledger with active/completed/transferred grouping — UAT #35, #37
+  15-0l-duplicates-auto-trigger-drilldown: backlog  # MEDIUM: auto-run detection + side-by-side comparison — UAT #18, #19
+  15-0m-within-file-deduplication-check: backlog  # MEDIUM: same-person-same-period in single file — UAT #36
+  15-0n-supersede-data-comparison-correction-reason: backlog  # HIGH+MEDIUM: record-level diff preview + mandatory reason for all corrections — UAT #40, #42
 
   # Epic 15: Beneficiary Onboarding & Verification Pipeline (Sprint 11 — parallel with E8 core after E8 prep)
   # Stories 15.1-15.4 can start after E8 prep (8.0a-8.0i). Story 15.5 has hard dependency on 8.0a/8.0b (three-vector model).
