@@ -136,6 +136,7 @@ function buildMockLoans(mdaMap: Map<string, string>) {
  * Idempotent: uses onConflictDoNothing for both MDAs and users.
  */
 export async function runDemoSeed(): Promise<{ userCount: number; loanCount: number }> {
+  console.log('Running FULL demo seed (admin users + demo loans + scheme config)...');
   const hashedPassword = await hashPassword(DEMO_PASSWORD);
 
   let userCount = 0;
@@ -162,6 +163,7 @@ export async function runDemoSeed(): Promise<{ userCount: number; loanCount: num
       { email: 'admin@vlprs.oyo.gov.ng', firstName: 'Department', lastName: 'Admin', role: 'dept_admin' as const, mdaId: null },
       { email: 'health.officer@vlprs.oyo.gov.ng', firstName: 'Health', lastName: 'Officer', role: 'mda_officer' as const, mdaId: healthMdaId },
       { email: 'education.officer@vlprs.oyo.gov.ng', firstName: 'Education', lastName: 'Officer', role: 'mda_officer' as const, mdaId: educationMdaId },
+      { email: 'bir.officer@oyo.gov.ng', firstName: 'BIR', lastName: 'Officer', role: 'mda_officer' as const, mdaId: mdaMap.get('BIR') ?? null },
     ];
 
     for (const user of DEMO_USERS) {
@@ -199,10 +201,7 @@ export async function runDemoSeed(): Promise<{ userCount: number; loanCount: num
       await tx
         .insert(schemeConfig)
         .values({ key: 'scheme_fund_total', value: '500000000.00', updatedBy: agUserId })
-        .onConflictDoUpdate({
-          target: schemeConfig.key,
-          set: { value: '500000000.00', updatedBy: agUserId },
-        });
+        .onConflictDoNothing({ target: schemeConfig.key });
     }
   });
 
