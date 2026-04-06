@@ -299,7 +299,9 @@ export const UI_COPY = {
   CHECKPOINT_RETIREMENT_HEADING: 'Approaching Retirement',
   CHECKPOINT_ZERO_DEDUCTION_HEADING: 'Zero Deduction Review',
   CHECKPOINT_PENDING_EVENTS_HEADING: 'Pending Events',
-  CHECKPOINT_EMPTY_SECTION: 'No items require attention',
+  CHECKPOINT_EMPTY_RETIREMENT: 'No approaching retirements',
+  CHECKPOINT_EMPTY_ZERO_DEDUCTION: 'All staff have recent deductions — no action needed',
+  CHECKPOINT_EMPTY_PENDING_EVENTS: 'No pending events',
   CHECKPOINT_CONFIRMATION_LABEL: 'I have reviewed the above items',
   // Employment Events UI (Story 11.2)
   EMPLOYMENT_EVENT_PAGE_TITLE: 'Employment Events',

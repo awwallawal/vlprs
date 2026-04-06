@@ -3,6 +3,7 @@ import { useDrillDown } from '@/hooks/useDrillDown';
 import { NairaDisplay } from '@/components/shared/NairaDisplay';
 import { HealthScoreBadge } from '@/components/shared/HealthScoreBadge';
 import { StatusDistributionBar } from '@/components/shared/StatusDistributionBar';
+import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
   Tooltip,
@@ -24,6 +25,13 @@ const METRIC_LABELS: Record<string, string> = {
   'at-risk': 'At-Risk Amount',
   'completion-rate': 'Completion Rate (60m)',
   'completion-rate-lifetime': 'Completion Rate (All-Time)',
+};
+
+// URL slug → loan list filter URL (only for metrics with a meaningful per-loan view)
+const SLUG_TO_LOAN_FILTER: Record<string, string> = {
+  'at-risk': '/dashboard/loans?filter=overdue',
+  'completion-rate': '/dashboard/loans?filter=completed',
+  'completion-rate-lifetime': '/dashboard/loans?filter=completed',
 };
 
 // URL slug → API param mapping
@@ -48,12 +56,20 @@ export function MetricDrillDownPage() {
 
   const metricLabel = METRIC_LABELS[metric ?? ''] ?? metric ?? 'Metric';
   const isMonthlyRecovery = metric === 'monthly-recovery';
+  const loanFilterUrl = SLUG_TO_LOAN_FILTER[metric ?? ''];
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold text-text-primary">
-        {metricLabel} — MDA Breakdown
-      </h1>
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold text-text-primary">
+          {metricLabel} — MDA Breakdown
+        </h1>
+        {loanFilterUrl && (
+          <Button variant="outline" size="sm" onClick={() => navigate(loanFilterUrl)}>
+            View All Loans
+          </Button>
+        )}
+      </div>
 
       <div className="overflow-x-auto rounded-lg border">
         <table className="w-full text-sm">
