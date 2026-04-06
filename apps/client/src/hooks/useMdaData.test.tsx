@@ -5,8 +5,12 @@ import type { ReactNode } from 'react';
 import { useMdaComplianceGrid, useMdaDetail, useMdaLoans } from './useMdaData';
 
 const mockApiClient = vi.fn();
+const mockAuthenticatedFetch = vi.fn();
+const mockParseJsonResponse = vi.fn();
 vi.mock('@/lib/apiClient', () => ({
   apiClient: (...args: unknown[]) => mockApiClient(...args),
+  authenticatedFetch: (...args: unknown[]) => mockAuthenticatedFetch(...args),
+  parseJsonResponse: (...args: unknown[]) => mockParseJsonResponse(...args),
 }));
 
 function createWrapper() {
@@ -20,6 +24,8 @@ function createWrapper() {
 
 beforeEach(() => {
   mockApiClient.mockReset();
+  mockAuthenticatedFetch.mockReset();
+  mockParseJsonResponse.mockReset();
 });
 
 describe('useMdaComplianceGrid', () => {
@@ -102,7 +108,11 @@ describe('useMdaDetail', () => {
 
 describe('useMdaLoans', () => {
   it('returns paginated loan list for an MDA', async () => {
-    const mockLoans = {
+    // Server sends FLAT format: { success, data: [...], pagination: {...} }
+    // parseJsonResponse returns the full body, hook manually constructs { data, pagination }
+    mockAuthenticatedFetch.mockResolvedValueOnce({});
+    mockParseJsonResponse.mockResolvedValueOnce({
+      success: true,
       data: [
         {
           loanId: 'loan-001',
@@ -120,8 +130,7 @@ describe('useMdaLoans', () => {
         },
       ],
       pagination: { page: 1, pageSize: 25, totalItems: 1, totalPages: 1 },
-    };
-    mockApiClient.mockResolvedValueOnce(mockLoans);
+    });
 
     const { result } = renderHook(() => useMdaLoans('mda-003'), {
       wrapper: createWrapper(),
@@ -145,7 +154,12 @@ describe('useMdaLoans', () => {
   });
 
   it('passes classification filter to API', async () => {
-    mockApiClient.mockResolvedValueOnce({ data: [], pagination: { page: 1, pageSize: 25, totalItems: 0, totalPages: 0 } });
+    mockAuthenticatedFetch.mockResolvedValueOnce({});
+    mockParseJsonResponse.mockResolvedValueOnce({
+      success: true,
+      data: [],
+      pagination: { page: 1, pageSize: 25, totalItems: 0, totalPages: 0 },
+    });
 
     const { result } = renderHook(() => useMdaLoans('mda-003', 'OVERDUE'), {
       wrapper: createWrapper(),
@@ -155,7 +169,7 @@ describe('useMdaLoans', () => {
       expect(result.current.isSuccess).toBe(true);
     });
 
-    expect(mockApiClient).toHaveBeenCalledWith(
+    expect(mockAuthenticatedFetch).toHaveBeenCalledWith(
       expect.stringContaining('classification=OVERDUE'),
     );
   });

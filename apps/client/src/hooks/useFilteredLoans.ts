@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { apiClient } from '@/lib/apiClient';
+import { authenticatedFetch, parseJsonResponse } from '@/lib/apiClient';
 import type { LoanSearchResult } from '@vlprs/shared';
 
 interface FilteredLoansResponse {
@@ -37,7 +37,14 @@ export function useFilteredLoans(
 
   return useQuery<FilteredLoansResponse>({
     queryKey: ['loans', 'filtered', filter, mdaId, classification, sortBy, sortOrder, page],
-    queryFn: () => apiClient<FilteredLoansResponse>(`/loans?${queryString}`),
+    queryFn: async () => {
+      const res = await authenticatedFetch(`/loans?${queryString}`);
+      const body = await parseJsonResponse(res);
+      return {
+        data: body.data as LoanSearchResult[],
+        pagination: body.pagination as FilteredLoansResponse['pagination'],
+      };
+    },
     staleTime: 30_000,
     enabled: !!(filter || classification),
   });

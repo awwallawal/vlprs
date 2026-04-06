@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router';
 import { ArrowLeft } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -29,10 +30,13 @@ const CLASSIFICATION_BADGE: Record<LoanClassification, { variant: 'complete' | '
 export function MdaDetailPage() {
   const { mdaId } = useParams<{ mdaId: string }>();
   const navigate = useNavigate();
+  const [loanPage, setLoanPage] = useState(1);
+  useEffect(() => { setLoanPage(1); }, [mdaId]);
   const mdaDetail = useMdaDetail(mdaId!);
   const submissions = useSubmissionHistory(mdaId!);
-  const mdaLoansQuery = useMdaLoans(mdaId!);
+  const mdaLoansQuery = useMdaLoans(mdaId!, undefined, loanPage);
   const mdaLoans = mdaLoansQuery.data?.data ?? [];
+  const loanPagination = mdaLoansQuery.data?.pagination;
 
   return (
     <div className="space-y-8">
@@ -316,6 +320,33 @@ export function MdaDetailPage() {
             </p>
           )}
         </div>
+
+        {/* Pagination */}
+        {loanPagination && loanPagination.totalPages > 1 && (
+          <div className="flex items-center justify-between pt-4">
+            <p className="text-sm text-text-secondary">
+              Showing {((loanPagination.page - 1) * loanPagination.pageSize) + 1}–{Math.min(loanPagination.page * loanPagination.pageSize, loanPagination.totalItems)} of {formatCount(loanPagination.totalItems)} loans
+            </p>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={loanPagination.page <= 1}
+                onClick={() => setLoanPage((p) => Math.max(1, p - 1))}
+              >
+                Previous
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={loanPagination.page >= loanPagination.totalPages}
+                onClick={() => setLoanPage((p) => p + 1)}
+              >
+                Next
+              </Button>
+            </div>
+          </div>
+        )}
       </section>
     </div>
   );
