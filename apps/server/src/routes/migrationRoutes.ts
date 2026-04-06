@@ -7,7 +7,7 @@ import { authorise } from '../middleware/authorise';
 import { scopeToMda } from '../middleware/scopeToMda';
 import { validate, validateQuery } from '../middleware/validate';
 import { auditLog } from '../middleware/auditLog';
-import { ROLES, migrationUploadQuerySchema, confirmMappingBodySchema, validationResultQuerySchema, createBaselineBodySchema, correctMigrationRecordSchema, supersedeSchema, checkOverlapBodySchema, submitReviewSchema, markReviewedSchema, extendWindowSchema, flaggedRecordsQuerySchema, worksheetApplySchema } from '@vlprs/shared';
+import { ROLES, migrationUploadQuerySchema, confirmMappingBodySchema, validationResultQuerySchema, createBaselineBodySchema, correctMigrationRecordSchema, supersedeSchema, checkOverlapBodySchema, submitReviewSchema, markReviewedSchema, extendWindowSchema, flaggedRecordsQuerySchema, worksheetApplySchema, rejectUploadSchema } from '@vlprs/shared';
 import type { VarianceCategory } from '@vlprs/shared';
 import { AppError } from '../lib/appError';
 import { param } from '../lib/params';
@@ -43,10 +43,18 @@ const adminAuth = [
   scopeToMda,
 ];
 
+// Middleware stack: upload flow — includes MDA_OFFICER (Story 15.0f)
+const uploadAuth = [
+  authenticate,
+  requirePasswordChange,
+  authorise(ROLES.SUPER_ADMIN, ROLES.DEPT_ADMIN, ROLES.MDA_OFFICER),
+  scopeToMda,
+];
+
 // POST /api/migrations/upload — Upload file and get preview with auto-detected mappings
 router.post(
   '/migrations/upload',
-  ...adminAuth,
+  ...uploadAuth,
   upload.single('file'),
   auditLog,
   async (req: Request, res: Response) => {
@@ -59,12 +67,18 @@ router.post(
       throw new AppError(400, 'MDA_REQUIRED', 'Please select an MDA for this upload.');
     }
 
+    // MDA officers can only upload for their assigned MDA (Story 15.0f)
+    if (req.user!.role === ROLES.MDA_OFFICER && mdaId !== req.mdaScope) {
+      throw new AppError(403, 'CANNOT_UPLOAD_FOR_OTHER_MDA', 'You can only upload data for your assigned MDA');
+    }
+
     const preview = await migrationService.previewUpload(
       req.file.buffer,
       req.file.originalname,
       req.file.size,
       mdaId,
       req.user!.userId,
+      req.user!.role,
     );
 
     res.status(201).json({ success: true, data: preview });
@@ -74,7 +88,7 @@ router.post(
 // POST /api/migrations/:id/confirm — Confirm column mapping and extract records
 router.post(
   '/migrations/:id/confirm',
-  ...adminAuth,
+  ...uploadAuth,
   upload.single('file'),
   validate(confirmMappingBodySchema),
   auditLog,
@@ -98,7 +112,7 @@ router.post(
 // POST /api/migrations/:id/confirm-overlap — Explicitly confirm proceeding despite period overlap
 router.post(
   '/migrations/:id/confirm-overlap',
-  ...adminAuth,
+  ...uploadAuth,
   auditLog,
   async (req: Request, res: Response) => {
     const uploadId = param(req.params.id);
@@ -110,7 +124,7 @@ router.post(
 // POST /api/migrations/:id/check-overlap — Check if upload overlaps existing period+MDA data (Story 8.0d: multi-sheet)
 router.post(
   '/migrations/:id/check-overlap',
-  ...adminAuth,
+  ...uploadAuth,
   validate(checkOverlapBodySchema),
   async (req: Request, res: Response) => {
     const uploadId = param(req.params.id);
@@ -135,7 +149,7 @@ router.patch(
 // GET /api/migrations — List uploads for MDA with pagination
 router.get(
   '/migrations',
-  ...adminAuth,
+  ...uploadAuth,
   validateQuery(migrationUploadQuerySchema),
   async (req: Request, res: Response) => {
     const filters = {
@@ -152,7 +166,7 @@ router.get(
 // GET /api/migrations/:id — Get upload detail with record summary
 router.get(
   '/migrations/:id',
-  ...adminAuth,
+  ...uploadAuth,
   async (req: Request, res: Response) => {
     const uploadId = param(req.params.id);
     const upload = await migrationService.getUpload(uploadId, req.mdaScope);
@@ -175,7 +189,7 @@ router.post(
 // GET /api/migrations/:id/validation — Get validation results
 router.get(
   '/migrations/:id/validation',
-  ...adminAuth,
+  ...uploadAuth,
   validateQuery(validationResultQuerySchema),
   async (req: Request, res: Response) => {
     const uploadId = param(req.params.id);
@@ -298,6 +312,34 @@ router.post(
       req.user!.userId,
     );
 
+    res.json({ success: true, data: result });
+  },
+);
+
+// ─── Federated Upload: Admin Approve/Reject (Story 15.0f) ──────────
+
+// PATCH /api/migrations/:uploadId/approve — Admin approves pending MDA officer upload
+router.patch(
+  '/migrations/:uploadId/approve',
+  ...adminAuth,
+  auditLog,
+  async (req: Request, res: Response) => {
+    const uploadId = param(req.params.uploadId);
+    const result = await migrationService.approveUpload(uploadId, req.user!.userId, req.mdaScope);
+    res.json({ success: true, data: result });
+  },
+);
+
+// PATCH /api/migrations/:uploadId/reject — Admin rejects pending MDA officer upload
+router.patch(
+  '/migrations/:uploadId/reject',
+  ...adminAuth,
+  validate(rejectUploadSchema),
+  auditLog,
+  async (req: Request, res: Response) => {
+    const uploadId = param(req.params.uploadId);
+    const { reason } = req.body;
+    const result = await migrationService.rejectUpload(uploadId, req.user!.userId, reason, req.mdaScope);
     res.json({ success: true, data: result });
   },
 );

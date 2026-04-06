@@ -1731,3 +1731,126 @@ VLPRS targets WCAG 2.1 Level AA compliance — the industry standard for governm
 - Core information (loan balance, status) accessible without JavaScript
 - Enhanced interactions (animations, drill-down, filtering) require JavaScript
 - Service worker provides offline shell with "You're offline — data may be stale" message
+
+---
+
+## E8 Retro UX Additions (2026-04-06)
+
+### UX Principle: Every Number is a Doorway (Team Agreement #11)
+
+All visible metrics, counts, and amounts must be clickable. The user's mental model is: "I see a number → I click it → I see the names behind it." No dead-end metrics. This applies to:
+
+- Hero metric cards → drill-down page → individual records
+- Table aggregate rows → filtered detail view
+- Report section cards → paginated record list
+- Pre-submission checkpoint counts → searchable, sortable table
+- Coverage Tracker cells → already implemented (Story 8.0f — exemplar)
+
+**Anti-pattern:** A card showing "168 items" that only displays a plain text list truncated with "and 118 more." Every count must lead to a paginated, searchable, sortable table.
+
+### UX Principle: Empty States are UX (Team Agreement #13)
+
+A blank section with no data must show a contextual message explaining:
+1. What data will appear here
+2. When/how it gets populated
+3. What action the user can take (if any)
+
+Examples:
+- Monthly Recovery ₦0 → "Awaiting first monthly submission from this MDA"
+- Submission History empty → "No monthly submissions yet. Upload your first submission using the button above."
+- Approaching Retirement empty → "No staff approaching retirement within 12 months"
+- Pending Events empty → "No pending employment events to review"
+
+### MDA Officer Dashboard Wireframe
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│  [MDA Name] Dashboard                          [officer@]   │
+├─────────────────────────────────────────────────────────────┤
+│                                                              │
+│  HERO METRICS (scoped to MDA, all clickable)                │
+│  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐      │
+│  │ Active   │ │ Monthly  │ │ Outstand.│ │ Complet. │      │
+│  │ Loans    │ │ Recovery │ │ Receiv.  │ │ Rate     │      │
+│  │   68     │ │ ₦X.XM   │ │ ₦X.XM   │ │  4.4%    │      │
+│  └──────────┘ └──────────┘ └──────────┘ └──────────┘      │
+│                                                              │
+│  MIGRATION STATUS                                           │
+│  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐      │
+│  │ Records  │ │ Unique   │ │ Quality  │ │ Coverage │      │
+│  │ Uploaded │ │ Staff    │ │ Score    │ │ Tracker  │      │
+│  │   90     │ │   68     │ │ 53 Clean │ │ Aug ✓    │      │
+│  │          │ │          │ │ 4 Minor  │ │ Sep ✓    │      │
+│  │          │ │          │ │ 23 Sig.  │ │ Oct ✗    │      │
+│  └──────────┘ └──────────┘ └──────────┘ └──────────┘      │
+│                                                              │
+│  REQUIRES YOUR ACTION (amber highlight if items pending)    │
+│  ┌──────────────────────────────────────────────────────┐  │
+│  │ 23 flagged records need your review                   │  │
+│  │ Review deadline: 12 days remaining                    │  │
+│  │ [Open Review] [Download Correction Worksheet]         │  │
+│  └──────────────────────────────────────────────────────┘  │
+│                                                              │
+│  PRE-SUBMISSION CHECKPOINT                                  │
+│  ┌─────────────┐ ┌─────────────┐ ┌─────────────┐          │
+│  │ Approaching │ │ Zero Deduct.│ │ Pending     │          │
+│  │ Retirement  │ │ Review      │ │ Events      │          │
+│  │ 2 staff     │ │ 168 staff   │ │ 0           │          │
+│  │ → table     │ │ → table     │ │             │          │
+│  └─────────────┘ └─────────────┘ └─────────────┘          │
+│                                                              │
+│  SUBMISSION HISTORY (gap-aware)                             │
+│  ┌────────┬──────────┬─────────┬───────────┬──────────┐   │
+│  │ Period │ Source   │ Records │ Status    │ Actions  │   │
+│  │ Aug 24 │ Migration│   90   │ Baselined │ View ›   │   │
+│  │ Sep 24 │ —       │   —    │ Gap       │ Upload › │   │
+│  │ Dec 24 │ Migration│  114   │ Baselined │ View ›   │   │
+│  └────────┴──────────┴─────────┴───────────┴──────────┘   │
+│                                                              │
+│  QUICK ACTIONS                                              │
+│  [Upload Migration Data] [Submit Monthly] [File Event]      │
+│                                                              │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### MDA Officer Sidebar (Redesigned)
+
+| # | Label | Route | Icon |
+|---|-------|-------|------|
+| 1 | My Dashboard | `/dashboard` | LayoutDashboard |
+| 2 | Upload Data | `/dashboard/migration` (MDA-scoped) | Upload |
+| 3 | Submit Monthly | `/dashboard/submissions` | FileText |
+| 4 | My Reviews | `/dashboard/migration` (MDA Review tab) | ClipboardCheck |
+| 5 | Employment Events | `/dashboard/employment-events` | Calendar |
+| 6 | Reconciliation | `/dashboard/reconciliation/three-way` | Scale |
+| 7 | My Reports | `/dashboard/reports` (MDA-scoped) | FileBarChart |
+
+### Public Certificate Verification Page
+
+```
+┌─────────────────────────────────────────────────┐
+│  🏛️ Oyo State Government                        │
+│  Vehicle Loan Processing & Receivables System    │
+│                                                   │
+│  ── Certificate Verification ──                   │
+│                                                   │
+│  [Valid certificate scanned/entered:]             │
+│  ✅ CERTIFICATE VERIFIED                         │
+│  Certificate ID:  ASC-2026-04-0001               │
+│  Beneficiary:     LAMIDI MORUFU                  │
+│  MDA:             Board of Internal Revenue      │
+│  Completion Date: April 4, 2026                  │
+│                                                   │
+│  This certificate confirms that the above        │
+│  beneficiary has fully repaid their vehicle       │
+│  loan. All deductions should cease immediately.  │
+│                                                   │
+│  [Invalid certificate:]                           │
+│  ❌ Certificate not found.                       │
+│  Please check the certificate ID and try again.  │
+│                                                   │
+│  ── Manual Verification ──                        │
+│  [Enter Certificate ID: ________] [Verify]        │
+│                                                   │
+└─────────────────────────────────────────────────┘
+```

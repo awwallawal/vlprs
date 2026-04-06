@@ -315,14 +315,17 @@ export function MigrationCoverageTracker() {
                       const status = cellStatus(mda, month);
                       const periodData = mda.periods[month];
                       const hasData = periodData && periodData.recordCount > 0;
+                      const isOfficerUpload = periodData?.uploadSource === 'mda_officer';
+                      const isMixedSource = periodData?.uploadSource === 'mixed';
+                      const sourceLabel = isMixedSource ? ' (mixed sources: admin + MDA officer)' : isOfficerUpload ? ' (MDA officer upload)' : '';
                       const tooltip = hasData
-                        ? `${month}: ${periodData.recordCount} records (${periodData.baselinedCount} baselined) — click to view`
+                        ? `${month}: ${periodData.recordCount} records (${periodData.baselinedCount} baselined)${sourceLabel} — click to view`
                         : `${month}: No data for this period`;
                       const [cellYear, cellMonth] = month.split('-');
                       return (
                         <td key={month} className="px-0.5 py-0.5 text-center">
                           <div
-                            className={`w-5 h-4 rounded-sm mx-auto ${CELL_COLORS[status]} ${status === 'gap' ? 'border border-gray-200' : ''} ${hasData ? 'cursor-pointer hover:ring-2 hover:ring-primary/30 transition-all' : 'cursor-default'}`}
+                            className={`relative w-5 h-4 rounded-sm mx-auto ${CELL_COLORS[status]} ${status === 'gap' ? 'border border-gray-200' : ''} ${hasData ? 'cursor-pointer hover:ring-2 hover:ring-primary/30 transition-all' : 'cursor-default'}`}
                             title={tooltip}
                             role={hasData ? 'button' : 'img'}
                             tabIndex={hasData ? 0 : undefined}
@@ -334,7 +337,11 @@ export function MigrationCoverageTracker() {
                                 navigate(`/dashboard/migrations/coverage/${mda.mdaId}/${cellYear}/${cellMonth}`);
                               }
                             } : undefined}
-                          />
+                          >
+                            {(isOfficerUpload || isMixedSource) && (
+                              <span className={`absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full ${isMixedSource ? 'bg-purple-500' : 'bg-blue-500'}`} />
+                            )}
+                          </div>
                         </td>
                       );
                     })}

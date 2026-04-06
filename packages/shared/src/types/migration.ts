@@ -1,6 +1,6 @@
 export type { MigrationStage, MigrationMdaStatus } from './mda.js';
 
-export type MigrationUploadStatus = 'uploaded' | 'mapped' | 'processing' | 'completed' | 'validated' | 'reconciled' | 'failed';
+export type MigrationUploadStatus = 'uploaded' | 'mapped' | 'processing' | 'completed' | 'pending_verification' | 'validated' | 'reconciled' | 'failed' | 'rejected';
 
 export type VarianceCategory = 'clean' | 'minor_variance' | 'significant_variance' | 'structural_error' | 'anomalous';
 
@@ -181,6 +181,9 @@ export interface MigrationUploadSummary {
   supersededBy: string | null;
   supersededAt: string | null;
   supersededByFilename: string | null;
+  // Federated upload fields (Story 15.0f)
+  uploadSource: 'admin' | 'mda_officer';
+  metadata: Record<string, unknown> | null;
 }
 
 export interface MigrationUploadDetail extends MigrationUpload {

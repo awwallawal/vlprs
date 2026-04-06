@@ -120,6 +120,12 @@ So that the issues come to me on the executive dashboard without needing to navi
 
 ## Dev Notes
 
+### Prep Story Context (15.0a–15.0n)
+
+- **15.0b:** Observations now auto-generate after baseline creation. When this story runs, observations will already exist in the DB — no need for manual trigger before testing attention item integration.
+- **15.0m:** New observation type `within_file_duplicate` added. This story should wire it into attention items if appropriate (same pattern as existing observation→attention item detectors).
+- **15.0l:** Cross-MDA dedup auto-triggers after validation. Duplicate candidates now exist automatically — attention items for duplicates should reference these.
+
 ### What's Already Built vs What's New
 
 | Feature | Built In | Status | This Story |

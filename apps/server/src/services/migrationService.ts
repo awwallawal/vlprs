@@ -4,7 +4,7 @@ import { db } from '../db/index';
 import { migrationUploads, migrationRecords, migrationExtraFields, mdas } from '../db/schema';
 import { AppError } from '../lib/appError';
 import { withMdaScope } from '../lib/mdaScope';
-import { VOCABULARY } from '@vlprs/shared';
+import { VOCABULARY, ROLES } from '@vlprs/shared';
 import type { MigrationUploadPreview, SheetPreview, ColumnMappingSuggestion, ConfirmedColumnMapping, SkippedSheet, MultiSheetOverlapResponse, SheetOverlapResult } from '@vlprs/shared';
 import { detectHeaderRow } from '../migration/headerDetect';
 import { mapColumns, extractRecord } from '../migration/columnMap';
@@ -69,6 +69,7 @@ export async function previewUpload(
   fileSizeBytes: number,
   mdaId: string,
   userId: string,
+  userRole: string,
 ): Promise<MigrationUploadPreview> {
   if (fileSizeBytes > MAX_FILE_SIZE) {
     throw new AppError(400, 'FILE_TOO_LARGE', VOCABULARY.MIGRATION_FILE_TOO_LARGE);
@@ -193,6 +194,7 @@ export async function previewUpload(
   }
 
   // Create upload record
+  const uploadSource = userRole === ROLES.MDA_OFFICER ? 'mda_officer' : 'admin';
   const [upload] = await db.insert(migrationUploads).values({
     mdaId,
     uploadedBy: userId,
@@ -201,6 +203,7 @@ export async function previewUpload(
     sheetCount: sheets.length,
     totalRecords: 0,
     status: 'uploaded',
+    uploadSource,
     eraDetected: sheets[0]?.era ?? null,
     metadata: { sheets: sheets.map(s => ({ name: s.sheetName, era: s.era, dataRows: s.dataRowCount, period: s.period })) },
   }).returning({ id: migrationUploads.id });
@@ -517,9 +520,10 @@ export async function confirmMapping(
         });
       }
 
-      // Update upload record
+      // Update upload record — MDA officer uploads go to pending_verification (Story 15.0f)
+      const completedStatus = upload.uploadSource === 'mda_officer' ? 'pending_verification' as const : 'completed' as const;
       await tx.update(migrationUploads).set({
-        status: 'completed',
+        status: completedStatus,
         totalRecords,
         sheetCount: recordsPerSheet.length,
         metadata: {
@@ -541,6 +545,81 @@ export async function confirmMapping(
   }
 
   return { totalRecords, recordsPerSheet, skippedRows };
+}
+
+// ─── Federated Upload: Admin Approve/Reject (Story 15.0f) ──────────
+
+/**
+ * Approve a pending_verification upload — advances to 'validated'.
+ * Wrapped in a transaction to prevent TOCTOU race between status check and update.
+ */
+export async function approveUpload(uploadId: string, approvedByUserId: string, mdaScope?: string | null) {
+  return db.transaction(async (tx) => {
+    const [upload] = await tx.select()
+      .from(migrationUploads)
+      .where(and(
+        eq(migrationUploads.id, uploadId),
+        isNull(migrationUploads.deletedAt),
+        withMdaScope(migrationUploads.mdaId, mdaScope),
+      ));
+
+    if (!upload) {
+      throw new AppError(404, 'UPLOAD_NOT_FOUND', 'Upload not found.');
+    }
+    if (upload.status !== 'pending_verification') {
+      throw new AppError(400, 'INVALID_STATUS', `Cannot approve upload with status "${upload.status}". Only pending_verification uploads can be approved.`);
+    }
+
+    const existingMeta = (upload.metadata ?? {}) as Record<string, unknown>;
+    await tx.update(migrationUploads).set({
+      status: 'validated',
+      metadata: {
+        ...existingMeta,
+        approvedAt: new Date().toISOString(),
+        approvedBy: approvedByUserId,
+      },
+      updatedAt: new Date(),
+    }).where(eq(migrationUploads.id, uploadId));
+
+    return { uploadId, status: 'validated' as const };
+  });
+}
+
+/**
+ * Reject a pending_verification upload — marks as 'rejected' with reason.
+ * Wrapped in a transaction to prevent TOCTOU race between status check and update.
+ */
+export async function rejectUpload(uploadId: string, rejectedByUserId: string, reason: string, mdaScope?: string | null) {
+  return db.transaction(async (tx) => {
+    const [upload] = await tx.select()
+      .from(migrationUploads)
+      .where(and(
+        eq(migrationUploads.id, uploadId),
+        isNull(migrationUploads.deletedAt),
+        withMdaScope(migrationUploads.mdaId, mdaScope),
+      ));
+
+    if (!upload) {
+      throw new AppError(404, 'UPLOAD_NOT_FOUND', 'Upload not found.');
+    }
+    if (upload.status !== 'pending_verification') {
+      throw new AppError(400, 'INVALID_STATUS', `Cannot reject upload with status "${upload.status}". Only pending_verification uploads can be rejected.`);
+    }
+
+    const existingMeta = (upload.metadata ?? {}) as Record<string, unknown>;
+    await tx.update(migrationUploads).set({
+      status: 'rejected',
+      metadata: {
+        ...existingMeta,
+        rejectionReason: reason,
+        rejectedAt: new Date().toISOString(),
+        rejectedBy: rejectedByUserId,
+      },
+      updatedAt: new Date(),
+    }).where(eq(migrationUploads.id, uploadId));
+
+    return { uploadId, status: 'rejected' as const, reason };
+  });
 }
 
 /**
@@ -784,7 +863,7 @@ export async function listUploads(
   ];
 
   if (filters.status) {
-    conditions.push(eq(migrationUploads.status, filters.status as 'uploaded' | 'mapped' | 'processing' | 'completed' | 'failed'));
+    conditions.push(eq(migrationUploads.status, filters.status as 'uploaded' | 'mapped' | 'processing' | 'completed' | 'pending_verification' | 'validated' | 'reconciled' | 'failed' | 'rejected'));
   }
 
   const offset = (filters.page - 1) * filters.limit;
@@ -806,6 +885,8 @@ export async function listUploads(
     supersededBy: migrationUploads.supersededBy,
     supersededAt: migrationUploads.supersededAt,
     supersededByFilename: sql<string | null>`(SELECT filename FROM migration_uploads WHERE id = ${migrationUploads.supersededBy})`,
+    uploadSource: migrationUploads.uploadSource,
+    metadata: migrationUploads.metadata,
   })
     .from(migrationUploads)
     .innerJoin(mdas, eq(migrationUploads.mdaId, mdas.id))

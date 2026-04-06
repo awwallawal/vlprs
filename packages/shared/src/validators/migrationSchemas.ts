@@ -15,7 +15,7 @@ const CANONICAL_FIELDS = [
 export const migrationUploadQuerySchema = z.object({
   page: z.coerce.number().int().min(1).optional().default(1),
   limit: z.coerce.number().int().min(1).max(100).optional().default(20),
-  status: z.enum(['uploaded', 'mapped', 'processing', 'completed', 'validated', 'reconciled', 'failed']).optional(),
+  status: z.enum(['uploaded', 'mapped', 'processing', 'completed', 'pending_verification', 'validated', 'reconciled', 'failed', 'rejected']).optional(),
 });
 
 export const validationResultQuerySchema = z.object({
@@ -178,6 +178,11 @@ export const worksheetApplySchema = z.object({
     reason: z.string().optional(),
     conflictDetail: z.string().optional(),
   })),
+});
+
+// ─── Federated Upload Approve/Reject (Story 15.0f) ─────────────────
+export const rejectUploadSchema = z.object({
+  reason: z.string().min(10, 'Rejection reason must be at least 10 characters'),
 });
 
 // ─── Beneficiary Ledger Query (Story 3.5) ───────────────────────────

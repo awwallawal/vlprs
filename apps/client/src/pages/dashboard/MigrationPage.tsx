@@ -27,7 +27,7 @@ export function MigrationPage() {
 
   const navigate = useNavigate();
   const user = useAuthStore((s) => s.user);
-  const canUpload = user?.role === ROLES.DEPT_ADMIN || user?.role === ROLES.SUPER_ADMIN;
+  const canUpload = user?.role === ROLES.DEPT_ADMIN || user?.role === ROLES.SUPER_ADMIN || user?.role === ROLES.MDA_OFFICER;
   const isAdminOrOfficer = canUpload || user?.role === ROLES.MDA_OFFICER;
   const uploads = useListMigrations({ limit: 1 });
   const latestUploadId = uploads.data?.data?.[0]?.id ?? '';
@@ -55,7 +55,7 @@ export function MigrationPage() {
             className="gap-2 shrink-0"
           >
             <Upload className="h-4 w-4" />
-            Upload Legacy Data
+            {user?.role === ROLES.MDA_OFFICER ? 'Upload My MDA Data' : 'Upload Legacy Data'}
           </Button>
         )}
       </div>

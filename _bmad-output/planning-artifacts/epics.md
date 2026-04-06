@@ -3433,6 +3433,124 @@ A living, month-over-month tracking pipeline answering: "We approved X loans. Ar
 
 Full specification with data analysis, upload design, matching algorithm, settlement pathway connections, ALATISE dependency analysis, risk register, and decisions log: `_bmad-output/planning-artifacts/epic-15-beneficiary-onboarding-pipeline.md`
 
+**Prep Stories (E8 Retro 2026-04-06 — 43 UAT findings, zero-debt-forward)**
+
+Sequence: 15.0a → 15.0b → 15.0c → 15.0d (quick) → 15.0e + 15.0f (parallel) → 15.0g + 15.0h (parallel) → 15.0i + 15.0j (parallel) → 15.0k → 15.0l + 15.0m (parallel) → 15.0n → UAT checkpoint → 15.1
+
+### Story 15.0a: API Response Consistency & Loans Table Fix
+
+As the **AG/Department Admin/MDA Officer**,
+I want the MDA Detail page to display the loans table and submission history correctly,
+So that I can drill down from any metric card to see the actual loan records behind the number.
+
+**Origin:** UAT Finding #5 (Critical) + #32 from E8 retro. `apiClient.ts:198` returns unwrapped `body.data` but `useMdaLoans` and `MdaDetailPage` expect wrapped `{ data, pagination }` format. All 171 loans fetched but discarded by type mismatch.
+
+### Story 15.0b: Observation Auto-Generation After Baseline
+
+As the **AG/Department Admin**,
+I want observations to be automatically generated when baselines are established,
+So that data quality issues (rate variance, negative balance, grade-tier mismatch) are surfaced without requiring a manual trigger.
+
+**Origin:** UAT Finding #8 (High) from E8 retro. `baselineService.ts` `createBatchBaseline()` never calls `generateObservations()` after transaction commits. Observations table empty after baseline.
+
+### Story 15.0c: Public Certificate Verification Page
+
+As a **beneficiary or third party**,
+I want to scan the QR code on my Auto-Stop Certificate and see an official verification page confirming the certificate is authentic,
+So that I can prove my loan is fully repaid to my employer, bank, or any requesting party.
+
+**Origin:** UAT Finding #33 (High) from E8 retro. Route `/verify/:certificateId` defined in `router.tsx:189` but `VerifyCertificatePage` component never created. Backend API `GET /api/public/verify/:certificateId` is fully built and tested.
+
+### Story 15.0d: DevAutoSeed Separation — Admin Users vs Demo Loans
+
+As a **developer**,
+I want the dev auto-seed to only create admin user accounts (not demo loans or scheme config) when the database is empty,
+So that a Docker volume reset restores login ability without polluting the database with fake financial data that overwrites real uploads.
+
+**Origin:** UAT Finding #39 (High) from E8 retro. Docker volume loss triggered full demo seed including 7 fake loans, destroying Awwal's 171 real BIR migration records.
+
+### Story 15.0e: MDA Officer Dashboard & Sidebar Redesign
+
+As an **MDA Officer**,
+I want a purpose-built dashboard showing my MDA's hero metrics (active loans, monthly recovery, outstanding receivables, completion rate), migration quality score, flagged records requiring my review, pre-submission checkpoint, gap-aware submission history, and quick action buttons,
+So that I can see everything relevant to my MDA at a glance and take action without hunting through menus.
+
+**Origin:** UAT Findings #20, #25, #29 (High) from E8 retro. Current MDA officer has 5 sparse sidebar items, no dashboard, no migration quality visibility. Full wireframe in retro document.
+
+Sidebar redesign: My Dashboard, Upload Data, Submit Monthly, My Reviews, Employment Events, Reconciliation, My Reports.
+
+### Story 15.0f: Federated Upload — MDA Officers Access Migration Upload
+
+As an **MDA Officer**,
+I want to upload my MDA's migration data using the same Excel upload pipeline as the AG (three-vector validation, period detection, column mapping),
+So that I can contribute data directly instead of waiting for the AG to upload on my behalf.
+
+**Origin:** UAT Finding #28 (High — Significant Discovery) from E8 retro. Current AG-centric model doesn't scale to 63 MDAs. Infrastructure 90% built — migration upload engine, three-vector validation, selective baseline all exist. Gap: role gate (add `mda_officer` to migration upload route, scoped to their MDA), verification step (MDA uploads are `pending_verification` until admin approves), upload source attribution (`mda_upload` vs `admin_upload`), Coverage Tracker shows source per cell.
+
+### Story 15.0g: Drill-Down Completeness — View All Loans & Table Upgrades
+
+As the **AG/Department Admin**,
+I want a "View All Loans" button on the metric drill-down page that shows a flat searchable list across all MDAs, and I want the Zero Deduction Review to be a proper paginated table (not a truncated plain text list),
+So that clicking any metric card gives me direct access to the records behind the number.
+
+**Origin:** UAT Findings #2 (High), #21 (High), #22 (High) from E8 retro. MetricDrillDownPage requires 2 clicks (card → MDA → loans). Zero Deduction shows 50 names as text with "and 118 more". MDA Review tab not discoverable for MDA officers.
+
+### Story 15.0h: Clickable Cards & Reports Drill-Down Bundle
+
+As the **AG/Department Admin**,
+I want Recovery Potential Summary cards, MDA Scorecard table rows, and Operations Hub cards to be clickable with drill-down navigation,
+So that every visible metric on every page leads somewhere actionable.
+
+**Origin:** UAT Findings #16, #17, #31 (Medium) from E8 retro. Team Agreement #11: "Every number is a doorway."
+
+### Story 15.0i: Certificate Admin Preview & Completed Loans View
+
+As the **AG/Department Admin**,
+I want a "Completed Loans & Certificates" section showing all issued Auto-Stop Certificates with preview, download, and resend actions,
+So that I can manage certificate issuance and verify notification status without navigating to individual loan detail pages.
+
+**Origin:** UAT Finding #34 (Medium) from E8 retro. Currently certificates only accessible via individual Loan Detail pages. No list view, no preview, no bulk management.
+
+### Story 15.0j: Quick Fixes Bundle — MetricHelp, Empty States, Data Hygiene
+
+As **any user**,
+I want MetricHelp tooltips explaining Active Loans vs Loans in Window difference, Monthly Recovery showing "Awaiting first submission" instead of ₦0, Staff Migrated vs Baselines showing "92 unique staff across 171 records", breadcrumb showing MDA name on first load (not UUID), MDA Progress "4 of 6" explained, all empty sections having contextual messages, correction worksheet including period month/year column, purge script clearing `scheme_fund_total`, Top Variances paginated (not hardcoded to 5), MoM Trend section with stacked layout, and Reports page Fund Available alignment fixed,
+So that every number has context and every empty state has guidance.
+
+**Origin:** UAT Findings #3, #4, #6, #7, #9, #11, #12, #13, #14, #15, #23, #24 (Low-Medium) from E8 retro.
+
+### Story 15.0k: MDA Beneficiary Ledger with Lifecycle Awareness
+
+As an **MDA Officer**,
+I want a beneficiary ledger scoped to my MDA showing active staff, completed loans (with certificate status), transferred-out staff (with destination MDA and date), and consecutive loan history,
+So that I have a complete picture of every person who has ever had a loan through my MDA.
+
+**Origin:** UAT Findings #35, #37 (Medium) from E8 retro. `beneficiaryLedgerService` already supports `withMdaScope`. Needs: lifecycle grouping (active/completed/transferred), transfer history section using `transfers` + `employment_events` tables.
+
+### Story 15.0l: Duplicates Auto-Trigger & Drill-Down
+
+As the **AG/Department Admin**,
+I want duplicate detection to run automatically after upload validation (not require a manual "Run Deduplication" button), and I want to click a duplicate row to see side-by-side record comparison from parent vs sub-agency,
+So that cross-MDA duplicates are surfaced proactively and I can investigate them without guessing.
+
+**Origin:** UAT Findings #18, #19 (Medium) from E8 retro. Detection engine exists but manual trigger only. Table has no click-to-expand or record-level detail view.
+
+### Story 15.0m: Within-File Deduplication Check
+
+As the **AG/Department Admin/MDA Officer**,
+I want the system to detect when the same person appears twice in the same upload file for the same period,
+So that duplicate records are flagged before baseline creation rather than silently creating two loans.
+
+**Origin:** UAT Finding #36 (Medium) from E8 retro. Cross-MDA deduplication (Story 3.8) works. Within-file same-person-same-period detection does not exist. Pre-baseline check: "ADEBAYO appears twice in this upload for August 2024 — merge or flag?"
+
+### Story 15.0n: Upload Supersede Data Comparison & Correction Reason Enforcement
+
+As the **AG/Department Admin**,
+I want to see a record-level comparison when superseding an upload (unchanged/modified/new/removed records with field-level diffs), and I want correction reasons to be mandatory for ALL record corrections (not just flagged records),
+So that I can make informed decisions about data replacement and every correction has an audit trail.
+
+**Origin:** UAT Findings #40 (High), #42 (Medium) from E8 retro. Current supersede shows only filenames + counts. `RecordDetailDrawer.tsx:482` only shows reason field when `isFlagged`. E16 cross-month diffing pattern reusable for comparison engine.
+
 Team review with data corrections, architectural decisions, and answered questions: `_bmad-output/planning-artifacts/epic-15-team-review.md`
 
 ### Story 15.1: Committee List Upload Pipeline

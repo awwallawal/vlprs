@@ -14,9 +14,11 @@ const UPLOAD_STATUS_RANK: Record<string, number> = {
   mapped: 2,
   processing: 3,
   completed: 4,
+  pending_verification: 4, // Treated as imported — data is processed, awaiting admin approval
   validated: 5,
   reconciled: 6,
   certified: 7,
+  // 'rejected' intentionally omitted — rejected uploads don't represent progress
 };
 
 const RANK_TO_STAGE: Record<number, MigrationStage> = {
@@ -61,10 +63,12 @@ export async function getMigrationDashboard(
       maxStatus: sql<string>`MAX(CASE
         WHEN ${migrationUploads.status} = 'reconciled' THEN '6_reconciled'
         WHEN ${migrationUploads.status} = 'validated' THEN '5_validated'
+        WHEN ${migrationUploads.status} = 'pending_verification' THEN '4_completed'
         WHEN ${migrationUploads.status} = 'completed' THEN '4_completed'
         WHEN ${migrationUploads.status} = 'processing' THEN '3_processing'
         WHEN ${migrationUploads.status} = 'mapped' THEN '2_mapped'
         WHEN ${migrationUploads.status} = 'uploaded' THEN '1_uploaded'
+        WHEN ${migrationUploads.status} = 'rejected' THEN '0_unknown'
         ELSE '0_unknown'
       END)`,
       lastActivity: sql<string>`MAX(COALESCE(${migrationUploads.updatedAt}, ${migrationUploads.createdAt}))`,
@@ -316,13 +320,19 @@ export async function getMigrationCoverage(
       periodMonth: migrationRecords.periodMonth,
       recordCount: sql<string>`COUNT(*)`,
       baselinedCount: sql<string>`COUNT(*) FILTER (WHERE ${migrationRecords.isBaselineCreated} = true)`,
+      uploadSource: sql<string>`CASE
+        WHEN bool_or(${migrationUploads.uploadSource} = 'mda_officer') AND bool_or(${migrationUploads.uploadSource} = 'admin') THEN 'mixed'
+        WHEN bool_or(${migrationUploads.uploadSource} = 'mda_officer') THEN 'mda_officer'
+        ELSE 'admin'
+      END`,
     })
     .from(migrationRecords)
+    .innerJoin(migrationUploads, and(eq(migrationRecords.uploadId, migrationUploads.id), isNull(migrationUploads.deletedAt)))
     .where(and(...periodConditions))
     .groupBy(migrationRecords.mdaId, migrationRecords.periodYear, migrationRecords.periodMonth);
 
-  // Build lookup: mdaId → { 'YYYY-MM': { recordCount, baselinedCount } }
-  const coverageMap = new Map<string, Record<string, { recordCount: number; baselinedCount: number }>>();
+  // Build lookup: mdaId → { 'YYYY-MM': { recordCount, baselinedCount, uploadSource? } }
+  const coverageMap = new Map<string, Record<string, { recordCount: number; baselinedCount: number; uploadSource?: 'admin' | 'mda_officer' | 'mixed' }>>();
   for (const row of periodAgg) {
     if (!coverageMap.has(row.mdaId)) {
       coverageMap.set(row.mdaId, {});
@@ -331,6 +341,7 @@ export async function getMigrationCoverage(
     coverageMap.get(row.mdaId)![key] = {
       recordCount: parseInt(row.recordCount, 10),
       baselinedCount: parseInt(row.baselinedCount, 10),
+      uploadSource: row.uploadSource as 'admin' | 'mda_officer' | 'mixed',
     };
   }
 

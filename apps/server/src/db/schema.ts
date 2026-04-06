@@ -276,9 +276,9 @@ export const refreshTokens = pgTable(
   ],
 );
 
-// ─── Migration Upload Status Enum (Story 3.1, extended Story 3.2, Story 3.4) ─
+// ─── Migration Upload Status Enum (Story 3.1, extended Story 3.2, Story 3.4, Story 15.0f) ─
 export const migrationUploadStatusEnum = pgEnum('migration_upload_status', [
-  'uploaded', 'mapped', 'processing', 'completed', 'validated', 'reconciled', 'failed',
+  'uploaded', 'mapped', 'processing', 'completed', 'pending_verification', 'validated', 'reconciled', 'failed', 'rejected',
 ]);
 
 // ─── Migration Record Status Enum (Story 7.0g) ─────────────────────
@@ -303,6 +303,7 @@ export const migrationUploads = pgTable(
     sheetCount: integer('sheet_count').notNull().default(0),
     totalRecords: integer('total_records').notNull().default(0),
     status: migrationUploadStatusEnum('status').notNull().default('uploaded'),
+    uploadSource: varchar('upload_source', { length: 20 }).notNull().default('admin'),
     eraDetected: integer('era_detected'),
     metadata: jsonb('metadata'),
     delineationResult: jsonb('delineation_result'),
