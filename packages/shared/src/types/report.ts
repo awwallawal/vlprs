@@ -85,8 +85,11 @@ export interface ReceivablesRankingRow {
   activeLoans: number;
 }
 
+export type RecoveryTierKey = 'QUICK' | 'INTERVENTION' | 'EXTENDED';
+
 export interface RecoveryTier {
-  tierName: string; // "Quick Recovery" | "Requires Intervention" | "Extended Follow-up"
+  tierKey: RecoveryTierKey; // Stable identifier — use this for routing/lookups, not tierName
+  tierName: string;          // Human-readable label, e.g. "Quick Recovery". Display only.
   loanCount: number;
   totalAmount: string;
   monthlyProjection: string;

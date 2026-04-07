@@ -103,6 +103,7 @@ export function OperationsHubPage() {
                 stage={mda.stage}
                 recordCounts={mda.recordCounts}
                 lastActivity={mda.lastActivity ?? undefined}
+                onClick={() => navigate(`/dashboard/mda/${mda.mdaId}`)}
               />
             ))}
           </div>

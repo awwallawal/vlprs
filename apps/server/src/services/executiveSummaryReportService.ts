@@ -275,9 +275,9 @@ async function buildRecoveryPotential(
   const allAtRiskIds = [...overdueIds, ...stalledIds];
   if (allAtRiskIds.length === 0) {
     return [
-      { tierName: RECOVERY_TIERS.QUICK.label, loanCount: 0, totalAmount: '0.00', monthlyProjection: '0.00' },
-      { tierName: RECOVERY_TIERS.INTERVENTION.label, loanCount: 0, totalAmount: '0.00', monthlyProjection: '0.00' },
-      { tierName: RECOVERY_TIERS.EXTENDED.label, loanCount: 0, totalAmount: '0.00', monthlyProjection: '0.00' },
+      { tierKey: 'QUICK', tierName: RECOVERY_TIERS.QUICK.label, loanCount: 0, totalAmount: '0.00', monthlyProjection: '0.00' },
+      { tierKey: 'INTERVENTION', tierName: RECOVERY_TIERS.INTERVENTION.label, loanCount: 0, totalAmount: '0.00', monthlyProjection: '0.00' },
+      { tierKey: 'EXTENDED', tierName: RECOVERY_TIERS.EXTENDED.label, loanCount: 0, totalAmount: '0.00', monthlyProjection: '0.00' },
     ];
   }
 
@@ -371,9 +371,9 @@ async function buildRecoveryPotential(
   }
 
   return [
-    { tierName: RECOVERY_TIERS.QUICK.label, loanCount: tiers.quick.count, totalAmount: tiers.quick.total.toFixed(2), monthlyProjection: tiers.quick.projection.toFixed(2) },
-    { tierName: RECOVERY_TIERS.INTERVENTION.label, loanCount: tiers.intervention.count, totalAmount: tiers.intervention.total.toFixed(2), monthlyProjection: tiers.intervention.projection.toFixed(2) },
-    { tierName: RECOVERY_TIERS.EXTENDED.label, loanCount: tiers.extended.count, totalAmount: tiers.extended.total.toFixed(2), monthlyProjection: tiers.extended.projection.toFixed(2) },
+    { tierKey: 'QUICK', tierName: RECOVERY_TIERS.QUICK.label, loanCount: tiers.quick.count, totalAmount: tiers.quick.total.toFixed(2), monthlyProjection: tiers.quick.projection.toFixed(2) },
+    { tierKey: 'INTERVENTION', tierName: RECOVERY_TIERS.INTERVENTION.label, loanCount: tiers.intervention.count, totalAmount: tiers.intervention.total.toFixed(2), monthlyProjection: tiers.intervention.projection.toFixed(2) },
+    { tierKey: 'EXTENDED', tierName: RECOVERY_TIERS.EXTENDED.label, loanCount: tiers.extended.count, totalAmount: tiers.extended.total.toFixed(2), monthlyProjection: tiers.extended.projection.toFixed(2) },
   ];
 }
 

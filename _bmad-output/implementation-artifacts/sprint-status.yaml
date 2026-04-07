@@ -292,7 +292,7 @@ development_status:
   15-0e-mda-officer-dashboard-sidebar-redesign: done  # HIGH: purpose-built dashboard, 6 sidebar items — UAT #20, #25, #29. Code review: 8 findings (1H 4M 3L) all resolved
   15-0f-federated-upload-mda-officer-migration: done  # HIGH: role gate + verification step + source attribution — UAT #28, #27. Code review: 10 findings (3H 4M 3L) all fixed
   15-0g-drill-down-completeness: done  # HIGH: View All Loans, Zero Deduction table, MDA Review discoverability — UAT #2, #21, #22
-  15-0h-clickable-cards-reports-drilldown: ready-for-dev  # MEDIUM: Recovery Potential, MDA Scorecard, Ops Hub — UAT #16, #17, #31
+  15-0h-clickable-cards-reports-drilldown: done  # MEDIUM: Recovery Potential, MDA Scorecard, Ops Hub — UAT #16, #17, #31. Code review: 5 findings (0H 2M 3L), all fixed
   15-0i-certificate-admin-preview-completed-loans: ready-for-dev  # MEDIUM: certificate list/preview/resend — UAT #34
   15-0j-quick-fixes-bundle: ready-for-dev  # MEDIUM: MetricHelp, empty states, breadcrumb, MoM layout, period column, fund total, Top Variances pagination — UAT #3,4,6,7,9,11,12,13,14,15,23,24
   15-0k-mda-beneficiary-ledger-lifecycle: ready-for-dev  # MEDIUM: MDA-scoped ledger with active/completed/transferred grouping — UAT #35, #37
