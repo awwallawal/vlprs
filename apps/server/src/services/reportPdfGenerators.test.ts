@@ -71,7 +71,7 @@ describe('generateExecutiveSummaryPdf', () => {
         bottomForReview: [],
       },
       receivablesRanking: [{ mdaId: '1', mdaName: 'Education', mdaCode: 'EDU', totalOutstanding: '5000000', activeLoans: 50 }],
-      recoveryPotential: [{ tierName: 'Quick Recovery', loanCount: 10, totalAmount: '1000000', monthlyProjection: '100000' }],
+      recoveryPotential: [{ tierKey: 'QUICK', tierName: 'Quick Recovery', loanCount: 10, totalAmount: '1000000', monthlyProjection: '100000' }],
       submissionCoverage: { activeMdas: 10, spottyMdas: 3, darkMdas: 2, totalMdas: 15 },
       onboardingPipeline: { approvedNotCollectingCount: 5, revenueAtRisk: '500000' },
       exceptionSummary: { openCount: 3, resolvedCount: 7, totalCount: 10 },

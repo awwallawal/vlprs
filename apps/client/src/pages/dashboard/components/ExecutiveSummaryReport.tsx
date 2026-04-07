@@ -1,3 +1,4 @@
+import { useNavigate } from 'react-router';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
@@ -7,7 +8,17 @@ import { MetricHelp } from '@/components/shared/MetricHelp';
 import { useExecutiveSummaryReport } from '@/hooks/useReportData';
 import { TrendingUp, TrendingDown, Minus, AlertTriangle } from 'lucide-react';
 import { ReportActions } from './ReportActions';
-import type { TrendMetric, MdaScorecardRow } from '@vlprs/shared';
+import type { TrendMetric, MdaScorecardRow, RecoveryTierKey } from '@vlprs/shared';
+
+// Recovery tier → filter route on FilteredLoanListPage.
+// Keyed by the stable RecoveryTierKey (set by the server) so display label
+// changes never silently break navigation. FilteredLoanListPage reads
+// ?filter= (not ?classification=) and maps the value internally.
+const TIER_ROUTES: Record<RecoveryTierKey, string> = {
+  QUICK: '/dashboard/loans?filter=quick-win',
+  INTERVENTION: '/dashboard/loans?filter=overdue',
+  EXTENDED: '/dashboard/loans?filter=stalled',
+};
 
 function healthBadge(band: string) {
   switch (band) {
@@ -46,6 +57,7 @@ function TrendIndicator({ metric, label }: { metric: TrendMetric; label: string 
 }
 
 function ScorecardTable({ title, rows }: { title: string; rows: MdaScorecardRow[] }) {
+  const navigate = useNavigate();
   if (rows.length === 0) return null;
   return (
     <div>
@@ -61,7 +73,21 @@ function ScorecardTable({ title, rows }: { title: string; rows: MdaScorecardRow[
         </TableHeader>
         <TableBody>
           {rows.map(r => (
-            <TableRow key={r.mdaId}>
+            <TableRow
+              key={r.mdaId}
+              role="link"
+              tabIndex={0}
+              aria-label={`View ${r.mdaName} details`}
+              data-testid={`scorecard-row-${r.mdaId}`}
+              onClick={() => navigate(`/dashboard/mda/${r.mdaId}`)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  navigate(`/dashboard/mda/${r.mdaId}`);
+                }
+              }}
+              className="cursor-pointer transition-colors hover:bg-slate-50"
+            >
               <TableCell className="font-medium">{r.mdaName}</TableCell>
               <TableCell>{healthBadge(r.healthBand)}</TableCell>
               <TableCell className="text-right"><NairaDisplay amount={r.totalOutstanding} /></TableCell>
@@ -76,6 +102,7 @@ function ScorecardTable({ title, rows }: { title: string; rows: MdaScorecardRow[
 
 export function ExecutiveSummaryReport() {
   const { data, isLoading, error } = useExecutiveSummaryReport();
+  const navigate = useNavigate();
 
   if (isLoading) {
     return (
@@ -209,18 +236,35 @@ export function ExecutiveSummaryReport() {
         <CardHeader><CardTitle>Recovery Potential Summary</CardTitle></CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {data.recoveryPotential.map(tier => (
-              <Card key={tier.tierName} className="border">
-                <CardContent className="pt-4">
-                  <h4 className="font-semibold mb-2">{tier.tierName}</h4>
-                  <div className="space-y-1 text-sm">
-                    <p><span className="text-text-secondary">Loans:</span> {tier.loanCount.toLocaleString()}</p>
-                    <p><span className="text-text-secondary">Total:</span> <NairaDisplay amount={tier.totalAmount} /></p>
-                    <p><span className="text-text-secondary">Monthly Projection:</span> <NairaDisplay amount={tier.monthlyProjection} /></p>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+            {data.recoveryPotential.map(tier => {
+              const route = TIER_ROUTES[tier.tierKey];
+              return (
+                <Card
+                  key={tier.tierKey}
+                  role="button"
+                  tabIndex={0}
+                  aria-label={`View ${tier.tierName} loans`}
+                  data-testid={`recovery-tier-card-${tier.tierKey}`}
+                  onClick={() => navigate(route)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      navigate(route);
+                    }
+                  }}
+                  className="border cursor-pointer hover:shadow-md transition-shadow"
+                >
+                  <CardContent className="pt-4">
+                    <h4 className="font-semibold mb-2">{tier.tierName}</h4>
+                    <div className="space-y-1 text-sm">
+                      <p><span className="text-text-secondary">Loans:</span> {tier.loanCount.toLocaleString()}</p>
+                      <p><span className="text-text-secondary">Total:</span> <NairaDisplay amount={tier.totalAmount} /></p>
+                      <p><span className="text-text-secondary">Monthly Projection:</span> <NairaDisplay amount={tier.monthlyProjection} /></p>
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
           </div>
         </CardContent>
       </Card>

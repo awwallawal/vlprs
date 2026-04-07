@@ -1,8 +1,19 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { OperationsHubPage } from './OperationsHubPage';
+
+const mockNavigate = vi.fn();
+
+vi.mock('react-router', async () => {
+  const actual = await vi.importActual<typeof import('react-router')>('react-router');
+  return {
+    ...actual,
+    useNavigate: () => mockNavigate,
+  };
+});
 
 const mockMigration = [
   {
@@ -57,6 +68,10 @@ function renderPage(initialEntries = ['/dashboard/operations']) {
 }
 
 describe('OperationsHubPage', () => {
+  beforeEach(() => {
+    mockNavigate.mockClear();
+  });
+
   it('renders page heading "Operations Hub"', () => {
     renderPage();
     expect(
@@ -106,5 +121,39 @@ describe('OperationsHubPage', () => {
     expect(
       screen.getByRole('button', { name: /Compute Early Exit/ }),
     ).toBeInTheDocument();
+  });
+
+  describe('Migration card navigation (Story 15.0h, UAT #31)', () => {
+    /**
+     * Mock data uses "Ministry of Finance" for both the migration card and the
+     * exception row, and both render role="button". Scope queries to the
+     * migration section (region with accessible name "Migration Status") so the
+     * exception row is not in scope.
+     */
+    function getMigrationCard(): HTMLElement {
+      const migrationSection = screen.getByRole('region', { name: /Migration Status/i });
+      return within(migrationSection).getByRole('button', { name: /Ministry of Finance/i });
+    }
+
+    it('navigates to /dashboard/mda/:mdaId when a migration card is clicked', async () => {
+      renderPage();
+      const card = getMigrationCard();
+      await userEvent.click(card);
+      expect(mockNavigate).toHaveBeenCalledWith('/dashboard/mda/mda-001');
+    });
+
+    it('navigates on Enter key from a focused migration card', async () => {
+      renderPage();
+      const card = getMigrationCard();
+      card.focus();
+      await userEvent.keyboard('{Enter}');
+      expect(mockNavigate).toHaveBeenCalledWith('/dashboard/mda/mda-001');
+    });
+
+    it('migration card has cursor-pointer class for hover affordance', () => {
+      renderPage();
+      const card = getMigrationCard();
+      expect(card.className).toContain('cursor-pointer');
+    });
   });
 });

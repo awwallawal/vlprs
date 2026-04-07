@@ -104,6 +104,7 @@ export const executiveSummaryReportSchema = z.object({
     activeLoans: z.number(),
   })),
   recoveryPotential: z.array(z.object({
+    tierKey: z.enum(['QUICK', 'INTERVENTION', 'EXTENDED']),
     tierName: z.string(),
     loanCount: z.number(),
     totalAmount: z.string(),
