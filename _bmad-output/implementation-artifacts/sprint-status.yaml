@@ -285,6 +285,10 @@ development_status:
   #   - After 15.0j: Clean-room UAT — all 3 roles, verify every dashboard number
   #
   # MDA COUNT: 63 (not 47 — 47 is legacy data coverage only)
+  #
+  # E15 RETRO INPUTS (open findings to discuss):
+  #   - test-isolation-flake-finding-2026-04-08.md — surfaced during 15.0i. Test fix shipped (audit-write drain in resetDb).
+  #     OPEN PM DECISION: should production audit-log writes be awaited (compliance) or stay fire-and-forget (speed)?
   15-0a-api-response-consistency-loans-table-fix: done  # CRITICAL: apiClient unwrap bug — UAT #5, #32. Code review: 6 findings (1H 2M 3L), 4 fixed, 2 deferred (pre-existing)
   15-0b-observation-auto-generation-after-baseline: done  # CRITICAL: wire generateObservations() to baseline commit — UAT #8. Code review: 4 findings (0H 1M 3L), all fixed
   15-0c-public-certificate-verification-page: done  # Already implemented in Story 8.2 (commit 11229aa). UAT #33 recorded against stale deployment
@@ -293,8 +297,8 @@ development_status:
   15-0f-federated-upload-mda-officer-migration: done  # HIGH: role gate + verification step + source attribution — UAT #28, #27. Code review: 10 findings (3H 4M 3L) all fixed
   15-0g-drill-down-completeness: done  # HIGH: View All Loans, Zero Deduction table, MDA Review discoverability — UAT #2, #21, #22
   15-0h-clickable-cards-reports-drilldown: done  # MEDIUM: Recovery Potential, MDA Scorecard, Ops Hub — UAT #16, #17, #31. Code review: 5 findings (0H 2M 3L), all fixed
-  15-0i-certificate-admin-preview-completed-loans: ready-for-dev  # MEDIUM: certificate list/preview/resend — UAT #34
-  15-0j-quick-fixes-bundle: ready-for-dev  # MEDIUM: MetricHelp, empty states, breadcrumb, MoM layout, period column, fund total, Top Variances pagination — UAT #3,4,6,7,9,11,12,13,14,15,23,24
+  15-0i-certificate-admin-preview-completed-loans: done  # MEDIUM: certificate list/preview/resend — UAT #34. Code review: 16 findings (1H 5M 10L), 14 fixed (2 deferred — TZ cross-cutting, branch bloat process)
+  15-0j-quick-fixes-bundle: review  # MEDIUM: MetricHelp, empty states, breadcrumb, MoM layout, period column, fund total, Top Variances pagination — UAT #3,4,6,7,9,11,12,13,14,15,23,24
   15-0k-mda-beneficiary-ledger-lifecycle: ready-for-dev  # MEDIUM: MDA-scoped ledger with active/completed/transferred grouping — UAT #35, #37
   15-0l-duplicates-auto-trigger-drilldown: ready-for-dev  # MEDIUM: auto-run detection + side-by-side comparison — UAT #18, #19
   15-0m-within-file-deduplication-check: ready-for-dev  # MEDIUM: same-person-same-period in single file — UAT #36

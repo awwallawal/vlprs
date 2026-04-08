@@ -1,5 +1,10 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient, authenticatedFetch, isApiError } from '@/lib/apiClient';
+import type {
+  CertificateListResponse,
+  CertificateNotificationStatus,
+  CertificateSortBy,
+} from '@vlprs/shared';
 
 interface CertificateMetadata {
   certificateId: string;
@@ -84,6 +89,49 @@ export function useResendNotifications(loanId: string) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['certificates', loanId] });
+      queryClient.invalidateQueries({ queryKey: ['certificates', 'list'] });
     },
+  });
+}
+
+// ─── Certificate List (Story 15.0i) ────────────────────────────────
+
+export interface CertificateListFilters {
+  mdaId?: string;
+  notificationStatus?: CertificateNotificationStatus;
+  page?: number;
+  limit?: number;
+  sortBy?: CertificateSortBy;
+  sortOrder?: 'asc' | 'desc';
+}
+
+/**
+ * Fetches paginated list of issued Auto-Stop Certificates.
+ * Backend returns wrapped format `{ success, data: { data, total, page, pageSize } }`.
+ * `apiClient<CertificateListResponse>` returns the inner object (wrapped format).
+ */
+export function useCertificateList(filters: CertificateListFilters = {}) {
+  // Strip undefined entries so the queryKey is stable when filters toggle on/off
+  // (otherwise React Query treats `{mdaId: undefined}` and `{}` as distinct keys
+  // and we get unnecessary cache misses).
+  const definedFilters = Object.fromEntries(
+    Object.entries(filters).filter(([, v]) => v !== undefined),
+  );
+
+  const params = new URLSearchParams();
+  if (filters.mdaId) params.set('mdaId', filters.mdaId);
+  if (filters.notificationStatus) params.set('notificationStatus', filters.notificationStatus);
+  if (filters.page) params.set('page', String(filters.page));
+  if (filters.limit) params.set('limit', String(filters.limit));
+  if (filters.sortBy) params.set('sortBy', filters.sortBy);
+  if (filters.sortOrder) params.set('sortOrder', filters.sortOrder);
+
+  const queryString = params.toString();
+  const endpoint = queryString ? `/certificates?${queryString}` : '/certificates';
+
+  return useQuery<CertificateListResponse>({
+    queryKey: ['certificates', 'list', definedFilters],
+    queryFn: () => apiClient<CertificateListResponse>(endpoint),
+    staleTime: 30_000,
   });
 }

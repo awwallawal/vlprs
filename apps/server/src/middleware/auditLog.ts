@@ -4,6 +4,7 @@ import { auditLog as auditLogTable } from '../db/schema';
 import { hashBody } from '../lib/hashBody';
 import { extractClientIp } from '../lib/extractIp';
 import { logger } from '../lib/logger';
+import { trackAuditWrite } from '../services/auditTracking';
 
 /**
  * Derives an action name from the request method and path.
@@ -57,25 +58,31 @@ export function auditLog(req: Request, res: Response, next: NextFunction): void 
   res.on('finish', () => {
     const durationMs = Number(process.hrtime.bigint() - startTime) / 1_000_000;
 
-    // Fire-and-forget: async insert, catch errors silently
-    db.insert(auditLogTable)
-      .values({
-        userId,
-        email,
-        role,
-        mdaId,
-        action: deriveAction(req),
-        resource,
-        method,
-        requestBodyHash: bodyHash,
-        responseStatus: res.statusCode,
-        ipAddress: ip,
-        userAgent,
-        durationMs: Math.round(durationMs),
-      })
-      .catch((err) => {
-        logger.error({ err, userId, resource, method }, 'Failed to write audit log entry');
-      });
+    // Fire-and-forget: async insert, catch errors silently. Registered with
+    // trackAuditWrite so integration test resets can drain in-flight writes
+    // before TRUNCATE — see
+    // _bmad-output/implementation-artifacts/test-isolation-flake-finding-2026-04-08.md
+    void trackAuditWrite(
+      db
+        .insert(auditLogTable)
+        .values({
+          userId,
+          email,
+          role,
+          mdaId,
+          action: deriveAction(req),
+          resource,
+          method,
+          requestBodyHash: bodyHash,
+          responseStatus: res.statusCode,
+          ipAddress: ip,
+          userAgent,
+          durationMs: Math.round(durationMs),
+        })
+        .catch((err) => {
+          logger.error({ err, userId, resource, method }, 'Failed to write audit log entry');
+        }),
+    );
   });
 
   next();
