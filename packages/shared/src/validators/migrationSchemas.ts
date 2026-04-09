@@ -185,7 +185,7 @@ export const rejectUploadSchema = z.object({
   reason: z.string().min(10, 'Rejection reason must be at least 10 characters'),
 });
 
-// ─── Beneficiary Ledger Query (Story 3.5) ───────────────────────────
+// ─── Beneficiary Ledger Query (Story 3.5, extended Story 15.0k) ─────
 export const beneficiaryQuerySchema = z.object({
   page: z.coerce.number().int().min(1).optional(),
   pageSize: z.coerce.number().int().min(1).max(100).optional(),
@@ -193,4 +193,5 @@ export const beneficiaryQuerySchema = z.object({
   search: z.string().min(2, 'Search term must be at least 2 characters').optional(),
   sortBy: z.enum(['staffName', 'totalExposure', 'loanCount', 'lastActivityDate']).optional(),
   sortOrder: z.enum(['asc', 'desc']).optional(),
+  loanStatus: z.enum(['ACTIVE', 'COMPLETED', 'TRANSFERRED', 'ALL']).optional(),
 });

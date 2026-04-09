@@ -187,6 +187,7 @@ router.get(
       mdaId: req.query.mdaId as string | undefined,
       sortBy: req.query.sortBy as 'staffName' | 'totalExposure' | 'loanCount' | 'lastActivityDate' | undefined,
       sortOrder: req.query.sortOrder as 'asc' | 'desc' | undefined,
+      loanStatus: req.query.loanStatus as 'ACTIVE' | 'COMPLETED' | 'TRANSFERRED' | 'ALL' | undefined,
     };
     const data = await beneficiaryLedgerService.listBeneficiaries(filters, req.mdaScope);
     res.json({ success: true, data });
@@ -216,6 +217,7 @@ router.get(
       mdaId: req.query.mdaId as string | undefined,
       sortBy: req.query.sortBy as 'staffName' | 'totalExposure' | 'loanCount' | 'lastActivityDate' | undefined,
       sortOrder: req.query.sortOrder as 'asc' | 'desc' | undefined,
+      loanStatus: req.query.loanStatus as 'ACTIVE' | 'COMPLETED' | 'TRANSFERRED' | 'ALL' | undefined,
     };
     const csv = await beneficiaryLedgerService.exportBeneficiariesCsv(filters, req.mdaScope);
     const date = new Date().toISOString().slice(0, 10);

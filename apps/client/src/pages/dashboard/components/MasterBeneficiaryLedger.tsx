@@ -8,13 +8,32 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { formatCount, formatDate } from '@/lib/formatters';
-import { Download, FileText } from 'lucide-react';
+import { Download, FileText, CheckCircle, Clock } from 'lucide-react';
+import type { BeneficiaryLoanStatus } from '@vlprs/shared';
+
+function LifecycleBadge({ status }: { status: BeneficiaryLoanStatus }) {
+  switch (status) {
+    case 'ACTIVE':
+      return <Badge variant="complete" className="text-[10px]">Active</Badge>;
+    case 'COMPLETED':
+      return <Badge className="border-transparent bg-teal-50 text-teal text-[10px]">Completed</Badge>;
+    case 'TRANSFERRED':
+      return <Badge variant="review" className="text-[10px]">Transferred</Badge>;
+    case 'TRANSFER_PENDING':
+      return <Badge variant="outline" className="text-[10px] border-gold-dark text-gold-dark">Transfer Pending</Badge>;
+    case 'INACTIVE':
+      return <Badge variant="pending" className="text-[10px]">Inactive</Badge>;
+    default:
+      return null;
+  }
+}
 
 export function MasterBeneficiaryLedger() {
   const navigate = useNavigate();
   const [search, setSearch] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [mdaId, setMdaId] = useState<string | undefined>();
+  const [statusFilter, setStatusFilter] = useState<'ACTIVE' | 'COMPLETED' | 'TRANSFERRED' | 'ALL' | undefined>();
   const [page, setPage] = useState(1);
   const [sortBy, setSortBy] = useState<'staffName' | 'totalExposure' | 'loanCount' | 'lastActivityDate'>('staffName');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
@@ -35,6 +54,7 @@ export function MasterBeneficiaryLedger() {
     search: debouncedSearch.length >= 2 ? debouncedSearch : undefined,
     sortBy,
     sortOrder,
+    loanStatus: statusFilter,
   };
 
   const { data, isPending } = useBeneficiaryList(filters);
@@ -126,6 +146,20 @@ export function MasterBeneficiaryLedger() {
               <option key={m.mdaId} value={m.mdaId}>{m.mdaName}</option>
             ))}
         </select>
+        <select
+          value={statusFilter ?? ''}
+          onChange={(e) => {
+            const val = e.target.value as 'ACTIVE' | 'COMPLETED' | 'TRANSFERRED' | 'ALL' | '';
+            setStatusFilter(val || undefined);
+            setPage(1);
+          }}
+          className="h-10 rounded-md border border-input bg-background px-3 text-sm"
+        >
+          <option value="">All Staff</option>
+          <option value="ACTIVE">Active</option>
+          <option value="COMPLETED">Completed</option>
+          <option value="TRANSFERRED">Transferred</option>
+        </select>
         <Button variant="secondary" onClick={handleExport} disabled={isExporting}>
           <Download className="h-4 w-4" aria-hidden="true" />
           {isExporting ? 'Exporting...' : 'Export CSV'}
@@ -152,6 +186,9 @@ export function MasterBeneficiaryLedger() {
                 </th>
                 <th className="py-2 px-3 text-xs font-semibold text-text-muted uppercase text-left">
                   Staff ID
+                </th>
+                <th className="py-2 px-3 text-xs font-semibold text-text-muted uppercase text-left">
+                  Status
                 </th>
                 <th className="py-2 px-3 text-xs font-semibold text-text-muted uppercase text-left">
                   MDA(s)
@@ -185,7 +222,7 @@ export function MasterBeneficiaryLedger() {
               {isPending ? (
                 Array.from({ length: 8 }).map((_, i) => (
                   <tr key={i} className="border-b border-border/50">
-                    <td colSpan={8} className="py-2 px-3">
+                    <td colSpan={9} className="py-2 px-3">
                       <Skeleton className="h-5 w-full" />
                     </td>
                   </tr>
@@ -207,6 +244,28 @@ export function MasterBeneficiaryLedger() {
                   >
                     <td className="py-2 px-3 text-text-primary font-medium">{person.staffName}</td>
                     <td className="py-2 px-3 font-mono text-text-muted text-xs">{person.staffId}</td>
+                    <td className="py-2 px-3">
+                      <div className="flex flex-wrap items-center gap-1">
+                        <LifecycleBadge status={person.loanStatus} />
+                        {person.hasConsecutiveLoan && (
+                          <Badge variant="info" className="text-[10px]">Consecutive</Badge>
+                        )}
+                        {person.loanStatus === 'COMPLETED' && person.certificateStatus === 'issued' && (
+                          <CheckCircle className="h-3.5 w-3.5 text-success" aria-label="Certificate Issued" />
+                        )}
+                        {person.loanStatus === 'COMPLETED' && person.certificateStatus === 'pending' && (
+                          <Clock className="h-3.5 w-3.5 text-gold-dark" aria-label="Certificate Pending" />
+                        )}
+                      </div>
+                      {person.loanStatus === 'COMPLETED' && person.completionDate && (
+                        <span className="text-[10px] text-text-muted block">{formatDate(person.completionDate)}</span>
+                      )}
+                      {(person.loanStatus === 'TRANSFERRED' || person.loanStatus === 'TRANSFER_PENDING') && person.transferredToMdaName && (
+                        <span className="text-[10px] text-text-muted block">
+                          → {person.transferredToMdaName} ({person.transferredOutDate ? formatDate(person.transferredOutDate) : ''})
+                        </span>
+                      )}
+                    </td>
                     <td className="py-2 px-3">
                       <span className="text-sm">{person.primaryMdaName}</span>
                       {person.isMultiMda && (
@@ -243,8 +302,11 @@ export function MasterBeneficiaryLedger() {
                 ))
               ) : (
                 <tr>
-                  <td colSpan={8} className="py-8 text-center text-sm text-text-muted">
-                    No beneficiaries found
+                  <td colSpan={9} className="py-8 text-center text-sm text-text-muted">
+                    {statusFilter === 'ACTIVE' ? 'No active beneficiaries found' :
+                     statusFilter === 'COMPLETED' ? 'No completed loans found' :
+                     statusFilter === 'TRANSFERRED' ? 'No transferred staff found' :
+                     'No beneficiaries found'}
                   </td>
                 </tr>
               )}

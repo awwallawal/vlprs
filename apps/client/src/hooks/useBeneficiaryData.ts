@@ -9,6 +9,7 @@ interface BeneficiaryFilters {
   search?: string;
   sortBy?: 'staffName' | 'totalExposure' | 'loanCount' | 'lastActivityDate';
   sortOrder?: 'asc' | 'desc';
+  loanStatus?: 'ACTIVE' | 'COMPLETED' | 'TRANSFERRED' | 'ALL';
 }
 
 function buildQueryString(filters: BeneficiaryFilters): string {
@@ -19,6 +20,7 @@ function buildQueryString(filters: BeneficiaryFilters): string {
   if (filters.search) params.set('search', filters.search);
   if (filters.sortBy) params.set('sortBy', filters.sortBy);
   if (filters.sortOrder) params.set('sortOrder', filters.sortOrder);
+  if (filters.loanStatus) params.set('loanStatus', filters.loanStatus);
   const qs = params.toString();
   return qs ? `?${qs}` : '';
 }
