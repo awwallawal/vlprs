@@ -609,3 +609,371 @@ describe('GET /api/public/verify/:certificateId', () => {
     expect(res.body.data.valid).toBe(true);
   });
 });
+
+// ─── Certificate List Endpoint (Story 15.0i) ─────────────────────────
+
+describe('GET /api/certificates', () => {
+  // Use a dedicated MDA so this scope test is fully isolated from prior tests.
+  let listMdaId: string;
+  let listAdminId: string;
+  let listAdminToken: string;
+  let otherMdaId: string;
+  let otherOfficerId: string;
+  let otherOfficerToken: string;
+
+  beforeAll(async () => {
+    listMdaId = generateUuidv7();
+    await db.insert(mdas).values({
+      id: listMdaId,
+      name: 'Cert List Primary MDA',
+      code: 'CLP1',
+      abbreviation: 'CLP1',
+    });
+
+    otherMdaId = generateUuidv7();
+    await db.insert(mdas).values({
+      id: otherMdaId,
+      name: 'Cert List Other MDA',
+      code: 'CLO2',
+      abbreviation: 'CLO2',
+    });
+
+    // Dedicated SUPER_ADMIN for the list endpoint tests
+    listAdminId = generateUuidv7();
+    await db.insert(users).values({
+      id: listAdminId,
+      email: 'cert-list-admin@test.com',
+      hashedPassword: 'hashed',
+      firstName: 'List',
+      lastName: 'Admin',
+      role: 'super_admin',
+    });
+    listAdminToken = signAccessToken({
+      userId: listAdminId,
+      email: 'cert-list-admin@test.com',
+      role: 'super_admin',
+      mdaId: null,
+      mustChangePassword: false,
+    });
+
+    // MDA officer scoped to "other" MDA — must NOT see primary-MDA certificates
+    otherOfficerId = generateUuidv7();
+    await db.insert(users).values({
+      id: otherOfficerId,
+      email: 'cert-list-other-officer@test.com',
+      hashedPassword: 'hashed',
+      firstName: 'Other',
+      lastName: 'Officer',
+      role: 'mda_officer',
+      mdaId: otherMdaId,
+    });
+    otherOfficerToken = signAccessToken({
+      userId: otherOfficerId,
+      email: 'cert-list-other-officer@test.com',
+      role: 'mda_officer',
+      mdaId: otherMdaId,
+      mustChangePassword: false,
+    });
+
+    // Seed three certificates for primary MDA with distinct notification states.
+    // Notified (both timestamps set)
+    const notifiedLoanId = generateUuidv7();
+    await db.insert(loans).values({
+      id: notifiedLoanId,
+      staffId: 'CLP-001',
+      staffName: 'Notified Beneficiary',
+      gradeLevel: 'GL-10',
+      mdaId: listMdaId,
+      principalAmount: PRINCIPAL,
+      interestRate: RATE,
+      tenureMonths: TENURE,
+      monthlyDeductionAmount: '3148.06',
+      approvalDate: new Date('2024-01-01'),
+      firstDeductionDate: new Date('2024-02-01'),
+      loanReference: 'VLC-CLP-001',
+      status: 'COMPLETED',
+      limitedComputation: false,
+    });
+    await db.insert(autoStopCertificates).values({
+      id: generateUuidv7(),
+      loanId: notifiedLoanId,
+      certificateId: 'ASC-2026-04-7001',
+      verificationToken: 'n'.repeat(64),
+      beneficiaryName: 'Notified Beneficiary',
+      staffId: 'CLP-001',
+      mdaId: listMdaId,
+      mdaName: 'Cert List Primary MDA',
+      loanReference: 'VLC-CLP-001',
+      originalPrincipal: PRINCIPAL,
+      totalPaid: TOTAL_LOAN,
+      totalInterestPaid: INTEREST,
+      completionDate: new Date('2026-04-01'),
+      generatedAt: new Date('2026-04-02T10:00:00Z'),
+      notifiedMdaAt: new Date('2026-04-02T10:05:00Z'),
+      notifiedBeneficiaryAt: new Date('2026-04-02T10:06:00Z'),
+    });
+
+    // Pending (no notifications yet)
+    const pendingLoanId = generateUuidv7();
+    await db.insert(loans).values({
+      id: pendingLoanId,
+      staffId: 'CLP-002',
+      staffName: 'Pending Beneficiary',
+      gradeLevel: 'GL-12',
+      mdaId: listMdaId,
+      principalAmount: PRINCIPAL,
+      interestRate: RATE,
+      tenureMonths: TENURE,
+      monthlyDeductionAmount: '3148.06',
+      approvalDate: new Date('2024-01-01'),
+      firstDeductionDate: new Date('2024-02-01'),
+      loanReference: 'VLC-CLP-002',
+      status: 'COMPLETED',
+      limitedComputation: false,
+    });
+    await db.insert(autoStopCertificates).values({
+      id: generateUuidv7(),
+      loanId: pendingLoanId,
+      certificateId: 'ASC-2026-04-7002',
+      verificationToken: 'p'.repeat(64),
+      beneficiaryName: 'Pending Beneficiary',
+      staffId: 'CLP-002',
+      mdaId: listMdaId,
+      mdaName: 'Cert List Primary MDA',
+      loanReference: 'VLC-CLP-002',
+      originalPrincipal: PRINCIPAL,
+      totalPaid: TOTAL_LOAN,
+      totalInterestPaid: INTEREST,
+      completionDate: new Date('2026-04-03'),
+      generatedAt: new Date('2026-04-03T11:00:00Z'),
+      notifiedMdaAt: null,
+      notifiedBeneficiaryAt: null,
+    });
+
+    // Partial (MDA notified, beneficiary not)
+    const partialLoanId = generateUuidv7();
+    await db.insert(loans).values({
+      id: partialLoanId,
+      staffId: 'CLP-003',
+      staffName: 'Partial Beneficiary',
+      gradeLevel: 'GL-08',
+      mdaId: listMdaId,
+      principalAmount: PRINCIPAL,
+      interestRate: RATE,
+      tenureMonths: TENURE,
+      monthlyDeductionAmount: '3148.06',
+      approvalDate: new Date('2024-01-01'),
+      firstDeductionDate: new Date('2024-02-01'),
+      loanReference: 'VLC-CLP-003',
+      status: 'COMPLETED',
+      limitedComputation: false,
+    });
+    await db.insert(autoStopCertificates).values({
+      id: generateUuidv7(),
+      loanId: partialLoanId,
+      certificateId: 'ASC-2026-04-7003',
+      verificationToken: 'r'.repeat(64),
+      beneficiaryName: 'Partial Beneficiary',
+      staffId: 'CLP-003',
+      mdaId: listMdaId,
+      mdaName: 'Cert List Primary MDA',
+      loanReference: 'VLC-CLP-003',
+      originalPrincipal: PRINCIPAL,
+      totalPaid: TOTAL_LOAN,
+      totalInterestPaid: INTEREST,
+      completionDate: new Date('2026-04-04'),
+      generatedAt: new Date('2026-04-04T09:00:00Z'),
+      notifiedMdaAt: new Date('2026-04-04T09:05:00Z'),
+      notifiedBeneficiaryAt: null,
+    });
+
+    // One certificate for OTHER MDA — used to assert MDA scoping
+    const otherLoanId = generateUuidv7();
+    await db.insert(loans).values({
+      id: otherLoanId,
+      staffId: 'CLO-001',
+      staffName: 'Other MDA Beneficiary',
+      gradeLevel: 'GL-10',
+      mdaId: otherMdaId,
+      principalAmount: PRINCIPAL,
+      interestRate: RATE,
+      tenureMonths: TENURE,
+      monthlyDeductionAmount: '3148.06',
+      approvalDate: new Date('2024-01-01'),
+      firstDeductionDate: new Date('2024-02-01'),
+      loanReference: 'VLC-CLO-001',
+      status: 'COMPLETED',
+      limitedComputation: false,
+    });
+    await db.insert(autoStopCertificates).values({
+      id: generateUuidv7(),
+      loanId: otherLoanId,
+      certificateId: 'ASC-2026-04-7004',
+      verificationToken: 'o'.repeat(64),
+      beneficiaryName: 'Other MDA Beneficiary',
+      staffId: 'CLO-001',
+      mdaId: otherMdaId,
+      mdaName: 'Cert List Other MDA',
+      loanReference: 'VLC-CLO-001',
+      originalPrincipal: PRINCIPAL,
+      totalPaid: TOTAL_LOAN,
+      totalInterestPaid: INTEREST,
+      completionDate: new Date('2026-04-05'),
+      generatedAt: new Date('2026-04-05T08:00:00Z'),
+      notifiedMdaAt: null,
+      notifiedBeneficiaryAt: null,
+    });
+  });
+
+  it('returns paginated certificates wrapped in success/data envelope', async () => {
+    const res = await request(app)
+      .get('/api/certificates')
+      .set('Authorization', `Bearer ${listAdminToken}`);
+
+    expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
+    expect(res.body.data).toBeDefined();
+    expect(Array.isArray(res.body.data.data)).toBe(true);
+    expect(typeof res.body.data.total).toBe('number');
+    expect(res.body.data.page).toBe(1);
+    expect(res.body.data.pageSize).toBe(25);
+    // Sensitive token must NEVER appear in list response
+    for (const item of res.body.data.data) {
+      expect(item.verificationToken).toBeUndefined();
+    }
+  });
+
+  it('filters by mdaId — primary MDA returns its 3 certificates', async () => {
+    const res = await request(app)
+      .get(`/api/certificates?mdaId=${listMdaId}`)
+      .set('Authorization', `Bearer ${listAdminToken}`);
+
+    expect(res.status).toBe(200);
+    const ids = res.body.data.data.map((c: { certificateId: string }) => c.certificateId);
+    expect(ids).toEqual(
+      expect.arrayContaining(['ASC-2026-04-7001', 'ASC-2026-04-7002', 'ASC-2026-04-7003']),
+    );
+    expect(ids).not.toContain('ASC-2026-04-7004');
+    expect(res.body.data.total).toBe(3);
+  });
+
+  it('filters notificationStatus=notified', async () => {
+    const res = await request(app)
+      .get(`/api/certificates?mdaId=${listMdaId}&notificationStatus=notified`)
+      .set('Authorization', `Bearer ${listAdminToken}`);
+
+    expect(res.status).toBe(200);
+    expect(res.body.data.total).toBe(1);
+    expect(res.body.data.data[0].certificateId).toBe('ASC-2026-04-7001');
+  });
+
+  it('filters notificationStatus=pending', async () => {
+    const res = await request(app)
+      .get(`/api/certificates?mdaId=${listMdaId}&notificationStatus=pending`)
+      .set('Authorization', `Bearer ${listAdminToken}`);
+
+    expect(res.status).toBe(200);
+    expect(res.body.data.total).toBe(1);
+    expect(res.body.data.data[0].certificateId).toBe('ASC-2026-04-7002');
+  });
+
+  it('filters notificationStatus=partial', async () => {
+    const res = await request(app)
+      .get(`/api/certificates?mdaId=${listMdaId}&notificationStatus=partial`)
+      .set('Authorization', `Bearer ${listAdminToken}`);
+
+    expect(res.status).toBe(200);
+    expect(res.body.data.total).toBe(1);
+    expect(res.body.data.data[0].certificateId).toBe('ASC-2026-04-7003');
+  });
+
+  it('sorts by completionDate ascending', async () => {
+    const res = await request(app)
+      .get(`/api/certificates?mdaId=${listMdaId}&sortBy=completionDate&sortOrder=asc`)
+      .set('Authorization', `Bearer ${listAdminToken}`);
+
+    expect(res.status).toBe(200);
+    const dates = res.body.data.data.map((c: { completionDate: string }) => c.completionDate);
+    const sorted = [...dates].sort();
+    expect(dates).toEqual(sorted);
+  });
+
+  it('sorts by generatedAt ascending (default-column toggle)', async () => {
+    // Default sort is generatedAt DESC. Toggling to ASC must reverse the order.
+    const res = await request(app)
+      .get(`/api/certificates?mdaId=${listMdaId}&sortBy=generatedAt&sortOrder=asc`)
+      .set('Authorization', `Bearer ${listAdminToken}`);
+
+    expect(res.status).toBe(200);
+    const generated = res.body.data.data.map((c: { generatedAt: string }) => c.generatedAt);
+    const sorted = [...generated].sort();
+    expect(generated).toEqual(sorted);
+  });
+
+  it('paginates with limit=2', async () => {
+    const res = await request(app)
+      .get(`/api/certificates?mdaId=${listMdaId}&limit=2&page=1`)
+      .set('Authorization', `Bearer ${listAdminToken}`);
+
+    expect(res.status).toBe(200);
+    expect(res.body.data.data).toHaveLength(2);
+    expect(res.body.data.pageSize).toBe(2);
+    expect(res.body.data.total).toBe(3);
+  });
+
+  it('MDA scoping: officer of other MDA does NOT see primary-MDA certificates', async () => {
+    const res = await request(app)
+      .get('/api/certificates')
+      .set('Authorization', `Bearer ${otherOfficerToken}`);
+
+    expect(res.status).toBe(200);
+    const ids = res.body.data.data.map((c: { certificateId: string }) => c.certificateId);
+    expect(ids).not.toContain('ASC-2026-04-7001');
+    expect(ids).not.toContain('ASC-2026-04-7002');
+    expect(ids).not.toContain('ASC-2026-04-7003');
+    // Officer should only see their own MDA's certificate
+    expect(ids).toContain('ASC-2026-04-7004');
+  });
+
+  it('rejects unauthenticated requests', async () => {
+    const res = await request(app).get('/api/certificates');
+    expect(res.status).toBe(401);
+  });
+
+  it('rejects invalid notificationStatus values via Zod validation', async () => {
+    const res = await request(app)
+      .get('/api/certificates?notificationStatus=banana')
+      .set('Authorization', `Bearer ${listAdminToken}`);
+
+    expect(res.status).toBe(400);
+  });
+
+  it('rejects invalid sortBy values via Zod validation', async () => {
+    const res = await request(app)
+      .get('/api/certificates?sortBy=mango')
+      .set('Authorization', `Bearer ${listAdminToken}`);
+
+    expect(res.status).toBe(400);
+  });
+
+  it('rejects invalid sortOrder values via Zod validation', async () => {
+    const res = await request(app)
+      .get('/api/certificates?sortOrder=sideways')
+      .set('Authorization', `Bearer ${listAdminToken}`);
+
+    expect(res.status).toBe(400);
+  });
+
+  it('does NOT match the literal "certificates" segment as a :loanId param', async () => {
+    // Regression guard: route ordering must place GET /certificates BEFORE
+    // GET /certificates/:loanId, otherwise Express would try to look up a
+    // loan with id="certificates" and respond 404.
+    const res = await request(app)
+      .get('/api/certificates')
+      .set('Authorization', `Bearer ${listAdminToken}`);
+
+    expect(res.status).toBe(200);
+    expect(res.body.data).toHaveProperty('data');
+    expect(res.body.data).toHaveProperty('total');
+  });
+});

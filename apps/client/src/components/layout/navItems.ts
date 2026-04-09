@@ -11,6 +11,7 @@ import {
   Activity,
   ArrowRightLeft,
   ClipboardCheck,
+  Award,
 } from 'lucide-react';
 import type { ComponentType } from 'react';
 
@@ -35,6 +36,7 @@ export const NAV_ITEMS: NavItem[] = [
   { label: 'Reconciliation', path: '/dashboard/reconciliation/three-way', icon: ArrowRightLeft, roles: [ROLES.SUPER_ADMIN, ROLES.DEPT_ADMIN, ROLES.MDA_OFFICER] },
   { label: 'My Reports', path: '/dashboard/reports', icon: FileText, roles: [ROLES.MDA_OFFICER] },
   { label: 'Reports', path: '/dashboard/reports', icon: FileText, roles: [ROLES.SUPER_ADMIN, ROLES.DEPT_ADMIN] },
+  { label: 'Certificates', path: '/dashboard/certificates', icon: Award, roles: [ROLES.SUPER_ADMIN, ROLES.DEPT_ADMIN] },
   { label: 'Exceptions', path: '/dashboard/exceptions', icon: AlertCircle, roles: [ROLES.SUPER_ADMIN, ROLES.DEPT_ADMIN] },
   { label: 'User Management', path: '/dashboard/admin', icon: Users, roles: [ROLES.SUPER_ADMIN, ROLES.DEPT_ADMIN] },
   { label: 'System Health', path: '/dashboard/system-health', icon: Activity, roles: [ROLES.SUPER_ADMIN, ROLES.DEPT_ADMIN] },

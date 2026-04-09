@@ -93,7 +93,15 @@ const mockReportData: ExecutiveSummaryReportData = {
   submissionCoverage: { activeMdas: 50, spottyMdas: 8, darkMdas: 5, totalMdas: 63 },
   onboardingPipeline: { approvedNotCollectingCount: 2, revenueAtRisk: '300000' },
   exceptionSummary: { openCount: 3, resolvedCount: 7, totalCount: 10 },
-  topVariances: [],
+  topVariances: [
+    {
+      staffName: 'ADEBAYO OLUSEGUN',
+      mdaName: 'Ministry of Finance',
+      declaredAmount: '500000',
+      computedAmount: '450000',
+      difference: '50000',
+    },
+  ],
   monthOverMonthTrend: {
     activeLoans: { current: 100, previous: 95, changePercent: 5.3 },
     totalExposure: { current: 500, previous: 480, changePercent: 4.2 },
@@ -222,6 +230,16 @@ describe('ExecutiveSummaryReport — clickable cards & rows (Story 15.0h)', () =
       );
       expect(scorecardRows.length).toBeGreaterThanOrEqual(3);
       scorecardRows.forEach((row) => expect(row.className).toContain('cursor-pointer'));
+    });
+  });
+
+  // Story 15.0j Fix #14 + AI Review 2026-04-09 L4
+  describe('Top Variances "View full variance report" link', () => {
+    it('navigates to /dashboard/reports when the link is clicked', async () => {
+      renderReport();
+      const link = screen.getByRole('button', { name: /view full variance report/i });
+      await userEvent.click(link);
+      expect(mockNavigate).toHaveBeenCalledWith('/dashboard/reports');
     });
   });
 });

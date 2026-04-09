@@ -4,13 +4,18 @@ import { authenticate } from '../middleware/authenticate';
 import { requirePasswordChange } from '../middleware/requirePasswordChange';
 import { authorise } from '../middleware/authorise';
 import { scopeToMda } from '../middleware/scopeToMda';
+import { validateQuery } from '../middleware/validate';
 import { auditLog } from '../middleware/auditLog';
 import { readLimiter, writeLimiter, verificationLimiter } from '../middleware/rateLimiter';
-import { ROLES } from '@vlprs/shared';
+import { ROLES, certificateListQuerySchema, type CertificateListQuery } from '@vlprs/shared';
 import { detectAndTriggerAutoStop } from '../services/autoStopService';
 import { db } from '../db';
 import { autoStopCertificates, loans } from '../db/schema';
-import { buildCertificatePdfData } from '../services/autoStopCertificateService';
+import {
+  buildCertificatePdfData,
+  listCertificates,
+  type CertificateListFilters,
+} from '../services/autoStopCertificateService';
 import { sendAutoStopNotifications } from '../services/autoStopNotificationService';
 import { param } from '../lib/params';
 
@@ -57,6 +62,36 @@ router.post(
         completions: results,
       },
     });
+  },
+);
+
+// GET /api/certificates — Paginated list of issued certificates (Story 15.0i)
+// CRITICAL: This route MUST be declared BEFORE /certificates/:loanId so that
+// Express does not match the literal "certificates" segment as a :loanId param.
+router.get(
+  '/certificates',
+  authenticate,
+  requirePasswordChange,
+  authorise(ROLES.SUPER_ADMIN, ROLES.DEPT_ADMIN, ROLES.MDA_OFFICER),
+  scopeToMda,
+  validateQuery(certificateListQuerySchema),
+  auditLog,
+  readLimiter,
+  async (req: Request, res: Response) => {
+    // validateQuery has already parsed, coerced, and applied defaults to req.query.
+    // Cast through `unknown` to the Zod-inferred type so the call site reflects that
+    // validation is complete and downstream code can rely on the typed shape.
+    const query = req.query as unknown as CertificateListQuery;
+    const filters: CertificateListFilters = {
+      mdaId: query.mdaId,
+      notificationStatus: query.notificationStatus,
+      page: query.page,
+      limit: query.limit,
+      sortBy: query.sortBy,
+      sortOrder: query.sortOrder,
+    };
+    const data = await listCertificates(filters, req.mdaScope);
+    res.json({ success: true, data });
   },
 );
 

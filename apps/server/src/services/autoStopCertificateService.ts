@@ -9,11 +9,18 @@
 import { randomBytes } from 'node:crypto';
 import { db } from '../db';
 import { autoStopCertificates, loans, mdas, loanCompletions } from '../db/schema';
-import { eq, sql, desc } from 'drizzle-orm';
+import { and, asc, count, desc, eq, isNotNull, isNull, or, sql, type SQL } from 'drizzle-orm';
 import { generateUuidv7 } from '../lib/uuidv7';
+import { withMdaScope } from '../lib/mdaScope';
 import { logger } from '../lib/logger';
 import { env } from '../config/env';
 import { sendAutoStopNotifications } from './autoStopNotificationService';
+import type {
+  CertificateListItem,
+  CertificateListResponse,
+  CertificateNotificationStatus,
+  CertificateSortBy,
+} from '@vlprs/shared';
 
 // ─── Types ──────────────────────────────────────────────────────────
 
@@ -202,5 +209,132 @@ export async function buildCertificatePdfData(
     generatedAt: certificate.generatedAt,
     qrCodeDataUrl,
     verificationUrl,
+  };
+}
+
+// ─── List Certificates (Story 15.0i) ────────────────────────────────
+
+export interface CertificateListFilters {
+  mdaId?: string;
+  notificationStatus?: CertificateNotificationStatus;
+  page?: number;
+  limit?: number;
+  sortBy?: CertificateSortBy;
+  sortOrder?: 'asc' | 'desc';
+}
+
+/**
+ * List issued Auto-Stop Certificates with pagination, MDA scoping, and filtering.
+ *
+ * Notification status semantics:
+ *   - 'pending'  → notifiedMdaAt IS NULL AND notifiedBeneficiaryAt IS NULL
+ *   - 'notified' → notifiedMdaAt IS NOT NULL AND notifiedBeneficiaryAt IS NOT NULL
+ *   - 'partial'  → exactly one of (notifiedMdaAt, notifiedBeneficiaryAt) is NULL
+ *
+ * Note: `verificationToken` is intentionally excluded from the response (security).
+ */
+export async function listCertificates(
+  filters: CertificateListFilters = {},
+  mdaScope?: string | null,
+): Promise<CertificateListResponse> {
+  const page = filters.page && filters.page > 0 ? filters.page : 1;
+  const pageSize = Math.min(Math.max(filters.limit ?? 25, 1), 100);
+  const offset = (page - 1) * pageSize;
+
+  // Build WHERE conditions. Typed as SQL[] (not ReturnType<typeof eq>[]) so we can
+  // honestly push and(...) / or(...) clauses without casts.
+  const conditions: SQL[] = [];
+
+  const scopeCondition = withMdaScope(autoStopCertificates.mdaId, mdaScope);
+  if (scopeCondition) conditions.push(scopeCondition);
+
+  if (filters.mdaId) {
+    conditions.push(eq(autoStopCertificates.mdaId, filters.mdaId));
+  }
+
+  if (filters.notificationStatus === 'pending') {
+    conditions.push(isNull(autoStopCertificates.notifiedMdaAt));
+    conditions.push(isNull(autoStopCertificates.notifiedBeneficiaryAt));
+  } else if (filters.notificationStatus === 'notified') {
+    conditions.push(isNotNull(autoStopCertificates.notifiedMdaAt));
+    conditions.push(isNotNull(autoStopCertificates.notifiedBeneficiaryAt));
+  } else if (filters.notificationStatus === 'partial') {
+    // Exactly one is NULL — either MDA notified but not beneficiary, or vice versa.
+    const partialClause = or(
+      and(
+        isNotNull(autoStopCertificates.notifiedMdaAt),
+        isNull(autoStopCertificates.notifiedBeneficiaryAt),
+      ),
+      and(
+        isNull(autoStopCertificates.notifiedMdaAt),
+        isNotNull(autoStopCertificates.notifiedBeneficiaryAt),
+      ),
+    );
+    if (partialClause) conditions.push(partialClause);
+  }
+
+  const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
+
+  // Count query
+  const [{ value: totalItems }] = await db
+    .select({ value: count() })
+    .from(autoStopCertificates)
+    .where(whereClause);
+
+  // Sort — column lookup is done lazily here (not at module load) so that
+  // services that transitively import this module via generateCertificate
+  // can mock ../db/schema without listing autoStopCertificates.
+  const sortCol =
+    (filters.sortBy ?? 'generatedAt') === 'completionDate'
+      ? autoStopCertificates.completionDate
+      : autoStopCertificates.generatedAt;
+  const sortDirection = filters.sortOrder ?? 'desc';
+  const orderExpr = sortDirection === 'asc' ? asc(sortCol) : desc(sortCol);
+
+  // Data query — denormalised mdaName means no join needed.
+  // verificationToken intentionally excluded from select for security.
+  const rows = await db
+    .select({
+      certificateId: autoStopCertificates.certificateId,
+      loanId: autoStopCertificates.loanId,
+      beneficiaryName: autoStopCertificates.beneficiaryName,
+      staffId: autoStopCertificates.staffId,
+      mdaId: autoStopCertificates.mdaId,
+      mdaName: autoStopCertificates.mdaName,
+      loanReference: autoStopCertificates.loanReference,
+      completionDate: autoStopCertificates.completionDate,
+      generatedAt: autoStopCertificates.generatedAt,
+      notifiedMdaAt: autoStopCertificates.notifiedMdaAt,
+      notifiedBeneficiaryAt: autoStopCertificates.notifiedBeneficiaryAt,
+      originalPrincipal: autoStopCertificates.originalPrincipal,
+      totalPaid: autoStopCertificates.totalPaid,
+    })
+    .from(autoStopCertificates)
+    .where(whereClause)
+    .orderBy(orderExpr)
+    .limit(pageSize)
+    .offset(offset);
+
+  const data: CertificateListItem[] = rows.map((r) => ({
+    certificateId: r.certificateId,
+    loanId: r.loanId,
+    beneficiaryName: r.beneficiaryName,
+    staffId: r.staffId,
+    mdaId: r.mdaId,
+    mdaName: r.mdaName,
+    loanReference: r.loanReference,
+    completionDate: r.completionDate.toISOString(),
+    generatedAt: r.generatedAt.toISOString(),
+    notifiedMdaAt: r.notifiedMdaAt ? r.notifiedMdaAt.toISOString() : null,
+    notifiedBeneficiaryAt: r.notifiedBeneficiaryAt ? r.notifiedBeneficiaryAt.toISOString() : null,
+    originalPrincipal: r.originalPrincipal,
+    totalPaid: r.totalPaid,
+  }));
+
+  return {
+    data,
+    total: Number(totalItems),
+    page,
+    pageSize,
   };
 }

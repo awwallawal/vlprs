@@ -35,23 +35,28 @@ function TrendIndicator({ metric, label }: { metric: TrendMetric; label: string 
   const isDown = cp !== null && cp < 0;
   const isFlat = cp !== null && cp === 0;
 
+  // Fix #15 (Story 15.0j): vertical stacking — label on top, value + trend below.
+  // Prevents the cramped horizontal layout when label + number + percent all
+  // try to share a single line.
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex flex-col gap-1">
       <span className="text-sm text-text-secondary">{label}</span>
-      <span className="font-semibold">
-        {typeof metric.current === 'number' && metric.current % 1 !== 0
-          ? metric.current.toFixed(1)
-          : metric.current}
-      </span>
-      {!hasData && <span className="text-xs text-text-muted">No prior data</span>}
-      {isFlat && <Minus className="h-4 w-4 text-gray-400" />}
-      {isUp && <TrendingUp className="h-4 w-4 text-teal-600" />}
-      {isDown && <TrendingDown className="h-4 w-4 text-amber-600" />}
-      {hasData && !isFlat && (
-        <span className={`text-xs ${isUp ? 'text-teal-600' : 'text-amber-600'}`}>
-          {isUp ? '+' : ''}{metric.changePercent!.toFixed(1)}%
+      <div className="flex items-center gap-2">
+        <span className="text-lg font-semibold">
+          {typeof metric.current === 'number' && metric.current % 1 !== 0
+            ? metric.current.toFixed(1)
+            : metric.current}
         </span>
-      )}
+        {!hasData && <span className="text-xs text-text-muted">No prior data</span>}
+        {isFlat && <Minus className="h-4 w-4 text-gray-400" />}
+        {isUp && <TrendingUp className="h-4 w-4 text-teal-600" />}
+        {isDown && <TrendingDown className="h-4 w-4 text-amber-600" />}
+        {hasData && !isFlat && (
+          <span className={`text-xs ${isUp ? 'text-teal-600' : 'text-amber-600'}`}>
+            {isUp ? '+' : ''}{metric.changePercent!.toFixed(1)}%
+          </span>
+        )}
+      </div>
     </div>
   );
 }
@@ -138,20 +143,25 @@ export function ExecutiveSummaryReport() {
       <Card>
         <CardHeader><CardTitle>Scheme Overview</CardTitle></CardHeader>
         <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div>
+          {/* Fix #13 (Story 15.0j): auto-rows-fr + h-full keeps Fund Available
+              aligned with siblings regardless of wrapping. */}
+          <div className="grid grid-cols-2 md:grid-cols-4 auto-rows-fr gap-4">
+            <div className="flex flex-col justify-start h-full">
               <p className="text-sm text-text-secondary">
-                Active Loans <MetricHelp definition={{ label: 'Active Loans', description: 'Loans currently being serviced through monthly deductions.', derivedFrom: 'Loan classification service' }} />
+                {/* Story 15.0j review fix: use the shared dashboard.activeLoans glossary
+                    entry so this tooltip stays in sync with DashboardPage and includes
+                    the "Differs from Loans in Window" guidance from Fix #4. */}
+                Active Loans <MetricHelp metric="dashboard.activeLoans" />
               </p>
               <p className="text-2xl font-bold">{data.schemeOverview.activeLoans.toLocaleString()}</p>
             </div>
-            <div>
+            <div className="flex flex-col justify-start h-full">
               <p className="text-sm text-text-secondary">
                 Total Exposure <MetricHelp metric="dashboard.totalExposure" />
               </p>
               <p className="text-2xl font-bold"><NairaDisplay amount={data.schemeOverview.totalExposure} variant="hero" /></p>
             </div>
-            <div>
+            <div className="flex flex-col justify-start h-full">
               <p className="text-sm text-text-secondary">Fund Available</p>
               <p className="text-2xl font-bold">
                 {data.schemeOverview.fundAvailable
@@ -159,7 +169,7 @@ export function ExecutiveSummaryReport() {
                   : <span className="text-gray-400">Not configured</span>}
               </p>
             </div>
-            <div>
+            <div className="flex flex-col justify-start h-full">
               <p className="text-sm text-text-secondary">
                 Monthly Recovery <MetricHelp metric="dashboard.monthlyRecovery" />
               </p>
@@ -299,7 +309,7 @@ export function ExecutiveSummaryReport() {
         </Card>
       </div>
 
-      {/* Top 5 Variances */}
+      {/* Top Variances (Fix #14, Story 15.0j: limit raised from 5 to 10) */}
       {data.topVariances.length > 0 && (
         <Card>
           <CardHeader><CardTitle>Top Variances by Magnitude</CardTitle></CardHeader>
@@ -326,15 +336,27 @@ export function ExecutiveSummaryReport() {
                 ))}
               </TableBody>
             </Table>
+            <div className="mt-3 text-right">
+              <button
+                type="button"
+                onClick={() => navigate('/dashboard/reports')}
+                className="text-xs font-medium text-teal hover:underline"
+              >
+                View full variance report →
+              </button>
+            </div>
           </CardContent>
         </Card>
       )}
 
-      {/* Month-over-Month Trend */}
+      {/* Month-over-Month Trend (Fix #15, Story 15.0j: 2-col grid + vertical TrendIndicator).
+          AI Review 2026-04-09: bumped breakpoint from `md:` (≥768px tablet) to
+          `lg:` (≥1024px desktop) to match AC10 wording — "2-column grid on
+          desktop". Tablet now sees the same single-column stack as mobile. */}
       <Card>
         <CardHeader><CardTitle>Month-over-Month Trend</CardTitle></CardHeader>
         <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <TrendIndicator metric={data.monthOverMonthTrend.activeLoans} label="Active Loans" />
             <TrendIndicator metric={data.monthOverMonthTrend.totalExposure} label="Total Exposure" />
             <TrendIndicator metric={data.monthOverMonthTrend.monthlyRecovery} label="Monthly Recovery" />

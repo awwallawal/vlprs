@@ -493,7 +493,9 @@ async function getTopVariancesByMagnitude(
     .innerJoin(mdas, eq(migrationRecords.mdaId, mdas.id))
     .where(and(...conditions))
     .orderBy(sql`ABS(${migrationRecords.varianceAmount}) DESC`)
-    .limit(5);
+    // Fix #14 (Story 15.0j): was hardcoded to 5; raised to 10 so the report
+    // surfaces more context without introducing a new /reports/variance route.
+    .limit(10);
 
   return rows.map(r => ({
     staffName: r.staffName,

@@ -151,6 +151,7 @@ function AdminDashboard() {
             format="count"
             trend={metrics.data?.trends?.activeLoans}
             isPending={metrics.isPending}
+            helpKey="dashboard.activeLoans"
             onClick={() => navigate('/dashboard/drill-down/active-loans')}
           />
           <HeroMetricCard
@@ -230,6 +231,17 @@ function AdminDashboard() {
                   const date = new Date(Number(y), Number(m) - 1);
                   return date.toLocaleDateString('en-GB', { month: 'short', year: 'numeric' });
                 })()}
+              </p>
+            )}
+            {/* Fix #6 (Story 15.0j): explain why Monthly Recovery is zero when the
+                system has migration-only data and no payroll submissions yet.
+                Numeric comparison instead of string equality so we don't break if
+                the backend ever returns '0.000', null, or numeric 0. */}
+            {!metrics.isPending
+              && !metrics.data?.recoveryPeriod
+              && Number(metrics.data?.monthlyRecovery ?? 0) === 0 && (
+              <p className="mt-1 text-xs text-text-secondary text-center">
+                Awaiting first submission
               </p>
             )}
           </div>

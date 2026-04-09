@@ -345,6 +345,13 @@ export const router = createBrowserRouter([
               })),
           },
           {
+            path: 'certificates',
+            lazy: () =>
+              import('@/pages/dashboard/CertificateListPage').then((m) => ({
+                Component: m.CertificateListPage,
+              })),
+          },
+          {
             path: 'admin',
             lazy: () => import('@/pages/dashboard/AdminPage'),
           },

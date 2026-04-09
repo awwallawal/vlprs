@@ -3,6 +3,7 @@ import { sql } from 'drizzle-orm';
 import { db } from '../db/index';
 import { mdas, users, loans } from '../db/schema';
 import { generateUuidv7 } from '../lib/uuidv7';
+import { resetDb } from '../test/resetDb';
 import * as ledgerService from './ledgerService';
 
 let testMdaId: string;
@@ -10,7 +11,7 @@ let testUserId: string;
 let testLoanId: string;
 
 beforeAll(async () => {
-  await db.execute(sql`TRUNCATE ledger_entries, loans, audit_log, refresh_tokens, users, mdas CASCADE`);
+  await resetDb();
 
   testMdaId = generateUuidv7();
   await db.insert(mdas).values({
@@ -53,7 +54,7 @@ beforeEach(async () => {
 });
 
 afterAll(async () => {
-  await db.execute(sql`TRUNCATE ledger_entries, loans, audit_log, refresh_tokens, users, mdas CASCADE`);
+  await resetDb();
 });
 
 const validEntryData = {

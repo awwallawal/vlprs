@@ -185,8 +185,9 @@ export const ATTENTION_HELP: Record<AttentionItemType, MetricDefinition> = {
 export const DASHBOARD_HELP: Record<DrillDownMetric, MetricDefinition> = {
   activeLoans: {
     label: 'Active Loans',
-    description: 'Total number of loans currently in active repayment status.',
-    derivedFrom: 'Count of loans with status "active" in the loan master table.',
+    description: 'Loans in active repayment (ON_TRACK, OVERDUE, STALLED). Excludes COMPLETED loans.',
+    derivedFrom: 'Count of loans with classification ON_TRACK, OVERDUE, or STALLED in the loan master table.',
+    guidance: 'Differs from Loans in Window, which includes all loans with activity in the last 60 months regardless of current status (including COMPLETED). Seeing a smaller number here than in Loans in Window is expected.',
   },
   totalExposure: {
     label: 'Total Exposure',
@@ -353,8 +354,21 @@ export const MIGRATION_HELP: Record<string, MetricDefinition> = {
   },
   reviewProgress: {
     label: 'Review Progress',
-    description: 'Percentage of flagged migration records that have been reviewed by the MDA officer — either corrected or confirmed correct.',
-    derivedFrom: 'Count of records with corrected_by IS NOT NULL divided by total flagged records per MDA.',
+    description: 'Baselined records vs total flagged records for this MDA. The numerator is the count of flagged records that have reached baseline state; the denominator is the total flagged records.',
+    derivedFrom: 'Count of flagged records with is_baseline_created = true divided by total flagged records per MDA.',
+    guidance: 'A ratio like "4 of 6" means 4 out of 6 flagged records for this MDA have been baselined.',
+  },
+  totalStaffMigrated: {
+    label: 'Total Staff Migrated',
+    description: 'Count of unique staff members whose records have been migrated into the system.',
+    derivedFrom: 'Distinct count of staff identifiers across all active migration records.',
+    guidance: 'May differ from Baselines Established if staff members have more than one loan — each loan produces its own baseline record.',
+  },
+  baselinesEstablished: {
+    label: 'Baselines Established',
+    description: 'Count of individual baseline records created (one per staff-loan combination).',
+    derivedFrom: 'Count of migration records flagged is_baseline_created = true.',
+    guidance: 'For example, 92 unique staff may produce 171 baselines if some staff have multiple loans.',
   },
 };
 

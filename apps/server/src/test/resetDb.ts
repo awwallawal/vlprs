@@ -1,5 +1,6 @@
 import { sql } from 'drizzle-orm';
 import { db } from '../db';
+import { drainPendingAuditWrites } from '../services/auditTracking';
 
 /**
  * Truncate ALL application tables in a single statement.
@@ -8,9 +9,15 @@ import { db } from '../db';
  * Call in beforeAll / afterAll of every integration test file
  * so that each file starts and finishes with a clean database.
  *
+ * Drains any in-flight audit-log writes BEFORE truncating, so a fire-and-forget
+ * audit INSERT from a previous test cannot race with the TRUNCATE and poison
+ * the connection pool — see
+ * _bmad-output/implementation-artifacts/test-isolation-flake-finding-2026-04-08.md
+ *
  * -- All application tables listed explicitly. Keep this in sync with schema.ts when adding new tables.
  */
 export async function resetDb(): Promise<void> {
+  await drainPendingAuditWrites();
   await db.execute(sql`TRUNCATE
     auto_stop_certificates,
     loan_completions,

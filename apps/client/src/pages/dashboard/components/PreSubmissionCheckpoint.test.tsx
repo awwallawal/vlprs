@@ -192,10 +192,11 @@ describe('PreSubmissionCheckpoint', () => {
       />,
     );
 
-    expect(screen.getByText('All staff have recent deductions — no action needed')).toBeInTheDocument();
+    expect(screen.getByText('All staff have recent deductions — no action needed.')).toBeInTheDocument();
   });
 
   // AC 6 — Empty states for retirement and pending events
+  // Story 15.0j Fix #24: copy updated to contextual messages explaining when data will appear.
   it('shows contextual empty states for retirement and pending events sections', () => {
     const onConfirm = vi.fn();
     render(
@@ -208,8 +209,12 @@ describe('PreSubmissionCheckpoint', () => {
       />,
     );
 
-    expect(screen.getByText('No approaching retirements')).toBeInTheDocument();
-    expect(screen.getByText('No pending events')).toBeInTheDocument();
+    expect(
+      screen.getByText('No staff approaching retirement in the next 6 months.'),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText('No pending employment events. New events will appear here when filed.'),
+    ).toBeInTheDocument();
   });
 
   // AC 5 — Skeleton loader during loading
