@@ -299,6 +299,12 @@ describe('14.4: Correction worksheet round-trip (XLSX export → import → appl
     expect(firstRow).toHaveProperty('Staff Name');
     expect(firstRow).toHaveProperty('Correction Reason');
     expect(firstRow).toHaveProperty('Corrected Outstanding Balance');
+    // Story 15.0j Fix #9: Period column (YYYY-MM) included in worksheet.
+    // Period should be populated as 'YYYY-MM' when periodMonth/periodYear are
+    // both set, and an empty string when either is null. The seed data above
+    // sets periodYear=2026/periodMonth=3, so we expect '2026-03' here.
+    expect(firstRow).toHaveProperty('Period');
+    expect(firstRow['Period']).toBe('2026-03');
 
     // Verify Metadata sheet
     const metadata = XLSX.utils.sheet_to_json<Record<string, unknown>>(wb.Sheets['Metadata']);

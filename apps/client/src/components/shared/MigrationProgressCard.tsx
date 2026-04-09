@@ -114,6 +114,7 @@ export function MigrationProgressCard({
       {baselineCompletion && baselineCompletion.total > 0 && (
         <p className="text-xs text-text-muted mb-2">
           Baselines: {baselineCompletion.done}/{baselineCompletion.total}
+          <MetricHelp metric="migration.reviewProgress" />
         </p>
       )}
 

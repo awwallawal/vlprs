@@ -48,6 +48,10 @@ export async function generateCorrectionWorksheet(
       employeeNo: migrationRecords.employeeNo,
       gradeLevel: migrationRecords.gradeLevel,
       mdaName: mdas.name,
+      // Fix #9 (Story 15.0j): include period columns so reviewers can tell
+      // which reporting month a flagged record belongs to.
+      periodMonth: migrationRecords.periodMonth,
+      periodYear: migrationRecords.periodYear,
       outstandingBalance: migrationRecords.outstandingBalance,
       totalLoan: migrationRecords.totalLoan,
       monthlyDeduction: migrationRecords.monthlyDeduction,
@@ -75,6 +79,11 @@ export async function generateCorrectionWorksheet(
     'Staff ID': r.employeeNo ?? '',
     'Grade Level': r.gradeLevel ?? '',
     'MDA': r.mdaName ?? '',
+    // Fix #9 (Story 15.0j): Period (YYYY-MM) so reviewers can identify the
+    // reporting month without cross-referencing the upload.
+    'Period': r.periodYear && r.periodMonth
+      ? `${r.periodYear}-${String(r.periodMonth).padStart(2, '0')}`
+      : '',
     'Declared Outstanding Balance': r.outstandingBalance ?? '',
     'Declared Total Loan': r.totalLoan ?? '',
     'Declared Monthly Deduction': r.monthlyDeduction ?? '',

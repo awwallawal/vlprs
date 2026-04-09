@@ -1,7 +1,7 @@
 import { useLocation, useParams, useSearchParams, Link } from 'react-router';
 import { useQueryClient } from '@tanstack/react-query';
 import { ChevronRight } from 'lucide-react';
-import type { MdaSummary } from '@vlprs/shared';
+import { useMdaDetail } from '@/hooks/useMdaData';
 
 const PATH_LABELS: Record<string, string> = {
   dashboard: 'Dashboard',
@@ -116,10 +116,23 @@ export function Breadcrumb() {
   const queryClient = useQueryClient();
   const segments = location.pathname.split('/').filter(Boolean);
 
-  // Use TanStack Query cache for MDA/loan labels — no extra API calls
+  // Fix #11 (Story 15.0j): actively fetch the MDA name when the route includes
+  // an :mdaId so the crumb resolves to the real name on cold cache instead of
+  // showing a truncated UUID. `useMdaDetail` has staleTime: 30_000 and is
+  // deduped with the MdaDetailPage query, so this does not cause double-fetch.
+  // Pass undefined (not '') when no :mdaId is present so we don't create a
+  // bogus cache entry under ['mda', ''].
+  const mdaQuery = useMdaDetail(params.mdaId);
+
+  // Resolve an MDA name for a breadcrumb segment. By construction (see
+  // buildCrumbs: `segments[i-1] === 'mda' && params.mdaId === segment`) this
+  // function is only called with the route's own :mdaId, so the active query
+  // is always the right one. AI Review 2026-04-09 cleanup: dropped the dead
+  // imperative `queryClient.getQueryData` fallback path that was never reached.
   const getMdaName = (mdaId: string) => {
-    const mdaData = queryClient.getQueryData<MdaSummary>(['mda', mdaId]);
-    return mdaData?.name ?? `MDA ${mdaId.substring(0, 8)}`;
+    if (mdaQuery.data) return mdaQuery.data.name;
+    if (mdaQuery.isPending) return 'Loading…';
+    return `MDA ${mdaId.substring(0, 8)}`;
   };
 
   const getLoanRef = (loanId: string) => {

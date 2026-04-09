@@ -28,7 +28,9 @@ export function MdaOfficerDashboard() {
   const userMdaId = user?.mdaId || undefined;
 
   const metrics = useDashboardMetrics();
-  const mdaDetail = useMdaDetail(userMdaId ?? '');
+  // Pass userMdaId directly (the hook accepts string | undefined). Coercing to ''
+  // would defeat the cache-key fix from Story 15.0j Fix #11 because '' is not nullish.
+  const mdaDetail = useMdaDetail(userMdaId);
   const migration = useMigrationStatus();
   const checkpoint = usePreSubmissionCheckpoint(userMdaId);
   const submissions = useSubmissionHistory(userMdaId, 1, 5);

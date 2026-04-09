@@ -3,6 +3,13 @@ import type { MdaSummary, LoanSearchResult, ComplianceResponse } from '@vlprs/sh
 import { apiClient, authenticatedFetch, parseJsonResponse } from '@/lib/apiClient';
 
 /**
+ * Sentinel queryKey segment used by `useMdaDetail` when no MDA id is supplied.
+ * Centralised so future maintainers can grep for it and so the value cannot
+ * accidentally collide with a real MDA id by typo.
+ */
+const NO_MDA_KEY = '__none__';
+
+/**
  * Fetches MDA compliance grid data including heatmap and summary.
  * @target GET /api/dashboard/compliance
  * @wired Story 4.4
@@ -17,12 +24,21 @@ export function useMdaComplianceGrid() {
 
 /**
  * Fetches MDA detail summary by ID.
+ *
+ * Both `undefined` and the empty string `''` are treated as "no MDA": the
+ * query is disabled and the cache key collapses to a single shared sentinel
+ * (`['mda', NO_MDA_KEY]`) so that non-MDA routes do not churn cache entries
+ * on every render. We use `||` (not `??`) so the empty-string case is also
+ * caught — that is the historical footgun that AI Review L2 had to clean up
+ * downstream in `MdaOfficerDashboard`. Hardening it at the hook protects
+ * against future regressions.
+ *
  * @target GET /api/mdas/:id/summary
  * @wired Story 4.3
  */
-export function useMdaDetail(mdaId: string) {
+export function useMdaDetail(mdaId: string | undefined) {
   return useQuery<MdaSummary>({
-    queryKey: ['mda', mdaId],
+    queryKey: ['mda', mdaId || NO_MDA_KEY],
     queryFn: () => apiClient<MdaSummary>(`/mdas/${mdaId}/summary`),
     enabled: !!mdaId,
     staleTime: 30_000,

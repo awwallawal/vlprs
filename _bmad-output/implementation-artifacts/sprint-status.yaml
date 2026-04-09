@@ -298,7 +298,7 @@ development_status:
   15-0g-drill-down-completeness: done  # HIGH: View All Loans, Zero Deduction table, MDA Review discoverability — UAT #2, #21, #22
   15-0h-clickable-cards-reports-drilldown: done  # MEDIUM: Recovery Potential, MDA Scorecard, Ops Hub — UAT #16, #17, #31. Code review: 5 findings (0H 2M 3L), all fixed
   15-0i-certificate-admin-preview-completed-loans: done  # MEDIUM: certificate list/preview/resend — UAT #34. Code review: 16 findings (1H 5M 10L), 14 fixed (2 deferred — TZ cross-cutting, branch bloat process)
-  15-0j-quick-fixes-bundle: review  # MEDIUM: MetricHelp, empty states, breadcrumb, MoM layout, period column, fund total, Top Variances pagination — UAT #3,4,6,7,9,11,12,13,14,15,23,24
+  15-0j-quick-fixes-bundle: done  # MEDIUM: MetricHelp, empty states, breadcrumb, MoM layout, period column, fund total, Top Variances pagination — UAT #3,4,6,7,9,11,12,13,14,15,23,24. Code review (2 passes): 25 findings total — first pass 15 (0H 5M 10L), second pass 10 (1H 4M 5L), all fixed except 3 deferred LOW (test mock pollution, unused breadcrumb fallback, untracked scripts dir)
   15-0k-mda-beneficiary-ledger-lifecycle: ready-for-dev  # MEDIUM: MDA-scoped ledger with active/completed/transferred grouping — UAT #35, #37
   15-0l-duplicates-auto-trigger-drilldown: ready-for-dev  # MEDIUM: auto-run detection + side-by-side comparison — UAT #18, #19
   15-0m-within-file-deduplication-check: ready-for-dev  # MEDIUM: same-person-same-period in single file — UAT #36

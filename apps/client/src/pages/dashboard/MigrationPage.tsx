@@ -83,6 +83,7 @@ export function MigrationPage() {
           value={metrics?.totalStaffMigrated ?? 0}
           format="count"
           isPending={isMetricsPending}
+          helpKey="migration.totalStaffMigrated"
         />
         <HeroMetricCard
           label="Total Exposure"
@@ -101,6 +102,7 @@ export function MigrationPage() {
           value={metrics?.baselinesEstablished ?? 0}
           format="count"
           isPending={isMetricsPending}
+          helpKey="migration.baselinesEstablished"
         />
         <HeroMetricCard
           label="Pending Duplicates"

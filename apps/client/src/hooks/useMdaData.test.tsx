@@ -97,8 +97,15 @@ describe('useMdaDetail', () => {
     expect(data.code).toBe('MOH');
   });
 
-  it('does not fetch when mdaId is empty', () => {
-    const { result } = renderHook(() => useMdaDetail(''), {
+  // Both `undefined` and `''` must be treated as "no MDA" so the hook stays
+  // robust against callers that coerce nullable IDs differently. AI Review
+  // 2026-04-09 hardened the hook to use `||` instead of `??` for exactly this
+  // reason; this parameterised test locks the contract in.
+  it.each<[string | undefined, string]>([
+    [undefined, 'undefined'],
+    ['', 'empty string'],
+  ])('does not fetch when mdaId is %s (label: %s)', (mdaId) => {
+    const { result } = renderHook(() => useMdaDetail(mdaId), {
       wrapper: createWrapper(),
     });
 

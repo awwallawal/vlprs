@@ -43,6 +43,7 @@ import { NAV_ITEMS, ROLE_LABELS, ROLE_HOME_ROUTES } from './navItems';
 import { ScrollToTop } from './ScrollToTop';
 import { Breadcrumb } from './Breadcrumb';
 import { BuildStatus } from '@/components/shared/BuildStatus';
+import { SidebarCalculator } from '@/components/sidebar/SidebarCalculator';
 import { cn } from '@/lib/utils';
 import type { Role } from '@vlprs/shared';
 import { PasswordChangeScreen } from '@/pages/dashboard/PasswordChangeScreen';
@@ -236,6 +237,20 @@ export function DashboardLayout() {
         </SidebarContent>
 
         <SidebarSeparator />
+
+        {/* Sidebar Naira Calculator (Story 15.0j AC 13, AI Review 2026-04-09 H1).
+            Two siblings: full inline panel when sidebar is expanded, compact
+            popover-trigger when sidebar collapses to icon mode. CSS-driven via
+            Tailwind group-data modifiers — no React state read of sidebar
+            collapse needed. Both instances share state through a module-level
+            store inside SidebarCalculator.tsx, so toggling the popover from
+            compact mode also opens the full panel and vice versa. */}
+        <div className="group-data-[collapsible=icon]:hidden">
+          <SidebarCalculator />
+        </div>
+        <div className="hidden group-data-[collapsible=icon]:flex justify-center py-2">
+          <SidebarCalculator compact />
+        </div>
 
         {/* Footer */}
         <SidebarFooter>
