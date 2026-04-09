@@ -150,6 +150,9 @@ export interface CoverageRecordsResponse {
   summary: CoverageRecordsSummary;
 }
 
+export type BeneficiaryLoanStatus = 'ACTIVE' | 'COMPLETED' | 'TRANSFERRED' | 'TRANSFER_PENDING' | 'INACTIVE';
+export type CertificateStatus = 'issued' | 'pending' | null;
+
 export interface BeneficiaryListItem {
   staffName: string;
   staffId: string;
@@ -161,6 +164,14 @@ export interface BeneficiaryListItem {
   observationCount: number;
   isMultiMda: boolean;
   lastActivityDate: string | null;
+  // Lifecycle fields (Story 15.0k)
+  loanStatus: BeneficiaryLoanStatus;
+  completionDate: string | null;
+  certificateStatus: CertificateStatus;
+  transferredToMdaName: string | null;
+  transferredOutDate: string | null;
+  transferStatus: 'PENDING' | 'COMPLETED' | null;
+  hasConsecutiveLoan: boolean;
 }
 
 export interface BeneficiaryListMetrics {

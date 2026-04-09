@@ -1,12 +1,12 @@
 import { eq, and, sql, ilike, or } from 'drizzle-orm';
 import Decimal from 'decimal.js';
 import { db } from '../db/index';
-import { loans, mdas, ledgerEntries, personMatches, migrationRecords } from '../db/schema';
+import { loans, mdas, ledgerEntries, personMatches, migrationRecords, loanCompletions, autoStopCertificates, transfers, observations } from '../db/schema';
 import { isActiveRecord } from '../db/queryHelpers';
 import { computeBalanceForLoan } from './computationEngine';
 import { withMdaScope } from '../lib/mdaScope';
 import { getUnreviewedCount, getObservationCountsByStaffNames } from './observationService';
-import type { BeneficiaryListItem, BeneficiaryListMetrics, PaginatedBeneficiaries } from '@vlprs/shared';
+import type { BeneficiaryListItem, BeneficiaryListMetrics, PaginatedBeneficiaries, BeneficiaryLoanStatus } from '@vlprs/shared';
 
 // ─── Types ───────────────────────────────────────────────────────────
 
@@ -15,6 +15,7 @@ interface BeneficiaryFilters {
   page?: number;
   pageSize?: number;
   mdaId?: string;
+  loanStatus?: 'ACTIVE' | 'COMPLETED' | 'TRANSFERRED' | 'ALL';
   sortBy?: 'staffName' | 'totalExposure' | 'loanCount' | 'lastActivityDate';
   sortOrder?: 'asc' | 'desc';
 }
@@ -28,6 +29,34 @@ interface BeneficiaryRow {
   loan_count: string;
   last_activity_date: string | null;
   loan_ids: string;
+}
+
+// ─── Loan Status Priority (Story 15.0k) ─────────────────────────────
+// ACTIVE > TRANSFER_PENDING > TRANSFERRED > COMPLETED > INACTIVE
+const LOAN_STATUS_PRIORITY: Record<string, number> = {
+  ACTIVE: 5, APPROVED: 5, APPLIED: 5,
+  TRANSFER_PENDING: 4,
+  TRANSFERRED: 3,
+  COMPLETED: 2,
+  WRITTEN_OFF: 1, RETIRED: 1, DECEASED: 1, SUSPENDED: 1, LWOP: 1,
+};
+
+function deriveBeneficiaryLoanStatus(statuses: string[]): BeneficiaryLoanStatus {
+  if (statuses.length === 0) return 'INACTIVE';
+  let best: BeneficiaryLoanStatus = 'INACTIVE';
+  let bestPriority = 0;
+  for (const s of statuses) {
+    const p = LOAN_STATUS_PRIORITY[s] ?? 1;
+    if (p > bestPriority) {
+      bestPriority = p;
+      if (p === 5) best = 'ACTIVE';
+      else if (p === 4) best = 'TRANSFER_PENDING';
+      else if (p === 3) best = 'TRANSFERRED';
+      else if (p === 2) best = 'COMPLETED';
+      else best = 'INACTIVE';
+    }
+  }
+  return best;
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────
@@ -69,6 +98,19 @@ export async function listBeneficiaries(
     );
   }
 
+  // Story 15.0k: status filter — HAVING clause filters by derived person-level
+  // lifecycle status (priority-based), not individual loan status
+  let statusHaving: ReturnType<typeof sql> | undefined;
+  if (filters.loanStatus && filters.loanStatus !== 'ALL') {
+    if (filters.loanStatus === 'ACTIVE') {
+      statusHaving = sql`HAVING bool_or(${loans.status} IN ('ACTIVE', 'APPROVED', 'APPLIED'))`;
+    } else if (filters.loanStatus === 'COMPLETED') {
+      statusHaving = sql`HAVING NOT bool_or(${loans.status} IN ('ACTIVE', 'APPROVED', 'APPLIED', 'TRANSFER_PENDING', 'TRANSFERRED')) AND bool_or(${loans.status} = 'COMPLETED')`;
+    } else if (filters.loanStatus === 'TRANSFERRED') {
+      statusHaving = sql`HAVING NOT bool_or(${loans.status} IN ('ACTIVE', 'APPROVED', 'APPLIED')) AND bool_or(${loans.status} IN ('TRANSFERRED', 'TRANSFER_PENDING'))`;
+    }
+  }
+
   const whereClause = and(...conditions);
 
   // Sort mapping — totalExposure is computed post-query, so use staffName as SQL fallback
@@ -92,6 +134,7 @@ export async function listBeneficiaries(
       INNER JOIN ${mdas} ON ${loans.mdaId} = ${mdas.id}
       WHERE ${whereClause}
       GROUP BY ${loans.staffName}, ${loans.staffId}
+      ${statusHaving ?? sql``}
     ) sub
   `);
   const totalItems = (countResult.rows[0] as { value: string }).value;
@@ -122,6 +165,7 @@ export async function listBeneficiaries(
     INNER JOIN ${mdas} ON ${loans.mdaId} = ${mdas.id}
     WHERE ${whereClause}
     GROUP BY ${loans.staffName}, ${loans.staffId}
+    ${statusHaving ?? sql``}
     ORDER BY ${orderSql}
     LIMIT ${pageSize} OFFSET ${offset}
   `);
@@ -129,7 +173,7 @@ export async function listBeneficiaries(
 
   // Batch balance computation for all loans in this page
   const allLoanIds: string[] = [];
-  const loanInfoMap = new Map<string, { principalAmount: string; interestRate: string; tenureMonths: number; limitedComputation: boolean }>();
+  const loanInfoMap = new Map<string, { principalAmount: string; interestRate: string; tenureMonths: number; limitedComputation: boolean; status: string }>();
 
   if (rows.length > 0) {
     // Collect all loan IDs from the aggregated groups
@@ -148,6 +192,7 @@ export async function listBeneficiaries(
           interestRate: loans.interestRate,
           tenureMonths: loans.tenureMonths,
           limitedComputation: loans.limitedComputation,
+          status: loans.status,
         })
         .from(loans)
         .where(sql`${loans.id} IN (${sql.join(groupLoanIds.map((id: string) => sql`${id}`), sql`, `)})`);
@@ -159,6 +204,7 @@ export async function listBeneficiaries(
           interestRate: l.interestRate,
           tenureMonths: l.tenureMonths,
           limitedComputation: l.limitedComputation,
+          status: l.status,
         });
       }
     }
@@ -210,11 +256,83 @@ export async function listBeneficiaries(
   // Observation counts per person (delegated to observationService)
   const observationCountMap = await getObservationCountsByStaffNames(staffNames);
 
+  // ─── Phase 2: Lifecycle enrichment (Story 15.0k) ──────────────────
+  // Loan statuses already in Phase 1 loanInfoMap; batch-fetch completions,
+  // certificates, transfers, and consecutive flags in parallel
+
+  const staffIds = rows.map((r: BeneficiaryRow) => r.staff_id);
+
+  const [completionRows, certRows, transferRows, consecutiveRows] = await Promise.all([
+    // Completion dates
+    allLoanIds.length > 0
+      ? db.select({ loanId: loanCompletions.loanId, completionDate: loanCompletions.completionDate })
+          .from(loanCompletions)
+          .where(sql`${loanCompletions.loanId} IN (${sql.join(allLoanIds.map(id => sql`${id}`), sql`, `)})`)
+      : Promise.resolve([] as { loanId: string; completionDate: Date }[]),
+    // Certificate status
+    allLoanIds.length > 0
+      ? db.select({ loanId: autoStopCertificates.loanId })
+          .from(autoStopCertificates)
+          .where(sql`${autoStopCertificates.loanId} IN (${sql.join(allLoanIds.map(id => sql`${id}`), sql`, `)})`)
+      : Promise.resolve([] as { loanId: string }[]),
+    // Transfer data per staff
+    staffIds.length > 0
+      ? db.select({
+            staffId: transfers.staffId,
+            status: transfers.status,
+            createdAt: transfers.createdAt,
+            incomingMdaName: mdas.name,
+          })
+          .from(transfers)
+          .leftJoin(mdas, eq(transfers.incomingMdaId, mdas.id))
+          .where(sql`${transfers.staffId} IN (${sql.join(staffIds.map((id: string) => sql`${id}`), sql`, `)})`)
+      : Promise.resolve([] as { staffId: string; status: string; createdAt: Date; incomingMdaName: string | null }[]),
+    // Consecutive loan flags
+    staffNames.length > 0
+      ? db.selectDistinct({ staffName: observations.staffName })
+          .from(observations)
+          .where(
+            and(
+              eq(observations.type, 'consecutive_loan'),
+              sql`${observations.staffName} IN (${sql.join(staffNames.map((n: string) => sql`${n}`), sql`, `)})`,
+            ),
+          )
+      : Promise.resolve([] as { staffName: string }[]),
+  ]);
+
+  const completionMap = new Map<string, string>();
+  for (const r of completionRows) {
+    completionMap.set(r.loanId, new Date(r.completionDate).toISOString().slice(0, 10));
+  }
+
+  const certMap = new Map<string, boolean>();
+  for (const r of certRows) certMap.set(r.loanId, true);
+
+  const transferMap = new Map<string, { toMdaName: string; date: string; status: string }>();
+  for (const r of transferRows) {
+    const existing = transferMap.get(r.staffId);
+    const date = new Date(r.createdAt).toISOString().slice(0, 10);
+    if (!existing || date > existing.date) {
+      transferMap.set(r.staffId, {
+        toMdaName: r.incomingMdaName ?? 'Unknown',
+        date,
+        status: r.status,
+      });
+    }
+  }
+
+  const consecutiveSet = new Set<string>();
+  for (const r of consecutiveRows) consecutiveSet.add(r.staffName);
+
   // Compute per-person exposure and build result
   const data: BeneficiaryListItem[] = rows.map((row: BeneficiaryRow) => {
     const loanIdsForPerson = row.loan_ids.replace(/[{}]/g, '').split(',').filter(Boolean);
 
     let totalExposure = new Decimal('0');
+    const statuses: string[] = [];
+    let latestCompletionDate: string | null = null;
+    let hasCertificate = false;
+
     for (const loanId of loanIdsForPerson) {
       const info = loanInfoMap.get(loanId);
       if (!info) continue;
@@ -227,6 +345,25 @@ export async function listBeneficiaries(
         totalPaid: paidMap.get(loanId) ?? '0.00',
       });
       totalExposure = totalExposure.plus(new Decimal(result.computedBalance));
+
+      // Lifecycle data per loan
+      statuses.push(info.status);
+
+      const compDate = completionMap.get(loanId);
+      if (compDate && (!latestCompletionDate || compDate > latestCompletionDate)) {
+        latestCompletionDate = compDate;
+      }
+
+      if (certMap.has(loanId)) hasCertificate = true;
+    }
+
+    const loanStatus = deriveBeneficiaryLoanStatus(statuses);
+    const transfer = transferMap.get(row.staff_id);
+
+    // Certificate status: only relevant for COMPLETED loans
+    let certificateStatus: 'issued' | 'pending' | null = null;
+    if (loanStatus === 'COMPLETED') {
+      certificateStatus = hasCertificate ? 'issued' : 'pending';
     }
 
     return {
@@ -240,6 +377,13 @@ export async function listBeneficiaries(
       observationCount: observationCountMap.get(row.staff_name) ?? 0,
       isMultiMda: multiMdaSet.has(row.staff_name),
       lastActivityDate: row.last_activity_date,
+      loanStatus,
+      completionDate: latestCompletionDate,
+      certificateStatus,
+      transferredToMdaName: transfer?.toMdaName ?? null,
+      transferredOutDate: transfer?.date ?? null,
+      transferStatus: transfer && (transfer.status === 'PENDING' || transfer.status === 'COMPLETED') ? transfer.status : null,
+      hasConsecutiveLoan: consecutiveSet.has(row.staff_name),
     };
   });
 
@@ -353,6 +497,17 @@ export async function exportBeneficiariesCsv(
         ilike(loans.staffId, term),
       )!,
     );
+  }
+
+  // Story 15.0k: status filter for CSV export (per-loan level for row-per-loan format)
+  if (filters.loanStatus && filters.loanStatus !== 'ALL') {
+    if (filters.loanStatus === 'ACTIVE') {
+      conditions.push(sql`${loans.status} IN ('ACTIVE', 'APPROVED', 'APPLIED')`);
+    } else if (filters.loanStatus === 'COMPLETED') {
+      conditions.push(eq(loans.status, 'COMPLETED'));
+    } else if (filters.loanStatus === 'TRANSFERRED') {
+      conditions.push(sql`${loans.status} IN ('TRANSFERRED', 'TRANSFER_PENDING')`);
+    }
   }
 
   const whereClause = and(...conditions);
