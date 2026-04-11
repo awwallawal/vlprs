@@ -20,6 +20,7 @@ import { generateUuidv7 } from '../lib/uuidv7';
 import { logger } from '../lib/logger';
 import { env } from '../config/env';
 import { generateCertificate } from './autoStopCertificateService';
+import { trackFireAndForget } from './fireAndForgetTracking';
 import type { BalanceResult } from '@vlprs/shared';
 
 // ─── Types ──────────────────────────────────────────────────────────
@@ -160,9 +161,9 @@ export async function detectAndTriggerAutoStop(
         );
 
         // Fire-and-forget certificate generation — failure does NOT roll back completion
-        generateCertificate(candidate.id).catch((err) => {
+        void trackFireAndForget(generateCertificate(candidate.id).catch((err) => {
           logger.error({ err, loanId: candidate.id }, 'Auto-stop certificate generation failed');
-        });
+        }));
 
         results.push({
           loanId: candidate.id,
@@ -261,9 +262,9 @@ export async function checkAndTriggerAutoStop(
       );
 
       // Fire-and-forget certificate generation — failure does NOT roll back completion
-      generateCertificate(loanId).catch((err) => {
+      void trackFireAndForget(generateCertificate(loanId).catch((err) => {
         logger.error({ err, loanId }, 'Auto-stop certificate generation failed (inline)');
-      });
+      }));
 
       return {
         triggered: true,

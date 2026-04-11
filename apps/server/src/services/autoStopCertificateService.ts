@@ -15,6 +15,7 @@ import { withMdaScope } from '../lib/mdaScope';
 import { logger } from '../lib/logger';
 import { env } from '../config/env';
 import { sendAutoStopNotifications } from './autoStopNotificationService';
+import { trackFireAndForget } from './fireAndForgetTracking';
 import type {
   CertificateListItem,
   CertificateListResponse,
@@ -163,9 +164,9 @@ export async function generateCertificate(loanId: string) {
       );
 
       // Fire-and-forget notification — don't await, don't block certificate generation
-      sendAutoStopNotifications(certificate.id).catch(err =>
+      void trackFireAndForget(sendAutoStopNotifications(certificate.id).catch(err =>
         logger.error({ err, certificateId: certificate.id }, 'Auto-stop notification failed'),
-      );
+      ));
 
       return certificate;
     } catch (err: unknown) {

@@ -22,7 +22,7 @@ import { isActiveRecord } from '../db/queryHelpers';
 import { AppError } from '../lib/appError';
 import { normalizeName, surnameAndInitial, levenshtein } from '../migration/nameMatch';
 import { VOCABULARY } from '@vlprs/shared';
-import type { DuplicateCandidate, DuplicateResolution } from '@vlprs/shared';
+import type { DuplicateCandidate, DuplicateResolution, DuplicateRecordDetail } from '@vlprs/shared';
 
 // ─── Types ──────────────────────────────────────────────────────────
 
@@ -223,6 +223,92 @@ async function detectForPair(
   }
 
   return insertedCount;
+}
+
+// ─── Duplicate Record Detail ────────────────────────────────────────
+
+/**
+ * Fetch individual migration records for a duplicate candidate,
+ * grouped by parent MDA and child MDA for side-by-side comparison.
+ */
+export async function getDuplicateRecordDetail(
+  candidateId: string,
+  mdaScope?: string | null,
+): Promise<DuplicateRecordDetail> {
+  const [candidate] = await db
+    .select()
+    .from(deduplicationCandidates)
+    .where(eq(deduplicationCandidates.id, candidateId));
+
+  if (!candidate) {
+    throw new AppError(404, 'DUPLICATE_NOT_FOUND', VOCABULARY.DUPLICATE_NOT_FOUND);
+  }
+
+  // MDA scope check: candidate must involve the scoped MDA
+  if (mdaScope && candidate.parentMdaId !== mdaScope && candidate.childMdaId !== mdaScope) {
+    throw new AppError(404, 'DUPLICATE_NOT_FOUND', VOCABULARY.DUPLICATE_NOT_FOUND);
+  }
+
+  const selectFields = {
+    id: migrationRecords.id,
+    staffName: migrationRecords.staffName,
+    staffId: sql<string | null>`COALESCE(${migrationRecords.employeeNo}, ${migrationRecords.refId})`,
+    gradeLevel: migrationRecords.gradeLevel,
+    principalAmount: migrationRecords.principal,
+    totalLoan: migrationRecords.totalLoan,
+    monthlyDeduction: migrationRecords.monthlyDeduction,
+    outstandingBalance: migrationRecords.outstandingBalance,
+    periodMonth: migrationRecords.periodMonth,
+    periodYear: migrationRecords.periodYear,
+    varianceCategory: migrationRecords.varianceCategory,
+  };
+
+  const nameCondition = sql`LOWER(${migrationRecords.staffName}) = LOWER(${candidate.staffName})`;
+
+  const [parentRecords, childRecords] = await Promise.all([
+    db
+      .select(selectFields)
+      .from(migrationRecords)
+      .where(and(
+        eq(migrationRecords.mdaId, candidate.parentMdaId),
+        nameCondition,
+        isNull(migrationRecords.deletedAt),
+      )),
+    db
+      .select(selectFields)
+      .from(migrationRecords)
+      .where(and(
+        eq(migrationRecords.mdaId, candidate.childMdaId),
+        nameCondition,
+        isNull(migrationRecords.deletedAt),
+      )),
+  ]);
+
+  // Fetch MDA names in parallel
+  const [[parentMda], [childMda]] = await Promise.all([
+    db.select({ name: mdas.name }).from(mdas).where(eq(mdas.id, candidate.parentMdaId)),
+    db.select({ name: mdas.name }).from(mdas).where(eq(mdas.id, candidate.childMdaId)),
+  ]);
+
+  const mapRecord = (r: typeof parentRecords[number]): DuplicateRecordDetail['parentRecords'][number] => ({
+    id: r.id,
+    staffName: r.staffName,
+    staffId: r.staffId,
+    gradeLevel: r.gradeLevel,
+    principalAmount: r.principalAmount,
+    totalLoan: r.totalLoan,
+    monthlyDeduction: r.monthlyDeduction,
+    outstandingBalance: r.outstandingBalance,
+    periodMonth: r.periodMonth,
+    periodYear: r.periodYear,
+    varianceCategory: r.varianceCategory,
+  });
+
+  return {
+    candidate: toDuplicateCandidate(candidate, parentMda?.name ?? 'Unknown', childMda?.name ?? 'Unknown'),
+    parentRecords: parentRecords.map(mapRecord),
+    childRecords: childRecords.map(mapRecord),
+  };
 }
 
 // ─── Resolve Duplicate ──────────────────────────────────────────────

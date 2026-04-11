@@ -4,13 +4,155 @@
  * Story 3.8: Multi-MDA File Delineation & Deduplication
  */
 
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Textarea } from '@/components/ui/textarea';
-import { useDuplicateList, useResolveDuplicate, useTriggerDeduplication } from '@/hooks/useDeduplication';
+import { useDuplicateList, useDuplicateRecordDetail, useResolveDuplicate, useTriggerDeduplication } from '@/hooks/useDeduplication';
 import { UI_COPY } from '@vlprs/shared';
-import type { DuplicateResolution } from '@vlprs/shared';
+import type { DuplicateRecord, DuplicateResolution } from '@vlprs/shared';
+
+// ─── Format Helpers ────────────────────────────────────────────────
+
+function formatNaira(value: string | null): string {
+  if (!value) return '—';
+  const num = parseFloat(value);
+  if (isNaN(num)) return '—';
+  return `₦${num.toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+}
+
+function formatPeriod(month: number | null, year: number | null): string {
+  if (!year) return '—';
+  if (!month) return String(year);
+  return `${year}-${String(month).padStart(2, '0')}`;
+}
+
+// ─── Diff Highlighting ─────────────────────────────────────────────
+
+function buildMatchMap(
+  records: DuplicateRecord[],
+): Map<string, DuplicateRecord> {
+  const map = new Map<string, DuplicateRecord>();
+  for (const rec of records) {
+    const key = rec.staffId?.trim() || rec.staffName.toLowerCase().trim();
+    if (!map.has(key)) map.set(key, rec);
+  }
+  return map;
+}
+
+function findMatch(record: DuplicateRecord, otherSide: Map<string, DuplicateRecord>): DuplicateRecord | null {
+  const key = record.staffId?.trim() || record.staffName.toLowerCase().trim();
+  return otherSide.get(key) ?? null;
+}
+
+function diffClass(a: string | null, b: string | null): string {
+  if (!a && !b) return '';
+  if (a !== b) return 'bg-amber-50 text-amber-700';
+  return '';
+}
+
+// ─── Detail Panel ──────────────────────────────────────────────────
+
+function DuplicateDetailPanel({ candidateId }: { candidateId: string }) {
+  const { data, isPending, isError } = useDuplicateRecordDetail(candidateId);
+
+  if (isPending) {
+    return (
+      <div className="p-4 space-y-2">
+        <Skeleton className="h-6 w-48" />
+        <Skeleton className="h-24 w-full" />
+      </div>
+    );
+  }
+
+  if (isError || !data) {
+    return <p className="p-4 text-sm text-text-muted">Failed to load record details.</p>;
+  }
+
+  const { parentRecords, childRecords, candidate } = data;
+  const childMap = buildMatchMap(childRecords);
+  const parentMap = buildMatchMap(parentRecords);
+
+  const columns = ['Staff ID', 'Grade', 'Principal', 'Monthly Ded.', 'Balance', 'Period'] as const;
+
+  const renderRecordRow = (rec: DuplicateRecord, match: DuplicateRecord | null) => (
+    <tr key={rec.id} className="border-b border-border/30 text-xs">
+      <td className="py-1.5 px-2">{rec.staffId ?? '—'}</td>
+      <td className="py-1.5 px-2">{rec.gradeLevel ?? '—'}</td>
+      <td className={`py-1.5 px-2 text-right ${match ? diffClass(rec.principalAmount, match.principalAmount) : ''}`}>
+        {formatNaira(rec.principalAmount)}
+      </td>
+      <td className={`py-1.5 px-2 text-right ${match ? diffClass(rec.monthlyDeduction, match.monthlyDeduction) : ''}`}>
+        {formatNaira(rec.monthlyDeduction)}
+      </td>
+      <td className={`py-1.5 px-2 text-right ${match ? diffClass(rec.outstandingBalance, match.outstandingBalance) : ''}`}>
+        {formatNaira(rec.outstandingBalance)}
+      </td>
+      <td className="py-1.5 px-2">{formatPeriod(rec.periodMonth, rec.periodYear)}</td>
+    </tr>
+  );
+
+  return (
+    <div className="bg-gray-50/50 p-4 border-t border-border">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        {/* Parent MDA side */}
+        <div>
+          <h4 className="text-xs font-semibold text-text-primary mb-2">
+            {candidate.parentMdaName} ({parentRecords.length} record{parentRecords.length !== 1 ? 's' : ''})
+          </h4>
+          {parentRecords.length === 0 ? (
+            <p className="text-xs text-text-muted">No records found</p>
+          ) : (
+            <table className="w-full text-left">
+              <thead>
+                <tr className="border-b border-border">
+                  {columns.map((col) => (
+                    <th key={col} className="py-1 px-2 text-[10px] font-semibold text-text-muted uppercase">{col}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {parentRecords.map((rec) => renderRecordRow(rec, findMatch(rec, childMap)))}
+              </tbody>
+            </table>
+          )}
+        </div>
+
+        {/* Child MDA side */}
+        <div>
+          <h4 className="text-xs font-semibold text-text-primary mb-2">
+            {candidate.childMdaName} ({childRecords.length} record{childRecords.length !== 1 ? 's' : ''})
+          </h4>
+          {childRecords.length === 0 ? (
+            <p className="text-xs text-text-muted">No records found</p>
+          ) : (
+            <table className="w-full text-left">
+              <thead>
+                <tr className="border-b border-border">
+                  {columns.map((col) => (
+                    <th key={col} className="py-1 px-2 text-[10px] font-semibold text-text-muted uppercase">{col}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {childRecords.map((rec) => renderRecordRow(rec, findMatch(rec, parentMap)))}
+              </tbody>
+            </table>
+          )}
+        </div>
+      </div>
+
+      {/* Unmatched records note */}
+      {parentRecords.length !== childRecords.length && (
+        <p className="mt-2 text-[10px] text-text-muted italic">
+          Record counts differ between MDAs — some records have no direct match in the other MDA.
+        </p>
+      )}
+    </div>
+  );
+}
+
+// ─── Main Table ────────────────────────────────────────────────────
 
 export function DuplicateResolutionTable() {
   const [page, setPage] = useState(1);
@@ -18,6 +160,7 @@ export function DuplicateResolutionTable() {
   const [resolvingId, setResolvingId] = useState<string | null>(null);
   const [noteDialogId, setNoteDialogId] = useState<string | null>(null);
   const [noteText, setNoteText] = useState('');
+  const [expandedId, setExpandedId] = useState<string | null>(null);
 
   const { data, isPending, isError } = useDuplicateList({
     page,
@@ -140,51 +283,68 @@ export function DuplicateResolutionTable() {
                 </thead>
                 <tbody>
                   {data.data.map((candidate) => (
-                    <tr key={candidate.id} className="border-b border-border/50 hover:bg-gray-50">
-                      <td className="py-2 px-3 text-sm text-text-primary">{candidate.staffName}</td>
-                      <td className="py-2 px-3 text-xs text-text-secondary">{candidate.parentMdaName}</td>
-                      <td className="py-2 px-3 text-xs text-text-secondary">{candidate.childMdaName}</td>
-                      <td className="py-2 px-3 text-sm text-right">{candidate.parentRecordCount}</td>
-                      <td className="py-2 px-3 text-sm text-right">{candidate.childRecordCount}</td>
-                      <td className="py-2 px-3">{confidenceBadge(candidate.matchConfidence)}</td>
-                      <td className="py-2 px-3">{statusBadge(candidate.status)}</td>
-                      {statusFilter === 'pending' && candidate.status === 'pending' && (
-                        <td className="py-2 px-3">
-                          <div className="flex gap-1">
-                            <button
-                              type="button"
-                              onClick={() => handleResolve(candidate.id, 'confirmed_multi_mda')}
-                              disabled={resolvingId === candidate.id}
-                              className="px-2 py-1 text-[10px] bg-teal/10 text-teal rounded hover:bg-teal/20 disabled:opacity-50"
-                              title="Confirm as legitimate multi-MDA staff"
-                            >
-                              Multi-MDA
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => handleResolve(candidate.id, 'reassigned')}
-                              disabled={resolvingId === candidate.id}
-                              className="px-2 py-1 text-[10px] bg-blue-50 text-blue-700 rounded hover:bg-blue-100 disabled:opacity-50"
-                              title="Reassign parent records to sub-agency"
-                            >
-                              Reassign
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => handleFlagWithNote(candidate.id)}
-                              disabled={resolvingId === candidate.id}
-                              className="px-2 py-1 text-[10px] bg-gold-50 text-gold-dark rounded hover:bg-gold/20 disabled:opacity-50"
-                              title="Flag for further investigation"
-                            >
-                              Flag
-                            </button>
-                          </div>
+                    <React.Fragment key={candidate.id}>
+                      <tr
+                        className="border-b border-border/50 hover:bg-gray-50 cursor-pointer"
+                        onClick={() => setExpandedId(expandedId === candidate.id ? null : candidate.id)}
+                      >
+                        <td className="py-2 px-3 text-sm text-text-primary">
+                          <span className="inline-block w-3 text-[10px] text-text-muted mr-1">
+                            {expandedId === candidate.id ? '▼' : '▶'}
+                          </span>
+                          {candidate.staffName}
                         </td>
+                        <td className="py-2 px-3 text-xs text-text-secondary">{candidate.parentMdaName}</td>
+                        <td className="py-2 px-3 text-xs text-text-secondary">{candidate.childMdaName}</td>
+                        <td className="py-2 px-3 text-sm text-right">{candidate.parentRecordCount}</td>
+                        <td className="py-2 px-3 text-sm text-right">{candidate.childRecordCount}</td>
+                        <td className="py-2 px-3">{confidenceBadge(candidate.matchConfidence)}</td>
+                        <td className="py-2 px-3">{statusBadge(candidate.status)}</td>
+                        {statusFilter === 'pending' && candidate.status === 'pending' && (
+                          <td className="py-2 px-3">
+                            <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
+                              <button
+                                type="button"
+                                onClick={() => handleResolve(candidate.id, 'confirmed_multi_mda')}
+                                disabled={resolvingId === candidate.id}
+                                className="px-2 py-1 text-[10px] bg-teal/10 text-teal rounded hover:bg-teal/20 disabled:opacity-50"
+                                title="Confirm as legitimate multi-MDA staff"
+                              >
+                                Multi-MDA
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleResolve(candidate.id, 'reassigned')}
+                                disabled={resolvingId === candidate.id}
+                                className="px-2 py-1 text-[10px] bg-blue-50 text-blue-700 rounded hover:bg-blue-100 disabled:opacity-50"
+                                title="Reassign parent records to sub-agency"
+                              >
+                                Reassign
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleFlagWithNote(candidate.id)}
+                                disabled={resolvingId === candidate.id}
+                                className="px-2 py-1 text-[10px] bg-gold-50 text-gold-dark rounded hover:bg-gold/20 disabled:opacity-50"
+                                title="Flag for further investigation"
+                              >
+                                Flag
+                              </button>
+                            </div>
+                          </td>
+                        )}
+                        {statusFilter === 'pending' && candidate.status !== 'pending' && (
+                          <td className="py-2 px-3 text-xs text-text-muted">—</td>
+                        )}
+                      </tr>
+                      {expandedId === candidate.id && (
+                        <tr>
+                          <td colSpan={statusFilter === 'pending' ? 8 : 7}>
+                            <DuplicateDetailPanel candidateId={candidate.id} />
+                          </td>
+                        </tr>
                       )}
-                      {statusFilter === 'pending' && candidate.status !== 'pending' && (
-                        <td className="py-2 px-3 text-xs text-text-muted">—</td>
-                      )}
-                    </tr>
+                    </React.Fragment>
                   ))}
                 </tbody>
               </table>

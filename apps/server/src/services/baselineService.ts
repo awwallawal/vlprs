@@ -11,6 +11,7 @@ import type { BaselineResult, BatchBaselineResult, BaselineSummary, VarianceCate
 import { checkAndTriggerAutoStop } from './autoStopService';
 import { generateObservations } from './observationEngine';
 import { logger } from '../lib/logger';
+import { trackFireAndForget } from './fireAndForgetTracking';
 
 // ─── Types ───────────────────────────────────────────────────────────
 
@@ -434,13 +435,13 @@ export async function createBaseline(
   });
 
   // Story 8.1: Check for auto-stop AFTER transaction commits (balance now visible)
-  checkAndTriggerAutoStop(result.loanId, result.ledgerEntryId).catch(() => {});
+  void trackFireAndForget(checkAndTriggerAutoStop(result.loanId, result.ledgerEntryId).catch(() => {}));
 
   // Story 15.0b: Fire-and-forget observation generation (skipped when called in a loop)
   if (!options?.skipObservationGeneration) {
-    generateObservations(uploadId, actingUser.userId).catch((err) =>
+    void trackFireAndForget(generateObservations(uploadId, actingUser.userId).catch((err) =>
       logger.error({ err, uploadId }, 'Observation generation failed after baseline'),
-    );
+    ));
   }
 
   return result;
@@ -662,9 +663,9 @@ export async function createBatchBaseline(
 
   // Story 15.0b: Fire-and-forget observation generation for newly baselined records
   if (result.loansCreated > 0) {
-    generateObservations(uploadId, actingUser.userId).catch((err) =>
+    void trackFireAndForget(generateObservations(uploadId, actingUser.userId).catch((err) =>
       logger.error({ err, uploadId }, 'Observation generation failed after batch baseline'),
-    );
+    ));
   }
 
   return result;
