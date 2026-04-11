@@ -459,7 +459,7 @@ export const personMatches = pgTable(
 
 // ─── Observation Type Enum (Story 3.6) ──────────────────────────────
 export const observationTypeEnum = pgEnum('observation_type', [
-  'rate_variance', 'stalled_balance', 'negative_balance', 'multi_mda', 'no_approval_match', 'consecutive_loan', 'period_overlap', 'grade_tier_mismatch', 'three_way_variance', 'manual_exception', 'inactive_loan', 'post_completion_deduction',
+  'rate_variance', 'stalled_balance', 'negative_balance', 'multi_mda', 'no_approval_match', 'consecutive_loan', 'period_overlap', 'grade_tier_mismatch', 'three_way_variance', 'manual_exception', 'inactive_loan', 'post_completion_deduction', 'within_file_duplicate',
 ]);
 
 // ─── Observation Status Enum (Story 3.6) ────────────────────────────

@@ -19,6 +19,7 @@ const TYPE_LABELS: Record<ObservationType, string> = {
   manual_exception: 'Manual Exception',
   inactive_loan: 'Inactive Loan',
   post_completion_deduction: 'Post-Completion Deduction',
+  within_file_duplicate: 'Within-File Duplicate',
 };
 
 const STATUS_VARIANT: Record<ObservationStatus, 'review' | 'info' | 'complete' | 'variance'> = {

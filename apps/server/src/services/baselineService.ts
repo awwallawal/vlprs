@@ -9,9 +9,73 @@ import { autoSplitDeduction, computeRetirementDate } from './computationEngine';
 import { VOCABULARY } from '@vlprs/shared';
 import type { BaselineResult, BatchBaselineResult, BaselineSummary, VarianceCategory } from '@vlprs/shared';
 import { checkAndTriggerAutoStop } from './autoStopService';
-import { generateObservations } from './observationEngine';
+import { generateObservations, findWithinFileDuplicateGroups } from './observationEngine';
 import { logger } from '../lib/logger';
 import { trackFireAndForget } from './fireAndForgetTracking';
+
+// ─── Within-File Duplicate Guard (Story 15.0m) ──────────────────────
+
+interface WithinFileDuplicateDetail {
+  staffName: string;
+  period: string;
+  count: number;
+  recordIds: string[];
+}
+
+/**
+ * Shared helper: detect within-file duplicates inside a loaded record set and
+ * throw a structured 422 `WITHIN_FILE_DUPLICATES_DETECTED` error if any are
+ * found. Used by `createBatchBaseline()` (auto-baseline partition) and
+ * `baselineReviewedRecords()` (flagged partition). Silently creating two
+ * loans for one person is worse than flagging and asking.
+ *
+ * Name normalisation, period extraction, and the distinct-employeeNo escape
+ * hatch are delegated to `findWithinFileDuplicateGroups()` in the observation
+ * engine so both the observation detector and this guard agree on what
+ * counts as a duplicate.
+ */
+export function assertNoWithinFileDuplicates(
+  records: ReadonlyArray<{
+    id: string;
+    staffName: string;
+    mdaId: string;
+    periodYear: number | null;
+    periodMonth: number | null;
+    employeeNo: string | null;
+    sourceFile: string;
+    sourceSheet: string;
+    sourceRow: number;
+  }>,
+): void {
+  const groups = findWithinFileDuplicateGroups(records);
+  if (groups.length === 0) return;
+
+  const details: WithinFileDuplicateDetail[] = groups.map(({ group, period }) => ({
+    staffName: group[0].staffName,
+    period,
+    count: group.length,
+    recordIds: group.map((r) => r.id),
+  }));
+
+  throw new AppError(
+    422,
+    'WITHIN_FILE_DUPLICATES_DETECTED',
+    buildWithinFileDuplicateMessage(details),
+    details,
+  );
+}
+
+function buildWithinFileDuplicateMessage(details: WithinFileDuplicateDetail[]): string {
+  const preview = details.slice(0, 20)
+    .map((d) => `${d.staffName} (${d.count}× in ${d.period})`)
+    .join(', ');
+  const overflow = details.length > 20 ? ` and ${details.length - 20} more` : '';
+  return (
+    `Baseline creation blocked: ${details.length} staff member(s) appear multiple times in the same period. ` +
+    `Affected: ${preview}${overflow}. ` +
+    `Review observations and resolve duplicates before retrying.`
+  );
+}
 
 // ─── Types ───────────────────────────────────────────────────────────
 
@@ -501,6 +565,12 @@ export async function createBatchBaseline(
         flaggedForReview: { count: 0, byCategory: {} },
       };
     }
+
+    // Story 15.0m: Block batch baseline when the same staff member appears more
+    // than once in the same period within this upload. Covers the auto-baseline
+    // partition; the same guard fires in `baselineReviewedRecords()` for the
+    // flagged-for-review partition so both paths are protected.
+    assertNoWithinFileDuplicates(records);
 
     // Partition by variance category: auto-baseline clean/minor, flag significant+ for MDA review
     const autoBaselineCategories = new Set(['clean', 'minor_variance']);

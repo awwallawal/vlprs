@@ -163,6 +163,7 @@ export async function getObservationCounts(
       manualException: sql<string>`COUNT(*) FILTER (WHERE ${observations.type} = 'manual_exception')`,
       inactiveLoan: sql<string>`COUNT(*) FILTER (WHERE ${observations.type} = 'inactive_loan')`,
       postCompletionDeduction: sql<string>`COUNT(*) FILTER (WHERE ${observations.type} = 'post_completion_deduction')`,
+      withinFileDuplicate: sql<string>`COUNT(*) FILTER (WHERE ${observations.type} = 'within_file_duplicate')`,
       // By status
       unreviewed: sql<string>`COUNT(*) FILTER (WHERE ${observations.status} = 'unreviewed')`,
       reviewed: sql<string>`COUNT(*) FILTER (WHERE ${observations.status} = 'reviewed')`,
@@ -187,6 +188,7 @@ export async function getObservationCounts(
       manual_exception: parseInt(result.manualException, 10),
       inactive_loan: parseInt(result.inactiveLoan, 10),
       post_completion_deduction: parseInt(result.postCompletionDeduction, 10),
+      within_file_duplicate: parseInt(result.withinFileDuplicate, 10),
     },
     byStatus: {
       unreviewed: parseInt(result.unreviewed, 10),

@@ -5,6 +5,7 @@ import {
   detectStalledBalance,
   detectConsecutiveLoan,
   detectGradeTierMismatch,
+  detectWithinFileDuplicates,
 } from './observationEngine';
 
 const UPLOAD_ID = '00000000-0000-0000-0000-000000000001';
@@ -397,5 +398,271 @@ describe('observationEngine — detectGradeTierMismatch', () => {
       const obs = detectGradeTierMismatch(records, mdaMap, UPLOAD_ID);
       expect(obs.length > 0, `Grade "${grade}" should ${shouldGenerate ? '' : 'not '}generate observation`).toBe(shouldGenerate);
     }
+  });
+});
+
+describe('observationEngine — detectWithinFileDuplicates (Story 15.0m)', () => {
+  const baseFields = {
+    mdaId: MDA_ID,
+    employeeNo: null,
+    sourceFile: 'file.xlsx',
+    sourceSheet: 'Sheet1',
+  };
+
+  it('generates one observation when same staff + period appears twice', () => {
+    const records = [
+      {
+        id: 'rec1', staffName: 'ADEBAYO OLUSEGUN',
+        periodYear: 2024, periodMonth: 8, sourceRow: 15,
+        ...baseFields,
+      },
+      {
+        id: 'rec2', staffName: 'ADEBAYO OLUSEGUN',
+        periodYear: 2024, periodMonth: 8, sourceRow: 42,
+        ...baseFields,
+      },
+    ];
+
+    const obs = detectWithinFileDuplicates(records, mdaMap, UPLOAD_ID);
+    expect(obs).toHaveLength(1);
+    expect(obs[0].type).toBe('within_file_duplicate');
+    expect(obs[0].staffName).toBe('ADEBAYO OLUSEGUN');
+    expect(obs[0].migrationRecordId).toBe('rec1');
+    expect(obs[0].description).toContain('ADEBAYO OLUSEGUN');
+    expect(obs[0].description).toContain('2 times');
+    expect(obs[0].description).toContain('2024-08');
+    expect(obs[0].description).toContain('Review');
+    expect(obs[0].context.dataPoints).toHaveProperty('duplicateCount', 2);
+    expect(obs[0].context.dataPoints).toHaveProperty('period', '2024-08');
+    expect(obs[0].context.dataPoints).toHaveProperty('recordIds', ['rec1', 'rec2']);
+    expect(obs[0].context.dataPoints).toHaveProperty('rowNumbers', [15, 42]);
+    expect(obs[0].context.dataPoints).toHaveProperty('mdaName', 'Ministry of Justice');
+    expect(obs[0].context.dataCompleteness).toBe(100);
+  });
+
+  it('generates one observation per period when duplicates span multiple periods', () => {
+    const records = [
+      {
+        id: 'rec1', staffName: 'ADEBAYO OLUSEGUN',
+        periodYear: 2024, periodMonth: 8, sourceRow: 15, ...baseFields,
+      },
+      {
+        id: 'rec2', staffName: 'ADEBAYO OLUSEGUN',
+        periodYear: 2024, periodMonth: 8, sourceRow: 42, ...baseFields,
+      },
+      {
+        id: 'rec3', staffName: 'ADEBAYO OLUSEGUN',
+        periodYear: 2024, periodMonth: 9, sourceRow: 60, ...baseFields,
+      },
+      {
+        id: 'rec4', staffName: 'ADEBAYO OLUSEGUN',
+        periodYear: 2024, periodMonth: 9, sourceRow: 80, ...baseFields,
+      },
+    ];
+
+    const obs = detectWithinFileDuplicates(records, mdaMap, UPLOAD_ID);
+    expect(obs).toHaveLength(2);
+    const periods = obs.map((o) => String(o.context.dataPoints.period)).sort();
+    expect(periods).toEqual(['2024-08', '2024-09']);
+  });
+
+  it('normalises names case-insensitively (same person, different case)', () => {
+    const records = [
+      {
+        id: 'rec1', staffName: 'ADEBAYO OLUSEGUN',
+        periodYear: 2024, periodMonth: 8, sourceRow: 15, ...baseFields,
+      },
+      {
+        id: 'rec2', staffName: 'Adebayo Olusegun',
+        periodYear: 2024, periodMonth: 8, sourceRow: 42, ...baseFields,
+      },
+    ];
+
+    const obs = detectWithinFileDuplicates(records, mdaMap, UPLOAD_ID);
+    expect(obs).toHaveLength(1);
+    expect(obs[0].context.dataPoints).toHaveProperty('duplicateCount', 2);
+  });
+
+  it('emits no observation when same staff appears in different periods only', () => {
+    const records = [
+      {
+        id: 'rec1', staffName: 'BELLO AMINAT',
+        periodYear: 2024, periodMonth: 8, sourceRow: 5, ...baseFields,
+      },
+      {
+        id: 'rec2', staffName: 'BELLO AMINAT',
+        periodYear: 2024, periodMonth: 9, sourceRow: 6, ...baseFields,
+      },
+      {
+        id: 'rec3', staffName: 'BELLO AMINAT',
+        periodYear: 2024, periodMonth: 10, sourceRow: 7, ...baseFields,
+      },
+    ];
+
+    const obs = detectWithinFileDuplicates(records, mdaMap, UPLOAD_ID);
+    expect(obs).toHaveLength(0);
+  });
+
+  it('emits no observation when records have no duplicates', () => {
+    const records = [
+      {
+        id: 'rec1', staffName: 'BELLO AMINAT',
+        periodYear: 2024, periodMonth: 8, sourceRow: 5, ...baseFields,
+      },
+      {
+        id: 'rec2', staffName: 'ADEBAYO OLUSEGUN',
+        periodYear: 2024, periodMonth: 8, sourceRow: 6, ...baseFields,
+      },
+    ];
+
+    const obs = detectWithinFileDuplicates(records, mdaMap, UPLOAD_ID);
+    expect(obs).toHaveLength(0);
+  });
+
+  it('skips records with null period (cannot be matched)', () => {
+    const records = [
+      {
+        id: 'rec1', staffName: 'ADEBAYO OLUSEGUN',
+        periodYear: null, periodMonth: null, sourceRow: 5, ...baseFields,
+      },
+      {
+        id: 'rec2', staffName: 'ADEBAYO OLUSEGUN',
+        periodYear: null, periodMonth: null, sourceRow: 6, ...baseFields,
+      },
+    ];
+
+    const obs = detectWithinFileDuplicates(records, mdaMap, UPLOAD_ID);
+    expect(obs).toHaveLength(0);
+  });
+
+  it('uses non-punitive vocabulary in description and explanations', () => {
+    const records = [
+      {
+        id: 'rec1', staffName: 'ADEBAYO OLUSEGUN',
+        periodYear: 2024, periodMonth: 8, sourceRow: 15, ...baseFields,
+      },
+      {
+        id: 'rec2', staffName: 'ADEBAYO OLUSEGUN',
+        periodYear: 2024, periodMonth: 8, sourceRow: 42, ...baseFields,
+      },
+    ];
+
+    const obs = detectWithinFileDuplicates(records, mdaMap, UPLOAD_ID);
+    const description = obs[0].description;
+    expect(description).not.toMatch(/error|violation|invalid|wrong/i);
+    expect(description).toContain('Review');
+    expect(obs[0].context.possibleExplanations.length).toBeGreaterThanOrEqual(3);
+  });
+
+  it('handles three or more duplicates in the same group', () => {
+    const records = [
+      {
+        id: 'rec1', staffName: 'ADEBAYO OLUSEGUN',
+        periodYear: 2024, periodMonth: 8, sourceRow: 10, ...baseFields,
+      },
+      {
+        id: 'rec2', staffName: 'ADEBAYO OLUSEGUN',
+        periodYear: 2024, periodMonth: 8, sourceRow: 20, ...baseFields,
+      },
+      {
+        id: 'rec3', staffName: 'ADEBAYO OLUSEGUN',
+        periodYear: 2024, periodMonth: 8, sourceRow: 30, ...baseFields,
+      },
+    ];
+
+    const obs = detectWithinFileDuplicates(records, mdaMap, UPLOAD_ID);
+    expect(obs).toHaveLength(1);
+    expect(obs[0].description).toContain('3 times');
+    expect(obs[0].context.dataPoints).toHaveProperty('duplicateCount', 3);
+    expect(obs[0].context.dataPoints).toHaveProperty('recordIds', ['rec1', 'rec2', 'rec3']);
+  });
+
+  // Review H2: detector must strip honorifics, parentheticals, and interior
+  // whitespace — same normalisation as the cross-MDA dedup engine.
+  it('collapses honorifics, parentheticals, and double whitespace to the same key', () => {
+    const records = [
+      {
+        id: 'rec1', staffName: 'MRS. ADEBAYO OLUSEGUN',
+        periodYear: 2024, periodMonth: 8, sourceRow: 10, ...baseFields,
+      },
+      {
+        id: 'rec2', staffName: 'ADEBAYO  OLUSEGUN (LATE)',
+        periodYear: 2024, periodMonth: 8, sourceRow: 11, ...baseFields,
+      },
+      {
+        id: 'rec3', staffName: 'Dr. Adebayo Olusegun',
+        periodYear: 2024, periodMonth: 8, sourceRow: 12, ...baseFields,
+      },
+    ];
+
+    const obs = detectWithinFileDuplicates(records, mdaMap, UPLOAD_ID);
+    expect(obs).toHaveLength(1);
+    expect(obs[0].context.dataPoints).toHaveProperty('duplicateCount', 3);
+    expect(obs[0].context.dataPoints).toHaveProperty('recordIds', ['rec1', 'rec2', 'rec3']);
+  });
+
+  // Review M3: distinct-employeeNo escape hatch — two records with the same
+  // normalised name but different staff IDs are almost certainly different
+  // people and must not be flagged (or blocked at baseline).
+  it('skips the group when all records have distinct non-null employeeNos', () => {
+    const records = [
+      {
+        id: 'rec1', staffName: 'MUHAMMED ALIYU',
+        periodYear: 2024, periodMonth: 8, sourceRow: 10,
+        mdaId: MDA_ID, employeeNo: 'STAFF-1001',
+        sourceFile: 'file.xlsx', sourceSheet: 'Sheet1',
+      },
+      {
+        id: 'rec2', staffName: 'MUHAMMED ALIYU',
+        periodYear: 2024, periodMonth: 8, sourceRow: 11,
+        mdaId: MDA_ID, employeeNo: 'STAFF-2042',
+        sourceFile: 'file.xlsx', sourceSheet: 'Sheet1',
+      },
+    ];
+
+    const obs = detectWithinFileDuplicates(records, mdaMap, UPLOAD_ID);
+    expect(obs).toHaveLength(0);
+  });
+
+  it('still flags a group when employeeNos are the same (single person, double row)', () => {
+    const records = [
+      {
+        id: 'rec1', staffName: 'ADEBAYO OLUSEGUN',
+        periodYear: 2024, periodMonth: 8, sourceRow: 10,
+        mdaId: MDA_ID, employeeNo: 'STAFF-777',
+        sourceFile: 'file.xlsx', sourceSheet: 'Sheet1',
+      },
+      {
+        id: 'rec2', staffName: 'ADEBAYO OLUSEGUN',
+        periodYear: 2024, periodMonth: 8, sourceRow: 11,
+        mdaId: MDA_ID, employeeNo: 'STAFF-777',
+        sourceFile: 'file.xlsx', sourceSheet: 'Sheet1',
+      },
+    ];
+
+    const obs = detectWithinFileDuplicates(records, mdaMap, UPLOAD_ID);
+    expect(obs).toHaveLength(1);
+    expect(obs[0].context.dataPoints).toHaveProperty('duplicateCount', 2);
+  });
+
+  it('still flags a mixed group where one record has a null employeeNo', () => {
+    const records = [
+      {
+        id: 'rec1', staffName: 'ADEBAYO OLUSEGUN',
+        periodYear: 2024, periodMonth: 8, sourceRow: 10,
+        mdaId: MDA_ID, employeeNo: 'STAFF-777',
+        sourceFile: 'file.xlsx', sourceSheet: 'Sheet1',
+      },
+      {
+        id: 'rec2', staffName: 'ADEBAYO OLUSEGUN',
+        periodYear: 2024, periodMonth: 8, sourceRow: 11,
+        mdaId: MDA_ID, employeeNo: null,
+        sourceFile: 'file.xlsx', sourceSheet: 'Sheet1',
+      },
+    ];
+
+    const obs = detectWithinFileDuplicates(records, mdaMap, UPLOAD_ID);
+    expect(obs).toHaveLength(1);
+    expect(obs[0].context.dataPoints).toHaveProperty('duplicateCount', 2);
   });
 });
