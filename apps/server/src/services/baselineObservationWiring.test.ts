@@ -17,9 +17,16 @@ import { generateUuidv7 } from '../lib/uuidv7';
 import { hashPassword } from '../lib/password';
 import { resetDb } from '../test/resetDb';
 
-// Mock observation engine — spy on wiring
+// Mock observation engine — spy on wiring.
+// Story 15.0m: assertNoWithinFileDuplicates() in baselineService reads
+// findWithinFileDuplicateGroups() from this module, so the mock must export
+// it too. These wiring tests use records that never duplicate on
+// staffName+period, so returning [] keeps the guard a no-op and preserves
+// the existing wiring assertions (the detector itself has its own suite).
 vi.mock('./observationEngine', () => ({
   generateObservations: vi.fn().mockResolvedValue({ generated: 5, skipped: 0, byType: {} }),
+  findWithinFileDuplicateGroups: vi.fn().mockReturnValue([]),
+  generateWithinFileDuplicateObservations: vi.fn().mockResolvedValue({ generated: 0, skipped: 0 }),
 }));
 
 // Mock auto-stop service to avoid side effects
