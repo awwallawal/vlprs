@@ -10,7 +10,8 @@ export type ObservationType =
   | 'three_way_variance'
   | 'manual_exception'
   | 'inactive_loan'
-  | 'post_completion_deduction';
+  | 'post_completion_deduction'
+  | 'within_file_duplicate';
 
 export type ObservationStatus = 'unreviewed' | 'reviewed' | 'resolved' | 'promoted';
 

@@ -149,6 +149,7 @@ describe('executiveSummaryReportService', () => {
         rate_variance: 5, stalled_balance: 3, negative_balance: 2, multi_mda: 1,
         no_approval_match: 4, consecutive_loan: 2, period_overlap: 1,
         grade_tier_mismatch: 3, three_way_variance: 2, manual_exception: 1, inactive_loan: 1, post_completion_deduction: 0,
+        within_file_duplicate: 0,
       },
       byStatus: { unreviewed: 10, reviewed: 5, resolved: 8, promoted: 2 },
     });

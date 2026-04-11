@@ -494,3 +494,98 @@ describe('14.9: MDA_OFFICER scoped access verification', () => {
     expect(extensionArray[extensionArray.length - 1].extendedBy).toBe(adminUserId);
   });
 });
+
+// ─── Story 15.0m review-path guard (review finding H1) ────────────
+
+describe('15.0m H1: baselineReviewedRecords blocks within-file duplicates in the flagged partition', () => {
+  it('throws 422 WITHIN_FILE_DUPLICATES_DETECTED when two flagged records collapse to the same person+period', async () => {
+    // Fresh upload, fresh MDA — avoid polluting the shared fixture
+    const dupMdaId = generateUuidv7();
+    const dupUploadId = generateUuidv7();
+    const dupAdminId = generateUuidv7();
+    const dupRec1Id = generateUuidv7();
+    const dupRec2Id = generateUuidv7();
+
+    await db.insert(mdas).values({
+      id: dupMdaId,
+      name: 'H1 Review Guard MDA',
+      code: 'REV-H1',
+      abbreviation: 'H1',
+      isActive: true,
+    });
+
+    await db.insert(users).values({
+      id: dupAdminId,
+      email: `h1-admin-${dupAdminId.slice(0, 8)}@vlprs.test`,
+      hashedPassword: await hashPassword('Password1!'),
+      firstName: 'H1',
+      lastName: 'Admin',
+      role: 'dept_admin',
+      mustChangePassword: false,
+      isActive: true,
+    });
+
+    await db.insert(migrationUploads).values({
+      id: dupUploadId,
+      mdaId: dupMdaId,
+      uploadedBy: dupAdminId,
+      filename: 'h1-guard.xlsx',
+      fileSizeBytes: 2048,
+      status: 'validated',
+    });
+
+    // Both flagged for review, both corrected, both reviewed — eligible for
+    // baselineReviewedRecords(). Same staff + period → guard must block.
+    const flaggedAt = new Date();
+    const deadline = new Date(flaggedAt.getTime() + 14 * 24 * 60 * 60 * 1000);
+    const commonFlagFields = {
+      ...baseRecord,
+      uploadId: dupUploadId,
+      mdaId: dupMdaId,
+      periodYear: 2024,
+      periodMonth: 8,
+      varianceCategory: 'significant_variance' as const,
+      varianceAmount: '8000.00',
+      flaggedForReviewAt: flaggedAt,
+      reviewWindowDeadline: deadline,
+      correctedBy: dupAdminId,
+      correctionReason: 'Verified against source payroll',
+      correctedOutstandingBalance: '48000.00',
+    };
+    await db.insert(migrationRecords).values([
+      {
+        id: dupRec1Id,
+        ...commonFlagFields,
+        rowNumber: 10,
+        sourceRow: 10,
+        staffName: 'ADEBAYO OLUSEGUN',
+        employeeNo: 'H1-DUP-001',
+      },
+      {
+        id: dupRec2Id,
+        ...commonFlagFields,
+        rowNumber: 11,
+        sourceRow: 11,
+        staffName: 'Adebayo Olusegun',
+        employeeNo: 'H1-DUP-001',
+      },
+    ]);
+
+    await expect(
+      baselineReviewedRecords(dupUploadId, dupMdaId, dupAdminId, 'dept_admin'),
+    ).rejects.toMatchObject({
+      statusCode: 422,
+      code: 'WITHIN_FILE_DUPLICATES_DETECTED',
+    });
+
+    // Confirm neither record was baselined (invariant: guard must fire before
+    // any createBaseline() call).
+    const rows = await db
+      .select({ id: migrationRecords.id, isBaselineCreated: migrationRecords.isBaselineCreated })
+      .from(migrationRecords)
+      .where(sql`${migrationRecords.uploadId} = ${dupUploadId}`);
+    for (const r of rows) {
+      expect(r.isBaselineCreated).toBe(false);
+    }
+  });
+});

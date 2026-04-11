@@ -11,6 +11,7 @@ import type { VarianceCategory, ValidationSummary, ValidationResultRecord, Migra
 import { computeRepaymentSchedule, computeSchemeExpected, inferTenureFromRate } from './computationEngine';
 import { detectMultiMda } from '../migration/mdaDelineation';
 import * as deduplicationService from './deduplicationService';
+import { generateWithinFileDuplicateObservations } from './observationEngine';
 import { trackFireAndForget } from './fireAndForgetTracking';
 
 // Configure decimal.js for financial precision (consistent with computationEngine)
@@ -432,6 +433,13 @@ export async function validateUpload(
   // Fire-and-forget: auto-trigger duplicate detection (after tx commit)
   void trackFireAndForget(deduplicationService.detectCrossFileDuplicates(mdaScope).catch((err) =>
     console.error(`Auto dedup detection failed for upload ${uploadId}:`, err),
+  ));
+
+  // Story 15.0m (finding M1): surface within-file duplicate observations BEFORE
+  // the user clicks Baseline, so the Observations tab has something to drill
+  // into if the guard later blocks. Fire-and-forget — never blocks validation.
+  void trackFireAndForget(generateWithinFileDuplicateObservations(uploadId).catch((err) =>
+    console.error(`Within-file dedup observation generation failed for upload ${uploadId}:`, err),
   ));
 
   return summary;

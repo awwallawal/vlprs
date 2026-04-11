@@ -378,3 +378,72 @@ describe('observationEngine integration — detectPeriodOverlap', () => {
     expect(overlapObs).toHaveLength(1);
   });
 });
+
+// ─── detectWithinFileDuplicates (Story 15.0m) ─────────────────────
+
+describe('observationEngine integration — detectWithinFileDuplicates', () => {
+  it('generates an observation when same staff + period appears twice in upload', async () => {
+    const uploadId = await seedUploadWithRecords({
+      periodYear: 2024,
+      periodMonth: 8,
+      records: [
+        { staffName: 'ADEBAYO OLUSEGUN', employeeNo: 'EMP-DUP-1' },
+        { staffName: 'Adebayo Olusegun', employeeNo: 'EMP-DUP-1' },
+      ],
+    });
+
+    const result = await generateObservations(uploadId, testUserId);
+
+    const dupObs = await db
+      .select()
+      .from(observations)
+      .where(eq(observations.type, 'within_file_duplicate'));
+
+    expect(dupObs).toHaveLength(1);
+    expect(dupObs[0].staffName).toBe('ADEBAYO OLUSEGUN');
+    expect(dupObs[0].description).toContain('2 times');
+    expect(dupObs[0].description).toContain('2024-08');
+    expect(result.byType.within_file_duplicate).toBe(1);
+  });
+
+  it('generates no observation when no duplicates exist in the upload', async () => {
+    const uploadId = await seedUploadWithRecords({
+      periodYear: 2024,
+      periodMonth: 8,
+      records: [
+        { staffName: 'BELLO AMINAT', employeeNo: 'EMP-A' },
+        { staffName: 'OJO ADEBAYO', employeeNo: 'EMP-B' },
+      ],
+    });
+
+    await generateObservations(uploadId, testUserId);
+
+    const dupObs = await db
+      .select()
+      .from(observations)
+      .where(eq(observations.type, 'within_file_duplicate'));
+
+    expect(dupObs).toHaveLength(0);
+  });
+
+  it('is idempotent — running twice does not create a second observation', async () => {
+    const uploadId = await seedUploadWithRecords({
+      periodYear: 2024,
+      periodMonth: 8,
+      records: [
+        { staffName: 'ADEBAYO OLUSEGUN', employeeNo: 'EMP-DUP-1' },
+        { staffName: 'ADEBAYO OLUSEGUN', employeeNo: 'EMP-DUP-1' },
+      ],
+    });
+
+    await generateObservations(uploadId, testUserId);
+    await generateObservations(uploadId, testUserId);
+
+    const dupObs = await db
+      .select()
+      .from(observations)
+      .where(eq(observations.type, 'within_file_duplicate'));
+
+    expect(dupObs).toHaveLength(1);
+  });
+});

@@ -18,7 +18,7 @@ const OBSERVATION_TYPES: ObservationType[] = [
   'rate_variance', 'stalled_balance', 'negative_balance', 'multi_mda',
   'no_approval_match', 'consecutive_loan', 'period_overlap',
   'grade_tier_mismatch', 'three_way_variance', 'manual_exception', 'inactive_loan',
-  'post_completion_deduction',
+  'post_completion_deduction', 'within_file_duplicate',
 ];
 
 const ATTENTION_ITEM_TYPES: AttentionItemType[] = [

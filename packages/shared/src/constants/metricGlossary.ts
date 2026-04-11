@@ -91,6 +91,12 @@ export const OBSERVATION_HELP: Record<ObservationType, MetricDefinition> = {
     derivedFrom: 'Cross-reference of submission rows against loans with COMPLETED status.',
     guidance: 'Notify the MDA to cease deductions immediately. Issue Auto-Stop Certificate if not already generated.',
   },
+  within_file_duplicate: {
+    label: 'Within-File Duplicate',
+    description: 'The same staff member appears more than once in the same upload for the same reporting period.',
+    derivedFrom: 'Grouping of migration records by normalised staff name and period within a single upload.',
+    guidance: 'Review the affected entries to determine if records should be merged, one removed, or if they represent distinct individuals with similar names.',
+  },
 };
 
 /**

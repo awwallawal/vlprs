@@ -22,6 +22,7 @@ import { buildTimelines } from './staffProfileService';
 import { RATE_TOLERANCE } from './migrationValidationService';
 import { getTierForGradeLevel } from '@vlprs/shared';
 import type { ObservationType } from '@vlprs/shared';
+import { normalizeName } from '../migration/nameMatch';
 
 // Accelerated rate-to-tenure mapping (derived from KNOWN_RATE_TIERS minus 13.33% standard)
 // Formula: rate = 13.33% × tenure / 60
@@ -165,10 +166,64 @@ export async function generateObservations(
   const gradeTierObs = detectGradeTierMismatch(records, mdaMap, uploadId);
   allObservations.push(...gradeTierObs);
 
+  // Within-File Duplicate: same staff + period appearing more than once in a single upload
+  const withinFileDupObs = detectWithinFileDuplicates(records, mdaMap, uploadId);
+  allObservations.push(...withinFileDupObs);
+
   // Batch insert with idempotency guard
   const { generated, skipped, byType } = await batchInsertObservations(allObservations, uploadId);
 
   return { generated, skipped, byType };
+}
+
+/**
+ * Lightweight pre-baseline helper (Story 15.0m, finding M1).
+ *
+ * Runs ONLY the within-file duplicate detector against an upload and inserts
+ * any resulting observations. Called fire-and-forget from validation so the
+ * Observations tab surfaces same-person-same-period conflicts BEFORE the
+ * user clicks Baseline — otherwise the baseline guard's 422 is the user's
+ * only signal and they have nowhere to drill into.
+ *
+ * Idempotent: the `(type, migration_record_id)` unique index dedupes reruns.
+ */
+export async function generateWithinFileDuplicateObservations(
+  uploadId: string,
+): Promise<{ generated: number; skipped: number }> {
+  const [upload] = await db
+    .select({ id: migrationUploads.id })
+    .from(migrationUploads)
+    .where(eq(migrationUploads.id, uploadId))
+    .limit(1);
+  if (!upload) return { generated: 0, skipped: 0 };
+
+  const records = await db
+    .select({
+      id: migrationRecords.id,
+      staffName: migrationRecords.staffName,
+      mdaId: migrationRecords.mdaId,
+      periodYear: migrationRecords.periodYear,
+      periodMonth: migrationRecords.periodMonth,
+      employeeNo: migrationRecords.employeeNo,
+      sourceFile: migrationRecords.sourceFile,
+      sourceSheet: migrationRecords.sourceSheet,
+      sourceRow: migrationRecords.sourceRow,
+    })
+    .from(migrationRecords)
+    .where(eq(migrationRecords.uploadId, uploadId));
+
+  if (records.length === 0) return { generated: 0, skipped: 0 };
+
+  const mdaIds = [...new Set(records.map((r) => r.mdaId))];
+  const mdaRows = await db
+    .select({ id: mdas.id, name: mdas.name, code: mdas.code })
+    .from(mdas)
+    .where(inArray(mdas.id, mdaIds));
+  const mdaMap = new Map(mdaRows.map((m) => [m.id, m]));
+
+  const withinFileDupObs = detectWithinFileDuplicates(records, mdaMap, uploadId);
+  const { generated, skipped } = await batchInsertObservations(withinFileDupObs, uploadId);
+  return { generated, skipped };
 }
 
 // ─── Rate Variance Detector ─────────────────────────────────────────
@@ -1028,6 +1083,140 @@ export function detectGradeTierMismatch(
         file: r.sourceFile,
         sheet: r.sourceSheet,
         row: r.sourceRow,
+      },
+    });
+  }
+
+  return result;
+}
+
+// ─── Within-File Duplicate Detector (Story 15.0m) ───────────────────
+
+/**
+ * A group of records sharing a normalised name + period within one upload.
+ * `isDistinctByEmployeeNo` is true when every record has a non-null
+ * `employeeNo` AND those IDs are all distinct — that's a confident signal of
+ * distinct individuals with similar names, and the group is skipped.
+ */
+type WithinFileDuplicateRecord = {
+  id: string;
+  staffName: string;
+  mdaId: string;
+  periodYear: number | null;
+  periodMonth: number | null;
+  employeeNo: string | null;
+  sourceFile: string;
+  sourceSheet: string;
+  sourceRow: number;
+};
+
+export interface WithinFileDuplicateGroup {
+  staffName: string;
+  period: string;
+  count: number;
+  recordIds: string[];
+  mdaId: string;
+}
+
+/**
+ * Group upload records by (normalised staff name + period). Returns only
+ * groups with size ≥ 2 that aren't explained away by distinct employeeNos.
+ *
+ * Name normalisation is delegated to `normalizeName()` (same helper used by
+ * the cross-MDA dedup engine), so honorifics (MRS, DR, CHIEF, ALHAJI…),
+ * parenthetical suffixes `(LATE)`, interior whitespace, and trailing
+ * punctuation are all collapsed before comparison.
+ *
+ * Records without a resolvable period are excluded (cannot be duplicates of
+ * an unknown period).
+ */
+export function findWithinFileDuplicateGroups(
+  records: ReadonlyArray<WithinFileDuplicateRecord>,
+): Array<{ group: WithinFileDuplicateRecord[]; period: string }> {
+  const groups = new Map<string, WithinFileDuplicateRecord[]>();
+  for (const record of records) {
+    if (record.periodYear === null || record.periodMonth === null) continue;
+    const nameKey = normalizeName(record.staffName);
+    if (!nameKey) continue;
+    const key = `${nameKey}::${record.periodYear}-${String(record.periodMonth).padStart(2, '0')}`;
+    const existing = groups.get(key);
+    if (existing) {
+      existing.push(record);
+    } else {
+      groups.set(key, [record]);
+    }
+  }
+
+  const result: Array<{ group: WithinFileDuplicateRecord[]; period: string }> = [];
+  for (const [key, group] of groups) {
+    if (group.length < 2) continue;
+
+    // Escape hatch: if every record has a non-null employeeNo AND all those
+    // IDs are distinct, they are almost certainly distinct staff members who
+    // happen to share a common Nigerian name. Don't flag.
+    const empNos = group.map((r) => r.employeeNo);
+    const allHaveId = empNos.every((e) => e !== null && e.trim() !== '');
+    if (allHaveId) {
+      const distinctIds = new Set(empNos);
+      if (distinctIds.size === group.length) continue;
+    }
+
+    const period = key.split('::')[1];
+    result.push({ group, period });
+  }
+  return result;
+}
+
+/**
+ * Detect when the same staff member appears multiple times in the same upload
+ * for the same reporting period. Pre-baseline data integrity check — silently
+ * creating two loans for one person is worse than flagging and asking.
+ */
+export function detectWithinFileDuplicates(
+  records: Array<WithinFileDuplicateRecord>,
+  mdaMap: Map<string, { id: string; name: string; code: string }>,
+  uploadId: string,
+): ObservationInsert[] {
+  const duplicateGroups = findWithinFileDuplicateGroups(records);
+
+  const result: ObservationInsert[] = [];
+  for (const { group, period } of duplicateGroups) {
+    const first = group[0];
+    const mdaName = mdaMap.get(first.mdaId)?.name ?? 'Unknown MDA';
+    const rowNumbers = group.map((r) => r.sourceRow).filter((n) => n > 0);
+
+    result.push({
+      type: 'within_file_duplicate',
+      staffName: first.staffName,
+      staffId: first.employeeNo,
+      loanId: null,
+      mdaId: first.mdaId,
+      migrationRecordId: first.id,
+      uploadId,
+      description: `${first.staffName} appears ${group.length} times in this upload for ${period}. Review to determine if entries should be merged or removed before baseline creation.`,
+      context: {
+        possibleExplanations: [
+          'Data entry variance — the same person entered more than once in the source file',
+          'Duplicate row carried over from the source spreadsheet',
+          'Same person with multiple loans in the same period, requiring manual review',
+          'Distinct individuals with similar names after normalisation',
+        ],
+        suggestedAction: `Review all ${group.length} entries for ${first.staffName} in ${period} at ${mdaName}. Remove duplicates or confirm as distinct before baseline creation.`,
+        dataCompleteness: 100,
+        completenessNote: `All ${group.length} matching records for this staff member and period reviewed from the same upload.`,
+        dataPoints: {
+          staffName: first.staffName,
+          period,
+          duplicateCount: group.length,
+          recordIds: group.map((r) => r.id),
+          rowNumbers,
+          mdaName,
+        },
+      },
+      sourceReference: {
+        file: first.sourceFile,
+        sheet: first.sourceSheet,
+        row: first.sourceRow,
       },
     });
   }

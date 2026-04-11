@@ -6,6 +6,7 @@ import { VOCABULARY } from '@vlprs/shared';
 import type { FlaggedRecordSummary, MdaReviewProgress, CountdownStatus } from '@vlprs/shared';
 import { correctRecord, getRecordDetail } from './migrationValidationService';
 import { generateObservations } from './observationEngine';
+import { assertNoWithinFileDuplicates } from './baselineService';
 import { logger } from '../lib/logger';
 import { trackFireAndForget } from './fireAndForgetTracking';
 import type { MigrationRecordDetail } from '@vlprs/shared';
@@ -340,12 +341,30 @@ export async function baselineReviewedRecords(
     conditions.push(eq(migrationRecords.mdaId, mdaScope));
   }
 
-  // Select reviewed record IDs without locking — each createBaseline() call
-  // manages its own transaction and row locks internally
-  const reviewedRecords = await db
-    .select({ id: migrationRecords.id })
+  // Story 15.0m: Block reviewed-records baseline if any flagged records
+  // within this upload collapse to the same person + period. The auto-
+  // baseline guard in createBatchBaseline() covers the clean/minor
+  // partition; this guard covers the flagged-for-review partition so
+  // both baseline stages honour the "never silently create two loans"
+  // invariant. Fetches the columns assertNoWithinFileDuplicates() needs.
+  const reviewedRecordsFull = await db
+    .select({
+      id: migrationRecords.id,
+      staffName: migrationRecords.staffName,
+      mdaId: migrationRecords.mdaId,
+      periodYear: migrationRecords.periodYear,
+      periodMonth: migrationRecords.periodMonth,
+      employeeNo: migrationRecords.employeeNo,
+      sourceFile: migrationRecords.sourceFile,
+      sourceSheet: migrationRecords.sourceSheet,
+      sourceRow: migrationRecords.sourceRow,
+    })
     .from(migrationRecords)
     .where(and(...conditions));
+
+  assertNoWithinFileDuplicates(reviewedRecordsFull);
+
+  const reviewedRecords = reviewedRecordsFull.map((r) => ({ id: r.id }));
 
   let baselinedCount = 0;
   const actingUser = { userId, role: userRole, mdaId: mdaScope ?? null };

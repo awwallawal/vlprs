@@ -651,6 +651,108 @@ describe('Baseline Integration Tests (Story 3.4 AC 7)', () => {
       expect(data.skippedRecords[0].reason).toContain('exceeds');
     });
 
+    it('batch baseline blocks upload with within-file duplicates (Story 15.0m)', async () => {
+      const dupUploadId = generateUuidv7();
+      await db.insert(migrationUploads).values({
+        id: dupUploadId,
+        mdaId: testMdaId,
+        uploadedBy: testUserId,
+        filename: 'within-file-dup.xlsx',
+        fileSizeBytes: 1024,
+        sheetCount: 1,
+        totalRecords: 2,
+        status: 'validated',
+      });
+
+      const baseDupRecord = {
+        uploadId: dupUploadId,
+        mdaId: testMdaId,
+        sheetName: 'Sheet1',
+        era: 2023,
+        periodYear: 2024,
+        periodMonth: 8,
+        principal: PRINCIPAL,
+        totalLoan: TOTAL_LOAN,
+        monthlyDeduction: '9444.17',
+        installmentCount: 60,
+        computedRate: RATE,
+        varianceCategory: 'clean' as const,
+        varianceAmount: '0.00',
+        hasRateVariance: false,
+        outstandingBalance: OUTSTANDING_1,
+        sourceFile: 'within-file-dup.xlsx',
+        sourceSheet: 'Sheet1',
+      };
+
+      await db.insert(migrationRecords).values([
+        {
+          ...baseDupRecord,
+          id: generateUuidv7(),
+          rowNumber: 2,
+          staffName: 'ADEBAYO OLUSEGUN',
+          employeeNo: 'DUP-001',
+          sourceRow: 15,
+        },
+        {
+          ...baseDupRecord,
+          id: generateUuidv7(),
+          rowNumber: 3,
+          staffName: 'Adebayo Olusegun',
+          employeeNo: 'DUP-001',
+          sourceRow: 42,
+        },
+      ]);
+
+      const res = await request(app)
+        .post(`/api/migrations/${dupUploadId}/baseline`)
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({ confirm: true });
+
+      expect(res.status).toBe(422);
+      const code = res.body.error?.code || res.body.code;
+      expect(code).toBe('WITHIN_FILE_DUPLICATES_DETECTED');
+      const message = res.body.error?.message || res.body.message;
+      expect(message).toContain('ADEBAYO OLUSEGUN');
+      expect(message).toContain('2024-08');
+      expect(message).toContain('Baseline creation blocked');
+
+      // Review M2: structured details must include the full duplicate group
+      // so the frontend can render a resolution table, not just guess from
+      // the single-example error string.
+      const details = res.body.error?.details as Array<{
+        staffName: string;
+        period: string;
+        count: number;
+        recordIds: string[];
+      }> | undefined;
+      expect(Array.isArray(details)).toBe(true);
+      expect(details).toHaveLength(1);
+      expect(details![0].staffName).toBe('ADEBAYO OLUSEGUN');
+      expect(details![0].period).toBe('2024-08');
+      expect(details![0].count).toBe(2);
+      expect(details![0].recordIds).toHaveLength(2);
+
+      // Confirm no loans created for this upload
+      const linkedRecords = await db
+        .select()
+        .from(migrationRecords)
+        .where(eq(migrationRecords.uploadId, dupUploadId));
+      expect(linkedRecords.every((r) => r.isBaselineCreated === false)).toBe(true);
+
+      // After removing one duplicate, baseline should proceed (AC 4)
+      await db
+        .delete(migrationRecords)
+        .where(eq(migrationRecords.id, linkedRecords[1].id));
+
+      const retryRes = await request(app)
+        .post(`/api/migrations/${dupUploadId}/baseline`)
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({ confirm: true });
+
+      expect(retryRes.status).toBe(201);
+      expect(retryRes.body.data.loansCreated).toBe(1);
+    });
+
     it('corrected outstanding balance that is valid allows baseline through', async () => {
       // Create record with bad declared outstanding but corrected to valid value
       const correctedRecordId = generateUuidv7();
