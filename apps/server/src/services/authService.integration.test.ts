@@ -18,6 +18,9 @@ beforeAll(async () => {
 });
 
 beforeEach(async () => {
+  // Drain fire-and-forget writes (audit middleware) before truncating to prevent FK race
+  const { drainFireAndForgetWrites } = await import('./fireAndForgetTracking');
+  await drainFireAndForgetWrites();
   // Truncate user-scoped tables only, preserving MDA created in beforeAll.
   // Table order matches resetDb() to prevent lock-ordering deadlocks.
   await db.execute(sql`TRUNCATE refresh_tokens, audit_log, users CASCADE`);

@@ -107,6 +107,17 @@ router.get(
   },
 );
 
+// GET /api/migrations/duplicates/:candidateId/records — Detail records for side-by-side comparison
+router.get(
+  '/migrations/duplicates/:candidateId/records',
+  ...adminAuth,
+  async (req: Request, res: Response) => {
+    const candidateId = param(req.params.candidateId);
+    const result = await deduplicationService.getDuplicateRecordDetail(candidateId, req.mdaScope);
+    res.json({ success: true, data: result });
+  },
+);
+
 // PATCH /api/migrations/duplicates/:id/resolve — Resolve a duplicate candidate
 router.patch(
   '/migrations/duplicates/:id/resolve',

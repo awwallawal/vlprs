@@ -38,6 +38,8 @@ beforeAll(async () => {
 
 beforeEach(async () => {
   resetRateLimiters();
+  const { drainFireAndForgetWrites } = await import('../services/fireAndForgetTracking');
+  await drainFireAndForgetWrites();
   await db.execute(sql`TRUNCATE refresh_tokens, audit_log, users CASCADE`);
 });
 

@@ -247,6 +247,12 @@ beforeAll(async () => {
 
   const certNoOfficers = await generateCertificate(testLoanNoOfficers);
   certNoOfficersId = certNoOfficers.id;
+
+  // generateCertificate() fires sendAutoStopNotifications as fire-and-forget.
+  // Drain those before tests run so mockClear() can reset to a clean state —
+  // otherwise queued notifications can land mid-test and inflate the call count.
+  const { drainFireAndForgetWrites } = await import('./fireAndForgetTracking');
+  await drainFireAndForgetWrites();
 });
 
 afterAll(async () => {

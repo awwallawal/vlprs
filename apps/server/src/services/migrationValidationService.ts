@@ -10,6 +10,8 @@ import { VOCABULARY, inferTierFromPrincipal } from '@vlprs/shared';
 import type { VarianceCategory, ValidationSummary, ValidationResultRecord, MigrationRecordDetail } from '@vlprs/shared';
 import { computeRepaymentSchedule, computeSchemeExpected, inferTenureFromRate } from './computationEngine';
 import { detectMultiMda } from '../migration/mdaDelineation';
+import * as deduplicationService from './deduplicationService';
+import { trackFireAndForget } from './fireAndForgetTracking';
 
 // Configure decimal.js for financial precision (consistent with computationEngine)
 Decimal.set({ precision: 20, rounding: Decimal.ROUND_HALF_UP });
@@ -426,6 +428,11 @@ export async function validateUpload(
       })
       .where(eq(migrationUploads.id, uploadId));
   });
+
+  // Fire-and-forget: auto-trigger duplicate detection (after tx commit)
+  void trackFireAndForget(deduplicationService.detectCrossFileDuplicates(mdaScope).catch((err) =>
+    console.error(`Auto dedup detection failed for upload ${uploadId}:`, err),
+  ));
 
   return summary;
 }

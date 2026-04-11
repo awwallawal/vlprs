@@ -389,6 +389,28 @@ export interface DuplicateCandidate {
   createdAt: string;
 }
 
+// ─── Duplicate Record Detail (Story 15.0l) ─────────────────────────
+
+export interface DuplicateRecord {
+  id: string;
+  staffName: string;
+  staffId: string | null;
+  gradeLevel: string | null;
+  principalAmount: string | null;
+  totalLoan: string | null;
+  monthlyDeduction: string | null;
+  outstandingBalance: string | null;
+  periodMonth: number | null;
+  periodYear: number | null;
+  varianceCategory: string | null;
+}
+
+export interface DuplicateRecordDetail {
+  candidate: DuplicateCandidate;
+  parentRecords: DuplicateRecord[];
+  childRecords: DuplicateRecord[];
+}
+
 // ─── Record Detail (Story 8.0b) ─────────────────────────────────────
 
 export interface MigrationRecordDetail {

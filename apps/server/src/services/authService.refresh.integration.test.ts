@@ -17,6 +17,8 @@ beforeAll(async () => {
 });
 
 beforeEach(async () => {
+  const { drainFireAndForgetWrites } = await import('./fireAndForgetTracking');
+  await drainFireAndForgetWrites();
   await db.execute(sql`TRUNCATE refresh_tokens, audit_log, users CASCADE`);
 
   const hashed = await hashPassword(testPassword);

@@ -2,7 +2,8 @@
 
 **Date discovered:** 2026-04-08
 **Discovered during:** Story 15.0i (Certificate Admin Preview) implementation, full integration suite re-run
-**Test fix applied:** ✅ 2026-04-08 (Option 1 — see below)
+**Test fix applied:** ✅ 2026-04-08 (Option 1 — partial: audit writes only)
+**Permanent fix applied:** ✅ 2026-04-11 (Story 15.0l code review — generalized to all fire-and-forget writes + beforeEach drain)
 **Open PM decision:** ⚠️ Production audit-log durability (Option 3 — for E15 retro)
 
 ---
@@ -74,6 +75,88 @@ export async function resetDb(): Promise<void> {
 This guarantees every TRUNCATE in `resetDb()` runs after every audit INSERT has settled. **The race window cannot exist.**
 
 **Production impact:** zero. `trackAuditWrite` only adds a `Set.add` + `Set.delete` per audit write; nobody reads the registry except `resetDb()` (test-only). The `void` caller semantics are preserved — production code doesn't await audit writes.
+
+## Permanent fix (2026-04-11) — generalized tracking + beforeEach drain
+
+**Discovered during Story 15.0l code review.** The 2026-04-08 fix only covered audit writes and only drained in `resetDb()` (i.e. `beforeAll`/`afterAll`). Two gaps remained:
+
+1. **Other fire-and-forget DB writes were not tracked at all.** A grep turned up 7 additional fire-and-forget call sites — `generateObservations` (3 sites), `generateCertificate` (2 sites), `sendAutoStopNotifications`, `detectCrossFileDuplicates`, plus `checkAndTriggerAutoStop`. Any test that exercised these code paths could race the next `resetDb()` exactly the same way audit writes did.
+2. **`beforeEach` hooks with custom `TRUNCATE` did not drain.** 21 integration test files do their own targeted `TRUNCATE` in `beforeEach` for speed. 6 of those truncate `users` or `audit_log` after running HTTP requests through supertest — meaning the audit middleware's fire-and-forget INSERT could be in flight when `beforeEach` truncated. The drain in `resetDb()` did not run for these.
+
+### What changed
+
+**1. Module renamed and generalized:** `apps/server/src/services/auditTracking.ts` → `apps/server/src/services/fireAndForgetTracking.ts`
+
+- New API names: `trackFireAndForget`, `drainFireAndForgetWrites`, `pendingFireAndForgetCount`.
+- Old API names re-exported as aliases from `auditTracking.ts` for backward compatibility — no consumer was forced to update at the same time.
+- Behavior is identical; only the scope (audit-only → all fire-and-forget) and naming changed.
+
+**2. All 8 fire-and-forget DB write call sites now wrapped:**
+
+| File | Line | Call |
+|---|---|---|
+| `services/baselineService.ts` | 437 | `checkAndTriggerAutoStop()` after single baseline |
+| `services/baselineService.ts` | 442 | `generateObservations()` after single baseline |
+| `services/baselineService.ts` | 666 | `generateObservations()` after batch baseline |
+| `services/mdaReviewService.ts` | 364 | `generateObservations()` after admin-verify baseline |
+| `services/autoStopService.ts` | 164 | `generateCertificate()` after auto-stop trigger (loop) |
+| `services/autoStopService.ts` | 265 | `generateCertificate()` after auto-stop trigger (inline) |
+| `services/autoStopCertificateService.ts` | 167 | `sendAutoStopNotifications()` after cert generation |
+| `services/migrationValidationService.ts` | 433 | `detectCrossFileDuplicates()` after validation |
+
+Pattern: `void trackFireAndForget(someAsync(...).catch(...))`. Caller-facing semantics unchanged — the wrapped promise is the same instance, just registered.
+
+**3. Six high-risk `beforeEach` hooks now drain before truncating:**
+
+| File | Why high-risk |
+|---|---|
+| `routes/userRoutes.integration.test.ts` | Truncates `users` after HTTP requests |
+| `routes/auditLog.integration.test.ts` | Truncates `audit_log` after HTTP requests |
+| `routes/authRoutes.integration.test.ts` | Truncates `users` after auth flows |
+| `routes/authRoutes.refresh.integration.test.ts` | Truncates `users` after refresh flows |
+| `services/authService.integration.test.ts` | Truncates `users` after `logAuthEvent` calls |
+| `services/authService.refresh.integration.test.ts` | Truncates `users` after `logAuthEvent` calls |
+
+Pattern: `await drainFireAndForgetWrites()` immediately before the custom `TRUNCATE`.
+
+**4. The dedup integration test no longer uses `setTimeout` to wait for the auto-trigger** — it calls `drainFireAndForgetWrites()` instead, which is deterministic.
+
+### Production impact
+
+Still zero. `trackFireAndForget` adds one `Set.add` + one `Set.delete` per fire-and-forget write. Nobody reads the registry in production code. The `void` calling convention is preserved everywhere.
+
+### Verification
+
+- **Unit:** `auditTracking.test.ts` — 8/8 pass (renamed to test new API + backward-compat aliases).
+- **Integration (single run):** 44/44 files, 632/632 tests pass.
+- **Integration (back-to-back run):** 44/44 files, 632/632 tests pass.
+
+### Files changed by the permanent fix
+
+| File | Action |
+|---|---|
+| `services/fireAndForgetTracking.ts` | **NEW** — generalized registry, exposes `trackFireAndForget`/`drainFireAndForgetWrites`/`pendingFireAndForgetCount` plus backward-compat aliases |
+| `services/auditTracking.ts` | Re-exports from `fireAndForgetTracking.ts` for backward compatibility |
+| `services/auditTracking.test.ts` | Updated to test new API names + alias parity |
+| `services/baselineService.ts` | Wrapped 3 fire-and-forget calls (lines 437, 442, 666) |
+| `services/mdaReviewService.ts` | Wrapped 1 fire-and-forget call (line 364) |
+| `services/autoStopService.ts` | Wrapped 2 fire-and-forget calls (lines 164, 265) |
+| `services/autoStopCertificateService.ts` | Wrapped 1 fire-and-forget call (line 167) |
+| `services/migrationValidationService.ts` | Wrapped 1 fire-and-forget call (line 433) |
+| `services/deduplication.integration.test.ts` | Replaced `setTimeout(500)` with `drainFireAndForgetWrites()` |
+| `test/resetDb.ts` | Imports + calls `drainFireAndForgetWrites` (renamed from audit-only) |
+| `routes/userRoutes.integration.test.ts` | `beforeEach` drains before TRUNCATE |
+| `routes/auditLog.integration.test.ts` | `beforeEach` drains before TRUNCATE |
+| `routes/authRoutes.integration.test.ts` | `beforeEach` drains before TRUNCATE |
+| `routes/authRoutes.refresh.integration.test.ts` | `beforeEach` drains before TRUNCATE |
+| `services/authService.integration.test.ts` | `beforeEach` drains before TRUNCATE |
+| `services/authService.refresh.integration.test.ts` | `beforeEach` drains before TRUNCATE |
+
+### Forward guard (team agreement candidate)
+
+Any new fire-and-forget DB write **must** be wrapped in `trackFireAndForget(...)`. Any new integration test that does a custom `TRUNCATE` in `beforeEach` **must** call `drainFireAndForgetWrites()` first. Suggest adding a one-line check to the code review checklist for E15+ retros.
+
+---
 
 ## Open question for PM (Option 3 — to discuss at E15 retro)
 

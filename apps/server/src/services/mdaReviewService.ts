@@ -7,6 +7,7 @@ import type { FlaggedRecordSummary, MdaReviewProgress, CountdownStatus } from '@
 import { correctRecord, getRecordDetail } from './migrationValidationService';
 import { generateObservations } from './observationEngine';
 import { logger } from '../lib/logger';
+import { trackFireAndForget } from './fireAndForgetTracking';
 import type { MigrationRecordDetail } from '@vlprs/shared';
 
 // ─── Review Window Helpers ──────────────────────────────────────────
@@ -360,9 +361,9 @@ export async function baselineReviewedRecords(
 
   // Story 15.0b: Fire-and-forget observation generation once for all newly baselined records
   if (baselinedCount > 0) {
-    generateObservations(uploadId, userId).catch((err) =>
+    void trackFireAndForget(generateObservations(uploadId, userId).catch((err) =>
       logger.error({ err, uploadId }, 'Observation generation failed after reviewed baseline'),
-    );
+    ));
   }
 
   return { baselinedCount };

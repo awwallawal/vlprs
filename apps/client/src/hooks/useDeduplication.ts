@@ -9,6 +9,7 @@ import { apiClient } from '@/lib/apiClient';
 import type {
   DelineationResult,
   DuplicateCandidate,
+  DuplicateRecordDetail,
   DuplicateResolution,
 } from '@vlprs/shared';
 
@@ -118,6 +119,18 @@ export function useResolveDuplicate() {
       queryClient.invalidateQueries({ queryKey: ['migration', 'status'] });
       queryClient.invalidateQueries({ queryKey: ['migration', 'dashboard', 'metrics'] });
     },
+  });
+}
+
+export function useDuplicateRecordDetail(candidateId: string | null) {
+  return useQuery<DuplicateRecordDetail>({
+    queryKey: ['duplicates', candidateId, 'records'],
+    queryFn: () =>
+      apiClient<DuplicateRecordDetail>(
+        `/migrations/duplicates/${candidateId}/records`,
+      ),
+    enabled: !!candidateId,
+    staleTime: 60_000,
   });
 }
 
