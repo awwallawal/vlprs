@@ -99,6 +99,30 @@ export interface SupersedeResponse {
   observationsRegenerated: boolean;
 }
 
+// ─── Supersede Comparison (Story 15.0n) ────────────────────────────
+
+export interface FieldChange {
+  field: string;
+  oldValue: string | null;
+  newValue: string | null;
+}
+
+export interface ModifiedRecordDiff {
+  staffName: string;
+  staffId: string | null;
+  changes: FieldChange[];
+}
+
+export interface SupersedeComparisonResult {
+  unchanged: number;
+  modified: number;
+  newRecords: number;
+  removed: number;
+  modifiedDetails: ModifiedRecordDiff[];
+  newDetails: Array<{ staffName: string; staffId: string | null }>;
+  removedDetails: Array<{ staffName: string; staffId: string | null }>;
+}
+
 // ─── Multi-Sheet Overlap (Story 8.0d) ──────────────────────────────
 
 export interface SheetOverlapResult {

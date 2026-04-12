@@ -356,9 +356,11 @@ function CorrectionForm({ detail, uploadId }: { detail: MigrationRecordDetail; u
     if (installmentsPaid && installmentsPaid !== currentIP) corrections.installmentsPaid = Number(installmentsPaid);
     if (installmentsOutstanding && installmentsOutstanding !== currentIO) corrections.installmentsOutstanding = Number(installmentsOutstanding);
 
+    // correctionReason is mandatory for ALL corrections (Story 15.0n) —
+    // flagged or not, every change leaves an audit trail.
+    if (correctionReason.length < 10) return;
+
     if (isFlagged) {
-      // Flagged records require correctionReason (min 10 chars)
-      if (correctionReason.length < 10) return;
       reviewMutation.mutate(
         { recordId: detail.recordId, corrections, correctionReason },
         { onSuccess: () => setEditing(false) },
@@ -369,7 +371,7 @@ function CorrectionForm({ detail, uploadId }: { detail: MigrationRecordDetail; u
         return;
       }
       correctMutation.mutate(
-        { recordId: detail.recordId, corrections },
+        { recordId: detail.recordId, corrections: { ...corrections, correctionReason } },
         { onSuccess: () => setEditing(false) },
       );
     }
@@ -478,24 +480,22 @@ function CorrectionForm({ detail, uploadId }: { detail: MigrationRecordDetail; u
         </div>
       )}
 
-      {/* Correction reason — required for flagged records */}
-      {isFlagged && (
-        <div>
-          <label className="text-xs text-text-secondary block mb-1">
-            Additional context <span className="text-amber-600">(required, min 10 characters)</span>
-          </label>
-          <textarea
-            value={correctionReason}
-            onChange={(e) => setCorrectionReason(e.target.value)}
-            placeholder="Explain why these values are being corrected..."
-            rows={2}
-            className="w-full px-2 py-1.5 text-sm border border-border rounded focus:outline-none focus:ring-1 focus:ring-teal resize-none"
-          />
-          {correctionReason.length > 0 && correctionReason.length < 10 && (
-            <p className="text-[11px] text-amber-600 mt-0.5">{10 - correctionReason.length} more character{10 - correctionReason.length !== 1 ? 's' : ''} needed</p>
-          )}
-        </div>
-      )}
+      {/* Correction reason — required for ALL corrections (Story 15.0n) */}
+      <div>
+        <label className="text-xs text-text-secondary block mb-1">
+          Correction reason <span className="text-amber-600">(required, min 10 characters)</span>
+        </label>
+        <textarea
+          value={correctionReason}
+          onChange={(e) => setCorrectionReason(e.target.value)}
+          placeholder="Explain why these values are being corrected..."
+          rows={2}
+          className="w-full px-2 py-1.5 text-sm border border-border rounded focus:outline-none focus:ring-1 focus:ring-teal resize-none"
+        />
+        {correctionReason.length > 0 && correctionReason.length < 10 && (
+          <p className="text-[11px] text-amber-600 mt-0.5">{10 - correctionReason.length} more character{10 - correctionReason.length !== 1 ? 's' : ''} needed</p>
+        )}
+      </div>
 
       {(correctMutation.isError || reviewMutation.isError) && (
         <p className="text-xs text-amber-600">{(correctMutation.error ?? reviewMutation.error)?.message ?? 'Correction could not be saved. Please check values and try again.'}</p>
@@ -504,7 +504,7 @@ function CorrectionForm({ detail, uploadId }: { detail: MigrationRecordDetail; u
         <button
           type="button"
           onClick={handleSave}
-          disabled={correctMutation.isPending || reviewMutation.isPending || (isFlagged && correctionReason.length < 10)}
+          disabled={correctMutation.isPending || reviewMutation.isPending || correctionReason.length < 10}
           className="px-3 py-1.5 text-xs bg-teal text-white rounded hover:bg-teal/90 disabled:opacity-50"
         >
           {(correctMutation.isPending || reviewMutation.isPending) ? 'Saving...' : 'Save Correction'}

@@ -302,7 +302,7 @@ development_status:
   15-0k-mda-beneficiary-ledger-lifecycle: done  # MEDIUM: MDA-scoped ledger with active/completed/transferred grouping — UAT #35, #37. Code review: 7 findings (2H 3M 2L) all fixed
   15-0l-duplicates-auto-trigger-drilldown: done  # MEDIUM: auto-run detection + side-by-side comparison — UAT #18, #19. Code review: 5 findings (0H 2M 2L+M3 N/A), all fixed
   15-0m-within-file-deduplication-check: done  # MEDIUM: same-person-same-period in single file — UAT #36. Three-layer defense: pre-baseline observation surface at validation (M1) + auto-baseline guard (createBatchBaseline) + review-path guard (baselineReviewedRecords, H1). normalizeName() parity with cross-MDA dedup (H2), distinct-employeeNo escape hatch (M3), structured error.details (M2), shared findWithinFileDuplicateGroups/assertNoWithinFileDuplicates helpers. Code review: 9 findings (2H 4M 3L), 8 fixed, L3 deferred (cosmetic migration name — rename risks hash drift). 16 tests total (12 original + 4 review follow-ups), migration 0044 applied
-  15-0n-supersede-data-comparison-correction-reason: ready-for-dev  # HIGH+MEDIUM: record-level diff preview + mandatory reason for all corrections — UAT #40, #42
+  15-0n-supersede-data-comparison-correction-reason: done  # HIGH+MEDIUM: record-level diff preview + mandatory reason for all corrections — UAT #40, #42. Code review: 6 findings (0H 3M 3L) all fixed
 
   # Epic 15: Beneficiary Onboarding & Verification Pipeline (Sprint 12 — after E15 prep sprint)
   # BLOCKED BY: E15 prep stories (15.0a–15.0n). All critical + high prep stories must complete before 15.1.
