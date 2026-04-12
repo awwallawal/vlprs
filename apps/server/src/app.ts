@@ -29,6 +29,7 @@ import threeWayReconciliationRoutes from './routes/threeWayReconciliationRoutes'
 import exceptionRoutes from './routes/exceptionRoutes';
 import annotationRoutes from './routes/annotationRoutes';
 import autoStopRoutes from './routes/autoStopRoutes';
+import committeeListRoutes from './routes/committeeListRoutes';
 import { AppError } from './lib/appError';
 import { VOCABULARY } from '@vlprs/shared';
 import { requestLogger } from './middleware/requestLogger';
@@ -92,6 +93,7 @@ app.use('/api', threeWayReconciliationRoutes);
 app.use('/api', annotationRoutes);
 app.use('/api', exceptionRoutes);
 app.use('/api', autoStopRoutes);
+app.use('/api', committeeListRoutes);
 
 // 404 handler
 app.use((_req: Request, res: Response) => {

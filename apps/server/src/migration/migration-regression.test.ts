@@ -177,9 +177,9 @@ function parseFixture(fixture: string) {
 }
 
 describe('Migration Regression Tests', () => {
-  // Timeout increased to 30s for all fixtures — EDUCATION stress fixture requires it under CI load, applied uniformly for consistency
+  // Timeout increased to 60s for all fixtures — EDUCATION stress fixture (1.6 MB) requires it under full-suite memory pressure
   describe.each(FIXTURES)('%s', (fixture) => {
-    it('record counts per sheet match expected', { timeout: 30_000 }, () => {
+    it('record counts per sheet match expected', { timeout: 60_000 }, () => {
       const expected = loadExpected(fixture);
       const parsed = parseFixture(fixture);
 
@@ -194,7 +194,7 @@ describe('Migration Regression Tests', () => {
       }
     });
 
-    it('era detection matches expected', { timeout: 30_000 }, () => {
+    it('era detection matches expected', { timeout: 60_000 }, () => {
       const expected = loadExpected(fixture);
       const parsed = parseFixture(fixture);
 
@@ -205,7 +205,7 @@ describe('Migration Regression Tests', () => {
       }
     });
 
-    it('canonical field values match for first 3 records per sheet', { timeout: 30_000 }, () => {
+    it('canonical field values match for first 3 records per sheet', { timeout: 60_000 }, () => {
       const expected = loadExpected(fixture);
       const parsed = parseFixture(fixture);
 

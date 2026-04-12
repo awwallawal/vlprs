@@ -6,7 +6,7 @@ export { loginSchema, registerSchema, changePasswordSchema } from './validators/
 export { createUserSchema, updateUserSchema, deactivateUserSchema, deleteUserSchema, changePasswordFormSchema } from './validators/userSchemas.js';
 export { createLoanSchema, searchLoansQuerySchema, transitionLoanSchema, updateTemporalProfileSchema, createServiceExtensionSchema } from './validators/loanSchemas.js';
 export { createLedgerEntrySchema, type CreateLedgerEntryInput } from './validators/ledgerSchemas.js';
-export { mdaQuerySchema } from './validators/mdaSchemas.js';
+export { mdaQuerySchema, createMdaAliasSchema, batchResolveMdaSchema } from './validators/mdaSchemas.js';
 export { migrationUploadQuerySchema, confirmMappingBodySchema, validationResultQuerySchema, personListQuerySchema, createBaselineBodySchema, correctMigrationRecordSchema, beneficiaryQuerySchema, coverageQuerySchema, coverageRecordsQuerySchema, coverageRecordsExportSchema, confirmDelineationSchema, resolveDuplicateSchema, duplicateListQuerySchema, checkOverlapBodySchema, submitReviewSchema, markReviewedSchema, extendWindowSchema, flaggedRecordsQuerySchema, worksheetApplySchema, rejectUploadSchema } from './validators/migrationSchemas.js';
 export { observationQuerySchema, reviewObservationSchema, resolveObservationSchema, promoteObservationSchema, generateObservationsSchema } from './validators/observationSchemas.js';
 export { flagExceptionSchema, resolveExceptionSchema, exceptionListQuerySchema } from './validators/exceptionSchemas.js';
@@ -22,6 +22,7 @@ export { flagDiscrepancySchema, type FlagDiscrepancyBody } from './validators/hi
 export { payrollConfirmSchema, payrollListQuerySchema } from './validators/payrollSchemas.js';
 export { addAnnotationSchema, correctEventFlagSchema } from './validators/annotationSchemas.js';
 export { certificateListQuerySchema, type CertificateListQuery } from './validators/autoStopSchemas.js';
+export { createBatchSchema, confirmUploadSchema, processRetireeSchema, threeVectorValidateSchema, matchClassifySchema } from './validators/committeeListSchemas.js';
 
 // Types
 export type { ApiResponse, ApiError, ApiResult } from './types/api.js';

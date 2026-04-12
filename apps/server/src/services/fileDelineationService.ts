@@ -18,7 +18,8 @@ import {
 import { AppError } from '../lib/appError';
 import { withMdaScope } from '../lib/mdaScope';
 import { withTransaction } from '../lib/transaction';
-import { resolveMdaByName, getMdaById } from './mdaService';
+import { resolveMdaByName, getMdaById, createAlias } from './mdaService';
+import { logger } from '../lib/logger';
 import { VOCABULARY } from '@vlprs/shared';
 import type { DelineationSection, DelineationResult, DelineationBoundaryRecord } from '@vlprs/shared';
 
@@ -476,6 +477,28 @@ export async function confirmBoundaries(
     }
     return section;
   });
+
+  // Story 15.1 Task A4: Learn aliases from ambiguous sections that were manually mapped.
+  // For each section that was originally ambiguous, if the raw mdaText couldn't be resolved
+  // automatically, save the manual mapping as an alias so future uploads auto-resolve.
+  for (const section of existing.sections) {
+    if (section.confidence !== 'ambiguous') continue;
+    const mdaText = section.mdaName;
+    const confirmedMdaId = confirmMap.get(section.sectionIndex);
+    if (!mdaText || !confirmedMdaId) continue;
+
+    // Only create alias if the text doesn't already resolve
+    const resolved = await resolveMdaByName(mdaText);
+    if (resolved) continue;
+
+    try {
+      const created = await createAlias(mdaText, confirmedMdaId);
+      // createAlias already validates and fetches the MDA internally — use the mdaId for logging
+      logger.info({ alias: mdaText, mdaId: confirmedMdaId, aliasId: created.id }, 'MDA alias learned from migration confirmation');
+    } catch {
+      // Alias may already exist (concurrent creation) — silently succeed
+    }
+  }
 
   const updatedResult: DelineationResult & { confirmedAt: string; confirmedBy: string } = {
     ...existing,

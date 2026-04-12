@@ -5,9 +5,9 @@ import { requirePasswordChange } from '../middleware/requirePasswordChange';
 import { authorise } from '../middleware/authorise';
 import { scopeToMda } from '../middleware/scopeToMda';
 import { readLimiter } from '../middleware/rateLimiter';
-import { validateQuery } from '../middleware/validate';
+import { validate, validateQuery } from '../middleware/validate';
 import { auditLog } from '../middleware/auditLog';
-import { ALL_ROLES, ROLES, mdaQuerySchema } from '@vlprs/shared';
+import { ALL_ROLES, ROLES, mdaQuerySchema, createMdaAliasSchema, batchResolveMdaSchema } from '@vlprs/shared';
 import { db } from '../db';
 import { loans, ledgerEntries } from '../db/schema';
 import { eq, and, sql, count, inArray } from 'drizzle-orm';
@@ -172,6 +172,86 @@ router.get(
     };
 
     res.json({ success: true, data: summary });
+  },
+);
+
+// ─── Alias CRUD (Story 15.1, Task A2) ──────────────────────────────
+
+// POST /api/mdas/aliases — create alias (SUPER_ADMIN, DEPT_ADMIN)
+router.post(
+  '/mdas/aliases',
+  authenticate,
+  requirePasswordChange,
+  authorise(ROLES.SUPER_ADMIN, ROLES.DEPT_ADMIN),
+  validate(createMdaAliasSchema),
+  auditLog,
+  async (req: Request, res: Response) => {
+    const { alias, mdaId } = req.body as { alias: string; mdaId: string };
+    const created = await mdaService.createAlias(alias, mdaId);
+    res.status(201).json({ success: true, data: created });
+  },
+);
+
+// GET /api/mdas/aliases — list all aliases with MDA names joined
+router.get(
+  '/mdas/aliases',
+  ...allAuth,
+  auditLog,
+  async (_req: Request, res: Response) => {
+    const aliases = await mdaService.listAliases();
+    res.json({ success: true, data: aliases });
+  },
+);
+
+// DELETE /api/mdas/aliases/:id — remove alias (SUPER_ADMIN only)
+router.delete(
+  '/mdas/aliases/:id',
+  authenticate,
+  requirePasswordChange,
+  authorise(ROLES.SUPER_ADMIN),
+  auditLog,
+  async (req: Request, res: Response) => {
+    await mdaService.deleteAlias(param(req.params.id));
+    res.json({ success: true });
+  },
+);
+
+// ─── Batch Resolve (Story 15.1, Task A3) ───────────────────────────
+
+// POST /api/mdas/resolve — batch MDA string resolution
+router.post(
+  '/mdas/resolve',
+  authenticate,
+  requirePasswordChange,
+  authorise(ROLES.SUPER_ADMIN, ROLES.DEPT_ADMIN),
+  validate(batchResolveMdaSchema),
+  auditLog,
+  async (req: Request, res: Response) => {
+    const { strings } = req.body as { strings: string[] };
+
+    // Deduplicate input strings (case-insensitive)
+    const seen = new Map<string, string>();
+    for (const s of strings) {
+      const key = s.toLowerCase();
+      if (!seen.has(key)) seen.set(key, s);
+    }
+
+    const results = await Promise.all(
+      [...seen.values()].map(async (input) => {
+        const { resolved, candidates } = await mdaService.resolveMdaWithCandidates(input);
+        let status: 'auto_matched' | 'needs_review' | 'unknown';
+        if (resolved) {
+          status = 'auto_matched';
+        } else if (candidates.length > 0) {
+          status = 'needs_review';
+        } else {
+          status = 'unknown';
+        }
+        return { input, status, resolved, candidates };
+      }),
+    );
+
+    res.json({ success: true, data: { results } });
   },
 );
 

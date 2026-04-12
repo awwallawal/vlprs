@@ -352,6 +352,13 @@ export const router = createBrowserRouter([
               })),
           },
           {
+            path: 'committee-lists',
+            lazy: () =>
+              import('@/pages/dashboard/CommitteeListsPage').then((m) => ({
+                Component: m.CommitteeListsPage,
+              })),
+          },
+          {
             path: 'admin',
             lazy: () => import('@/pages/dashboard/AdminPage'),
           },
