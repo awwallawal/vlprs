@@ -376,6 +376,27 @@ export const MIGRATION_HELP: Record<string, MetricDefinition> = {
     derivedFrom: 'Count of migration records flagged is_baseline_created = true.',
     guidance: 'For example, 92 unique staff may produce 171 baselines if some staff have multiple loans.',
   },
+  supersedeUnchanged: {
+    label: 'Unchanged',
+    description: 'Records present in both the old and new uploads with identical values across all compared fields.',
+    derivedFrom: 'Matched by normalized staff name + employee number; all financial fields equal.',
+  },
+  supersedeModified: {
+    label: 'Modified',
+    description: 'Records present in both uploads but with at least one field value changed between them.',
+    derivedFrom: 'Matched by normalized staff name + employee number; one or more financial fields differ.',
+    guidance: 'Expand to see field-level diffs showing the old and new values.',
+  },
+  supersedeNew: {
+    label: 'New',
+    description: 'Records present in the replacement upload but not found in the older upload being superseded.',
+    derivedFrom: 'Staff name + employee number combination exists in the new upload but has no match in the old.',
+  },
+  supersedeRemoved: {
+    label: 'Removed',
+    description: 'Records present in the older upload but not found in the replacement. These records will no longer appear in active data after supersession.',
+    derivedFrom: 'Staff name + employee number combination exists in the old upload but has no match in the new.',
+  },
 };
 
 export const LOAN_HELP: Record<string, MetricDefinition> = {

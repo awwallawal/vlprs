@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient, authenticatedFetch } from '@/lib/apiClient';
-import type { MigrationMdaStatus, MigrationDashboardMetrics, CoverageMatrix, CoverageRecordsResponse, SupersedeResponse } from '@vlprs/shared';
+import type { MigrationMdaStatus, MigrationDashboardMetrics, CoverageMatrix, CoverageRecordsResponse, SupersedeResponse, SupersedeComparisonResult } from '@vlprs/shared';
 
 export function useMigrationStatus() {
   return useQuery<MigrationMdaStatus[]>({
@@ -63,6 +63,21 @@ export function useCoverageRecordExport() {
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
     },
+  });
+}
+
+export function useSupersedeComparison(
+  oldUploadId: string | null,
+  newUploadId: string | null,
+) {
+  return useQuery<SupersedeComparisonResult>({
+    queryKey: ['supersede', 'compare', oldUploadId, newUploadId],
+    queryFn: () =>
+      apiClient<SupersedeComparisonResult>(
+        `/migrations/${oldUploadId}/supersede/compare/${newUploadId}`,
+      ),
+    enabled: !!oldUploadId && !!newUploadId,
+    staleTime: 60_000,
   });
 }
 

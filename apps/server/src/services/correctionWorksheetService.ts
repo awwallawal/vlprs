@@ -311,8 +311,10 @@ export async function applyCorrectionWorksheet(
           installmentCount?: number;
           installmentsPaid?: number;
           installmentsOutstanding?: number;
-          correctionReason?: string;
-        } = {};
+          correctionReason: string;
+        } = {
+          correctionReason: record.reason,
+        };
 
         if (record.corrections.outstandingBalance) corrections.outstandingBalance = String(record.corrections.outstandingBalance);
         if (record.corrections.totalLoan) corrections.totalLoan = String(record.corrections.totalLoan);
@@ -320,7 +322,6 @@ export async function applyCorrectionWorksheet(
         if (record.corrections.installmentCount) corrections.installmentCount = Number(record.corrections.installmentCount);
         if (record.corrections.installmentsPaid) corrections.installmentsPaid = Number(record.corrections.installmentsPaid);
         if (record.corrections.installmentsOutstanding) corrections.installmentsOutstanding = Number(record.corrections.installmentsOutstanding);
-        corrections.correctionReason = record.reason;
 
         await correctRecord(record.recordId, uploadId, corrections, userId, mdaScope, tx);
         applied++;

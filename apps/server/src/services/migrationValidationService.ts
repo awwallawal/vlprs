@@ -707,7 +707,8 @@ interface CorrectionInput {
   installmentsPaid?: number;
   installmentsOutstanding?: number;
   installmentCount?: number;
-  correctionReason?: string;
+  // Required since Story 15.0n — enforced at the validation layer.
+  correctionReason: string;
 }
 
 /**
@@ -788,9 +789,8 @@ export async function correctRecord(
       correctedAt: new Date(),
     };
 
-    if (corrections.correctionReason !== undefined) {
-      updateData.correctionReason = corrections.correctionReason;
-    }
+    // correctionReason is required by validation (Story 15.0n) — always set
+    updateData.correctionReason = corrections.correctionReason;
 
     if (isFirstCorrection && originalSnapshot) {
       updateData.originalValuesSnapshot = originalSnapshot;

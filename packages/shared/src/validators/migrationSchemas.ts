@@ -93,7 +93,10 @@ export const createBaselineBodySchema = z.object({
   confirm: z.literal(true),
 });
 
-// ─── Record Correction (Story 8.0b) ─────────────────────────────────
+// ─── Record Correction (Story 8.0b, reason made mandatory in Story 15.0n) ─
+// correctionReason is required for ALL corrections (flagged or not) so every
+// data change leaves an audit trail. At least one financial field must also
+// be provided alongside the reason — a reason alone is not a correction.
 export const correctMigrationRecordSchema = z.object({
   outstandingBalance: z.string().regex(/^\d+(\.\d{1,2})?$/, 'Must be a valid decimal amount').optional(),
   totalLoan: z.string().regex(/^\d+(\.\d{1,2})?$/, 'Must be a valid decimal amount').optional(),
@@ -101,8 +104,12 @@ export const correctMigrationRecordSchema = z.object({
   installmentCount: z.number().int().min(1).max(120).optional(),
   installmentsPaid: z.number().int().min(0).max(120).optional(),
   installmentsOutstanding: z.number().int().min(0).max(120).optional(),
+  correctionReason: z.string().min(10, 'Correction reason must be at least 10 characters'),
 }).refine(
-  (data) => Object.values(data).some((v) => v !== undefined),
+  (data) => {
+    const { correctionReason: _reason, ...rest } = data;
+    return Object.values(rest).some((v) => v !== undefined);
+  },
   { message: 'At least one field must be provided for correction' },
 );
 

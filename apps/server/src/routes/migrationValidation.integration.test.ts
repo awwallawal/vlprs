@@ -565,7 +565,7 @@ describe('Migration Validation Integration Tests', () => {
       const res = await request(app)
         .patch(`/api/migrations/${uploadId}/records/${record.recordId}/correct`)
         .set('Authorization', `Bearer ${adminToken}`)
-        .send({ outstandingBalance: '150000.00' });
+        .send({ outstandingBalance: '150000.00', correctionReason: 'MDA provided updated figure for this staff' });
 
       expect(res.status).toBe(200);
       expect(res.body.success).toBe(true);
@@ -575,6 +575,7 @@ describe('Migration Validation Integration Tests', () => {
       expect(detail.correctedValues.outstandingBalance).toBe('150000.00');
       expect(detail.correctedBy).toBe(testUserId);
       expect(detail.correctedAt).toBeTruthy();
+      expect(detail.correctionReason).toBe('MDA provided updated figure for this staff');
 
       // Original snapshot should be preserved
       expect(detail.originalValuesSnapshot).not.toBeNull();
@@ -621,7 +622,7 @@ describe('Migration Validation Integration Tests', () => {
       const res = await request(app)
         .patch(`/api/migrations/${uploadId}/records/${baselinableRecordId}/correct`)
         .set('Authorization', `Bearer ${adminToken}`)
-        .send({ outstandingBalance: '100000.00' });
+        .send({ outstandingBalance: '100000.00', correctionReason: 'Attempting correction after baseline' });
 
       expect(res.status).toBe(409);
     });
@@ -633,7 +634,7 @@ describe('Migration Validation Integration Tests', () => {
       await request(app)
         .patch(`/api/migrations/${uploadId}/records/${record.recordId}/correct`)
         .set('Authorization', `Bearer ${adminToken}`)
-        .send({ outstandingBalance: '150000.00' });
+        .send({ outstandingBalance: '150000.00', correctionReason: 'Initial correction round' });
 
       // Get snapshot from first correction
       const first = await request(app)
@@ -645,7 +646,7 @@ describe('Migration Validation Integration Tests', () => {
       const res = await request(app)
         .patch(`/api/migrations/${uploadId}/records/${record.recordId}/correct`)
         .set('Authorization', `Bearer ${adminToken}`)
-        .send({ outstandingBalance: '200000.00' });
+        .send({ outstandingBalance: '200000.00', correctionReason: 'Revised after MDA follow-up call' });
 
       expect(res.status).toBe(200);
       expect(res.body.data.correctedValues.outstandingBalance).toBe('200000.00');
@@ -668,7 +669,7 @@ describe('Migration Validation Integration Tests', () => {
       const res = await request(app)
         .patch(`/api/migrations/${uploadId}/records/${record.recordId}/correct`)
         .set('Authorization', `Bearer ${adminToken}`)
-        .send({ installmentCount: 36 });
+        .send({ installmentCount: 36, correctionReason: 'Tenure corrected to 36 months per approval letter' });
 
       expect(res.status).toBe(200);
 
@@ -692,10 +693,44 @@ describe('Migration Validation Integration Tests', () => {
       expect(res.status).toBe(400);
     });
 
+    // Story 15.0n — correctionReason is mandatory for ALL corrections
+    it('rejects correction without correctionReason (400)', async () => {
+      const record = await validateAndGetRecord('CLEAN RECORD');
+
+      const res = await request(app)
+        .patch(`/api/migrations/${uploadId}/records/${record.recordId}/correct`)
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({ outstandingBalance: '150000.00' });
+
+      expect(res.status).toBe(400);
+    });
+
+    it('rejects correction with correctionReason shorter than 10 chars (400)', async () => {
+      const record = await validateAndGetRecord('CLEAN RECORD');
+
+      const res = await request(app)
+        .patch(`/api/migrations/${uploadId}/records/${record.recordId}/correct`)
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({ outstandingBalance: '150000.00', correctionReason: 'too short' });
+
+      expect(res.status).toBe(400);
+    });
+
+    it('rejects reason-only correction (no financial field) with 400', async () => {
+      const record = await validateAndGetRecord('CLEAN RECORD');
+
+      const res = await request(app)
+        .patch(`/api/migrations/${uploadId}/records/${record.recordId}/correct`)
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({ correctionReason: 'Only the reason — no values to change' });
+
+      expect(res.status).toBe(400);
+    });
+
     it('returns 401 without authentication', async () => {
       const res = await request(app)
         .patch(`/api/migrations/${uploadId}/records/${generateUuidv7()}/correct`)
-        .send({ outstandingBalance: '100000.00' });
+        .send({ outstandingBalance: '100000.00', correctionReason: 'Valid correction reason here' });
 
       expect(res.status).toBe(401);
     });

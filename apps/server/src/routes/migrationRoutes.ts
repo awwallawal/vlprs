@@ -15,6 +15,7 @@ import * as migrationService from '../services/migrationService';
 import * as migrationValidationService from '../services/migrationValidationService';
 import * as baselineService from '../services/baselineService';
 import * as supersedeService from '../services/supersedeService';
+import * as supersedeComparisonService from '../services/supersedeComparisonService';
 import * as mdaReviewService from '../services/mdaReviewService';
 import * as correctionWorksheetService from '../services/correctionWorksheetService';
 
@@ -292,6 +293,24 @@ router.get(
     const summary = await baselineService.getBaselineSummary(uploadId, req.mdaScope);
 
     res.json({ success: true, data: summary });
+  },
+);
+
+// GET /api/migrations/:uploadId/supersede/compare/:replacementUploadId — Read-only diff preview
+router.get(
+  '/migrations/:uploadId/supersede/compare/:replacementUploadId',
+  ...adminAuth,
+  async (req: Request, res: Response) => {
+    const oldUploadId = param(req.params.uploadId);
+    const newUploadId = param(req.params.replacementUploadId);
+
+    const result = await supersedeComparisonService.compareUploads(
+      oldUploadId,
+      newUploadId,
+      req.mdaScope,
+    );
+
+    res.json({ success: true, data: result });
   },
 );
 
