@@ -464,12 +464,19 @@ export async function createBaseline(
     let loanId: string;
     let loanReference: string;
     let ledgerEntryId: string;
+    let baselineAmountStr = '0.00';
 
     if (matchedLoanId) {
       // Link to existing loan — no new loan, no new ledger entry
       loanId = matchedLoanId;
       loanReference = matchedLoanRef!;
       ledgerEntryId = ''; // No entry created — existing baseline covers it
+      // Derive baseline amount for response (total loan minus effective outstanding)
+      const effectiveOutstanding = record.correctedOutstandingBalance ?? record.outstandingBalance;
+      const totalLoan = record.correctedTotalLoan ?? record.totalLoan;
+      if (effectiveOutstanding != null && totalLoan != null) {
+        baselineAmountStr = new Decimal(totalLoan).minus(new Decimal(effectiveOutstanding)).toFixed(2);
+      }
     } else {
       // No existing loan — create new one
       loanId = loanData.id;
@@ -494,6 +501,7 @@ export async function createBaseline(
       }
       const [entry] = await tx.insert(ledgerEntries).values(entryData).returning();
       ledgerEntryId = entry.id;
+      baselineAmountStr = entry.amount;
     }
 
     // Link migration record to loan (existing or new)
@@ -524,7 +532,7 @@ export async function createBaseline(
       loanReference,
       ledgerEntryId,
       varianceCategory: record.varianceCategory as VarianceCategory | null,
-      baselineAmount: '0.00', // Will be set from entry data
+      baselineAmount: baselineAmountStr,
       correctionApplied: record.correctedOutstandingBalance != null
         || record.correctedTotalLoan != null
         || record.correctedMonthlyDeduction != null
