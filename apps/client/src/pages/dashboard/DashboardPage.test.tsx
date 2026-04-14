@@ -136,7 +136,8 @@ describe('DashboardPage', () => {
     expect(screen.getByText('Active Loans')).toBeInTheDocument();
     expect(screen.getByText('Total Exposure')).toBeInTheDocument();
     expect(screen.getByText('Fund Available')).toBeInTheDocument();
-    expect(screen.getByText('Monthly Recovery')).toBeInTheDocument();
+    // "Monthly Recovery" renamed to "Declared Recovery" in UAT #9
+    expect(screen.getByText('Declared Recovery')).toBeInTheDocument();
   });
 
   it('renders attention items section', () => {

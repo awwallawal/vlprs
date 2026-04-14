@@ -1,7 +1,7 @@
 import { eq, and, or, sql, ilike, count, inArray, asc, desc } from 'drizzle-orm';
 import Decimal from 'decimal.js';
 import { db } from '../db/index';
-import { loans, mdas, ledgerEntries } from '../db/schema';
+import { loans, mdas, ledgerEntries, migrationRecords } from '../db/schema';
 import { generateUuidv7 } from '../lib/uuidv7';
 import { AppError } from '../lib/appError';
 import { withMdaScope } from '../lib/mdaScope';
@@ -9,7 +9,7 @@ import { ledgerDb } from '../db/immutable';
 import { computeBalanceFromEntries, computeBalanceForLoan, computeRepaymentSchedule, computeRetirementDate } from './computationEngine';
 import { buildTemporalProfile, getExtensionDataForLoan } from './temporalProfileService';
 import * as gratuityProjectionService from './gratuityProjectionService';
-import { VOCABULARY } from '@vlprs/shared';
+import { VOCABULARY, inferTierFromPrincipal } from '@vlprs/shared';
 import type { Loan, LoanSearchResult, LoanDetail, LoanStatus, LoanClassification as SharedLoanClassification } from '@vlprs/shared';
 import { classifyAllLoans, LoanClassification } from './loanClassificationService';
 import { toDateString } from '../lib/dateUtils';
@@ -372,6 +372,7 @@ export async function searchLoans(
   }
 
   // Fetch last deduction date and retirement date for enriched results
+  // First try PAYROLL entries (Epic 5 monthly submissions), fall back to migration record period
   let lastDeductionMap = new Map<string, string>();
   const retirementMap = new Map<string, string>();
   if (loanIds.length > 0) {
@@ -387,6 +388,23 @@ export async function searchLoans(
       ))
       .groupBy(ledgerEntries.loanId);
     lastDeductionMap = new Map(lastDeductions.map((d) => [d.loanId, d.lastDate]));
+
+    // Fallback: for loans without PAYROLL entries, use latest migration record period
+    const loansWithoutPayroll = loanIds.filter(id => !lastDeductionMap.has(id));
+    if (loansWithoutPayroll.length > 0) {
+      const migrationLastPeriods = await db.execute(sql`
+        SELECT loan_id, MAX(period_year || '-' || LPAD(period_month::text, 2, '0') || '-01') as last_date
+        FROM migration_records
+        WHERE loan_id IN (${sql.join(loansWithoutPayroll.map(id => sql`${id}`), sql`, `)})
+          AND deleted_at IS NULL
+          AND period_year IS NOT NULL
+          AND period_month IS NOT NULL
+        GROUP BY loan_id
+      `);
+      for (const row of migrationLastPeriods.rows as Array<{ loan_id: string; last_date: string }>) {
+        lastDeductionMap.set(row.loan_id, row.last_date);
+      }
+    }
 
     const retirementDates = await db
       .select({
@@ -503,19 +521,34 @@ export async function getLoanDetail(
     moratoriumMonths: row.loan.moratoriumMonths,
   });
 
-  // Ledger entry count + extension data + gratuity projection (concurrent)
-  const [ledgerCountResult, extensionData, gratuityProjection] = await Promise.all([
+  // Ledger entry count + extension data + gratuity projection + migration context (concurrent)
+  const [ledgerCountResult, extensionData, gratuityProjection, migrationContext] = await Promise.all([
     db.select({ value: count() }).from(ledgerEntries).where(eq(ledgerEntries.loanId, loanId)),
     getExtensionDataForLoan(loanId),
     gratuityProjectionService.getGratuityProjection(loanId, mdaScope),
+    db.select({
+      installmentsPaid: migrationRecords.installmentsPaid,
+      installmentsOutstanding: migrationRecords.installmentsOutstanding,
+      gradeLevel: migrationRecords.gradeLevel,
+    })
+      .from(migrationRecords)
+      .where(and(eq(migrationRecords.loanId, loanId), sql`${migrationRecords.deletedAt} IS NULL`))
+      .limit(1)
+      .then((rows) => rows[0] ?? null),
   ]);
   const [{ value: ledgerEntryCount }] = ledgerCountResult;
+
+  // Resolve grade: migration record grade → tier inference from principal → fallback to loan value
+  const inferredTier = inferTierFromPrincipal(row.loan.principalAmount);
+  const effectiveGradeLevel = (row.loan.gradeLevel === 'MIGRATION' || !row.loan.gradeLevel)
+    ? (migrationContext?.gradeLevel || (inferredTier ? inferredTier.gradeLevels : row.loan.gradeLevel))
+    : row.loan.gradeLevel;
 
   return {
     id: row.loan.id,
     staffId: row.loan.staffId,
     staffName: row.loan.staffName,
-    gradeLevel: row.loan.gradeLevel,
+    gradeLevel: effectiveGradeLevel,
     mdaId: row.loan.mdaId,
     mdaName: row.mdaName,
     mdaCode: row.mdaCode,
@@ -535,5 +568,53 @@ export async function getLoanDetail(
     ledgerEntryCount: Number(ledgerEntryCount),
     temporalProfile: buildTemporalProfile(row.loan, extensionData),
     gratuityProjection,
+    // Migration context — installment breakdown from source data (not from ledger entries)
+    migrationContext: migrationContext
+      ? {
+          installmentsPaid: migrationContext.installmentsPaid,
+          installmentsOutstanding: migrationContext.installmentsOutstanding,
+        }
+      : null,
   };
+}
+
+/**
+ * Update the staff ID on a loan (e.g. replacing synthetic MIG-xxx with real government ID).
+ * Also updates the linked migration record's employeeNo for consistency.
+ */
+export async function updateStaffId(
+  loanId: string,
+  newStaffId: string,
+  _userId: string,
+  mdaScope: string | null | undefined,
+): Promise<{ loanId: string; staffId: string }> {
+  const [loan] = await db
+    .select({ id: loans.id, mdaId: loans.mdaId, staffId: loans.staffId })
+    .from(loans)
+    .where(eq(loans.id, loanId));
+
+  if (!loan) {
+    throw new AppError(404, 'LOAN_NOT_FOUND', VOCABULARY.LOAN_NOT_FOUND);
+  }
+
+  if (mdaScope && loan.mdaId !== mdaScope) {
+    throw new AppError(403, 'MDA_ACCESS_DENIED', VOCABULARY.MDA_ACCESS_DENIED);
+  }
+
+  await db.transaction(async (tx) => {
+    // Update loan staff ID
+    await tx.update(loans)
+      .set({ staffId: newStaffId, updatedAt: new Date() })
+      .where(eq(loans.id, loanId));
+
+    // Also update linked migration record's employeeNo for consistency
+    await tx.update(migrationRecords)
+      .set({ employeeNo: newStaffId })
+      .where(and(
+        eq(migrationRecords.loanId, loanId),
+        sql`${migrationRecords.deletedAt} IS NULL`,
+      ));
+  });
+
+  return { loanId, staffId: newStaffId };
 }

@@ -5,12 +5,12 @@ import { requirePasswordChange } from '../middleware/requirePasswordChange';
 import { authorise } from '../middleware/authorise';
 import { scopeToMda } from '../middleware/scopeToMda';
 import { readLimiter } from '../middleware/rateLimiter';
-import { validateQuery } from '../middleware/validate';
+import { validate, validateQuery } from '../middleware/validate';
 import { auditLog } from '../middleware/auditLog';
-import { ALL_ROLES, ROLES, mdaQuerySchema } from '@vlprs/shared';
+import { ALL_ROLES, ROLES, mdaQuerySchema, createMdaAliasSchema, batchResolveMdaSchema } from '@vlprs/shared';
 import { db } from '../db';
-import { loans, ledgerEntries } from '../db/schema';
-import { eq, and, sql, count, inArray } from 'drizzle-orm';
+import { loans, ledgerEntries, migrationRecords, migrationUploads } from '../db/schema';
+import { eq, and, sql, count, inArray, isNull, desc } from 'drizzle-orm';
 import { AppError } from '../lib/appError';
 import { param } from '../lib/params';
 import * as mdaService from '../services/mdaService';
@@ -148,11 +148,50 @@ router.get(
       )
       .limit(1);
 
-    const expected = new Decimal(expectedResult?.total ?? '0');
+    const declaredRecovery = new Decimal(expectedResult?.total ?? '0');
     const actual = new Decimal(recoveryResult?.total ?? '0');
-    const variancePercent = expected.gt(0)
-      ? Number(actual.minus(expected).div(expected).mul(100).toDecimalPlaces(1, Decimal.ROUND_HALF_UP).toNumber())
+
+    // Collection Potential — SUM of scheme-expected monthly deduction for baselined records
+    const [collectionPotentialResult] = await db
+      .select({
+        total: sql<string>`COALESCE(SUM(${migrationRecords.schemeExpectedMonthlyDeduction}), '0.00')`,
+      })
+      .from(migrationRecords)
+      .where(and(
+        eq(migrationRecords.mdaId, mdaId),
+        eq(migrationRecords.isBaselineCreated, true),
+        sql`${migrationRecords.deletedAt} IS NULL`,
+      ));
+
+    const collectionPotential = new Decimal(collectionPotentialResult?.total ?? '0');
+    const recoveryVarianceAmount = collectionPotential.gt(0)
+      ? declaredRecovery.minus(collectionPotential).toFixed(2)
       : null;
+    const recoveryVariancePercent = collectionPotential.gt(0)
+      ? Number(declaredRecovery.minus(collectionPotential).div(collectionPotential).mul(100).toDecimalPlaces(1, Decimal.ROUND_HALF_UP).toNumber())
+      : null;
+
+    // Legacy variance (actual PAYROLL vs declared)
+    const variancePercent = declaredRecovery.gt(0)
+      ? Number(actual.minus(declaredRecovery).div(declaredRecovery).mul(100).toDecimalPlaces(1, Decimal.ROUND_HALF_UP).toNumber())
+      : null;
+
+    // Migration uploads for this MDA (submission history)
+    const mdaMigrationUploads = await db
+      .select({
+        id: migrationUploads.id,
+        filename: migrationUploads.filename,
+        status: migrationUploads.status,
+        totalRecords: migrationUploads.totalRecords,
+        createdAt: migrationUploads.createdAt,
+      })
+      .from(migrationUploads)
+      .where(and(
+        eq(migrationUploads.mdaId, mdaId),
+        isNull(migrationUploads.deletedAt),
+      ))
+      .orderBy(desc(migrationUploads.createdAt))
+      .limit(10);
 
     const summary = {
       mdaId: mda.id,
@@ -162,16 +201,108 @@ router.get(
       loanCount: loanCountResult?.value ?? 0,
       totalExposure: totalExposure.toFixed(2),
       monthlyRecovery: actual.toFixed(2),
-      submissionHistory: [], // Future Epic 5
+      submissionHistory: [], // MDA monthly submissions (Epic 5)
+      migrationUploads: mdaMigrationUploads.map((u) => ({
+        id: u.id,
+        filename: u.filename,
+        status: u.status,
+        totalRecords: u.totalRecords,
+        createdAt: u.createdAt.toISOString(),
+      })),
       healthScore: score,
       healthBand: band,
       statusDistribution,
-      expectedMonthlyDeduction: expected.toFixed(2),
+      expectedMonthlyDeduction: declaredRecovery.toFixed(2),
       actualMonthlyRecovery: actual.toFixed(2),
       variancePercent,
+      // New: Declared Recovery vs Collection Potential (UAT 2026-04-12 Finding #7)
+      declaredRecovery: declaredRecovery.toFixed(2),
+      collectionPotential: collectionPotential.toFixed(2),
+      recoveryVarianceAmount,
+      recoveryVariancePercent,
     };
 
     res.json({ success: true, data: summary });
+  },
+);
+
+// ─── Alias CRUD (Story 15.1, Task A2) ──────────────────────────────
+
+// POST /api/mdas/aliases — create alias (SUPER_ADMIN, DEPT_ADMIN)
+router.post(
+  '/mdas/aliases',
+  authenticate,
+  requirePasswordChange,
+  authorise(ROLES.SUPER_ADMIN, ROLES.DEPT_ADMIN),
+  validate(createMdaAliasSchema),
+  auditLog,
+  async (req: Request, res: Response) => {
+    const { alias, mdaId } = req.body as { alias: string; mdaId: string };
+    const created = await mdaService.createAlias(alias, mdaId);
+    res.status(201).json({ success: true, data: created });
+  },
+);
+
+// GET /api/mdas/aliases — list all aliases with MDA names joined
+router.get(
+  '/mdas/aliases',
+  ...allAuth,
+  auditLog,
+  async (_req: Request, res: Response) => {
+    const aliases = await mdaService.listAliases();
+    res.json({ success: true, data: aliases });
+  },
+);
+
+// DELETE /api/mdas/aliases/:id — remove alias (SUPER_ADMIN only)
+router.delete(
+  '/mdas/aliases/:id',
+  authenticate,
+  requirePasswordChange,
+  authorise(ROLES.SUPER_ADMIN),
+  auditLog,
+  async (req: Request, res: Response) => {
+    await mdaService.deleteAlias(param(req.params.id));
+    res.json({ success: true });
+  },
+);
+
+// ─── Batch Resolve (Story 15.1, Task A3) ───────────────────────────
+
+// POST /api/mdas/resolve — batch MDA string resolution
+router.post(
+  '/mdas/resolve',
+  authenticate,
+  requirePasswordChange,
+  authorise(ROLES.SUPER_ADMIN, ROLES.DEPT_ADMIN),
+  validate(batchResolveMdaSchema),
+  auditLog,
+  async (req: Request, res: Response) => {
+    const { strings } = req.body as { strings: string[] };
+
+    // Deduplicate input strings (case-insensitive)
+    const seen = new Map<string, string>();
+    for (const s of strings) {
+      const key = s.toLowerCase();
+      if (!seen.has(key)) seen.set(key, s);
+    }
+
+    const results = await Promise.all(
+      [...seen.values()].map(async (input) => {
+        const { resolved, candidates } = await mdaService.resolveMdaWithCandidates(input);
+        let status: 'auto_matched' | 'needs_review' | 'unknown';
+        if (resolved) {
+          status = 'auto_matched';
+        } else if (candidates.length > 0) {
+          status = 'needs_review';
+        } else {
+          status = 'unknown';
+        }
+        return { input, status, resolved, candidates };
+      }),
+    );
+
+    res.json({ success: true, data: { results } });
   },
 );
 

@@ -10,6 +10,7 @@ import { VOCABULARY } from '@vlprs/shared';
 import type { BaselineResult, BatchBaselineResult, BaselineSummary, VarianceCategory } from '@vlprs/shared';
 import { checkAndTriggerAutoStop } from './autoStopService';
 import { generateObservations, findWithinFileDuplicateGroups } from './observationEngine';
+import { matchName } from '../migration/nameMatch';
 import { logger } from '../lib/logger';
 import { trackFireAndForget } from './fireAndForgetTracking';
 
@@ -441,31 +442,72 @@ export async function createBaseline(
     // Derive loan data
     const loanData = await deriveLoanFromMigrationRecord(record, upload, 1);
 
-    // Insert loan record directly as ACTIVE
-    await tx.insert(loans).values(loanData);
+    // ─── Duplicate Guard: fuzzy name match against existing MDA loans ───
+    // If a loan already exists for this staff name in the same MDA,
+    // link to it instead of creating a duplicate.
+    const existingLoans = await tx
+      .select({ id: loans.id, staffName: loans.staffName, staffId: loans.staffId, loanReference: loans.loanReference })
+      .from(loans)
+      .where(eq(loans.mdaId, upload.mdaId));
 
-    // Insert state transition audit entry
-    await tx.insert(loanStateTransitions).values({
-      id: generateUuidv7(),
-      loanId: loanData.id,
-      fromStatus: 'APPLIED',
-      toStatus: 'ACTIVE',
-      transitionedBy: actingUser.userId,
-      reason: 'Migration baseline — legacy data imported as active loan',
-    });
-
-    // Compute and insert baseline ledger entry
-    const entryData = computeBaselineEntry(loanData, record, uploadId, actingUser.userId);
-    if (!entryData) {
-      throw new AppError(400, 'BASELINE_MISSING_BALANCE', VOCABULARY.BASELINE_MISSING_BALANCE);
+    let matchedLoanId: string | null = null;
+    let matchedLoanRef: string | null = null;
+    for (const existing of existingLoans) {
+      const match = matchName(record.staffName, existing.staffName);
+      if (match.confidence === 'exact') {
+        matchedLoanId = existing.id;
+        matchedLoanRef = existing.loanReference;
+        break;
+      }
     }
 
-    const [entry] = await tx.insert(ledgerEntries).values(entryData).returning();
+    let loanId: string;
+    let loanReference: string;
+    let ledgerEntryId: string;
+    let baselineAmountStr = '0.00';
 
-    // Link migration record to loan
+    if (matchedLoanId) {
+      // Link to existing loan — no new loan, no new ledger entry
+      loanId = matchedLoanId;
+      loanReference = matchedLoanRef!;
+      ledgerEntryId = ''; // No entry created — existing baseline covers it
+      // Derive baseline amount for response (total loan minus effective outstanding)
+      const effectiveOutstanding = record.correctedOutstandingBalance ?? record.outstandingBalance;
+      const totalLoan = record.correctedTotalLoan ?? record.totalLoan;
+      if (effectiveOutstanding != null && totalLoan != null) {
+        baselineAmountStr = new Decimal(totalLoan).minus(new Decimal(effectiveOutstanding)).toFixed(2);
+      }
+    } else {
+      // No existing loan — create new one
+      loanId = loanData.id;
+      loanReference = loanData.loanReference;
+
+      await tx.insert(loans).values(loanData);
+
+      // Insert state transition audit entry
+      await tx.insert(loanStateTransitions).values({
+        id: generateUuidv7(),
+        loanId: loanData.id,
+        fromStatus: 'APPLIED',
+        toStatus: 'ACTIVE',
+        transitionedBy: actingUser.userId,
+        reason: 'Migration baseline — legacy data imported as active loan',
+      });
+
+      // Compute and insert baseline ledger entry
+      const entryData = computeBaselineEntry(loanData, record, uploadId, actingUser.userId);
+      if (!entryData) {
+        throw new AppError(400, 'BASELINE_MISSING_BALANCE', VOCABULARY.BASELINE_MISSING_BALANCE);
+      }
+      const [entry] = await tx.insert(ledgerEntries).values(entryData).returning();
+      ledgerEntryId = entry.id;
+      baselineAmountStr = entry.amount;
+    }
+
+    // Link migration record to loan (existing or new)
     await tx
       .update(migrationRecords)
-      .set({ loanId: loanData.id, isBaselineCreated: true })
+      .set({ loanId, isBaselineCreated: true })
       .where(eq(migrationRecords.id, recordId));
 
     // Check if all records in upload now have baselines — advance to 'reconciled'
@@ -486,11 +528,11 @@ export async function createBaseline(
     }
 
     return {
-      loanId: loanData.id,
-      loanReference: loanData.loanReference,
-      ledgerEntryId: entry.id,
+      loanId,
+      loanReference,
+      ledgerEntryId,
       varianceCategory: record.varianceCategory as VarianceCategory | null,
-      baselineAmount: entryData.amount,
+      baselineAmount: baselineAmountStr,
       correctionApplied: record.correctedOutstandingBalance != null
         || record.correctedTotalLoan != null
         || record.correctedMonthlyDeduction != null
@@ -538,6 +580,17 @@ export async function createBatchBaseline(
 
   // Story 8.1: Track created loans + ledger entries for post-commit auto-stop check
   const createdEntries: Array<{ loanId: string; ledgerEntryId: string }> = [];
+
+  // Track linked records for post-commit completion + overdeduction detection (UAT 2026-04-14)
+  const linkedRecordsForReview: Array<{
+    loanId: string;
+    recordId: string;
+    staffName: string;
+    mdaId: string;
+    declaredOutstanding: string | null;
+    installmentsPaid: number | null;
+    period: string | null;
+  }> = [];
 
   const result = await db.transaction(async (tx) => {
     // Load all records that haven't had baselines created yet and aren't flagged for review
@@ -639,53 +692,104 @@ export async function createBatchBaseline(
       };
     }
 
+    // ─── Duplicate Guard: load existing loans for this MDA for fuzzy matching ───
+    const existingMdaLoans = await tx
+      .select({ id: loans.id, staffName: loans.staffName, loanReference: loans.loanReference })
+      .from(loans)
+      .where(eq(loans.mdaId, upload.mdaId));
+
+    // Build a lookup for fast name matching
+    function findExistingLoan(staffName: string): { id: string; loanReference: string } | null {
+      for (const existing of existingMdaLoans) {
+        const match = matchName(staffName, existing.staffName);
+        // Only use exact match — surname+initial ('high') is too loose for same-MDA
+        // matching where multiple staff can share a surname (e.g. ADELEKE OLUFEMI vs ADELEKE OLUWASEGUN)
+        if (match.confidence === 'exact') {
+          return { id: existing.id, loanReference: existing.loanReference };
+        }
+      }
+      return null;
+    }
+
     // Pre-generate sequential loan references inside transaction to avoid duplicates
+    // Use MAX sequence number (not COUNT) to avoid collisions with gaps from deleted loans
     const currentYear = new Date().getFullYear();
-    const [refCountResult] = await tx
-      .select({ count: sql<string>`COUNT(*)` })
+    const [refMaxResult] = await tx
+      .select({ maxRef: sql<string>`MAX(${loans.loanReference})` })
       .from(loans)
       .where(sql`${loans.loanReference} LIKE ${'VLC-MIG-' + currentYear + '-%'}`);
-    const refStartSeq = parseInt(refCountResult.count, 10) + 1;
+    const maxRefStr = refMaxResult?.maxRef;
+    const refStartSeq = maxRefStr
+      ? parseInt(maxRefStr.replace(`VLC-MIG-${currentYear}-`, ''), 10) + 1
+      : 1;
 
     let loansCreated = 0;
+    let _loansLinked = 0;
     let entriesCreated = 0;
+    let newLoanSeq = 0;
     const byCategory: Record<string, number> = {};
 
     for (let i = 0; i < eligibleRecords.length; i++) {
       const record = eligibleRecords[i];
+      const existingLoan = findExistingLoan(record.staffName);
 
-      // Generate loan reference from pre-computed sequence
-      const refSeq = refStartSeq + i;
-      const loanRef = `VLC-MIG-${currentYear}-${String(refSeq).padStart(Math.max(4, String(refSeq).length), '0')}`;
+      if (existingLoan) {
+        // Link to existing loan — no new loan, no new ledger entry
+        await tx
+          .update(migrationRecords)
+          .set({ loanId: existingLoan.id, isBaselineCreated: true })
+          .where(eq(migrationRecords.id, record.id));
 
-      // Derive loan data with pre-generated reference
-      const loanData = await deriveLoanFromMigrationRecord(record, upload, i + 1, loanRef);
+        // Collect for post-commit processing (completion + overdeduction detection)
+        linkedRecordsForReview.push({
+          loanId: existingLoan.id,
+          recordId: record.id,
+          staffName: record.staffName,
+          mdaId: record.mdaId,
+          declaredOutstanding: record.correctedOutstandingBalance ?? record.outstandingBalance,
+          installmentsPaid: record.correctedInstallmentsPaid ?? record.installmentsPaid,
+          period: record.periodYear && record.periodMonth ? `${record.periodYear}-${String(record.periodMonth).padStart(2, '0')}` : null,
+        });
 
-      // Insert loan
-      await tx.insert(loans).values(loanData);
-      loansCreated++;
+        _loansLinked++;
+      } else {
+        // Generate loan reference from pre-computed sequence
+        const refSeq = refStartSeq + newLoanSeq;
+        const loanRef = `VLC-MIG-${currentYear}-${String(refSeq).padStart(Math.max(4, String(refSeq).length), '0')}`;
+        newLoanSeq++;
 
-      // Insert state transition
-      await tx.insert(loanStateTransitions).values({
-        id: generateUuidv7(),
-        loanId: loanData.id,
-        fromStatus: 'APPLIED',
-        toStatus: 'ACTIVE',
-        transitionedBy: actingUser.userId,
-        reason: 'Migration baseline — legacy data imported as active loan',
-      });
+        // Derive loan data with pre-generated reference
+        const loanData = await deriveLoanFromMigrationRecord(record, upload, i + 1, loanRef);
 
-      // Compute and insert baseline ledger entry (pre-validated: outstandingBalance is present)
-      const entryData = computeBaselineEntry(loanData, record, uploadId, actingUser.userId)!;
-      await tx.insert(ledgerEntries).values(entryData);
-      entriesCreated++;
-      createdEntries.push({ loanId: loanData.id, ledgerEntryId: entryData.id });
+        // Insert loan
+        await tx.insert(loans).values(loanData);
+        loansCreated++;
 
-      // Link record
-      await tx
-        .update(migrationRecords)
-        .set({ loanId: loanData.id, isBaselineCreated: true })
-        .where(eq(migrationRecords.id, record.id));
+        // Add to existing loans list so subsequent records in this batch can match
+        existingMdaLoans.push({ id: loanData.id, staffName: loanData.staffName, loanReference: loanData.loanReference });
+
+        // Insert state transition
+        await tx.insert(loanStateTransitions).values({
+          id: generateUuidv7(),
+          loanId: loanData.id,
+          fromStatus: 'APPLIED',
+          toStatus: 'ACTIVE',
+          transitionedBy: actingUser.userId,
+          reason: 'Migration baseline — legacy data imported as active loan',
+        });
+
+        // Compute and insert baseline ledger entry
+        const entryData = computeBaselineEntry(loanData, record, uploadId, actingUser.userId)!;
+        await tx.insert(ledgerEntries).values(entryData);
+        entriesCreated++;
+        createdEntries.push({ loanId: loanData.id, ledgerEntryId: entryData.id });
+
+        // Link record
+        await tx
+          .update(migrationRecords)
+          .set({ loanId: loanData.id, isBaselineCreated: true })
+          .where(eq(migrationRecords.id, record.id));
+      }
 
       // Track category
       const cat = record.varianceCategory || 'clean';
@@ -728,6 +832,102 @@ export async function createBatchBaseline(
   void (async () => {
     for (const { loanId, ledgerEntryId } of createdEntries) {
       await checkAndTriggerAutoStop(loanId, ledgerEntryId).catch(() => {});
+    }
+  })();
+
+  // UAT 2026-04-14: For records linked to existing loans, check completion + overdeduction
+  // using the DECLARED outstanding balance from the migration record (not ledger-computed,
+  // since we intentionally don't create ledger entries for linked records to avoid
+  // double-counting). When a subsequent month shows zero outstanding → complete the loan.
+  // When it shows negative outstanding on a COMPLETED loan → flag overdeduction.
+  void (async () => {
+    try {
+      const { observations, loanStateTransitions, loanCompletions } = await import('../db/schema');
+      const { eq: eqImport } = await import('drizzle-orm');
+
+      // Group by loanId — process each loan's latest record (highest period)
+      const latestByLoan = new Map<string, typeof linkedRecordsForReview[0]>();
+      for (const rec of linkedRecordsForReview) {
+        const existing = latestByLoan.get(rec.loanId);
+        if (!existing || (rec.period && existing.period && rec.period > existing.period)) {
+          latestByLoan.set(rec.loanId, rec);
+        }
+      }
+
+      for (const rec of latestByLoan.values()) {
+        if (!rec.declaredOutstanding) continue;
+        const outstanding = Number(rec.declaredOutstanding);
+
+        const [loan] = await db.select({ status: loans.status, tenureMonths: loans.tenureMonths, staffId: loans.staffId })
+          .from(loans)
+          .where(eqImport(loans.id, rec.loanId));
+        if (!loan) continue;
+
+        // Case 1: ACTIVE loan showing completion (outstanding ≤ 0)
+        if (loan.status === 'ACTIVE' && outstanding <= 0) {
+          // Transition to COMPLETED
+          await db.insert(loanStateTransitions).values({
+            id: generateUuidv7(),
+            loanId: rec.loanId,
+            fromStatus: 'ACTIVE',
+            toStatus: 'COMPLETED',
+            transitionedBy: actingUser.userId,
+            reason: `Auto-completion from migration record ${rec.period ?? ''} — declared outstanding ₦${outstanding.toFixed(2)}`,
+          });
+          await db.update(loans)
+            .set({ status: 'COMPLETED', updatedAt: new Date() })
+            .where(eqImport(loans.id, rec.loanId));
+          await db.insert(loanCompletions).values({
+            id: generateUuidv7(),
+            loanId: rec.loanId,
+            completionDate: new Date(),
+            finalBalance: outstanding.toFixed(2),
+            totalPaid: '0.00',
+            totalPrincipalPaid: '0.00',
+            totalInterestPaid: '0.00',
+            triggerSource: 'ledger_entry',
+            triggerLedgerEntryId: null,
+          }).catch(() => {});
+
+          logger.info({ loanId: rec.loanId, staffName: rec.staffName, period: rec.period }, 'Loan auto-completed from migration data');
+        }
+
+        // Case 2: COMPLETED loan still showing deductions (overdeduction)
+        // Check ANY linked record for this loan (not just latest) showing post-completion deductions
+        if (loan.status === 'COMPLETED' || (loan.status === 'ACTIVE' && outstanding <= 0)) {
+          const overdeductionRecords = linkedRecordsForReview.filter(r =>
+            r.loanId === rec.loanId &&
+            r.declaredOutstanding !== null &&
+            Number(r.declaredOutstanding) < 0,
+          );
+
+          for (const overRec of overdeductionRecords) {
+            const overOutstanding = Number(overRec.declaredOutstanding!);
+            await db.insert(observations).values({
+              id: generateUuidv7(),
+              type: 'post_completion_deduction',
+              staffName: overRec.staffName,
+              staffId: loan.staffId,
+              loanId: overRec.loanId,
+              mdaId: overRec.mdaId,
+              migrationRecordId: overRec.recordId,
+              uploadId,
+              description: `Overdeduction detected for ${overRec.staffName} in ${overRec.period ?? 'period'}. Declared outstanding ₦${overOutstanding.toFixed(2)} (overdeduction of ₦${Math.abs(overOutstanding).toFixed(2)}). MDA should cease deductions and process refund.`,
+              context: {
+                possibleExplanations: ['MDA payroll not updated after loan completion', 'Administrative lag in stop-order'],
+                suggestedAction: 'Notify MDA to cease deductions. Process refund for overdeducted amount.',
+                dataCompleteness: 1.0,
+                completenessNote: 'Derived from migration record vs computed loan status',
+                dataPoints: { declaredOutstanding: overRec.declaredOutstanding, period: overRec.period, installmentsPaid: overRec.installmentsPaid },
+              },
+              sourceReference: null,
+              status: 'unreviewed',
+            }).onConflictDoNothing();
+          }
+        }
+      }
+    } catch (err) {
+      logger.error({ err, uploadId }, 'Linked-record completion/overdeduction check failed');
     }
   })();
 

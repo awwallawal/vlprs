@@ -51,27 +51,34 @@ const COLUMN_RULES: Array<[RegExp, CanonicalField]> = [
   // Station
   [/^station$/i, 'station'],
 
-  // Outstanding balance — specific patterns first
+  // Outstanding balance — specific patterns first (incl. OUSTANDING typo)
   [/^out\s*s?t?a?n?d?i?n?g?\s*balance$/i, 'outstandingBalance'],
   [/^outstanding\s+bal\.?$/i, 'outstandingBalance'],
   [/^outsd\.?\s*bal(ance)?\.?$/i, 'outstandingBalance'],
   [/^bal\.?$/i, 'outstandingBalance'],
   [/^outstanding$/i, 'outstandingBalance'],
+  [/^oust?anding$/i, 'outstandingBalance'],     // OUSTANDING typo
+  [/^oust?anding\s*bal(ance)?$/i, 'outstandingBalance'],
+  [/^loan\s*balance$/i, 'outstandingBalance'],
 
   // Total loan paid
   [/^total\s*loan\s*paid/i, 'totalLoanPaid'],
 
-  // Installments outstanding (period after "INSTAL." is common)
+  // Installments outstanding (handles INSTAL., INSTALL, INSTALLMENT, OUSTANDING typo)
   [/^no\.?\s*(of\.?)?\s*instal(l?ment)?\.?\s*outstanding/i, 'installmentsOutstanding'],
+  [/^no\.?\s*(of\.?)?\s*instal+\s*oust?anding$/i, 'installmentsOutstanding'],
   [/^out\s*s?t?a?n?d?i?n?g?\s*instal/i, 'installmentsOutstanding'],
+  [/^oust?anding\s*instal/i, 'installmentsOutstanding'],
 
-  // Installments paid
+  // Installments paid (handles INSTAL., INSTALL, INSTALLMENT)
   [/^no\.?\s*(of\.?)?\s*instal(l?ment)?\.?\s*paid/i, 'installmentsPaid'],
+  [/^no\.?\s*(of\.?)?\s*instal+\s*paid$/i, 'installmentsPaid'],
   [/^instal(l?ment)?\.?\s*paid/i, 'installmentsPaid'],
 
-  // Total outstanding interest
+  // Total outstanding interest (incl. OUSTANDING typo)
   [/^total\s*outstanding\s*int(e?r[ea]st|rest)/i, 'totalOutstandingInterest'],
   [/^total\s*outstanding$/i, 'totalOutstandingInterest'],
+  [/^oust?anding\s*int(e?r[ea]st|rest)$/i, 'totalOutstandingInterest'],
 
   // Total interest paid
   [/^total\s*interest\s*paid/i, 'totalInterestPaid'],
@@ -86,8 +93,9 @@ const COLUMN_RULES: Array<[RegExp, CanonicalField]> = [
   // Monthly deduction
   [/^monthl?y\s*(deduction|ded)/i, 'monthlyDeduction'],
 
-  // Number of installments (count)
+  // Number of installments (count) — incl. INSTALL (no M), INSTAL., INSTALMENT
   [/^(total\s*)?no\.?\s*(of\.?)?\s*i(n?st|nst)(a?l\.?(l?ment)?)?\.?$/i, 'installmentCount'],
+  [/^(total\s*)?no\.?\s*(of\.?)?\s*instal+$/i, 'installmentCount'],
 
   // Total loan (must come after "total loan paid")
   [/^total\s*loan(\s*#)?$/i, 'totalLoan'],

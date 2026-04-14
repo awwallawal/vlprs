@@ -16,7 +16,6 @@ interface MigrationProgressCardProps {
   recordCounts?: { clean: number; minor: number; significant: number; structural: number; anomalous?: number };
   lastActivity?: string;
   baselineCompletion?: { done: number; total: number };
-  observationCount?: number;
   onClick?: () => void;
   className?: string;
 }
@@ -28,7 +27,6 @@ export function MigrationProgressCard({
   recordCounts,
   lastActivity,
   baselineCompletion,
-  observationCount,
   onClick,
   className,
 }: MigrationProgressCardProps) {
@@ -116,12 +114,6 @@ export function MigrationProgressCard({
           Baselines: {baselineCompletion.done}/{baselineCompletion.total}
           <MetricHelp metric="migration.reviewProgress" />
         </p>
-      )}
-
-      {typeof observationCount === 'number' && observationCount > 0 && (
-        <Badge className="bg-slate-100 text-teal border-slate-200 text-[10px] mb-2">
-          {observationCount} observation{observationCount !== 1 ? 's' : ''}
-        </Badge>
       )}
 
       {lastActivity && (

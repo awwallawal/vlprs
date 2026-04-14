@@ -1,6 +1,7 @@
 import { rateLimit, MemoryStore } from 'express-rate-limit';
 import { VOCABULARY } from '@vlprs/shared';
 
+// Touch to reload — UAT
 const authStore = new MemoryStore();
 const writeStore = new MemoryStore();
 const readStore = new MemoryStore();

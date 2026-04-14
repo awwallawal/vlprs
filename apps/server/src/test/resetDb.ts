@@ -20,6 +20,8 @@ import { drainFireAndForgetWrites } from '../services/fireAndForgetTracking';
 export async function resetDb(): Promise<void> {
   await drainFireAndForgetWrites();
   await db.execute(sql`TRUNCATE
+    approved_beneficiaries,
+    approval_batches,
     auto_stop_certificates,
     loan_completions,
     metric_snapshots,

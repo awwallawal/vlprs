@@ -77,6 +77,17 @@ export interface MdaSummary {
   expectedMonthlyDeduction?: string;
   actualMonthlyRecovery?: string;
   variancePercent?: number | null;
+  declaredRecovery?: string;
+  collectionPotential?: string;
+  recoveryVarianceAmount?: string | null;
+  recoveryVariancePercent?: number | null;
+  migrationUploads?: Array<{
+    id: string;
+    filename: string;
+    status: string;
+    totalRecords: number;
+    createdAt: string;
+  }>;
 }
 
 export interface MigrationMdaStatus {

@@ -324,7 +324,7 @@ development_status:
   #   - Deceased: informational only (estate/guarantor recovery is policy-driven)
   #   - MDA Alias Review with persistent saved mappings (novel reusable component)
   epic-15: in-progress
-  15-1-committee-list-upload-pipeline: ready-for-dev  # Two-track wizard: 3-step approval (5-col) + 5-step retiree/deceased (17-col). Global MDA Alias Enhancement, dual schema detection, flexible batch model (FR93)
+  15-1-committee-list-upload-pipeline: done  # Two-track wizard: 3-step approval (5-col) + 5-step retiree/deceased (17-col). Global MDA Alias Enhancement, dual schema detection, flexible batch model (FR93). Code review: 13 findings (2C 2H 6M 3L) all fixed
   15-2-fuzzy-name-matching-engine: ready-for-dev  # Confidence bands: High ≥95% (auto-link), Medium 85-94% (review queue), Low <85% (flagged). Token-set similarity, benchmark Jaro-Winkler vs Levenshtein (FR85 extended)
   15-3-monthly-onboarding-scan: ready-for-dev  # Hooks into Epic 5 submission pipeline, fire-and-forget. Tracks first_deduction_month, generates attention items at 3/6 months (FR85 extended, FR33(l) extended)
   15-4-onboarding-pipeline-dashboard-report: ready-for-dev  # Onboarding curve, per-MDA breakdown, historical rates, Executive Summary population, branded PDF export (FR94)

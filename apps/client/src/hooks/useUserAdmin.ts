@@ -1,7 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/apiClient';
 import type { User, UserListItem, PaginatedResponse } from '@vlprs/shared';
-import { getMockUsersResponse, MOCK_MDAS } from '@/mocks/users';
 
 // ─── Queries ───────────────────────────────────────────────
 
@@ -22,17 +21,16 @@ export interface UserFilters {
 export function useUsers(filters?: UserFilters) {
   return useQuery<PaginatedResponse<UserListItem>>({
     queryKey: ['users', filters],
-    queryFn: async () => getMockUsersResponse(filters),
-    // Wire: queryFn: () => {
-    //   const params = new URLSearchParams();
-    //   if (filters) {
-    //     Object.entries(filters).forEach(([key, value]) => {
-    //       if (value !== undefined && value !== '') params.set(key, String(value));
-    //     });
-    //   }
-    //   const qs = params.toString();
-    //   return apiClient<PaginatedResponse<UserListItem>>(`/users${qs ? `?${qs}` : ''}`);
-    // },
+    queryFn: () => {
+      const params = new URLSearchParams();
+      if (filters) {
+        Object.entries(filters).forEach(([key, value]) => {
+          if (value !== undefined && value !== '') params.set(key, String(value));
+        });
+      }
+      const qs = params.toString();
+      return apiClient<PaginatedResponse<UserListItem>>(`/users${qs ? `?${qs}` : ''}`);
+    },
   });
 }
 
@@ -50,7 +48,7 @@ export interface MdaOption {
 export function useMdas() {
   return useQuery<MdaOption[]>({
     queryKey: ['mdas'],
-    queryFn: async () => MOCK_MDAS,
+    queryFn: () => apiClient<MdaOption[]>('/mdas'),
     staleTime: 5 * 60_000,
   });
 }

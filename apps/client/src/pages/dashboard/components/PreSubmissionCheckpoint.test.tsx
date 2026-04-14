@@ -1,8 +1,14 @@
-import { render, screen, within } from '@testing-library/react';
+import { render as rtlRender, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { MemoryRouter } from 'react-router';
 import { describe, expect, it, vi } from 'vitest';
 import { PreSubmissionCheckpoint } from './PreSubmissionCheckpoint';
 import type { PreSubmissionCheckpoint as CheckpointData } from '@vlprs/shared';
+
+// PendingEventsTable uses useNavigate — wrap every render in MemoryRouter
+function render(ui: Parameters<typeof rtlRender>[0]) {
+  return rtlRender(<MemoryRouter>{ui}</MemoryRouter>);
+}
 
 const emptyCheckpoint: CheckpointData = {
   approachingRetirement: [],
@@ -66,6 +72,7 @@ describe('PreSubmissionCheckpoint', () => {
   });
 
   // AC 3 — Zero Deduction renders as a proper table
+  // Story 15.0j (#24/#25) — pending events now render as cards, so only 2 tables exist.
   it('renders zero deduction items in a table with sortable columns', () => {
     const onConfirm = vi.fn();
     render(
@@ -78,17 +85,17 @@ describe('PreSubmissionCheckpoint', () => {
       />,
     );
 
-    // Should have table elements (3 tables — retirement, zero deduction, pending events)
+    // Retirement + zero deduction are tables; pending events is now card-style
     const tables = screen.getAllByRole('table');
-    expect(tables).toHaveLength(3);
+    expect(tables).toHaveLength(2);
 
     // Check zero deduction specific column headers exist (shared headers like "Staff Name" appear in multiple tables)
     expect(screen.getByText('Last Deduction')).toBeInTheDocument();
     expect(screen.getByText('Days Since')).toBeInTheDocument();
   });
 
-  // AC 3 — Retirement and pending events also render as tables
-  it('renders retirement and pending event items as tables', () => {
+  // AC 3 — Retirement renders as table; pending events renders as action cards
+  it('renders retirement as a table and pending events as actionable cards', () => {
     const onConfirm = vi.fn();
     render(
       <PreSubmissionCheckpoint
@@ -100,18 +107,19 @@ describe('PreSubmissionCheckpoint', () => {
       />,
     );
 
-    // All three sections should have tables
+    // Two tables: retirement + zero deduction
     const tables = screen.getAllByRole('table');
-    expect(tables).toHaveLength(3);
+    expect(tables).toHaveLength(2);
 
     // Retirement table headers
     expect(screen.getByText('Retirement Date')).toBeInTheDocument();
     expect(screen.getByText('Days Until')).toBeInTheDocument();
 
-    // Pending events table headers
-    expect(screen.getByText('Event Type')).toBeInTheDocument();
-    expect(screen.getByText('Effective Date')).toBeInTheDocument();
-    expect(screen.getByText('Status')).toBeInTheDocument();
+    // Pending events now rendered as cards: event type + staff name + status pill
+    expect(screen.getByText('TRANSFER_OUT')).toBeInTheDocument();
+    expect(screen.getByText('Alice Brown')).toBeInTheDocument();
+    // reconciliationStatus 'unconfirmed' (lowercase) falls through to default "Pending" label
+    expect(screen.getByText('Pending')).toBeInTheDocument();
   });
 
   // AC 3 — Pagination renders when >25 items

@@ -885,3 +885,74 @@ export const auditLog = pgTable(
     index('idx_audit_log_action').on(table.action),
   ],
 );
+
+// ─── Approval Batches (Story 15.1) ──────────────────────────────────
+export const approvalBatches = pgTable(
+  'approval_batches',
+  {
+    id: uuid('id').primaryKey().$defaultFn(generateUuidv7),
+    label: varchar('label', { length: 255 }).notNull(),
+    year: integer('year'), // nullable for ad-hoc batches
+    listType: varchar('list_type', { length: 50 }).notNull(), // 'APPROVAL' | 'RETIREE'
+    notes: text('notes'),
+    uploadedBy: uuid('uploaded_by').notNull().references(() => users.id),
+    uploadedAt: timestamp('uploaded_at', { withTimezone: true }).notNull().defaultNow(),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    index('idx_approval_batches_year').on(table.year),
+    index('idx_approval_batches_list_type').on(table.listType),
+  ],
+);
+
+// ─── Approved Beneficiaries (Story 15.1) ─────────────────────────────
+export const approvedBeneficiaries = pgTable(
+  'approved_beneficiaries',
+  {
+    id: uuid('id').primaryKey().$defaultFn(generateUuidv7),
+    batchId: uuid('batch_id').notNull().references(() => approvalBatches.id),
+    name: varchar('name', { length: 255 }).notNull(),
+    mdaRaw: varchar('mda_raw', { length: 255 }), // original string from file
+    mdaCanonicalId: uuid('mda_canonical_id').references(() => mdas.id),
+    gradeLevel: varchar('grade_level', { length: 10 }),
+    approvedAmount: numeric('approved_amount', { precision: 15, scale: 2 }),
+    listType: varchar('list_type', { length: 50 }).notNull(), // APPROVAL | ADDENDUM | RETIREE | DECEASED
+
+    // Financial data (17-column retiree records only — null for 5-column approval records)
+    principal: numeric('principal', { precision: 15, scale: 2 }),
+    interest: numeric('interest', { precision: 15, scale: 2 }),
+    totalLoan: numeric('total_loan', { precision: 15, scale: 2 }),
+    monthlyDeduction: numeric('monthly_deduction', { precision: 15, scale: 2 }),
+    installmentsPaid: integer('installments_paid'),
+    totalPrincipalPaid: numeric('total_principal_paid', { precision: 15, scale: 2 }),
+    totalInterestPaid: numeric('total_interest_paid', { precision: 15, scale: 2 }),
+    totalLoanPaid: numeric('total_loan_paid', { precision: 15, scale: 2 }),
+    outstandingPrincipal: numeric('outstanding_principal', { precision: 15, scale: 2 }),
+    outstandingInterest: numeric('outstanding_interest', { precision: 15, scale: 2 }),
+    outstandingBalance: numeric('outstanding_balance', { precision: 15, scale: 2 }),
+    installmentsOutstanding: integer('installments_outstanding'),
+    collectionDate: text('collection_date'), // raw text — dates in files are inconsistent
+    commencementDate: text('commencement_date'), // raw text
+
+    // Matching & onboarding status (populated by Stories 15.2-15.4)
+    matchStatus: varchar('match_status', { length: 50 }).notNull().default('UNMATCHED'),
+    matchedLoanId: uuid('matched_loan_id').references(() => loans.id),
+    matchConfidence: integer('match_confidence'), // 0-100
+    firstDeductionMonth: varchar('first_deduction_month', { length: 7 }), // YYYY-MM
+    onboardingStatus: varchar('onboarding_status', { length: 50 }).notNull().default('NOT_YET_OPERATIONAL'),
+
+    // Provenance
+    uploadReference: uuid('upload_reference'), // FK to track source upload
+    sourceRow: integer('source_row'),
+    sourceSheet: text('source_sheet'),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    index('idx_approved_beneficiaries_batch_id').on(table.batchId),
+    index('idx_approved_beneficiaries_mda_canonical_id').on(table.mdaCanonicalId),
+    index('idx_approved_beneficiaries_match_status').on(table.matchStatus),
+    index('idx_approved_beneficiaries_onboarding_status').on(table.onboardingStatus),
+    index('idx_approved_beneficiaries_name').on(table.name),
+  ],
+);

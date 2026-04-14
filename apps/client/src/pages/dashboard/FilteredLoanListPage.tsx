@@ -54,6 +54,8 @@ export function FilteredLoanListPage() {
   const sortBy = searchParams.get('sortBy') ?? undefined;
   const sortOrder = searchParams.get('sortOrder') ?? undefined;
 
+  const page = Number(searchParams.get('page') ?? '1') || 1;
+
   // Determine if this is a classification-based filter or attention item filter
   const classification = CLASSIFICATION_FILTERS[filter];
   const attentionFilter = ATTENTION_FILTERS.has(filter) ? filter : undefined;
@@ -64,6 +66,7 @@ export function FilteredLoanListPage() {
     sortBy,
     sortOrder,
     classification,
+    page,
   );
 
   function handleSort(column: string) {
@@ -75,6 +78,7 @@ export function FilteredLoanListPage() {
         next.set('sortBy', column);
         next.set('sortOrder', 'asc');
       }
+      next.delete('page');
       return next;
     });
   }
@@ -105,7 +109,7 @@ export function FilteredLoanListPage() {
   }, []);
 
   const loans = result?.data ?? [];
-  const label = FILTER_LABELS[filter] ?? filter;
+  const label = (FILTER_LABELS[filter] ?? filter) || 'All Loans';
 
   return (
     <div className="space-y-6">
@@ -231,6 +235,41 @@ export function FilteredLoanListPage() {
           </p>
         )}
       </div>
+
+      {/* Pagination */}
+      {result?.pagination && result.pagination.totalPages > 1 && (
+        <div className="flex items-center justify-between text-sm text-text-secondary">
+          <span>
+            Page {result.pagination.page} of {result.pagination.totalPages} ({result.pagination.totalItems} loans)
+          </span>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              className="rounded border px-3 py-1 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed"
+              disabled={page <= 1}
+              onClick={() => setSearchParams((prev) => {
+                const next = new URLSearchParams(prev);
+                next.set('page', String(page - 1));
+                return next;
+              })}
+            >
+              Previous
+            </button>
+            <button
+              type="button"
+              className="rounded border px-3 py-1 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed"
+              disabled={page >= result.pagination.totalPages}
+              onClick={() => setSearchParams((prev) => {
+                const next = new URLSearchParams(prev);
+                next.set('page', String(page + 1));
+                return next;
+              })}
+            >
+              Next
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

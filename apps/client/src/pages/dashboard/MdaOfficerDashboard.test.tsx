@@ -141,7 +141,8 @@ describe('MdaOfficerDashboard', () => {
   it('renders hero metric cards (AC: 1)', () => {
     renderDashboard();
     expect(screen.getByText('Active Loans')).toBeInTheDocument();
-    expect(screen.getByText('Monthly Recovery')).toBeInTheDocument();
+    // "Monthly Recovery" renamed to "Declared Recovery" in UAT #9
+    expect(screen.getByText('Declared Recovery')).toBeInTheDocument();
     expect(screen.getByText('Total Exposure')).toBeInTheDocument();
     expect(screen.getByText('Completion Rate')).toBeInTheDocument();
   });

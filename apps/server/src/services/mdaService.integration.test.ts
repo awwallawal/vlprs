@@ -10,6 +10,8 @@ let financeMdaId: string;
 let inactiveMdaId: string;
 let agricultureMdaId: string;
 let cduMdaId: string;
+let highCourtMdaId: string;
+let accosMdaId: string;
 
 beforeAll(async () => {
   await db.execute(sql`TRUNCATE refresh_tokens, audit_log, users, mdas CASCADE`);
@@ -19,6 +21,8 @@ beforeAll(async () => {
   inactiveMdaId = generateUuidv7();
   agricultureMdaId = generateUuidv7();
   cduMdaId = generateUuidv7();
+  highCourtMdaId = generateUuidv7();
+  accosMdaId = generateUuidv7();
 
   await db.insert(mdas).values([
     { id: healthMdaId, name: 'Ministry of Health', code: 'HEALTH', abbreviation: 'Health' },
@@ -26,6 +30,8 @@ beforeAll(async () => {
     { id: inactiveMdaId, name: 'Defunct Agency', code: 'DEFUNCT', abbreviation: 'Defunct', isActive: false },
     { id: agricultureMdaId, name: 'Ministry of Agriculture', code: 'AGRICULTURE', abbreviation: 'Agriculture' },
     { id: cduMdaId, name: 'Cocoa Development Unit', code: 'CDU', abbreviation: 'CDU', parentMdaId: agricultureMdaId },
+    { id: highCourtMdaId, name: 'Oyo State High Court', code: 'HIGH COURT', abbreviation: 'High Court' },
+    { id: accosMdaId, name: 'Agricultural Credit Corporation of Oyo State', code: 'ACCOS', abbreviation: 'ACCOS' },
   ]);
 
   // Seed aliases for testing layer 3
@@ -45,7 +51,7 @@ afterAll(async () => {
 describe('mdaService.listMdas', () => {
   it('returns only active MDAs by default', async () => {
     const result = await mdaService.listMdas();
-    expect(result.length).toBe(4);
+    expect(result.length).toBe(6);
     expect(result.every((m) => m.isActive)).toBe(true);
   });
 
@@ -69,7 +75,7 @@ describe('mdaService.listMdas', () => {
 
   it('returns all MDAs when scope is null (admin)', async () => {
     const result = await mdaService.listMdas({}, null);
-    expect(result.length).toBe(4); // 4 active
+    expect(result.length).toBe(6); // 6 active
   });
 
   it('returns MdaListItem shape with parent fields', async () => {
@@ -186,5 +192,41 @@ describe('mdaService parent/agency relationship (Story 3.0b)', () => {
     expect(result.length).toBe(1);
     expect(result[0].code).toBe('CDU');
     expect(result[0].parentMdaCode).toBe('AGRICULTURE');
+  });
+});
+
+describe('mdaService.resolveMdaWithCandidates (Layer 2.5 fuzzy)', () => {
+  it('A1.3: "AGRIC" → resolved null, candidates include Agriculture (prefix, score 92)', async () => {
+    const result = await mdaService.resolveMdaWithCandidates('AGRIC');
+    expect(result.resolved).toBeNull();
+    expect(result.candidates.length).toBeGreaterThan(0);
+    const agric = result.candidates.find((c) => c.mda.code === 'AGRICULTURE');
+    expect(agric).toBeDefined();
+    expect(agric!.score).toBe(92);
+    expect(agric!.reason).toBe('prefix');
+  });
+
+  it('A1.4: "HIGHCOURT" → resolved null, candidates include High Court (normalized, space-collapsed)', async () => {
+    const result = await mdaService.resolveMdaWithCandidates('HIGHCOURT');
+    expect(result.resolved).toBeNull();
+    expect(result.candidates.length).toBeGreaterThan(0);
+    const hc = result.candidates.find((c) => c.mda.code === 'HIGH COURT');
+    expect(hc).toBeDefined();
+    expect(hc!.score).toBe(92);
+    expect(hc!.reason).toBe('normalized');
+  });
+
+  it('A1.5: "HEALTH" → resolved directly (Layer 1), candidates empty', async () => {
+    const result = await mdaService.resolveMdaWithCandidates('HEALTH');
+    expect(result.resolved).not.toBeNull();
+    expect(result.resolved!.code).toBe('HEALTH');
+    expect(result.candidates).toEqual([]);
+  });
+
+  it('A1.6: "HLT" → resolved via alias (Layer 3), candidates empty', async () => {
+    const result = await mdaService.resolveMdaWithCandidates('HLT');
+    expect(result.resolved).not.toBeNull();
+    expect(result.resolved!.code).toBe('HEALTH');
+    expect(result.candidates).toEqual([]);
   });
 });

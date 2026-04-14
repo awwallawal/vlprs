@@ -159,6 +159,26 @@ export function useCreateBatchBaseline(uploadId: string) {
   });
 }
 
+/** Dynamic variant — accepts uploadId at mutation call time (for upload list actions). */
+export function useBatchBaseline() {
+  const queryClient = useQueryClient();
+
+  return useMutation<BatchBaselineResult, Error, { uploadId: string }>({
+    mutationFn: ({ uploadId }) =>
+      apiClient<BatchBaselineResult>(`/migrations/${uploadId}/baseline`, {
+        method: 'POST',
+        body: JSON.stringify({ confirm: true }),
+      }),
+    onSuccess: (_data, { uploadId }) => {
+      queryClient.invalidateQueries({ queryKey: ['migrations'] });
+      queryClient.invalidateQueries({ queryKey: ['baseline-summary', uploadId] });
+      queryClient.invalidateQueries({ queryKey: ['validation', uploadId] });
+      queryClient.invalidateQueries({ queryKey: ['migration-metrics'] });
+      queryClient.invalidateQueries({ queryKey: ['loans'] });
+    },
+  });
+}
+
 // ─── Record Detail & Correction (Story 8.0b) ───────────────────────
 
 export function useMigrationRecordDetail(uploadId: string, recordId: string | null) {
@@ -227,6 +247,29 @@ export function useDiscardMigration() {
   });
 }
 
+// ─── Delete Upload (UAT 2026-04-12) ─────────────────────────────────
+
+export function useDeleteMigration() {
+  const queryClient = useQueryClient();
+
+  return useMutation<
+    { deleted: true; recordsAffected: number; loansRemoved: number },
+    Error,
+    { uploadId: string; confirmFilename: string; reason: string }
+  >({
+    mutationFn: ({ uploadId, confirmFilename, reason }) =>
+      apiClient<{ deleted: true; recordsAffected: number; loansRemoved: number }>(`/migrations/${uploadId}`, {
+        method: 'DELETE',
+        body: JSON.stringify({ confirmFilename, reason }),
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['migrations'] });
+      queryClient.invalidateQueries({ queryKey: ['loans'] });
+      queryClient.invalidateQueries({ queryKey: ['migration-metrics'] });
+    },
+  });
+}
+
 export function useBaselineSummary(uploadId: string) {
   return useQuery<BaselineSummary>({
     queryKey: ['baseline-summary', uploadId],
@@ -256,6 +299,36 @@ export function useFlaggedRecords(
     },
     enabled: !!uploadId,
     staleTime: 15_000,
+  });
+}
+
+/** Fetches ALL flagged records across all uploads for the user's MDA scope. */
+export function useAllFlaggedRecords(
+  filters?: { page?: number; limit?: number; status?: 'pending' | 'reviewed' | 'all'; mda?: string },
+) {
+  return useQuery<{ records: FlaggedRecordSummary[]; total: number; page: number; limit: number }>({
+    queryKey: ['migrations', 'review', 'all', filters],
+    queryFn: async () => {
+      const params = new URLSearchParams();
+      if (filters?.page) params.set('page', String(filters.page));
+      if (filters?.limit) params.set('limit', String(filters.limit));
+      if (filters?.status) params.set('status', filters.status);
+      if (filters?.mda) params.set('mda', filters.mda);
+
+      return apiClient<{ records: FlaggedRecordSummary[]; total: number; page: number; limit: number }>(
+        `/migrations/review/all?${params}`,
+      );
+    },
+    staleTime: 15_000,
+  });
+}
+
+/** All-MDA progress aggregated across all active uploads (UAT 2026-04-14) */
+export function useAllMdaReviewProgress() {
+  return useQuery<MdaReviewProgress[]>({
+    queryKey: ['migrations', 'review', 'progress-all'],
+    queryFn: () => apiClient<MdaReviewProgress[]>('/migrations/review/progress-all'),
+    staleTime: 30_000,
   });
 }
 

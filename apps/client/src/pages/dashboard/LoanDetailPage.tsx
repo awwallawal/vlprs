@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router';
-import { ArrowLeft, Clock, AlertTriangle, Download, Loader2, Send } from 'lucide-react';
+import { ArrowLeft, AlertTriangle, Download, Loader2, Send, Pencil, Check, X } from 'lucide-react';
+import { toast } from 'sonner';
+import { Input } from '@/components/ui/input';
 import { formatDate } from '@/lib/formatters';
-import { useLoanDetail } from '@/hooks/useLoanData';
+import { useLoanDetail, useUpdateStaffId } from '@/hooks/useLoanData';
 import { useCertificate, useDownloadCertificatePdf, useResendNotifications } from '@/hooks/useCertificate';
 import { NairaDisplay } from '@/components/shared/NairaDisplay';
 import { Badge } from '@/components/ui/badge';
@@ -40,11 +42,14 @@ export function LoanDetailPage() {
   const { mdaId, loanId } = useParams<{ mdaId: string; loanId: string }>();
   const navigate = useNavigate();
   const loanDetail = useLoanDetail(loanId!);
+  const updateStaffId = useUpdateStaffId(loanId!);
   const isCompleted = loanDetail.data?.status === 'COMPLETED';
   const certificate = useCertificate(loanId!, isCompleted);
   const downloadPdf = useDownloadCertificatePdf(loanId!);
   const resendNotifications = useResendNotifications(loanId!);
   const [flagOpen, setFlagOpen] = useState(false);
+  const [editingStaffId, setEditingStaffId] = useState(false);
+  const [staffIdDraft, setStaffIdDraft] = useState('');
   const user = useAuthStore((s) => s.user);
   const canFlag = user?.role === 'super_admin' || user?.role === 'dept_admin';
   const isSuperAdmin = user?.role === 'super_admin';
@@ -77,15 +82,73 @@ export function LoanDetailPage() {
           <>
             <div className="flex flex-wrap items-center gap-3">
               <h1 className="text-2xl font-bold text-text-primary">
-                {loanDetail.data.borrowerName}
+                {loanDetail.data.staffName}
               </h1>
               <Badge variant={LOAN_STATUS_MAP[loanDetail.data.status].variant}>
                 {LOAN_STATUS_MAP[loanDetail.data.status].label}
               </Badge>
             </div>
-            <p className="mt-1 text-sm text-text-secondary font-mono">
-              Staff ID: {loanDetail.data.staffId ?? '—'}
-            </p>
+            <div className="mt-1 flex items-center gap-2">
+              {editingStaffId ? (
+                <>
+                  <Input
+                    value={staffIdDraft}
+                    onChange={(e) => setStaffIdDraft(e.target.value)}
+                    className="h-7 w-48 font-mono text-sm"
+                    placeholder="e.g. OY/BIR/001"
+                    autoFocus
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && staffIdDraft.trim().length >= 2) {
+                        updateStaffId.mutate({ staffId: staffIdDraft.trim() }, {
+                          onSuccess: () => { setEditingStaffId(false); toast.success('Staff ID updated'); },
+                          onError: (err) => toast.error(err.message),
+                        });
+                      }
+                      if (e.key === 'Escape') setEditingStaffId(false);
+                    }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (staffIdDraft.trim().length >= 2) {
+                        updateStaffId.mutate({ staffId: staffIdDraft.trim() }, {
+                          onSuccess: () => { setEditingStaffId(false); toast.success('Staff ID updated'); },
+                          onError: (err) => toast.error(err.message),
+                        });
+                      }
+                    }}
+                    disabled={staffIdDraft.trim().length < 2 || updateStaffId.isPending}
+                    className="p-1 rounded text-teal hover:bg-teal/10 disabled:opacity-40"
+                  >
+                    <Check className="h-4 w-4" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setEditingStaffId(false)}
+                    className="p-1 rounded text-text-muted hover:bg-slate-100"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </>
+              ) : (
+                <>
+                  <span className="text-sm text-text-secondary font-mono">
+                    Staff ID: {loanDetail.data.staffId ?? '—'}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => { setStaffIdDraft(loanDetail.data?.staffId ?? ''); setEditingStaffId(true); }}
+                    className="p-1 rounded text-text-muted hover:text-teal hover:bg-teal/10 transition-colors"
+                    title="Edit Staff ID"
+                  >
+                    <Pencil className="h-3.5 w-3.5" />
+                  </button>
+                  {loanDetail.data.staffId?.startsWith('MIG-') && (
+                    <span className="text-xs text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded">Needs real ID</span>
+                  )}
+                </>
+              )}
+            </div>
           </>
         ) : (
           <p className="text-text-secondary">Loan not found.</p>
@@ -114,22 +177,24 @@ export function LoanDetailPage() {
             <div className="rounded-lg border bg-white p-6">
               <p className="text-sm text-text-secondary mb-1">Loan Reference</p>
               <p className="font-medium font-mono text-text-primary">
-                {loanDetail.data.loanRef}
+                {loanDetail.data.loanReference}
               </p>
             </div>
             <div className="rounded-lg border bg-white p-6">
               <p className="text-sm text-text-secondary mb-1">
-                Grade Level Tier
-                <MetricHelp metric="loan.gradeLevelTier" />
+                Grade Level
               </p>
               <p className="font-medium text-text-primary">
-                Tier {loanDetail.data.gradeLevelTier}
+                {loanDetail.data.gradeLevel}
               </p>
+              {loanDetail.data.gradeLevel !== 'MIGRATION' && loanDetail.data.gradeLevel?.startsWith('Levels') && (
+                <p className="text-xs text-text-muted mt-1">Inferred from principal amount</p>
+              )}
             </div>
             <div className="rounded-lg border bg-white p-6">
               <p className="text-sm text-text-secondary mb-1">Loan Amount</p>
               <NairaDisplay
-                amount={loanDetail.data.principal}
+                amount={loanDetail.data.principalAmount}
                 variant="body"
                 className="font-bold text-lg"
               />
@@ -137,13 +202,11 @@ export function LoanDetailPage() {
             <div className="rounded-lg border bg-white p-6">
               <p className="text-sm text-text-secondary mb-1">Tenure</p>
               <p className="font-medium text-text-primary">
-                {loanDetail.data.installmentsPaid} paid /{' '}
-                {loanDetail.data.installmentsRemaining} remaining
+                {loanDetail.data.migrationContext?.installmentsPaid ?? loanDetail.data.balance.installmentsCompleted} paid /{' '}
+                {loanDetail.data.migrationContext?.installmentsOutstanding ?? loanDetail.data.balance.installmentsRemaining} remaining
               </p>
               <p className="text-xs text-text-muted mt-1">
-                {loanDetail.data.installmentsPaid +
-                  loanDetail.data.installmentsRemaining}{' '}
-                total installments
+                {loanDetail.data.tenureMonths} total installments
               </p>
             </div>
             <div className="rounded-lg border bg-white p-6">
@@ -152,28 +215,28 @@ export function LoanDetailPage() {
                 <MetricHelp metric="loan.outstandingBalance" />
               </p>
               <NairaDisplay
-                amount={loanDetail.data.outstandingBalance}
+                amount={loanDetail.data.balance.computedBalance}
                 variant="body"
                 className="font-bold text-lg"
               />
             </div>
             <div className="rounded-lg border bg-white p-6">
               <p className="text-sm text-text-secondary mb-1">
-                Last Deduction
+                Monthly Deduction
               </p>
-              <p className="font-medium text-text-primary">
-                {loanDetail.data.lastDeductionDate
-                  ? formatDate(loanDetail.data.lastDeductionDate)
-                  : '—'}
-              </p>
+              <NairaDisplay
+                amount={loanDetail.data.monthlyDeductionAmount}
+                variant="body"
+                className="font-medium"
+              />
             </div>
             <div className="rounded-lg border bg-white p-6">
               <p className="text-sm text-text-secondary mb-1">
                 Retirement Date
               </p>
               <p className="font-medium text-text-primary">
-                {loanDetail.data.retirementDate
-                  ? formatDate(loanDetail.data.retirementDate)
+                {loanDetail.data.temporalProfile?.computedRetirementDate
+                  ? formatDate(loanDetail.data.temporalProfile.computedRetirementDate)
                   : '—'}
               </p>
             </div>
@@ -266,34 +329,71 @@ export function LoanDetailPage() {
         </section>
       )}
 
-      {/* Placeholder sections for future features */}
-      <section aria-label="Upcoming features" className="space-y-4">
-        <PlaceholderSection
-          title="Repayment Schedule"
-          sprint="Coming in Sprint 2 (Epic 2)"
-        />
-        <PlaceholderSection
-          title="Ledger History"
-          sprint="Coming in Sprint 2 (Epic 2)"
-        />
-      </section>
+      {/* Repayment Schedule */}
+      {loanDetail.data?.schedule && (
+        <section aria-label="Repayment schedule">
+          <Accordion type="single" collapsible>
+            <AccordionItem value="schedule">
+              <AccordionTrigger className="text-sm font-medium text-text-secondary hover:no-underline">
+                Repayment Schedule ({loanDetail.data.schedule.schedule.length} months)
+              </AccordionTrigger>
+              <AccordionContent>
+                <div className="overflow-x-auto rounded-lg border">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b bg-slate-50">
+                        <th className="px-3 py-2 text-left font-medium text-text-secondary">#</th>
+                        <th className="px-3 py-2 text-right font-medium text-text-secondary">Principal</th>
+                        <th className="px-3 py-2 text-right font-medium text-text-secondary">Interest</th>
+                        <th className="px-3 py-2 text-right font-medium text-text-secondary">Total</th>
+                        <th className="px-3 py-2 text-right font-medium text-text-secondary">Balance</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {loanDetail.data.schedule.schedule.map((row) => (
+                        <tr key={row.monthNumber} className="border-b last:border-b-0">
+                          <td className="px-3 py-1.5 text-text-secondary">{row.monthNumber}</td>
+                          <td className="px-3 py-1.5 text-right font-mono"><NairaDisplay amount={row.principalComponent} variant="table" /></td>
+                          <td className="px-3 py-1.5 text-right font-mono"><NairaDisplay amount={row.interestComponent} variant="table" /></td>
+                          <td className="px-3 py-1.5 text-right font-mono"><NairaDisplay amount={row.totalDeduction} variant="table" /></td>
+                          <td className="px-3 py-1.5 text-right font-mono"><NairaDisplay amount={row.runningBalance} variant="table" /></td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
+        </section>
+      )}
 
-      {/* Collapsed accordion: "How was this calculated?" */}
-      <section aria-label="Calculation details">
-        <Accordion type="single" collapsible>
-          <AccordionItem value="calculation">
-            <AccordionTrigger className="text-sm font-medium text-text-secondary hover:no-underline">
-              How was this calculated?
-            </AccordionTrigger>
-            <AccordionContent>
-              <p className="text-sm text-text-secondary">
-                Coming in Sprint 2 — Detailed calculation breakdown will be
-                available when the loan amortization engine is implemented.
-              </p>
-            </AccordionContent>
-          </AccordionItem>
-        </Accordion>
-      </section>
+      {/* Calculation details */}
+      {loanDetail.data?.balance && (
+        <section aria-label="Calculation details">
+          <Accordion type="single" collapsible>
+            <AccordionItem value="calculation">
+              <AccordionTrigger className="text-sm font-medium text-text-secondary hover:no-underline">
+                How was the balance calculated?
+              </AccordionTrigger>
+              <AccordionContent>
+                <div className="space-y-2 text-sm text-text-secondary">
+                  <p className="font-mono">{loanDetail.data.balance.derivation.formula}</p>
+                  <div className="grid grid-cols-2 gap-2 max-w-md">
+                    <span>Total Loan:</span>
+                    <span className="font-mono text-right"><NairaDisplay amount={loanDetail.data.balance.derivation.totalLoan} variant="table" /></span>
+                    <span>Total Paid:</span>
+                    <span className="font-mono text-right"><NairaDisplay amount={loanDetail.data.balance.totalAmountPaid} variant="table" /></span>
+                    <span>Outstanding:</span>
+                    <span className="font-mono text-right"><NairaDisplay amount={loanDetail.data.balance.computedBalance} variant="table" /></span>
+                  </div>
+                  <p className="text-xs text-text-muted">{loanDetail.data.ledgerEntryCount} ledger {loanDetail.data.ledgerEntryCount === 1 ? 'entry' : 'entries'}</p>
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
+        </section>
+      )}
     </div>
   );
 }
@@ -325,24 +425,6 @@ function ExceptionFlagSection({ loanId, flagOpen, setFlagOpen }: { loanId: strin
       )}
       <FlagExceptionDialog open={flagOpen} onOpenChange={setFlagOpen} loanId={loanId} />
     </section>
-  );
-}
-
-function PlaceholderSection({
-  title,
-  sprint,
-}: {
-  title: string;
-  sprint: string;
-}) {
-  return (
-    <div className="rounded-lg border border-dashed bg-white p-6">
-      <div className="flex items-center gap-2 text-text-secondary">
-        <Clock className="h-4 w-4" />
-        <h3 className="text-sm font-medium">{title}</h3>
-      </div>
-      <p className="mt-1 text-sm text-text-muted">{sprint}</p>
-    </div>
   );
 }
 

@@ -60,6 +60,8 @@ export interface ObservationListItem {
   staffId: string | null;
   mdaId: string;
   mdaName: string;
+  mdaCode: string | null;
+  loanId: string | null;
   description: string;
   context: ObservationContext;
   sourceReference: SourceReference | null;

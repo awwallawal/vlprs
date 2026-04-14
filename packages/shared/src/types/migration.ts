@@ -446,6 +446,7 @@ export interface MigrationRecordDetail {
   gradeLevel: string | null;
   station: string | null;
   mdaText: string | null;
+  mdaCode?: string | null;
   serialNumber: string | null;
   // Source info
   sheetName: string;
@@ -541,6 +542,7 @@ export type CountdownStatus = 'normal' | 'warning' | 'overdue';
 
 export interface FlaggedRecordSummary {
   recordId: string;
+  uploadId?: string;
   staffName: string;
   staffId: string | null;
   gradeLevel: string | null;
@@ -554,6 +556,10 @@ export interface FlaggedRecordSummary {
   correctedBy: string | null;
   correctedAt: string | null;
   correctionReason: string | null;
+  // Source period for distinguishing records of the same staff across uploads
+  sourceFile?: string | null;
+  periodYear?: number | null;
+  periodMonth?: number | null;
 }
 
 export interface MdaReviewProgress {

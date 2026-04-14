@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect } from 'react';
-import { Info, CheckCircle2, ChevronDown, ChevronLeft, ChevronRight, ArrowUp, ArrowDown, ArrowUpDown } from 'lucide-react';
+import { useNavigate } from 'react-router';
+import { Info, CheckCircle2, ChevronDown, ChevronLeft, ChevronRight, ArrowUp, ArrowDown, ArrowUpDown, AlertTriangle, ArrowRight } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/ui/collapsible';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -296,8 +297,10 @@ function ZeroDeductionTable({ items }: { items: ZeroDeductionItem[] }) {
             <tr key={item.staffId} className="border-b last:border-b-0 hover:bg-white/30">
               <td className="px-3 py-2 font-medium">{item.staffName}</td>
               <td className="px-3 py-2 font-mono text-text-secondary">{item.staffId}</td>
-              <td className="px-3 py-2 text-text-secondary">{item.lastDeductionDate}</td>
-              <td className="px-3 py-2 text-right font-mono">{item.daysSinceLastDeduction ?? '—'}</td>
+              <td className="px-3 py-2 text-text-secondary">
+                {item.lastDeductionDate === 'N/A' ? '—' : new Date(item.lastDeductionDate).toLocaleDateString('en-GB', { month: 'short', year: 'numeric' })}
+              </td>
+              <td className="px-3 py-2 text-right font-mono">{item.daysSinceLastDeduction != null ? `${item.daysSinceLastDeduction}d` : '—'}</td>
             </tr>
           ))}
         </tbody>
@@ -310,40 +313,41 @@ function ZeroDeductionTable({ items }: { items: ZeroDeductionItem[] }) {
 // ─── Pending Events table ────────────────────────────────────────
 
 function PendingEventsTable({ items }: { items: PendingEventItem[] }) {
-  const { paginated, page, setPage, totalPages, handleSort, sortIcon, showPagination } = useSortedPaginated(items, 'effectiveDate');
+  const navigate = useNavigate();
+
+  const STATUS_STYLE: Record<string, string> = {
+    OVERDUE: 'bg-amber-100 text-amber-800',
+    PENDING: 'bg-gold/10 text-gold',
+    UNCONFIRMED: 'bg-slate-100 text-slate-600',
+  };
 
   return (
-    <>
-      <table className="w-full text-sm" role="table">
-        <thead>
-          <tr className="border-b bg-white/50">
-            <th className="px-3 py-2 text-left font-medium text-text-secondary cursor-pointer select-none" onClick={() => handleSort('eventType')}>
-              Event Type {sortIcon('eventType')}
-            </th>
-            <th className="px-3 py-2 text-left font-medium text-text-secondary cursor-pointer select-none" onClick={() => handleSort('staffName')}>
-              Staff Name {sortIcon('staffName')}
-            </th>
-            <th className="px-3 py-2 text-left font-medium text-text-secondary cursor-pointer select-none" onClick={() => handleSort('effectiveDate')}>
-              Effective Date {sortIcon('effectiveDate')}
-            </th>
-            <th className="px-3 py-2 text-left font-medium text-text-secondary cursor-pointer select-none" onClick={() => handleSort('reconciliationStatus')}>
-              Status {sortIcon('reconciliationStatus')}
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          {paginated.map((item) => (
-            <tr key={`${item.staffName}-${item.effectiveDate}-${item.reconciliationStatus}`} className="border-b last:border-b-0 hover:bg-white/30">
-              <td className="px-3 py-2 font-medium">{item.eventType}</td>
-              <td className="px-3 py-2 text-text-secondary">{item.staffName}</td>
-              <td className="px-3 py-2 text-text-secondary">{item.effectiveDate}</td>
-              <td className="px-3 py-2 text-text-secondary">{item.reconciliationStatus}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-      {showPagination && <PaginationControls page={page} totalPages={totalPages} setPage={setPage} />}
-    </>
+    <div className="space-y-2">
+      {items.map((item, i) => (
+        <div
+          key={`${item.eventType}-${i}`}
+          className={`flex items-center justify-between gap-3 rounded-lg border p-3 ${item.actionUrl ? 'cursor-pointer hover:shadow-sm transition-shadow' : ''}`}
+          role={item.actionUrl ? 'link' : undefined}
+          tabIndex={item.actionUrl ? 0 : undefined}
+          onClick={() => item.actionUrl && navigate(item.actionUrl)}
+          onKeyDown={(e) => { if (item.actionUrl && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); navigate(item.actionUrl!); } }}
+        >
+          <div className="flex items-start gap-3 min-w-0">
+            <AlertTriangle className={`h-4 w-4 mt-0.5 shrink-0 ${item.reconciliationStatus === 'OVERDUE' ? 'text-amber-600' : 'text-gold'}`} />
+            <div className="min-w-0">
+              <p className="text-sm font-medium text-text-primary">{item.description ?? item.eventType}</p>
+              <p className="text-xs text-text-muted mt-0.5">{item.staffName}</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
+            <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${STATUS_STYLE[item.reconciliationStatus] ?? STATUS_STYLE.PENDING}`}>
+              {item.reconciliationStatus === 'OVERDUE' ? 'Overdue' : item.reconciliationStatus === 'UNCONFIRMED' ? 'Unconfirmed' : 'Pending'}
+            </span>
+            {item.actionUrl && <ArrowRight className="h-4 w-4 text-text-muted" />}
+          </div>
+        </div>
+      ))}
+    </div>
   );
 }
 

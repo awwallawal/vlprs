@@ -52,6 +52,14 @@ const uploadAuth = [
   scopeToMda,
 ];
 
+// Middleware stack: includes MDA_OFFICER for review actions + record detail reads
+const reviewAuth = [
+  authenticate,
+  requirePasswordChange,
+  authorise(ROLES.SUPER_ADMIN, ROLES.DEPT_ADMIN, ROLES.MDA_OFFICER),
+  scopeToMda,
+];
+
 // POST /api/migrations/upload — Upload file and get preview with auto-detected mappings
 router.post(
   '/migrations/upload',
@@ -147,6 +155,25 @@ router.patch(
   },
 );
 
+// DELETE /api/migrations/:id — Delete upload with full cascade (UAT 2026-04-12)
+router.delete(
+  '/migrations/:id',
+  ...adminAuth,
+  auditLog,
+  async (req: Request, res: Response) => {
+    const uploadId = param(req.params.id);
+    const { confirmFilename, reason } = req.body as { confirmFilename?: string; reason?: string };
+    if (!confirmFilename || typeof confirmFilename !== 'string') {
+      throw new AppError(400, 'MISSING_CONFIRMATION', 'You must provide the exact filename to confirm deletion.');
+    }
+    if (!reason || typeof reason !== 'string' || reason.length < 10) {
+      throw new AppError(400, 'MISSING_REASON', 'A deletion reason of at least 10 characters is required.');
+    }
+    const result = await migrationService.deleteUpload(uploadId, confirmFilename, reason, req.user!.userId, req.mdaScope);
+    res.json({ success: true, data: result });
+  },
+);
+
 // GET /api/migrations — List uploads for MDA with pagination
 router.get(
   '/migrations',
@@ -208,9 +235,10 @@ router.get(
 );
 
 // GET /api/migrations/:uploadId/records/:recordId — Record detail (Story 8.0b)
+// reviewAuth: MDA officers need read access to review flagged records
 router.get(
   '/migrations/:uploadId/records/:recordId',
-  ...adminAuth,
+  ...reviewAuth,
   async (req: Request, res: Response) => {
     const uploadId = param(req.params.uploadId);
     const recordId = param(req.params.recordId);
@@ -365,13 +393,32 @@ router.patch(
 
 // ─── MDA Review Routes (Story 8.0j) ────────────────────────────────
 
-// Middleware stack: includes MDA_OFFICER for review actions
-const reviewAuth = [
-  authenticate,
-  requirePasswordChange,
-  authorise(ROLES.SUPER_ADMIN, ROLES.DEPT_ADMIN, ROLES.MDA_OFFICER),
-  scopeToMda,
-];
+// reviewAuth defined at top of file (moved for hoisting)
+
+// GET /api/migrations/review/progress-all — Per-MDA progress aggregated across all active uploads (UAT 2026-04-14)
+router.get(
+  '/migrations/review/progress-all',
+  ...reviewAuth,
+  async (req: Request, res: Response) => {
+    const result = await mdaReviewService.getAllMdaReviewProgress(req.mdaScope);
+    res.json({ success: true, data: result });
+  },
+);
+
+// GET /api/migrations/review/all — All flagged records across all uploads (MDA-scoped) (UAT 2026-04-13)
+router.get(
+  '/migrations/review/all',
+  ...reviewAuth,
+  async (req: Request, res: Response) => {
+    const page = Number(req.query.page) || 1;
+    const limit = Number(req.query.limit) || 20;
+    const status = (req.query.status as 'pending' | 'reviewed' | 'all') || 'pending';
+    const mdaFilter = req.query.mda as string | undefined;
+
+    const result = await mdaReviewService.getAllFlaggedRecords(req.mdaScope, { page, limit, status, mdaFilter });
+    res.json({ success: true, data: result });
+  },
+);
 
 // GET /api/migrations/:uploadId/review/records — Paginated flagged records (reviewAuth)
 router.get(

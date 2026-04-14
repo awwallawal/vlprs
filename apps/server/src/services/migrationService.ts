@@ -1,7 +1,13 @@
 import XLSX from 'xlsx';
-import { eq, and, isNull, desc, sql } from 'drizzle-orm';
+import { eq, and, isNull, inArray, desc, sql } from 'drizzle-orm';
 import { db } from '../db/index';
-import { migrationUploads, migrationRecords, migrationExtraFields, mdas } from '../db/schema';
+import {
+  migrationUploads, migrationRecords, migrationExtraFields, mdas,
+  loans, ledgerEntries, loanStateTransitions, observations,
+  loanAnnotations, loanEventFlagCorrections, employmentEvents,
+  transfers, exceptions, loanCompletions, autoStopCertificates,
+  temporalCorrections, serviceExtensions, approvedBeneficiaries,
+} from '../db/schema';
 import { AppError } from '../lib/appError';
 import { withMdaScope } from '../lib/mdaScope';
 import { VOCABULARY, ROLES } from '@vlprs/shared';
@@ -815,6 +821,131 @@ export async function discardUpload(
   });
 
   return { discarded: true, recordsAffected };
+}
+
+/**
+ * Delete an upload of any status, cascading to records, observations, loans, and ledger entries.
+ * Requires the caller to supply the exact filename as confirmation.
+ * Soft-deletes uploads and records; hard-deletes observations, ledger entries, loan state
+ * transitions, and loans (since ledger entries are immutable/append-only and cannot be
+ * soft-deleted — the cleanest removal is full cascade).
+ */
+export async function deleteUpload(
+  uploadId: string,
+  confirmFilename: string,
+  reason: string,
+  userId: string,
+  mdaScope: string | null | undefined,
+): Promise<{ deleted: true; recordsAffected: number; loansRemoved: number }> {
+  const now = new Date();
+  let recordsAffected = 0;
+  let loansRemoved = 0;
+
+  await db.transaction(async (tx) => {
+    const [upload] = await tx.select()
+      .from(migrationUploads)
+      .where(and(
+        eq(migrationUploads.id, uploadId),
+        isNull(migrationUploads.deletedAt),
+        withMdaScope(migrationUploads.mdaId, mdaScope),
+      ));
+
+    if (!upload) {
+      throw new AppError(404, 'UPLOAD_NOT_FOUND', VOCABULARY.MIGRATION_UPLOAD_NOT_FOUND);
+    }
+
+    if (upload.filename !== confirmFilename) {
+      throw new AppError(400, 'FILENAME_MISMATCH', 'The confirmation filename does not match. Please type the exact filename to confirm deletion.');
+    }
+
+    // Collect loan IDs linked to this upload's records before deleting
+    const linkedRecords = await tx.select({ loanId: migrationRecords.loanId })
+      .from(migrationRecords)
+      .where(and(
+        eq(migrationRecords.uploadId, uploadId),
+        isNull(migrationRecords.deletedAt),
+      ));
+
+    const loanIds = linkedRecords
+      .map((r) => r.loanId)
+      .filter((id): id is string => id !== null);
+
+    // 1. Delete observations for this upload
+    await tx.delete(observations)
+      .where(eq(observations.uploadId, uploadId));
+
+    // 2. Soft-delete migration records (unlink loans first)
+    await tx.update(migrationRecords)
+      .set({ loanId: null })
+      .where(and(eq(migrationRecords.uploadId, uploadId), isNull(migrationRecords.deletedAt)));
+
+    const recordResult = await tx.update(migrationRecords)
+      .set({ deletedAt: now })
+      .where(and(eq(migrationRecords.uploadId, uploadId), isNull(migrationRecords.deletedAt)));
+    recordsAffected = recordResult.rowCount ?? 0;
+
+    // 3. Safe cascade: only delete loans NOT referenced by other active uploads
+    if (loanIds.length > 0) {
+      // Find which loans are still referenced by OTHER active uploads' records
+      const sharedLoanRows = await tx.select({ loanId: migrationRecords.loanId })
+        .from(migrationRecords)
+        .where(and(
+          inArray(migrationRecords.loanId, loanIds),
+          sql`${migrationRecords.uploadId} != ${uploadId}`,
+          isNull(migrationRecords.deletedAt),
+        ));
+      const sharedLoanIds = new Set(sharedLoanRows.map((r) => r.loanId).filter(Boolean));
+
+      // Only delete loans that are NOT shared with other uploads
+      const safeToDeletIds = loanIds.filter((id) => !sharedLoanIds.has(id));
+
+      if (safeToDeletIds.length > 0) {
+        await tx.execute(sql`ALTER TABLE ledger_entries DISABLE TRIGGER trg_ledger_entries_immutable`);
+        await tx.execute(sql`ALTER TABLE loan_state_transitions DISABLE TRIGGER trg_loan_state_transitions_immutable`);
+        await tx.execute(sql`ALTER TABLE temporal_corrections DISABLE TRIGGER trg_temporal_corrections_immutable`);
+        await tx.execute(sql`ALTER TABLE service_extensions DISABLE TRIGGER trg_service_extensions_immutable`);
+
+        try {
+          await tx.delete(approvedBeneficiaries).where(inArray(approvedBeneficiaries.matchedLoanId, safeToDeletIds));
+          await tx.delete(autoStopCertificates).where(inArray(autoStopCertificates.loanId, safeToDeletIds));
+          await tx.delete(loanCompletions).where(inArray(loanCompletions.loanId, safeToDeletIds));
+          await tx.delete(loanEventFlagCorrections).where(inArray(loanEventFlagCorrections.loanId, safeToDeletIds));
+          await tx.delete(loanAnnotations).where(inArray(loanAnnotations.loanId, safeToDeletIds));
+          await tx.delete(transfers).where(inArray(transfers.loanId, safeToDeletIds));
+          await tx.delete(employmentEvents).where(inArray(employmentEvents.loanId, safeToDeletIds));
+          await tx.delete(exceptions).where(inArray(exceptions.loanId, safeToDeletIds));
+          await tx.delete(temporalCorrections).where(inArray(temporalCorrections.loanId, safeToDeletIds));
+          await tx.delete(serviceExtensions).where(inArray(serviceExtensions.loanId, safeToDeletIds));
+          await tx.delete(observations).where(inArray(observations.loanId, safeToDeletIds));
+          await tx.delete(ledgerEntries).where(inArray(ledgerEntries.loanId, safeToDeletIds));
+          await tx.delete(loanStateTransitions).where(inArray(loanStateTransitions.loanId, safeToDeletIds));
+
+          await tx.update(migrationRecords)
+            .set({ loanId: null })
+            .where(inArray(migrationRecords.loanId, safeToDeletIds));
+
+          const loanResult = await tx.delete(loans).where(inArray(loans.id, safeToDeletIds));
+          loansRemoved = loanResult.rowCount ?? 0;
+        } finally {
+          await tx.execute(sql`ALTER TABLE ledger_entries ENABLE TRIGGER trg_ledger_entries_immutable`);
+          await tx.execute(sql`ALTER TABLE loan_state_transitions ENABLE TRIGGER trg_loan_state_transitions_immutable`);
+          await tx.execute(sql`ALTER TABLE temporal_corrections ENABLE TRIGGER trg_temporal_corrections_immutable`);
+          await tx.execute(sql`ALTER TABLE service_extensions ENABLE TRIGGER trg_service_extensions_immutable`);
+        }
+      }
+    }
+
+    // 4. Soft-delete the upload with reason
+    await tx.update(migrationUploads)
+      .set({
+        deletedAt: now,
+        updatedAt: now,
+        metadata: sql`COALESCE(${migrationUploads.metadata}, '{}'::jsonb) || ${JSON.stringify({ deletionReason: reason, deletedBy: userId })}::jsonb`,
+      })
+      .where(eq(migrationUploads.id, uploadId));
+  });
+
+  return { deleted: true, recordsAffected, loansRemoved };
 }
 
 export async function getUpload(uploadId: string, mdaScope: string | null | undefined) {

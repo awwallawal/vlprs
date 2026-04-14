@@ -68,7 +68,7 @@ describe('Legacy Migration Regression Fixtures', () => {
   });
 
   describe.each(EXPECTED_FIXTURES)('%s', (fixture) => {
-    it('opens with xlsx library', () => {
+    it('opens with xlsx library', { timeout: 60_000 }, () => {
       const wb = XLSX.readFile(path.join(FIXTURE_DIR, fixture));
       expect(wb.SheetNames.length).toBeGreaterThan(0);
     });

@@ -77,11 +77,14 @@ describe('GET /api/dashboard/metrics', () => {
     expect(res.status).toBe(401);
   });
 
-  it('returns 403 for mda_officer role (requires super_admin or dept_admin)', async () => {
+  it('allows MDA_OFFICER access (scoped to their MDA)', async () => {
+    // UAT 2026-04-13 #16: dashboard endpoints authorise MDA_OFFICER so they can
+    // view metrics scoped to their own MDA via scopeToMda middleware
     const res = await request(app)
       .get('/api/dashboard/metrics')
       .set('Authorization', `Bearer ${officerToken}`);
-    expect(res.status).toBe(403);
+    expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
   });
 
   it('returns dashboard metrics with success envelope', async () => {

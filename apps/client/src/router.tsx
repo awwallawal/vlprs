@@ -303,6 +303,27 @@ export const router = createBrowserRouter([
               })),
           },
           {
+            path: 'migration/review',
+            lazy: () =>
+              import('@/pages/dashboard/MdaReviewPage').then((m) => ({
+                Component: m.MdaReviewPage,
+              })),
+          },
+          {
+            path: 'backlog',
+            lazy: () =>
+              import('@/pages/dashboard/PendingActionPage').then((m) => ({
+                Component: m.PendingActionPage,
+              })),
+          },
+          {
+            path: 'multi-loan-staff',
+            lazy: () =>
+              import('@/pages/dashboard/MultiLoanStaffPage').then((m) => ({
+                Component: m.MultiLoanStaffPage,
+              })),
+          },
+          {
             path: 'migration/persons/:personKey',
             lazy: () =>
               import('@/pages/dashboard/PersonDetailPage').then((m) => ({
@@ -349,6 +370,13 @@ export const router = createBrowserRouter([
             lazy: () =>
               import('@/pages/dashboard/CertificateListPage').then((m) => ({
                 Component: m.CertificateListPage,
+              })),
+          },
+          {
+            path: 'committee-lists',
+            lazy: () =>
+              import('@/pages/dashboard/CommitteeListsPage').then((m) => ({
+                Component: m.CommitteeListsPage,
               })),
           },
           {
