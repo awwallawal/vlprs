@@ -1,12 +1,18 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router';
 import { FileText, Briefcase, Calculator, Search } from 'lucide-react';
+import { useDashboardMetrics } from '@/hooks/useDashboardData';
+import { useAttentionItems } from '@/hooks/useAttentionItems';
 import { useMigrationStatus } from '@/hooks/useMigrationData';
+import { useListMigrations } from '@/hooks/useMigration';
 import { useLoanSearch } from '@/hooks/useLoanData';
 import { useExceptionQueue, useExceptionCounts } from '@/hooks/useExceptionData';
+import { HeroMetricCard } from '@/components/shared/HeroMetricCard';
 import { MigrationProgressCard } from '@/components/shared/MigrationProgressCard';
+import { MdaReviewProgressTracker } from './components/MdaReviewProgressTracker';
 import { WelcomeGreeting } from '@/components/shared/WelcomeGreeting';
 import { ExceptionQueueRow, ExceptionEmptyState } from '@/components/shared/ExceptionQueueRow';
+import { AttentionItemCard } from '@/components/shared/AttentionItemCard';
 import { NairaDisplay } from '@/components/shared/NairaDisplay';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -29,6 +35,14 @@ const PRIORITY_ORDER: Record<string, number> = { high: 0, medium: 1, low: 2 };
 
 export function OperationsHubPage() {
   const navigate = useNavigate();
+
+  // --- Hero Metrics ---
+  const metrics = useDashboardMetrics();
+  const attention = useAttentionItems();
+
+  // --- MDA Review Progress ---
+  const uploads = useListMigrations({ limit: 1 });
+  const latestUploadId = uploads.data?.data?.[0]?.id ?? '';
 
   // --- Migration Dashboard ---
   const { data: migrationData, isPending: isMigrationPending } = useMigrationStatus();
@@ -56,8 +70,85 @@ export function OperationsHubPage() {
   return (
     <div className="space-y-10">
       {/* Welcome greeting + page heading */}
-      <WelcomeGreeting subtitle="Here's your operations overview" />
-      <h1 className="text-2xl font-bold text-text-primary">Operations Hub</h1>
+      <WelcomeGreeting subtitle="Operations Dashboard" />
+
+      {/* Hero Metrics */}
+      <section aria-label="Key metrics">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+          <HeroMetricCard
+            label="Active Loans"
+            value={metrics.data?.activeLoans ?? 0}
+            format="count"
+            trend={metrics.data?.trends?.activeLoans}
+            isPending={metrics.isPending}
+            onClick={() => navigate('/dashboard/loans')}
+          />
+          <HeroMetricCard
+            label="Declared Recovery"
+            value={Number(metrics.data?.monthlyRecovery ?? 0) > 0
+              ? (metrics.data?.monthlyRecovery ?? '0')
+              : (metrics.data?.monthlyCollectionPotential ?? '0')}
+            format="currency"
+            isPending={metrics.isPending}
+            onClick={() => navigate('/dashboard/drill-down/monthly-recovery')}
+          />
+          <HeroMetricCard
+            label="Total Exposure"
+            value={metrics.data?.totalExposure ?? '0'}
+            format="currency"
+            trend={metrics.data?.trends?.totalExposure}
+            isPending={metrics.isPending}
+            onClick={() => navigate('/dashboard/drill-down/total-exposure')}
+          />
+          <HeroMetricCard
+            label="Open Exceptions"
+            value={exceptionCounts?.total ?? 0}
+            format="count"
+            isPending={!exceptionCounts}
+            onClick={() => navigate('/dashboard/exceptions')}
+          />
+        </div>
+      </section>
+
+      {/* Attention Items (top 5) */}
+      {attention.data && attention.data.items.length > 0 && (
+        <section aria-label="Attention items">
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-lg font-semibold text-text-primary">Needs Attention</h2>
+            {attention.data.totalCount > 5 && (
+              <button
+                type="button"
+                onClick={() => navigate('/dashboard/attention')}
+                className="text-sm text-teal hover:text-teal-hover underline"
+              >
+                View all ({attention.data.totalCount})
+              </button>
+            )}
+          </div>
+          <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+            {attention.data.items.slice(0, 5).map((item) => (
+              <AttentionItemCard
+                key={item.id}
+                type={item.type}
+                description={item.description}
+                mdaName={item.mdaName}
+                category={item.category}
+                count={item.count}
+                amount={item.amount}
+                drillDownUrl={item.drillDownUrl}
+                timestamp={item.timestamp}
+              />
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* MDA Review Progress */}
+      {latestUploadId && (
+        <section aria-label="MDA review progress">
+          <MdaReviewProgressTracker uploadId={latestUploadId} allUploads />
+        </section>
+      )}
 
       {/* Migration Dashboard */}
       <section aria-labelledby="migration-heading">

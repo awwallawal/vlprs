@@ -8,6 +8,7 @@ import { formatDate, formatCount } from '@/lib/formatters';
 import { useDashboardMetrics } from '@/hooks/useDashboardData';
 import { useMdaComplianceGrid } from '@/hooks/useMdaData';
 import { useAttentionItems } from '@/hooks/useAttentionItems';
+import { usePendingMdaAction } from '@/hooks/usePendingMdaAction';
 import { useThreeWayDashboard } from '@/hooks/useThreeWayReconciliation';
 import { HeroMetricCard } from '@/components/shared/HeroMetricCard';
 import { WelcomeGreeting } from '@/components/shared/WelcomeGreeting';
@@ -53,6 +54,7 @@ function AdminDashboard() {
   const metrics = useDashboardMetrics();
   const compliance = useMdaComplianceGrid();
   const attention = useAttentionItems();
+  const pendingAction = usePendingMdaAction();
   const threeWayDashboard = useThreeWayDashboard();
 
   const sortedComplianceRows = useMemo(
@@ -142,6 +144,33 @@ function AdminDashboard() {
         </div>
       </div>
 
+      {/* Pending MDA Action banner — UAT 2026-04-14 */}
+      {pendingAction.data && pendingAction.data.totalPending > 0 && (
+        <div
+          className="rounded-lg border border-amber-200 bg-amber-50 p-4 cursor-pointer hover:shadow-md transition-shadow"
+          role="link"
+          tabIndex={0}
+          onClick={() => navigate('/dashboard/backlog')}
+          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); navigate('/dashboard/backlog'); } }}
+        >
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-start gap-3 min-w-0">
+              <svg className="h-5 w-5 text-amber-700 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+              <div className="min-w-0">
+                <p className="text-sm font-semibold text-amber-900">
+                  {pendingAction.data.totalPending.toLocaleString()} record{pendingAction.data.totalPending !== 1 ? 's' : ''} awaiting MDA action across {pendingAction.data.mdaCount} MDA{pendingAction.data.mdaCount !== 1 ? 's' : ''}
+                </p>
+                <p className="text-xs text-amber-800 mt-1">
+                  Verified data shown below. As MDAs work through their queues, these numbers will update.
+                  {pendingAction.data.overdeductions > 0 && ` ${pendingAction.data.overdeductions} overdeduction${pendingAction.data.overdeductions !== 1 ? 's' : ''} need refund processing.`}
+                </p>
+              </div>
+            </div>
+            <span className="text-sm text-amber-900 font-medium shrink-0">View Backlog →</span>
+          </div>
+        </div>
+      )}
+
       {/* Hero metrics grid — Primary Row */}
       <section aria-label="Key metrics">
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
@@ -215,8 +244,10 @@ function AdminDashboard() {
           )}
           <div>
             <HeroMetricCard
-              label="Monthly Recovery"
-              value={metrics.data?.monthlyRecovery ?? '0'}
+              label="Declared Recovery"
+              value={Number(metrics.data?.monthlyRecovery ?? 0) > 0
+                ? (metrics.data?.monthlyRecovery ?? '0')
+                : (metrics.data?.monthlyCollectionPotential ?? '0')}
               format="currency"
               trend={metrics.data?.trends?.monthlyRecovery}
               isPending={metrics.isPending}
@@ -233,13 +264,18 @@ function AdminDashboard() {
                 })()}
               </p>
             )}
-            {/* Fix #6 (Story 15.0j): explain why Monthly Recovery is zero when the
-                system has migration-only data and no payroll submissions yet.
-                Numeric comparison instead of string equality so we don't break if
-                the backend ever returns '0.000', null, or numeric 0. */}
             {!metrics.isPending
               && !metrics.data?.recoveryPeriod
-              && Number(metrics.data?.monthlyRecovery ?? 0) === 0 && (
+              && Number(metrics.data?.monthlyRecovery ?? 0) === 0
+              && Number(metrics.data?.monthlyCollectionPotential ?? 0) > 0 && (
+              <p className="mt-1 text-xs text-text-secondary text-center">
+                From declared deductions
+              </p>
+            )}
+            {!metrics.isPending
+              && !metrics.data?.recoveryPeriod
+              && Number(metrics.data?.monthlyRecovery ?? 0) === 0
+              && Number(metrics.data?.monthlyCollectionPotential ?? 0) === 0 && (
               <p className="mt-1 text-xs text-text-secondary text-center">
                 Awaiting first submission
               </p>

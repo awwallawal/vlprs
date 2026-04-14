@@ -46,6 +46,5 @@ export function useFilteredLoans(
       };
     },
     staleTime: 30_000,
-    enabled: !!(filter || classification),
   });
 }

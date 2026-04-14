@@ -71,6 +71,22 @@ router.get(
   },
 );
 
+// PATCH /api/loans/:id/staff-id — Update staff ID on a loan (all authenticated, MDA-scoped)
+router.patch(
+  '/loans/:id/staff-id',
+  ...allAuth,
+  auditLog,
+  async (req: Request, res: Response) => {
+    const loanId = param(req.params.id);
+    const { staffId } = req.body as { staffId?: string };
+    if (!staffId || typeof staffId !== 'string' || staffId.trim().length < 2) {
+      throw new AppError(400, 'INVALID_STAFF_ID', 'Please provide a valid staff ID (at least 2 characters).');
+    }
+    const updated = await loanService.updateStaffId(loanId, staffId.trim(), req.user!.userId, req.mdaScope);
+    res.json({ success: true, data: updated });
+  },
+);
+
 // POST /api/loans/:loanId/transition — Transition loan status (dept_admin + super_admin only)
 router.post(
   '/loans/:loanId/transition',

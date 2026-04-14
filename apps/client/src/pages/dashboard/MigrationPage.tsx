@@ -239,7 +239,6 @@ export function MigrationPage() {
                   recordCounts={mda.recordCounts}
                   lastActivity={mda.lastActivity ?? undefined}
                   baselineCompletion={mda.baselineCompletion}
-                  observationCount={mda.observationCount}
                   onClick={() => navigate(`/dashboard/mda/${mda.mdaId}`)}
                 />
               ))}
@@ -283,10 +282,10 @@ export function MigrationPage() {
         </section>
       )}
 
-      {/* MDA Review Tab (Story 8.0j) */}
+      {/* MDA Review Tab (Story 8.0j) — UAT 2026-04-14: aggregate across all uploads */}
       {activeTab === 'mda-review' && latestUploadId && (
         <section aria-label="MDA Review Progress">
-          <MdaReviewProgressTracker uploadId={latestUploadId} />
+          <MdaReviewProgressTracker uploadId={latestUploadId} allUploads />
         </section>
       )}
     </div>

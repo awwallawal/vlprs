@@ -1,21 +1,15 @@
-import { useQuery } from '@tanstack/react-query';
-import type { LoanSummary, LoanSearchResult } from '@vlprs/shared';
-import { MOCK_LOAN_DETAILS } from '@/mocks/loanDetail';
-import { MOCK_LOAN_SEARCH_RESULTS } from '@/mocks/loanSearch';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import type { LoanDetail, LoanSearchResult } from '@vlprs/shared';
+import { apiClient } from '@/lib/apiClient';
 
 /**
  * Fetches single loan detail by ID.
  * @target GET /api/loans/:id
- * @wire Sprint 2 (Epic 2: Loan Data Management)
  */
 export function useLoanDetail(loanId: string) {
-  return useQuery<LoanSummary>({
+  return useQuery<LoanDetail>({
     queryKey: ['loan', loanId],
-    queryFn: async () => {
-      const loan = MOCK_LOAN_DETAILS[loanId];
-      if (!loan) throw new Error(`Loan ${loanId} not found`);
-      return loan;
-    },
+    queryFn: () => apiClient<LoanDetail>(`/loans/${loanId}`),
     enabled: !!loanId,
     staleTime: 30_000,
   });
@@ -23,23 +17,36 @@ export function useLoanDetail(loanId: string) {
 
 /**
  * Searches loans by query string.
- * @target GET /api/loans/search
- * @wire Sprint 2 (Epic 2: Loan Data Management)
+ * @target GET /api/loans?search=:query
  */
 export function useLoanSearch(query: string) {
   return useQuery<LoanSearchResult[]>({
     queryKey: ['loan', 'search', query],
     queryFn: async () => {
       if (!query) return [];
-      const q = query.toLowerCase();
-      return MOCK_LOAN_SEARCH_RESULTS.filter(
-        (r) =>
-          r.staffName.toLowerCase().includes(q) ||
-          r.staffId?.toLowerCase().includes(q) ||
-          r.loanReference.toLowerCase().includes(q),
-      );
+      const result = await apiClient<{ data: LoanSearchResult[] }>(`/loans?search=${encodeURIComponent(query)}&pageSize=25`);
+      return result.data;
     },
     enabled: query.length > 0,
     staleTime: 30_000,
+  });
+}
+
+/**
+ * Update staff ID on a loan.
+ */
+export function useUpdateStaffId(loanId: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation<{ loanId: string; staffId: string }, Error, { staffId: string }>({
+    mutationFn: ({ staffId }) =>
+      apiClient<{ loanId: string; staffId: string }>(`/loans/${loanId}/staff-id`, {
+        method: 'PATCH',
+        body: JSON.stringify({ staffId }),
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['loan', loanId] });
+      queryClient.invalidateQueries({ queryKey: ['loans'] });
+    },
   });
 }

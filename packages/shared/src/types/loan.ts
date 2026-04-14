@@ -183,4 +183,9 @@ export interface LoanDetail {
   temporalProfile: TemporalProfile;
   /** Gratuity projection from Story 10.3 — null if temporal profile incomplete */
   gratuityProjection: GratuityProjectionResult | null;
+  /** Migration context — installment breakdown from source data, null for non-migration loans */
+  migrationContext: {
+    installmentsPaid: number | null;
+    installmentsOutstanding: number | null;
+  } | null;
 }

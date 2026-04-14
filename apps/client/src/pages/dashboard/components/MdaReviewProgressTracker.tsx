@@ -1,5 +1,6 @@
 import { toast } from 'sonner';
-import { useMdaReviewProgress, useExtendReviewWindow, useBaselineReviewed } from '@/hooks/useMigration';
+import { useNavigate } from 'react-router';
+import { useMdaReviewProgress, useAllMdaReviewProgress, useExtendReviewWindow, useBaselineReviewed } from '@/hooks/useMigration';
 import { MetricHelp } from '@/components/shared/MetricHelp';
 import type { CountdownStatus } from '@vlprs/shared';
 import { CorrectionWorksheetActions } from './CorrectionWorksheetActions';
@@ -24,10 +25,15 @@ export function countdownBadge(daysRemaining: number, status: CountdownStatus) {
 
 interface MdaReviewProgressTrackerProps {
   uploadId: string;
+  /** When true, aggregates across all active uploads instead of just this upload (UAT 2026-04-14) */
+  allUploads?: boolean;
 }
 
-export function MdaReviewProgressTracker({ uploadId }: MdaReviewProgressTrackerProps) {
-  const progress = useMdaReviewProgress(uploadId);
+export function MdaReviewProgressTracker({ uploadId, allUploads = false }: MdaReviewProgressTrackerProps) {
+  const navigate = useNavigate();
+  const singleProgress = useMdaReviewProgress(allUploads ? '' : uploadId);
+  const allProgress = useAllMdaReviewProgress();
+  const progress = allUploads ? allProgress : singleProgress;
   const extendMutation = useExtendReviewWindow(uploadId);
   const baselineMutation = useBaselineReviewed(uploadId);
 
@@ -72,7 +78,14 @@ export function MdaReviewProgressTracker({ uploadId }: MdaReviewProgressTrackerP
 
       <div className="space-y-2">
         {progress.data.map((mda) => (
-          <div key={mda.mdaId} className="bg-white border border-border rounded-lg p-4">
+          <div
+            key={mda.mdaId}
+            className="bg-white border border-border rounded-lg p-4 cursor-pointer hover:shadow-md transition-shadow"
+            role="link"
+            tabIndex={0}
+            onClick={() => navigate(`/dashboard/migration/review?mda=${mda.mdaId}`)}
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); navigate(`/dashboard/migration/review?mda=${mda.mdaId}`); } }}
+          >
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-2">
                 <span className="text-sm font-medium text-text-primary">{mda.mdaName}</span>
@@ -80,7 +93,6 @@ export function MdaReviewProgressTracker({ uploadId }: MdaReviewProgressTrackerP
               </div>
               <span className="text-sm text-text-secondary">
                 {mda.reviewed}/{mda.totalFlagged}
-                <MetricHelp metric="migration.reviewProgress" />
               </span>
             </div>
 
@@ -92,20 +104,21 @@ export function MdaReviewProgressTracker({ uploadId }: MdaReviewProgressTrackerP
               />
             </div>
 
-            <div className="flex items-center justify-between text-xs text-text-muted">
-              <span>{mda.completionPct}% complete
-                <MetricHelp metric="migration.reviewProgress" />
-              </span>
-              {mda.countdownStatus === 'overdue' && (
-                <button
-                  type="button"
-                  onClick={() => handleExtend(mda.mdaId, mda.mdaName)}
-                  disabled={extendMutation.isPending}
-                  className="px-2 py-0.5 text-xs border border-amber-300 text-amber-700 rounded hover:bg-amber-50 disabled:opacity-50"
-                >
-                  Extend
-                </button>
-              )}
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-text-muted">{mda.completionPct}% complete</span>
+              <div className="flex items-center gap-2">
+                {mda.countdownStatus === 'overdue' && (
+                  <button
+                    type="button"
+                    onClick={(e) => { e.stopPropagation(); handleExtend(mda.mdaId, mda.mdaName); }}
+                    disabled={extendMutation.isPending}
+                    className="px-2 py-0.5 text-xs border border-amber-300 text-amber-700 rounded hover:bg-amber-50 disabled:opacity-50"
+                  >
+                    Extend
+                  </button>
+                )}
+                <span className="text-teal font-medium">Review Records →</span>
+              </div>
             </div>
           </div>
         ))}

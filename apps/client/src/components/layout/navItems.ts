@@ -13,6 +13,7 @@ import {
   ClipboardCheck,
   ClipboardList,
   Award,
+  UsersRound,
 } from 'lucide-react';
 import type { ComponentType } from 'react';
 
@@ -29,7 +30,7 @@ export const NAV_ITEMS: NavItem[] = [
   // MDA Officer navigation (Story 15.0e — 6 items)
   { label: 'My Dashboard', path: '/dashboard', icon: LayoutDashboard, roles: [ROLES.MDA_OFFICER] },
   { label: 'Upload Data', path: '/dashboard/submissions', icon: Upload, roles: [ROLES.MDA_OFFICER] },
-  { label: 'My Reviews', path: '/dashboard/migration', icon: ClipboardCheck, roles: [ROLES.MDA_OFFICER] },
+  { label: 'My Reviews', path: '/dashboard/migration/review', icon: ClipboardCheck, roles: [ROLES.MDA_OFFICER] },
   { label: 'Historical Upload', path: '/dashboard/historical-upload', icon: FileText, roles: [ROLES.DEPT_ADMIN] },
   { label: 'Payroll Upload', path: '/dashboard/payroll-upload', icon: FileSpreadsheet, roles: [ROLES.SUPER_ADMIN] },
   { label: 'Employment Events', path: '/dashboard/employment-events', icon: UserCog, roles: [ROLES.SUPER_ADMIN, ROLES.DEPT_ADMIN, ROLES.MDA_OFFICER] },
@@ -40,6 +41,7 @@ export const NAV_ITEMS: NavItem[] = [
   { label: 'Committee Lists', path: '/dashboard/committee-lists', icon: ClipboardList, roles: [ROLES.SUPER_ADMIN, ROLES.DEPT_ADMIN] },
   { label: 'Certificates', path: '/dashboard/certificates', icon: Award, roles: [ROLES.SUPER_ADMIN, ROLES.DEPT_ADMIN] },
   { label: 'Exceptions', path: '/dashboard/exceptions', icon: AlertCircle, roles: [ROLES.SUPER_ADMIN, ROLES.DEPT_ADMIN] },
+  { label: 'Multi-Loan Staff', path: '/dashboard/multi-loan-staff', icon: UsersRound, roles: [ROLES.SUPER_ADMIN, ROLES.DEPT_ADMIN] },
   { label: 'User Management', path: '/dashboard/admin', icon: Users, roles: [ROLES.SUPER_ADMIN, ROLES.DEPT_ADMIN] },
   { label: 'System Health', path: '/dashboard/system-health', icon: Activity, roles: [ROLES.SUPER_ADMIN, ROLES.DEPT_ADMIN] },
 ];

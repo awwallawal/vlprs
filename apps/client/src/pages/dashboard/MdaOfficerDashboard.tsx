@@ -62,8 +62,10 @@ export function MdaOfficerDashboard() {
             onClick={() => navigate(userMdaId ? `/dashboard/loans?filter=active&mda=${userMdaId}` : '/dashboard/loans?filter=active')}
           />
           <HeroMetricCard
-            label="Monthly Recovery"
-            value={metrics.data?.monthlyRecovery ?? '0'}
+            label="Declared Recovery"
+            value={Number(metrics.data?.monthlyRecovery ?? 0) > 0
+              ? (metrics.data?.monthlyRecovery ?? '0')
+              : (metrics.data?.monthlyCollectionPotential ?? '0')}
             format="currency"
             trend={metrics.data?.trends?.monthlyRecovery}
             isPending={metrics.isPending}
@@ -127,7 +129,7 @@ export function MdaOfficerDashboard() {
         </section>
 
         {/* Records Awaiting Review (AC: 3) */}
-        <MdaReviewSection onNavigateToReview={() => navigate('/dashboard/migration')} />
+        <MdaReviewSection onNavigateToReview={() => navigate('/dashboard/migration/review')} />
       </div>
 
       {/* Pre-Submission Checkpoint (AC: 4) */}
@@ -139,21 +141,34 @@ export function MdaOfficerDashboard() {
           <Skeleton className="h-6 w-48" />
         ) : checkpoint.data ? (
           <div className="flex items-center gap-3">
-            {checkpoint.data.approachingRetirement.length === 0 &&
-             checkpoint.data.zeroDeduction.length === 0 &&
-             checkpoint.data.pendingEvents.length === 0 ? (
-              <>
-                <CheckCircle2 className="h-5 w-5 text-green-600" />
-                <span className="text-sm text-text-primary font-medium">All clear — ready to submit</span>
-              </>
-            ) : (
-              <>
-                <AlertTriangle className="h-5 w-5 text-amber-500" />
-                <span className="text-sm text-text-primary font-medium">
-                  {checkpoint.data.approachingRetirement.length + checkpoint.data.zeroDeduction.length + checkpoint.data.pendingEvents.length} items need attention
-                </span>
-              </>
-            )}
+            {(() => {
+              // Suppress zero-deduction alerts if MDA has never submitted
+              // (all alerts would be false positives from migration-only data)
+              const hasSubmitted = !!checkpoint.data.lastSubmissionDate;
+              const actionableRetirement = checkpoint.data.approachingRetirement.length;
+              const actionableZeroDeduction = hasSubmitted ? checkpoint.data.zeroDeduction.length : 0;
+              const actionablePending = checkpoint.data.pendingEvents.length;
+              const totalActionable = actionableRetirement + actionableZeroDeduction + actionablePending;
+
+              if (totalActionable === 0) {
+                return (
+                  <>
+                    <CheckCircle2 className="h-5 w-5 text-green-600" />
+                    <span className="text-sm text-text-primary font-medium">
+                      {hasSubmitted ? 'All clear — ready to submit' : 'Awaiting first monthly submission'}
+                    </span>
+                  </>
+                );
+              }
+              return (
+                <>
+                  <AlertTriangle className="h-5 w-5 text-amber-500" />
+                  <span className="text-sm text-text-primary font-medium">
+                    {totalActionable} item{totalActionable !== 1 ? 's' : ''} need{totalActionable === 1 ? 's' : ''} attention
+                  </span>
+                </>
+              );
+            })()}
             <button
               type="button"
               onClick={() => navigate('/dashboard/submissions')}
@@ -166,6 +181,41 @@ export function MdaOfficerDashboard() {
           <p className="text-sm text-text-muted">Pre-submission checkpoint will appear when your submission window opens.</p>
         )}
       </section>
+
+      {/* Data Uploads — migration uploads done for this MDA */}
+      {mdaDetail.data?.migrationUploads && mdaDetail.data.migrationUploads.length > 0 && (
+        <section aria-label="Data uploads" className="rounded-lg border bg-white p-5">
+          <h3 className="text-sm font-semibold text-text-primary mb-3">
+            Data Uploads
+          </h3>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b bg-slate-50">
+                  <th className="px-3 py-2 text-left font-medium text-text-secondary">Filename</th>
+                  <th className="px-3 py-2 text-left font-medium text-text-secondary">Date</th>
+                  <th className="px-3 py-2 text-right font-medium text-text-secondary">Records</th>
+                  <th className="px-3 py-2 text-left font-medium text-text-secondary">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {mdaDetail.data.migrationUploads.map((upload: { id: string; filename: string; status: string; totalRecords: number; createdAt: string }) => (
+                  <tr key={upload.id} className="border-b">
+                    <td className="px-3 py-2 font-medium text-text-primary">{upload.filename}</td>
+                    <td className="px-3 py-2 text-text-secondary">{formatDate(upload.createdAt)}</td>
+                    <td className="px-3 py-2 text-right font-mono text-text-secondary">{upload.totalRecords.toLocaleString()}</td>
+                    <td className="px-3 py-2">
+                      <Badge variant={upload.status === 'validated' || upload.status === 'reconciled' ? 'complete' : 'pending'}>
+                        {upload.status.charAt(0).toUpperCase() + upload.status.slice(1)}
+                      </Badge>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      )}
 
       {/* Recent Submissions (AC: 5, 8) */}
       <section aria-label="Recent submissions" className="rounded-lg border bg-white p-5">

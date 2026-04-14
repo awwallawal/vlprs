@@ -63,6 +63,21 @@ function InfoRow({ label, value }: { label: string; value: string | number | nul
 }
 
 /**
+ * Normalize a staff name to match the server's normalizeName() for personKey construction.
+ * Mirrors apps/server/src/migration/nameMatch.ts normalizeName().
+ */
+function normalizeStaffName(raw: string): string {
+  let name = raw.toUpperCase().trim();
+  name = name.replace(/\([^)]*\)/g, '').trim();
+  name = name.replace(/\s+/g, ' ');
+  // Strip honorific titles (mirrors server logic — best-effort for client-side links)
+  for (let i = 0; i < 2; i++) {
+    name = name.replace(/^(MRS?\.?|MISS|DR\.?|CHIEF|ALHAJ[IA]\.?|ALH\.?|PRINCE|PRINCESS|ENGR\.?|ARC\.?|PROF\.?|BARR\.?|HON\.?|COMR?A?DE?\.?|COL\.?|GEN\.?|CAPT\.?|PASTOR|REV\.?|ELDER|DEACON(ESS)?|OTUNBA|BAALE)\s+/i, '').trim();
+  }
+  return name.replace(/[.,]+$/, '').trim();
+}
+
+/**
  * Parse a numeric grade from a string like "GL 08", "08", "Level 10", etc.
  */
 function parseGradeNumber(grade: string | null): number | null {
@@ -754,7 +769,12 @@ export function RecordDetailDrawer({ uploadId, recordId, open, onOpenChange }: R
           <>
             <SheetHeader>
               <SheetTitle className="text-lg">Record Detail — {detail.staffName}</SheetTitle>
-              <div className="flex items-center gap-2 mt-1">
+              <div className="flex items-center gap-2 mt-1 flex-wrap">
+                {detail.periodYear && detail.periodMonth && (
+                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-slate-100 text-slate-700 border border-slate-200 font-medium">
+                    {new Date(detail.periodYear, detail.periodMonth - 1, 1).toLocaleDateString('en-GB', { month: 'long', year: 'numeric' })}
+                  </span>
+                )}
                 <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs border ${BADGE_STYLES[detail.varianceCategory]}`}>
                   {UI_COPY.VARIANCE_CATEGORY_LABELS[detail.varianceCategory] ?? detail.varianceCategory}
                 </span>
@@ -779,7 +799,26 @@ export function RecordDetailDrawer({ uploadId, recordId, open, onOpenChange }: R
                 )}
                 <InfoRow label="Station" value={detail.station} />
                 <InfoRow label="MDA" value={detail.mdaText} />
+                <InfoRow
+                  label="Source Period"
+                  value={detail.periodYear && detail.periodMonth
+                    ? new Date(detail.periodYear, detail.periodMonth - 1, 1).toLocaleDateString('en-GB', { month: 'long', year: 'numeric' })
+                    : null}
+                />
                 <InfoRow label="Sheet" value={`${detail.sheetName} (row ${detail.sourceRow})`} />
+                {detail.mdaCode && detail.staffName && (
+                  <div className="flex justify-between py-1">
+                    <span className="text-sm text-text-secondary">All Records</span>
+                    <a
+                      href={`/dashboard/migration/persons/${encodeURIComponent(`${detail.mdaCode}:${normalizeStaffName(detail.staffName)}`)}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-sm text-teal hover:text-teal-hover underline"
+                    >
+                      View all for {detail.staffName} →
+                    </a>
+                  </div>
+                )}
               </Section>
 
               {/* Financial Comparison (Three-Vector) */}

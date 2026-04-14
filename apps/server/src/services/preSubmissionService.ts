@@ -4,7 +4,7 @@
  */
 import { eq, and, sql, desc, lte, gt, isNotNull, inArray, ne } from 'drizzle-orm';
 import { db } from '../db/index';
-import { loans, mdaSubmissions, submissionRows } from '../db/schema';
+import { loans, mdaSubmissions, submissionRows, migrationRecords as migrationRecordsTable } from '../db/schema';
 import { getEffectiveEventFlags } from './effectiveEventFlagHelper';
 import { differenceInDays, addMonths, endOfMonth, subMonths, format } from 'date-fns';
 import type { PreSubmissionCheckpoint, RetirementItem, ZeroDeductionItem, PendingEventItem } from '@vlprs/shared';
@@ -198,15 +198,57 @@ async function getZeroDeductionAlerts(mdaId: string, now: Date): Promise<ZeroDed
     });
   }
 
+  // For missing rows: fall back to migration record period as "last deduction"
+  // since that's the last known data point before monthly submissions begin
+  const missingStaffIds = missingRows.map((r) => r.staffId).filter((id) => !seen.has(id));
+  const migrationPeriodMap = new Map<string, { year: number; month: number }>();
+
+  if (missingStaffIds.length > 0) {
+    const migrationPeriods = await db.select({
+      staffId: loans.staffId,
+      periodYear: sql<number>`MAX(${migrationRecordsTable.periodYear})`.as('period_year'),
+      periodMonth: sql<number>`MAX(${migrationRecordsTable.periodMonth})`.as('period_month'),
+    })
+      .from(loans)
+      .innerJoin(migrationRecordsTable, eq(migrationRecordsTable.loanId, loans.id))
+      .where(
+        and(
+          inArray(loans.staffId, missingStaffIds),
+          sql`${migrationRecordsTable.deletedAt} IS NULL`,
+          sql`${migrationRecordsTable.periodYear} IS NOT NULL`,
+          sql`${migrationRecordsTable.periodMonth} IS NOT NULL`,
+        ),
+      )
+      .groupBy(loans.staffId);
+
+    for (const row of migrationPeriods) {
+      if (row.periodYear && row.periodMonth) {
+        migrationPeriodMap.set(row.staffId, { year: row.periodYear, month: row.periodMonth });
+      }
+    }
+  }
+
   for (const row of missingRows) {
     if (seen.has(row.staffId)) continue;
     seen.add(row.staffId);
-    results.push({
-      staffName: row.staffName,
-      staffId: row.staffId,
-      lastDeductionDate: 'N/A',
-      daysSinceLastDeduction: null,
-    });
+    const migPeriod = migrationPeriodMap.get(row.staffId);
+    if (migPeriod) {
+      const eom = endOfMonth(new Date(migPeriod.year, migPeriod.month - 1, 1));
+      const lastDate = eom.toISOString().split('T')[0];
+      results.push({
+        staffName: row.staffName,
+        staffId: row.staffId,
+        lastDeductionDate: lastDate,
+        daysSinceLastDeduction: differenceInDays(now, eom),
+      });
+    } else {
+      results.push({
+        staffName: row.staffName,
+        staffId: row.staffId,
+        lastDeductionDate: 'N/A',
+        daysSinceLastDeduction: null,
+      });
+    }
   }
 
   return results;
@@ -242,15 +284,81 @@ async function getLastSubmissionDate(mdaId: string): Promise<string | null> {
 }
 
 /**
- * AC 1 Section 3: Pending employment events since last submission.
+ * AC 1 Section 3: Pending actions requiring MDA officer attention.
  *
- * NOTE: The employment_events table is created by Story 11.2.
- * Until that story is complete, this returns an empty array.
- * This matches the story's design: "If no events exist yet, the section
- * will correctly show empty state."
+ * Includes:
+ * 1. Migration records flagged for review (14-day window)
+ * 2. Unreconciled employment events (Story 11.2)
+ * 3. Pending transfers involving this MDA
  */
-async function getPendingEvents(_mdaId: string, _lastSubmissionDate: string | null): Promise<PendingEventItem[]> {
-  // employment_events table does not exist yet (Story 11.2).
-  // Return empty array — the frontend renders "No items require attention".
-  return [];
+async function getPendingEvents(mdaId: string, _lastSubmissionDate: string | null): Promise<PendingEventItem[]> {
+  const results: PendingEventItem[] = [];
+  const now = new Date();
+
+  // 1. Flagged migration records pending review
+  const flaggedRecords = await db.select({
+    count: sql<number>`COUNT(*)::int`,
+    deadline: sql<string>`MIN(${migrationRecordsTable.reviewWindowDeadline})`,
+  })
+    .from(migrationRecordsTable)
+    .where(and(
+      eq(migrationRecordsTable.mdaId, mdaId),
+      sql`${migrationRecordsTable.flaggedForReviewAt} IS NOT NULL`,
+      sql`${migrationRecordsTable.correctedAt} IS NULL`,
+      sql`${migrationRecordsTable.deletedAt} IS NULL`,
+    ));
+
+  const flaggedCount = flaggedRecords[0]?.count ?? 0;
+  if (flaggedCount > 0) {
+    const deadline = flaggedRecords[0]?.deadline ? new Date(flaggedRecords[0].deadline) : null;
+    const daysLeft = deadline ? Math.ceil((deadline.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)) : null;
+    const urgency = daysLeft !== null && daysLeft <= 3 ? ' (urgent)' : '';
+
+    results.push({
+      eventType: 'MIGRATION_REVIEW',
+      staffName: `${flaggedCount} record${flaggedCount !== 1 ? 's' : ''}`,
+      effectiveDate: deadline?.toISOString() ?? now.toISOString(),
+      reconciliationStatus: daysLeft !== null && daysLeft < 0 ? 'OVERDUE' : 'PENDING',
+      description: `${flaggedCount} migration record${flaggedCount !== 1 ? 's' : ''} flagged for review${daysLeft !== null ? ` — ${daysLeft > 0 ? `${daysLeft} days remaining` : 'overdue'}${urgency}` : ''}`,
+      actionUrl: '/dashboard/migration/review',
+    });
+  }
+
+  // 2. Pending transfers involving this MDA (incoming or outgoing)
+  const pendingTransfers = await db.execute(sql`
+    SELECT COUNT(*)::int as count FROM transfers
+    WHERE status = 'PENDING'
+      AND (outgoing_mda_id = ${mdaId} OR incoming_mda_id = ${mdaId})
+  `);
+  const transferCount = (pendingTransfers.rows[0] as { count: number })?.count ?? 0;
+  if (transferCount > 0) {
+    results.push({
+      eventType: 'TRANSFER_PENDING',
+      staffName: `${transferCount} transfer${transferCount !== 1 ? 's' : ''}`,
+      effectiveDate: now.toISOString(),
+      reconciliationStatus: 'PENDING',
+      description: `${transferCount} pending transfer${transferCount !== 1 ? 's' : ''} awaiting confirmation`,
+      actionUrl: '/dashboard/employment-events',
+    });
+  }
+
+  // 3. Unreconciled employment events
+  const unreconciledEvents = await db.execute(sql`
+    SELECT COUNT(*)::int as count FROM employment_events
+    WHERE loan_id IN (SELECT id FROM loans WHERE mda_id = ${mdaId})
+      AND reconciliation_status = 'UNCONFIRMED'
+  `);
+  const eventCount = (unreconciledEvents.rows[0] as { count: number })?.count ?? 0;
+  if (eventCount > 0) {
+    results.push({
+      eventType: 'UNRECONCILED_EVENT',
+      staffName: `${eventCount} event${eventCount !== 1 ? 's' : ''}`,
+      effectiveDate: now.toISOString(),
+      reconciliationStatus: 'UNCONFIRMED',
+      description: `${eventCount} employment event${eventCount !== 1 ? 's' : ''} pending reconciliation`,
+      actionUrl: '/dashboard/employment-events',
+    });
+  }
+
+  return results;
 }

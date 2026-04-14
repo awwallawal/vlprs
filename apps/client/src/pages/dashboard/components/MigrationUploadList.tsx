@@ -8,7 +8,8 @@
 
 import { useState } from 'react';
 import { toast } from 'sonner';
-import { useListMigrations, useDiscardMigration, useApproveUpload, useRejectUpload } from '@/hooks/useMigration';
+import { useListMigrations, useDiscardMigration, useDeleteMigration, useApproveUpload, useRejectUpload, useBatchBaseline } from '@/hooks/useMigration';
+import { Input } from '@/components/ui/input';
 import { useAuthStore } from '@/stores/authStore';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -23,7 +24,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { ChevronLeft, ChevronRight, FileSpreadsheet, Trash2, Check, X } from 'lucide-react';
+import { ChevronLeft, ChevronRight, FileSpreadsheet, Trash2, Check, X, Play } from 'lucide-react';
 import { ROLES } from '@vlprs/shared';
 import type { MigrationUploadSummary, MigrationUploadStatus } from '@vlprs/shared';
 
@@ -64,6 +65,9 @@ const DISCARDABLE_STATUSES: MigrationUploadStatus[] = ['uploaded', 'mapped', 'fa
 export function MigrationUploadList() {
   const [page, setPage] = useState(1);
   const [discardTarget, setDiscardTarget] = useState<MigrationUploadSummary | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<MigrationUploadSummary | null>(null);
+  const [deleteConfirmFilename, setDeleteConfirmFilename] = useState('');
+  const [deleteReason, setDeleteReason] = useState('');
   const [rejectTarget, setRejectTarget] = useState<MigrationUploadSummary | null>(null);
   const [rejectReason, setRejectReason] = useState('');
   const limit = 15;
@@ -72,6 +76,8 @@ export function MigrationUploadList() {
   const isAdmin = user?.role === ROLES.SUPER_ADMIN || user?.role === ROLES.DEPT_ADMIN;
   const { data, isPending, isError } = useListMigrations({ page, limit });
   const discardMutation = useDiscardMigration();
+  const deleteMutation = useDeleteMigration();
+  const batchBaselineMutation = useBatchBaseline();
   const approveMutation = useApproveUpload();
   const rejectMutation = useRejectUpload();
 
@@ -86,6 +92,34 @@ export function MigrationUploadList() {
       setDiscardTarget(null);
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : 'Failed to discard upload';
+      toast.error(message);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!deleteTarget || deleteConfirmFilename !== deleteTarget.filename || deleteReason.length < 10) return;
+    try {
+      const result = await deleteMutation.mutateAsync({
+        uploadId: deleteTarget.id,
+        confirmFilename: deleteConfirmFilename,
+        reason: deleteReason,
+      });
+      toast.success(`Upload deleted — ${result.recordsAffected} records, ${result.loansRemoved} loans removed`);
+      setDeleteTarget(null);
+      setDeleteConfirmFilename('');
+      setDeleteReason('');
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Failed to delete upload';
+      toast.error(message);
+    }
+  };
+
+  const handleBaseline = async (upload: MigrationUploadSummary) => {
+    try {
+      const result = await batchBaselineMutation.mutateAsync({ uploadId: upload.id });
+      toast.success(`Baselines established: ${result.loansCreated} loans created, ${result.flaggedForReview.count} flagged for review`);
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Failed to establish baselines';
       toast.error(message);
     }
   };
@@ -161,6 +195,9 @@ export function MigrationUploadList() {
                 upload={upload}
                 isAdmin={isAdmin}
                 onDiscard={setDiscardTarget}
+                onDelete={setDeleteTarget}
+                onBaseline={handleBaseline}
+                isBaselining={batchBaselineMutation.isPending}
                 onApprove={handleApprove}
                 onReject={setRejectTarget}
               />
@@ -245,19 +282,73 @@ export function MigrationUploadList() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Delete Upload Dialog — GitHub-style type-to-confirm */}
+      <AlertDialog open={!!deleteTarget} onOpenChange={(open) => { if (!open) { setDeleteTarget(null); setDeleteConfirmFilename(''); setDeleteReason(''); } }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Upload</AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-2">
+                <p>
+                  This will permanently delete <strong>{deleteTarget?.filename}</strong> ({deleteTarget?.totalRecords.toLocaleString()} records) and all associated loans and ledger entries. This action cannot be undone.
+                </p>
+                <p>
+                  To confirm, type the filename below:
+                </p>
+                <p className="rounded bg-slate-100 px-2 py-1 font-mono text-xs select-all">
+                  {deleteTarget?.filename}
+                </p>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="space-y-3">
+            <Input
+              placeholder="Type filename to confirm..."
+              value={deleteConfirmFilename}
+              onChange={(e) => setDeleteConfirmFilename(e.target.value)}
+              className="font-mono text-sm"
+            />
+            <Textarea
+              placeholder="Reason for deletion (min 10 characters)..."
+              value={deleteReason}
+              onChange={(e) => setDeleteReason(e.target.value)}
+              className="min-h-[80px]"
+            />
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <Button
+              onClick={handleDelete}
+              disabled={
+                deleteMutation.isPending ||
+                deleteConfirmFilename !== deleteTarget?.filename ||
+                deleteReason.length < 10
+              }
+              variant="destructive"
+            >
+              {deleteMutation.isPending ? 'Deleting...' : 'Delete Upload'}
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
 
-function UploadRow({ upload, isAdmin, onDiscard, onApprove, onReject }: {
+function UploadRow({ upload, isAdmin, onDiscard, onDelete, onBaseline, isBaselining, onApprove, onReject }: {
   upload: MigrationUploadSummary;
   isAdmin: boolean;
   onDiscard: (upload: MigrationUploadSummary) => void;
+  onDelete: (upload: MigrationUploadSummary) => void;
+  onBaseline: (upload: MigrationUploadSummary) => void;
+  isBaselining: boolean;
   onApprove: (upload: MigrationUploadSummary) => void;
   onReject: (upload: MigrationUploadSummary) => void;
 }) {
   const isSuperseded = !!upload.supersededBy;
   const canDiscard = DISCARDABLE_STATUSES.includes(upload.status);
+  const canDelete = isAdmin && !canDiscard; // Admin can delete validated/reconciled/completed uploads
   const isPendingVerification = upload.status === 'pending_verification';
   const isRejected = upload.status === 'rejected';
   const rejectionReason = isRejected && upload.metadata?.rejectionReason ? String(upload.metadata.rejectionReason) : null;
@@ -312,12 +403,33 @@ function UploadRow({ upload, isAdmin, onDiscard, onApprove, onReject }: {
       </td>
       <td className="px-4 py-3">
         <div className="flex items-center gap-1">
+          {isAdmin && upload.status === 'validated' && (
+            <button
+              type="button"
+              onClick={() => onBaseline(upload)}
+              disabled={isBaselining}
+              className="p-1.5 rounded-md text-teal hover:bg-teal/10 transition-colors disabled:opacity-50"
+              title="Establish baselines"
+            >
+              <Play className="h-4 w-4" />
+            </button>
+          )}
           {canDiscard && (
             <button
               type="button"
               onClick={() => onDiscard(upload)}
               className="p-1.5 rounded-md text-text-muted hover:text-destructive hover:bg-destructive/10 transition-colors"
               title="Discard upload"
+            >
+              <Trash2 className="h-4 w-4" />
+            </button>
+          )}
+          {canDelete && (
+            <button
+              type="button"
+              onClick={() => onDelete(upload)}
+              className="p-1.5 rounded-md text-text-muted hover:text-destructive hover:bg-destructive/10 transition-colors"
+              title="Delete upload"
             >
               <Trash2 className="h-4 w-4" />
             </button>

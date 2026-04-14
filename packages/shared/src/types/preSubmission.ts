@@ -19,12 +19,14 @@ export interface ZeroDeductionItem {
   daysSinceLastDeduction: number | null;
 }
 
-/** Mid-cycle employment event pending CSV confirmation */
+/** Pending action requiring MDA officer attention */
 export interface PendingEventItem {
   eventType: string;
   staffName: string;
   effectiveDate: string; // ISO 8601 date
   reconciliationStatus: string;
+  description?: string;
+  actionUrl?: string;
 }
 
 /** Complete checkpoint response from GET /api/pre-submission/:mdaId */

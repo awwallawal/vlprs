@@ -173,6 +173,28 @@ export async function generateObservations(
   // Batch insert with idempotency guard
   const { generated, skipped, byType } = await batchInsertObservations(allObservations, uploadId);
 
+  // "Clean means clean" — reclassify any record that received observations
+  if (generated > 0) {
+    const observedRecordIds = [
+      ...new Set(
+        allObservations
+          .map((o) => o.migrationRecordId)
+          .filter((id): id is string => id !== null),
+      ),
+    ];
+    if (observedRecordIds.length > 0) {
+      await db
+        .update(migrationRecords)
+        .set({ varianceCategory: 'minor_variance' })
+        .where(
+          and(
+            inArray(migrationRecords.id, observedRecordIds),
+            eq(migrationRecords.varianceCategory, 'clean'),
+          ),
+        );
+    }
+  }
+
   return { generated, skipped, byType };
 }
 

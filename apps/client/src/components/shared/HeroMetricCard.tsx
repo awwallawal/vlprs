@@ -86,7 +86,7 @@ export function HeroMetricCard({
       case 'count':
         return (
           <span
-            className="text-4xl font-bold font-mono"
+            className="text-2xl sm:text-3xl xl:text-4xl font-bold font-mono"
             style={{ fontVariantNumeric: 'tabular-nums' }}
           >
             {formatCount(animatedCount)}
@@ -95,7 +95,7 @@ export function HeroMetricCard({
       case 'percentage':
         return (
           <span
-            className="text-4xl font-bold font-mono"
+            className="text-2xl sm:text-3xl xl:text-4xl font-bold font-mono"
             style={{ fontVariantNumeric: 'tabular-nums' }}
           >
             {typeof value === 'number' ? value.toFixed(1) : value}%
@@ -111,7 +111,7 @@ export function HeroMetricCard({
   return (
     <div
       className={cn(
-        'rounded-lg border bg-white p-6 transition-shadow',
+        'rounded-lg border bg-white p-6 transition-shadow flex flex-col',
         onClick && 'cursor-pointer hover:shadow-md',
         className,
       )}
@@ -126,7 +126,7 @@ export function HeroMetricCard({
         }
       }}
     >
-      <p className="text-sm text-text-secondary mb-1">{label}{helpKey && <MetricHelp metric={helpKey} />}</p>
+      <p className="text-sm text-text-secondary mb-1 min-h-[2.5rem] flex items-end flex-wrap">{label}{helpKey && <MetricHelp metric={helpKey} />}</p>
       <div className="mb-1 min-w-0 overflow-hidden">{displayValue()}</div>
       {trend && (
         <p className={cn('text-xs', trendConfig[trend.direction].color)}>

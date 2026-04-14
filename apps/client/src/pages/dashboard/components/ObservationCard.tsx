@@ -1,10 +1,22 @@
 import { useState } from 'react';
-import { Info, ChevronDown, ChevronUp } from 'lucide-react';
+import { useNavigate } from 'react-router';
+import { Info, ChevronDown, ChevronUp, ExternalLink } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { MetricHelp } from '@/components/shared/MetricHelp';
 import { formatDateTime } from '@/lib/formatters';
 import type { ObservationListItem, ObservationStatus, ObservationType } from '@vlprs/shared';
+
+/** Mirror of server's normalizeName() for personKey construction */
+function normalizeStaffName(raw: string): string {
+  let name = raw.toUpperCase().trim();
+  name = name.replace(/\([^)]*\)/g, '').trim();
+  name = name.replace(/\s+/g, ' ');
+  for (let i = 0; i < 2; i++) {
+    name = name.replace(/^(MRS?\.?|MISS|DR\.?|CHIEF|ALHAJ[IA]\.?|ALH\.?|PRINCE|PRINCESS|ENGR\.?|ARC\.?|PROF\.?|BARR\.?|HON\.?|COMR?A?DE?\.?|COL\.?|GEN\.?|CAPT\.?|PASTOR|REV\.?|ELDER|DEACON(ESS)?|OTUNBA|BAALE)\s+/i, '').trim();
+  }
+  return name.replace(/[.,]+$/, '').trim();
+}
 
 const TYPE_LABELS: Record<ObservationType, string> = {
   rate_variance: 'Rate Variance',
@@ -52,6 +64,21 @@ export function ObservationCard({
   onSupersede,
 }: ObservationCardProps) {
   const [expanded, setExpanded] = useState(false);
+  const navigate = useNavigate();
+
+  const personKey = observation.mdaCode
+    ? encodeURIComponent(`${observation.mdaCode}:${normalizeStaffName(observation.staffName)}`)
+    : null;
+
+  const handleDrillDown = () => {
+    if (observation.loanId && observation.mdaId) {
+      navigate(`/dashboard/mda/${observation.mdaId}/loan/${observation.loanId}`);
+    } else if (personKey) {
+      navigate(`/dashboard/migration/persons/${personKey}`);
+    }
+  };
+
+  const canDrillDown = !!((observation.loanId && observation.mdaId) || personKey);
 
   return (
     <div className="rounded-lg bg-attention-bg p-4 transition-colors">
@@ -68,7 +95,19 @@ export function ObservationCard({
 
           {/* Staff and MDA */}
           <div className="flex items-center gap-2 mb-1">
-            <span className="text-sm font-medium text-text-primary">{observation.staffName}</span>
+            {canDrillDown ? (
+              <button
+                type="button"
+                onClick={handleDrillDown}
+                className="group inline-flex items-center gap-1 text-sm font-medium text-teal hover:text-teal/80 hover:underline transition-colors"
+                title={observation.loanId ? 'Open loan detail' : 'Open staff profile'}
+              >
+                {observation.staffName}
+                <ExternalLink className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+              </button>
+            ) : (
+              <span className="text-sm font-medium text-text-primary">{observation.staffName}</span>
+            )}
             <span className="text-xs text-text-muted">{observation.mdaName}</span>
           </div>
 

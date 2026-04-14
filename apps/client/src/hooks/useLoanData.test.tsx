@@ -1,8 +1,15 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import type { ReactNode } from 'react';
 import { useLoanDetail, useLoanSearch } from './useLoanData';
+
+vi.mock('@/lib/apiClient', () => ({
+  apiClient: vi.fn(),
+}));
+
+import { apiClient } from '@/lib/apiClient';
+const mockApiClient = vi.mocked(apiClient);
 
 function createWrapper() {
   const queryClient = new QueryClient({
@@ -13,8 +20,18 @@ function createWrapper() {
   };
 }
 
+beforeEach(() => {
+  vi.clearAllMocks();
+});
+
 describe('useLoanDetail', () => {
-  it('returns loan with borrowerName for loan-001', async () => {
+  it('fetches loan by ID from the API', async () => {
+    mockApiClient.mockResolvedValueOnce({
+      id: 'loan-001',
+      staffName: 'Akinwale Babatunde',
+      status: 'ACTIVE',
+    });
+
     const { result } = renderHook(() => useLoanDetail('loan-001'), {
       wrapper: createWrapper(),
     });
@@ -23,10 +40,9 @@ describe('useLoanDetail', () => {
       expect(result.current.isSuccess).toBe(true);
     });
 
-    const data = result.current.data!;
-    expect(data.borrowerName).toBe('Akinwale Babatunde');
-    expect(data.loanId).toBe('loan-001');
-    expect(data.status).toBe('ACTIVE');
+    expect(mockApiClient).toHaveBeenCalledWith('/loans/loan-001');
+    expect(result.current.data!.staffName).toBe('Akinwale Babatunde');
+    expect(result.current.data!.status).toBe('ACTIVE');
   });
 
   it('does not fetch when loanId is empty', () => {
@@ -35,11 +51,16 @@ describe('useLoanDetail', () => {
     });
 
     expect(result.current.fetchStatus).toBe('idle');
+    expect(mockApiClient).not.toHaveBeenCalled();
   });
 });
 
 describe('useLoanSearch', () => {
-  it('returns results when searching for "Akinwale"', async () => {
+  it('fetches search results from the API', async () => {
+    mockApiClient.mockResolvedValueOnce({
+      data: [{ staffName: 'Akinwale Babatunde', loanReference: 'VLC-001' }],
+    });
+
     const { result } = renderHook(() => useLoanSearch('Akinwale'), {
       wrapper: createWrapper(),
     });
@@ -48,9 +69,7 @@ describe('useLoanSearch', () => {
       expect(result.current.isSuccess).toBe(true);
     });
 
-    const data = result.current.data!;
-    expect(data.length).toBeGreaterThan(0);
-    expect(data.every((r) => r.staffName.toLowerCase().includes('akinwale'))).toBe(true);
+    expect(result.current.data!.length).toBeGreaterThan(0);
   });
 
   it('does not fetch when query is empty', () => {

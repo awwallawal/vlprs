@@ -30,7 +30,7 @@ const router = Router();
 const dashboardAuth = [
   authenticate,
   requirePasswordChange,
-  authorise(ROLES.SUPER_ADMIN, ROLES.DEPT_ADMIN),
+  authorise(ROLES.SUPER_ADMIN, ROLES.DEPT_ADMIN, ROLES.MDA_OFFICER),
   scopeToMda,
   readLimiter,
   auditLog,
@@ -313,6 +313,173 @@ router.get(
     res.json({
       success: true,
       data: { items: items.slice(0, 10), totalCount: items.length },
+    });
+  },
+);
+
+// ─── Multi-Loan Staff (UAT 2026-04-14) ─────────────────────────────────
+// GET /api/dashboard/multi-loan-staff — Staff with 2+ loans across same/different MDAs
+
+router.get(
+  '/dashboard/multi-loan-staff',
+  ...drillDownAuth,
+  async (req: Request, res: Response) => {
+    const mdaScope = req.mdaScope ?? null;
+    const { sql: sqlImport } = await import('drizzle-orm');
+
+    const summaryResult = await db.execute(sqlImport`
+      SELECT
+        COUNT(*) FILTER (WHERE loan_count >= 2)::int as multi_loan_staff,
+        COUNT(*) FILTER (WHERE loan_count >= 3)::int as triple_plus,
+        COUNT(*) FILTER (WHERE mda_count >= 2)::int as cross_mda,
+        COALESCE(SUM(total_principal::numeric) FILTER (WHERE loan_count >= 2), 0)::text as concentrated_exposure
+      FROM (
+        SELECT staff_name, COUNT(*)::int as loan_count, COUNT(DISTINCT mda_id)::int as mda_count, SUM(principal_amount::numeric) as total_principal
+        FROM loans
+        ${mdaScope ? sqlImport`WHERE mda_id = ${mdaScope}` : sqlImport``}
+        GROUP BY staff_name
+      ) x
+    `);
+    const summary = summaryResult.rows[0] as { multi_loan_staff: number; triple_plus: number; cross_mda: number; concentrated_exposure: string };
+
+    const listResult = await db.execute(sqlImport`
+      SELECT
+        l.staff_name,
+        COUNT(*)::int as loan_count,
+        COUNT(DISTINCT l.mda_id)::int as mda_count,
+        SUM(l.principal_amount::numeric)::text as total_principal,
+        STRING_AGG(DISTINCT m.code, ', ') as mda_codes,
+        STRING_AGG(DISTINCT m.name, ' | ') as mda_names,
+        STRING_AGG(l.loan_reference, ', ' ORDER BY l.loan_reference) as loan_refs,
+        (ARRAY_AGG(l.id))[1] as sample_loan_id,
+        (ARRAY_AGG(l.mda_id))[1] as sample_mda_id,
+        (ARRAY_AGG(m.code))[1] as sample_mda_code,
+        COUNT(*) FILTER (WHERE l.status = 'ACTIVE')::int as active_count,
+        COUNT(*) FILTER (WHERE l.status = 'COMPLETED')::int as completed_count
+      FROM loans l
+      JOIN mdas m ON l.mda_id = m.id
+      ${mdaScope ? sqlImport`WHERE l.mda_id = ${mdaScope}` : sqlImport``}
+      GROUP BY l.staff_name
+      HAVING COUNT(*) > 1
+      ORDER BY COUNT(*) DESC, SUM(l.principal_amount::numeric) DESC
+      LIMIT 1000
+    `);
+
+    res.json({
+      success: true,
+      data: {
+        summary: {
+          multiLoanStaff: summary.multi_loan_staff,
+          triplePlus: summary.triple_plus,
+          crossMda: summary.cross_mda,
+          concentratedExposure: summary.concentrated_exposure,
+        },
+        staff: (listResult.rows as Array<any>).map(r => ({
+          staffName: r.staff_name,
+          loanCount: r.loan_count,
+          mdaCount: r.mda_count,
+          totalPrincipal: r.total_principal,
+          mdaCodes: r.mda_codes,
+          mdaNames: r.mda_names,
+          loanRefs: r.loan_refs,
+          sampleLoanId: r.sample_loan_id,
+          sampleMdaId: r.sample_mda_id,
+          sampleMdaCode: r.sample_mda_code,
+          activeCount: r.active_count,
+          completedCount: r.completed_count,
+        })),
+      },
+    });
+  },
+);
+
+// ─── Pending MDA Action (UAT 2026-04-14) ─────────────────────────────────
+// GET /api/dashboard/pending-mda-action — Aggregated backlog of records awaiting MDA action
+
+router.get(
+  '/dashboard/pending-mda-action',
+  ...drillDownAuth,
+  async (req: Request, res: Response) => {
+    const mdaScope = req.mdaScope ?? null;
+    const { sql: sqlImport } = await import('drizzle-orm');
+
+    // Total pending records (flagged for review or not yet baselined, across all active uploads)
+    const totalResult = await db.execute(sqlImport`
+      SELECT
+        COUNT(*)::int as total_pending,
+        COUNT(DISTINCT mda_id)::int as mda_count,
+        COALESCE(SUM(total_loan::numeric), 0)::text as total_exposure
+      FROM migration_records
+      WHERE deleted_at IS NULL
+        AND (
+          flagged_for_review_at IS NOT NULL AND corrected_at IS NULL
+          OR is_baseline_created = false
+        )
+        ${mdaScope ? sqlImport`AND mda_id = ${mdaScope}` : sqlImport``}
+    `);
+    const totalRow = totalResult.rows[0] as { total_pending: number; mda_count: number; total_exposure: string };
+
+    // Per-MDA breakdown
+    const perMdaResult = await db.execute(sqlImport`
+      SELECT
+        m.id as mda_id,
+        m.code as mda_code,
+        m.name as mda_name,
+        COUNT(mr.*) FILTER (WHERE mr.flagged_for_review_at IS NOT NULL AND mr.corrected_at IS NULL)::int as flagged,
+        COUNT(mr.*) FILTER (WHERE mr.is_baseline_created = false AND mr.flagged_for_review_at IS NULL)::int as not_baselined,
+        COALESCE(SUM(mr.total_loan::numeric) FILTER (WHERE mr.flagged_for_review_at IS NOT NULL AND mr.corrected_at IS NULL), 0)::text as flagged_exposure,
+        MIN(mr.flagged_for_review_at) FILTER (WHERE mr.corrected_at IS NULL) as oldest_flagged,
+        MIN(mr.review_window_deadline) FILTER (WHERE mr.corrected_at IS NULL) as next_deadline
+      FROM mdas m
+      LEFT JOIN migration_records mr ON mr.mda_id = m.id AND mr.deleted_at IS NULL
+      WHERE EXISTS (
+        SELECT 1 FROM migration_records mr2
+        WHERE mr2.mda_id = m.id AND mr2.deleted_at IS NULL
+          AND (
+            (mr2.flagged_for_review_at IS NOT NULL AND mr2.corrected_at IS NULL)
+            OR mr2.is_baseline_created = false
+          )
+      )
+      ${mdaScope ? sqlImport`AND m.id = ${mdaScope}` : sqlImport``}
+      GROUP BY m.id, m.code, m.name
+      ORDER BY (COUNT(mr.*) FILTER (WHERE mr.flagged_for_review_at IS NOT NULL AND mr.corrected_at IS NULL) + COUNT(mr.*) FILTER (WHERE mr.is_baseline_created = false AND mr.flagged_for_review_at IS NULL)) DESC
+    `);
+
+    // Observation counts (overdeductions, within-file duplicates)
+    const obsResult = await db.execute(sqlImport`
+      SELECT type, COUNT(*)::int as cnt
+      FROM observations
+      WHERE status = 'unreviewed'
+        AND type IN ('post_completion_deduction', 'within_file_duplicate', 'negative_balance')
+        ${mdaScope ? sqlImport`AND mda_id = ${mdaScope}` : sqlImport``}
+      GROUP BY type
+    `);
+
+    const obsByType: Record<string, number> = {};
+    for (const row of obsResult.rows as Array<{ type: string; cnt: number }>) {
+      obsByType[row.type] = row.cnt;
+    }
+
+    res.json({
+      success: true,
+      data: {
+        totalPending: totalRow.total_pending,
+        mdaCount: totalRow.mda_count,
+        totalExposure: totalRow.total_exposure,
+        overdeductions: obsByType.post_completion_deduction ?? 0,
+        withinFileDuplicates: obsByType.within_file_duplicate ?? 0,
+        negativeBalances: obsByType.negative_balance ?? 0,
+        perMda: (perMdaResult.rows as Array<any>).map(r => ({
+          mdaId: r.mda_id,
+          mdaCode: r.mda_code,
+          mdaName: r.mda_name,
+          flagged: r.flagged ?? 0,
+          notBaselined: r.not_baselined ?? 0,
+          flaggedExposure: r.flagged_exposure ?? '0.00',
+          oldestFlagged: r.oldest_flagged ? new Date(r.oldest_flagged).toISOString() : null,
+          nextDeadline: r.next_deadline ? new Date(r.next_deadline).toISOString() : null,
+        })),
+      },
     });
   },
 );

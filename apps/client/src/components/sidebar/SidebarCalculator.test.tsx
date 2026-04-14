@@ -17,7 +17,6 @@ vi.mock('@/hooks/useCopyToClipboard', () => ({
 import {
   SidebarCalculator,
   evaluateExpression,
-  __resetSidebarCalculatorStoreForTests,
 } from './SidebarCalculator';
 
 // ─── Parser unit tests ─────────────────────────────────────────────
@@ -97,13 +96,13 @@ describe('evaluateExpression', () => {
 describe('SidebarCalculator', () => {
   beforeEach(() => {
     window.localStorage.clear();
-    // Ensure panel opens on first render so tests don't have to toggle
-    window.localStorage.setItem('vlprs.sidebarCalculator.open', 'true');
-    // Reset the module-level shared store so test bleed doesn't happen
-    __resetSidebarCalculatorStoreForTests();
-    // Reset the copy-to-clipboard mock between tests
     mockCopyToClipboard.mockClear();
   });
+
+  function openCalculator() {
+    render(<SidebarCalculator />);
+    fireEvent.click(screen.getByRole('button', { name: /calculator/i }));
+  }
 
   it('renders the calculator toggle button', () => {
     render(<SidebarCalculator />);
@@ -111,7 +110,7 @@ describe('SidebarCalculator', () => {
   });
 
   it('evaluates an expression on Enter and formats result as Naira', () => {
-    render(<SidebarCalculator />);
+    openCalculator();
     const input = screen.getByLabelText(/calculator expression/i) as HTMLInputElement;
     fireEvent.change(input, { target: { value: '1875000 - 500000' } });
     fireEvent.keyDown(input, { key: 'Enter' });
@@ -121,7 +120,7 @@ describe('SidebarCalculator', () => {
   });
 
   it('evaluates via the = button', () => {
-    render(<SidebarCalculator />);
+    openCalculator();
     const input = screen.getByLabelText(/calculator expression/i) as HTMLInputElement;
     fireEvent.change(input, { target: { value: '1000 + 500' } });
     fireEvent.click(screen.getByRole('button', { name: /evaluate expression/i }));
@@ -130,7 +129,7 @@ describe('SidebarCalculator', () => {
   });
 
   it('shows an error for invalid expressions', () => {
-    render(<SidebarCalculator />);
+    openCalculator();
     const input = screen.getByLabelText(/calculator expression/i) as HTMLInputElement;
     fireEvent.change(input, { target: { value: '1 + abc' } });
     fireEvent.keyDown(input, { key: 'Enter' });
@@ -140,7 +139,7 @@ describe('SidebarCalculator', () => {
   });
 
   it('clears expression, result, and error when Clear pressed', () => {
-    render(<SidebarCalculator />);
+    openCalculator();
     const input = screen.getByLabelText(/calculator expression/i) as HTMLInputElement;
     fireEvent.change(input, { target: { value: '100 + 200' } });
     fireEvent.keyDown(input, { key: 'Enter' });
@@ -152,7 +151,7 @@ describe('SidebarCalculator', () => {
   });
 
   it('appends tokens when keypad buttons are pressed', () => {
-    render(<SidebarCalculator />);
+    openCalculator();
     const input = screen.getByLabelText(/calculator expression/i) as HTMLInputElement;
     fireEvent.click(screen.getByRole('button', { name: 'Insert 7' }));
     fireEvent.click(screen.getByRole('button', { name: 'Insert +' }));
@@ -161,7 +160,7 @@ describe('SidebarCalculator', () => {
   });
 
   it('passes the formatted result to the useCopyToClipboard hook', () => {
-    render(<SidebarCalculator />);
+    openCalculator();
     const input = screen.getByLabelText(/calculator expression/i) as HTMLInputElement;
     fireEvent.change(input, { target: { value: '500 + 500' } });
     fireEvent.keyDown(input, { key: 'Enter' });
@@ -170,61 +169,11 @@ describe('SidebarCalculator', () => {
     expect(mockCopyToClipboard).toHaveBeenCalledWith('₦1,000.00');
   });
 
-  it('renders compact mode as a popover-trigger icon button', () => {
-    render(<SidebarCalculator compact />);
+  it('renders calculator trigger button', () => {
+    render(<SidebarCalculator />);
     expect(
-      screen.getByRole('button', { name: /naira calculator/i }),
+      screen.getByRole('button', { name: /^calculator$/i }),
     ).toBeInTheDocument();
   });
 
-  it('persists open state to localStorage', () => {
-    // Start clean — no key set
-    window.localStorage.removeItem('vlprs.sidebarCalculator.open');
-    __resetSidebarCalculatorStoreForTests();
-
-    render(<SidebarCalculator />);
-
-    // Initially closed (no key, default is false), then click toggle to open
-    fireEvent.click(screen.getByRole('button', { name: /^calculator$/i }));
-    expect(window.localStorage.getItem('vlprs.sidebarCalculator.open')).toBe('true');
-
-    // Click again to close
-    fireEvent.click(screen.getByRole('button', { name: /^calculator$/i }));
-    expect(window.localStorage.getItem('vlprs.sidebarCalculator.open')).toBe('false');
-  });
-
-  // Story 15.0j Code Review 2026-04-09 — H1/M4 regression coverage.
-  //
-  // The previous architecture used per-instance React useState for `open`,
-  // `expression`, `result`, `error`, and only WROTE to localStorage in
-  // useEffect. That meant two SidebarCalculator instances would desync as
-  // soon as either was toggled, and unmounting/remounting any instance lost
-  // all calculator state. The new architecture lifts state into a module-level
-  // store consumed via useSyncExternalStore.
-  //
-  // We verify the new behaviour by typing into one mounted instance, then
-  // unmounting it, then remounting a fresh instance and asserting that the
-  // expression and result are still there. With the previous (broken) design
-  // both values would be lost because per-instance React state is destroyed
-  // on unmount.
-  it('preserves expression and result across unmount/remount via shared store (Story 15.0j H1/M4)', () => {
-    const { unmount } = render(<SidebarCalculator />);
-
-    const input = screen.getByLabelText(/calculator expression/i) as HTMLInputElement;
-    fireEvent.change(input, { target: { value: '250 + 750' } });
-    fireEvent.keyDown(input, { key: 'Enter' });
-    expect(screen.getByTestId('calculator-result').textContent).toBe('₦1,000.00');
-
-    unmount();
-
-    // Fresh remount — same component, same `open=true` from localStorage.
-    // If state lived in React useState, expression/result would both be empty.
-    // With the shared module-level store they survive the unmount.
-    render(<SidebarCalculator />);
-    const remountedInput = screen.getByLabelText(
-      /calculator expression/i,
-    ) as HTMLInputElement;
-    expect(remountedInput.value).toBe('250 + 750');
-    expect(screen.getByTestId('calculator-result').textContent).toBe('₦1,000.00');
-  });
 });

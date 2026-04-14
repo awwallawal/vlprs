@@ -113,35 +113,43 @@ export function MdaDetailPage() {
                 />
               </div>
               <div className="rounded-lg border bg-white p-6">
-                <p className="text-sm text-text-secondary mb-1">Monthly Recovery</p>
+                <p className="text-sm text-text-secondary mb-1">Declared Recovery</p>
                 <NairaDisplay
-                  amount={mdaDetail.data.monthlyRecovery}
+                  amount={mdaDetail.data.declaredRecovery ?? mdaDetail.data.expectedMonthlyDeduction ?? '0'}
                   variant="body"
                   className="text-2xl font-bold"
                 />
+                <p className="text-xs text-text-muted mt-1">What MDA declares monthly</p>
               </div>
             </>
           ) : null}
         </div>
 
-        {/* Expected vs Actual recovery + variance */}
-        {!mdaDetail.isPending && mdaDetail.data?.expectedMonthlyDeduction && (
+        {/* Declared Recovery vs Collection Potential */}
+        {!mdaDetail.isPending && mdaDetail.data && (mdaDetail.data.declaredRecovery || mdaDetail.data.expectedMonthlyDeduction) && (
           <div className="mt-4 rounded-lg border bg-white p-4">
-            <div className="flex flex-wrap items-center gap-4 text-sm">
+            <p className="text-xs font-medium text-text-secondary mb-2">Recovery Analysis</p>
+            <div className="flex flex-wrap items-center gap-6 text-sm">
               <span className="text-text-secondary">
-                Expected: <NairaDisplay amount={mdaDetail.data.expectedMonthlyDeduction} variant="table" className="font-medium" />/month
+                Declared: <NairaDisplay amount={mdaDetail.data.declaredRecovery ?? mdaDetail.data.expectedMonthlyDeduction ?? '0'} variant="table" className="font-medium" />/month
               </span>
               <span className="text-text-secondary">
-                Actual: <NairaDisplay amount={mdaDetail.data.actualMonthlyRecovery ?? '0'} variant="table" className="font-medium" />
+                Scheme Expected: <NairaDisplay amount={mdaDetail.data.collectionPotential ?? '0'} variant="table" className="font-medium" />/month
               </span>
-              {mdaDetail.data.variancePercent !== null && mdaDetail.data.variancePercent !== undefined && (
+              {mdaDetail.data.recoveryVariancePercent !== null && mdaDetail.data.recoveryVariancePercent !== undefined && (
                 <span className={cn(
-                  'text-xs font-medium',
-                  mdaDetail.data.variancePercent < 0 ? 'text-amber-600' : 'text-green-600',
+                  'text-xs font-medium px-2 py-0.5 rounded-full',
+                  Math.abs(mdaDetail.data.recoveryVariancePercent) < 1
+                    ? 'bg-green-100 text-green-700'
+                    : 'bg-amber-100 text-amber-700',
                 )}>
-                  {mdaDetail.data.variancePercent < 0 ? '\u2212' : '+'}
-                  {Math.abs(mdaDetail.data.variancePercent).toFixed(1)}%
-                  {mdaDetail.data.variancePercent < 0 ? ' below expected' : ' above expected'}
+                  {mdaDetail.data.recoveryVariancePercent > 0 ? '+' : ''}
+                  {mdaDetail.data.recoveryVariancePercent.toFixed(1)}% variance
+                </span>
+              )}
+              {mdaDetail.data.recoveryVarianceAmount && Number(mdaDetail.data.recoveryVarianceAmount) !== 0 && (
+                <span className="text-xs text-text-muted">
+                  (<NairaDisplay amount={mdaDetail.data.recoveryVarianceAmount} variant="compact" /> gap)
                 </span>
               )}
             </div>
@@ -163,10 +171,45 @@ export function MdaDetailPage() {
         )}
       </section>
 
+      {/* Migration uploads for this MDA */}
+      {mdaDetail.data?.migrationUploads && mdaDetail.data.migrationUploads.length > 0 && (
+        <section aria-label="Migration uploads">
+          <h2 className="mb-4 text-lg font-semibold text-text-primary">
+            Data Uploads
+          </h2>
+          <div className="overflow-x-auto rounded-lg border">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b bg-slate-50">
+                  <th className="px-4 py-3 text-left font-medium text-text-secondary">Filename</th>
+                  <th className="px-4 py-3 text-left font-medium text-text-secondary">Date</th>
+                  <th className="px-4 py-3 text-right font-medium text-text-secondary">Records</th>
+                  <th className="px-4 py-3 text-left font-medium text-text-secondary">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {mdaDetail.data.migrationUploads.map((upload: { id: string; filename: string; status: string; totalRecords: number; createdAt: string }) => (
+                  <tr key={upload.id} className="border-b">
+                    <td className="px-4 py-3 font-medium text-text-primary">{upload.filename}</td>
+                    <td className="px-4 py-3 text-text-secondary">{formatDate(upload.createdAt)}</td>
+                    <td className="px-4 py-3 text-right font-mono text-text-secondary">{formatCount(upload.totalRecords)}</td>
+                    <td className="px-4 py-3">
+                      <Badge variant={upload.status === 'validated' || upload.status === 'reconciled' ? 'complete' : 'pending'}>
+                        {upload.status.charAt(0).toUpperCase() + upload.status.slice(1)}
+                      </Badge>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      )}
+
       {/* Submission history table */}
       <section aria-label="Submission history">
         <h2 className="mb-4 text-lg font-semibold text-text-primary">
-          Submission History
+          Monthly Submissions
         </h2>
         <div className="overflow-x-auto rounded-lg border">
           <table className="w-full text-sm">
@@ -228,7 +271,7 @@ export function MdaDetailPage() {
           </table>
           {!submissions.isPending && submissions.data && submissions.data.items.length === 0 && (
             <p className="px-4 py-6 text-center text-sm text-text-secondary">
-              No monthly submissions yet. Submissions will appear here once the MDA submits their first monthly return.
+              No monthly submissions yet. This section will populate once the MDA submits their first monthly return via CSV or manual entry.
             </p>
           )}
         </div>

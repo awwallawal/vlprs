@@ -620,6 +620,11 @@ export async function getRecordDetail(
     throw new AppError(404, 'RECORD_NOT_FOUND', 'The requested migration record was not found.');
   }
 
+  // Fetch MDA code for personKey construction (UAT 2026-04-14)
+  const { mdas: mdasTable } = await import('../db/schema');
+  const [mdaInfo] = await db.select({ code: mdasTable.code }).from(mdasTable).where(eq(mdasTable.id, record.mdaId));
+  const mdaCode = mdaInfo?.code ?? null;
+
   // Compute apparent rate (virtual field from computedRate via tier table)
   let apparentRate: string | null = null;
   if (record.computedRate) {
@@ -637,6 +642,7 @@ export async function getRecordDetail(
     gradeLevel: record.gradeLevel ?? null,
     station: record.station ?? null,
     mdaText: record.mdaText ?? null,
+    mdaCode,
     serialNumber: record.serialNumber ?? null,
     sheetName: record.sheetName,
     sourceRow: record.sourceRow,
@@ -837,10 +843,12 @@ export async function correctRecord(
       }
     }
 
-    // Re-compute variance using corrected values vs scheme expected
-    const effectiveOutstanding = (corrections.outstandingBalance ?? record.correctedOutstandingBalance ?? record.outstandingBalance);
-    const effectiveTotalLoan = (corrections.totalLoan ?? record.correctedTotalLoan ?? record.totalLoan);
-    const effectiveMonthlyDed = (corrections.monthlyDeduction ?? record.correctedMonthlyDeduction ?? record.monthlyDeduction);
+    // Re-compute variance using corrected values vs scheme expected.
+    // Use updateData first (picks up auto-computed values like correctedOutstandingBalance
+    // derived from installmentsOutstanding), then fall back to existing corrected/declared values.
+    const effectiveOutstanding = (updateData.correctedOutstandingBalance as string | undefined) ?? corrections.outstandingBalance ?? record.correctedOutstandingBalance ?? record.outstandingBalance;
+    const effectiveTotalLoan = (updateData.correctedTotalLoan as string | undefined) ?? corrections.totalLoan ?? record.correctedTotalLoan ?? record.totalLoan;
+    const effectiveMonthlyDed = (updateData.correctedMonthlyDeduction as string | undefined) ?? corrections.monthlyDeduction ?? record.correctedMonthlyDeduction ?? record.monthlyDeduction;
 
     // Use updated scheme expected if just recomputed, otherwise existing
     const schemeExpTotalLoan = (updateData.schemeExpectedTotalLoan as string | undefined) ?? record.schemeExpectedTotalLoan;

@@ -75,6 +75,7 @@ export async function getFlaggedRecords(
   const rows = await db
     .select({
       id: migrationRecords.id,
+      uploadId: migrationRecords.uploadId,
       staffName: migrationRecords.staffName,
       employeeNo: migrationRecords.employeeNo,
       gradeLevel: migrationRecords.gradeLevel,
@@ -86,6 +87,9 @@ export async function getFlaggedRecords(
       correctedAt: migrationRecords.correctedAt,
       correctionReason: migrationRecords.correctionReason,
       mdaName: mdas.name,
+      sourceFile: migrationRecords.sourceFile,
+      periodYear: migrationRecords.periodYear,
+      periodMonth: migrationRecords.periodMonth,
     })
     .from(migrationRecords)
     .leftJoin(mdas, eq(migrationRecords.mdaId, mdas.id))
@@ -99,6 +103,7 @@ export async function getFlaggedRecords(
     const { daysRemaining, status: countdownStatus } = computeCountdownStatus(deadline);
     return {
       recordId: r.id,
+      uploadId: r.uploadId,
       staffName: r.staffName,
       staffId: r.employeeNo ?? null,
       gradeLevel: r.gradeLevel ?? null,
@@ -112,6 +117,105 @@ export async function getFlaggedRecords(
       correctedBy: r.correctedBy ?? null,
       correctedAt: r.correctedAt?.toISOString() ?? null,
       correctionReason: r.correctionReason ?? null,
+      sourceFile: r.sourceFile ?? null,
+      periodYear: r.periodYear ?? null,
+      periodMonth: r.periodMonth ?? null,
+    };
+  });
+
+  return { records, total, page, limit };
+}
+
+// ─── All Flagged Records Across Uploads (UAT 2026-04-13) ───────────
+
+/**
+ * Query flagged records across ALL active uploads for an MDA (or all MDAs for admin).
+ * Returns combined results from all uploads, not just the latest one.
+ */
+export async function getAllFlaggedRecords(
+  mdaScope: string | null | undefined,
+  options: { page: number; limit: number; status: 'pending' | 'reviewed' | 'all'; mdaFilter?: string },
+): Promise<{ records: FlaggedRecordSummary[]; total: number; page: number; limit: number }> {
+  const { page, limit, status, mdaFilter } = options;
+
+  const conditions = [
+    isNotNull(migrationRecords.flaggedForReviewAt),
+    isNull(migrationRecords.deletedAt),
+  ];
+
+  // Only include records from active (non-deleted) uploads
+  conditions.push(sql`${migrationRecords.uploadId} IN (
+    SELECT id FROM migration_uploads WHERE deleted_at IS NULL
+  )`);
+
+  if (mdaScope) {
+    conditions.push(eq(migrationRecords.mdaId, mdaScope));
+  }
+  // Optional MDA filter (admin selecting a specific MDA from progress tracker)
+  if (mdaFilter && !mdaScope) {
+    conditions.push(eq(migrationRecords.mdaId, mdaFilter));
+  }
+
+  if (status === 'pending') {
+    conditions.push(isNull(migrationRecords.correctedBy));
+  } else if (status === 'reviewed') {
+    conditions.push(isNotNull(migrationRecords.correctedBy));
+  }
+
+  const [countResult] = await db
+    .select({ count: sql<string>`COUNT(*)` })
+    .from(migrationRecords)
+    .where(and(...conditions));
+  const total = parseInt(countResult.count, 10);
+
+  const rows = await db
+    .select({
+      id: migrationRecords.id,
+      uploadId: migrationRecords.uploadId,
+      staffName: migrationRecords.staffName,
+      employeeNo: migrationRecords.employeeNo,
+      gradeLevel: migrationRecords.gradeLevel,
+      varianceCategory: migrationRecords.varianceCategory,
+      varianceAmount: migrationRecords.varianceAmount,
+      flaggedForReviewAt: migrationRecords.flaggedForReviewAt,
+      reviewWindowDeadline: migrationRecords.reviewWindowDeadline,
+      correctedBy: migrationRecords.correctedBy,
+      correctedAt: migrationRecords.correctedAt,
+      correctionReason: migrationRecords.correctionReason,
+      mdaName: mdas.name,
+      sourceFile: migrationRecords.sourceFile,
+      periodYear: migrationRecords.periodYear,
+      periodMonth: migrationRecords.periodMonth,
+    })
+    .from(migrationRecords)
+    .leftJoin(mdas, eq(migrationRecords.mdaId, mdas.id))
+    .where(and(...conditions))
+    .orderBy(migrationRecords.staffName)
+    .limit(limit)
+    .offset((page - 1) * limit);
+
+  const records: FlaggedRecordSummary[] = rows.map((r) => {
+    const deadline = r.reviewWindowDeadline!;
+    const { daysRemaining, status: countdownStatus } = computeCountdownStatus(deadline);
+    return {
+      recordId: r.id,
+      uploadId: r.uploadId,
+      staffName: r.staffName,
+      staffId: r.employeeNo ?? null,
+      gradeLevel: r.gradeLevel ?? null,
+      mdaName: r.mdaName ?? null,
+      varianceCategory: r.varianceCategory ?? null,
+      varianceAmount: r.varianceAmount ?? null,
+      flaggedAt: r.flaggedForReviewAt!.toISOString(),
+      reviewWindowDeadline: deadline.toISOString(),
+      daysRemaining,
+      countdownStatus,
+      correctedBy: r.correctedBy ?? null,
+      correctedAt: r.correctedAt?.toISOString() ?? null,
+      correctionReason: r.correctionReason ?? null,
+      sourceFile: r.sourceFile ?? null,
+      periodYear: r.periodYear ?? null,
+      periodMonth: r.periodMonth ?? null,
     };
   });
 
@@ -258,6 +362,55 @@ export async function getMdaReviewProgress(
       windowDeadline: deadline.toISOString(),
     };
   });
+}
+
+/** All-MDA review progress aggregated across ALL active uploads (UAT 2026-04-14) */
+export async function getAllMdaReviewProgress(
+  mdaScope: string | null | undefined,
+): Promise<MdaReviewProgress[]> {
+  const conditions = [
+    isNotNull(migrationRecords.flaggedForReviewAt),
+    isNull(migrationRecords.deletedAt),
+    sql`${migrationRecords.uploadId} IN (SELECT id FROM migration_uploads WHERE deleted_at IS NULL)`,
+  ];
+  if (mdaScope) {
+    conditions.push(eq(migrationRecords.mdaId, mdaScope));
+  }
+
+  const rows = await db
+    .select({
+      mdaId: migrationRecords.mdaId,
+      mdaName: mdas.name,
+      totalFlagged: sql<string>`COUNT(*)`,
+      reviewed: sql<string>`COUNT(CASE WHEN ${migrationRecords.correctedBy} IS NOT NULL THEN 1 END)`,
+      reviewWindowDeadline: sql<Date>`MAX(${migrationRecords.reviewWindowDeadline})`,
+    })
+    .from(migrationRecords)
+    .leftJoin(mdas, eq(migrationRecords.mdaId, mdas.id))
+    .where(and(...conditions))
+    .groupBy(migrationRecords.mdaId, mdas.name);
+
+  return rows.map((r) => {
+    const total = parseInt(r.totalFlagged, 10);
+    const reviewed = parseInt(r.reviewed, 10);
+    const pending = total - reviewed;
+    const completionPct = total > 0 ? Math.round((reviewed / total) * 100) : 0;
+    const rawDeadline = r.reviewWindowDeadline!;
+    const deadline = rawDeadline instanceof Date ? rawDeadline : new Date(rawDeadline as unknown as string);
+    const { daysRemaining, status } = computeCountdownStatus(deadline);
+
+    return {
+      mdaId: r.mdaId,
+      mdaName: r.mdaName ?? 'Unknown MDA',
+      totalFlagged: total,
+      reviewed,
+      pending,
+      completionPct,
+      daysRemaining,
+      countdownStatus: status,
+      windowDeadline: deadline.toISOString(),
+    };
+  }).sort((a, b) => b.totalFlagged - a.totalFlagged);
 }
 
 // ─── Extend Review Window (AC: 9) ──────────────────────────────────
