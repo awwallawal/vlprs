@@ -837,7 +837,7 @@ These findings emerged when uploading December 2024 alongside the existing Augus
 
 ---
 
-**Resolved:** 42 of 49 findings (including #45 observations drilldown shipped this session)
+**Resolved:** 46 of 53 findings (42 original UAT + 4 post-UAT CI hardening #50–#53, including 1 CRITICAL production bug caught by integration tests)
 **Validation findings (engine working correctly):** 2 (#42 ALATISE multi-period test, #49 MDA equivalence)
 **Design / architectural findings (next sprint stories):** 5
   - #8 Migration-aware health score
@@ -929,6 +929,111 @@ These findings emerged when uploading December 2024 alongside the existing Augus
 ---
 
 *UAT session conducted 2026-04-12 to 2026-04-13. Document to be referenced during retrospective and for tracing multi-month migration architectural decisions.*
+
+---
+
+## Post-UAT CI Hardening (2026-04-14 afternoon)
+
+After the UAT work was committed and pushed (commit `8490d09`), CI surfaced a cascade of regressions that local UAT had not caught. These were fixed in three follow-up commits. **Captured here for retro; the pattern is load-bearing.**
+
+### #50 — CI lint blocked on unused-var errors (commit `ec02604`)
+- **Severity:** Low (mechanical, no behaviour change)
+- **Description:** `pnpm lint` in CI failed with 3 errors — 2 unused imports (`count`, `loans`) in `apps/server/scripts/sandbox-mda-load.ts` and 1 unused counter (`loansLinked`) in `apps/server/src/services/baselineService.ts`. 46 pre-existing `@typescript-eslint/no-explicit-any` warnings were tolerated; only errors gate CI.
+- **Fix:** Prefixed `loansLinked` with `_` (kept the counter for diagnostic clarity — intent is to surface it in the baseline response later); removed the two unused imports.
+- **Files:** `apps/server/src/services/baselineService.ts`, `apps/server/scripts/sandbox-mda-load.ts`
+- **Status:** Resolved in `ec02604`
+
+### #51 — Test regression wave: 26 client + 2 server unit tests broken by UAT rewrites (commit `14862f1`)
+- **Severity:** Medium (scope) / Low individually (each a stale fixture)
+- **Description:** The UAT commit rewrote or rewired 14+ components across 11 UAT stories (#9, #10, #13, #16, #21, #24, #25, #26, #27, etc.). Each rewrite changed either a component's data shape, hook contract, or rendered output. Tests were not updated in the same commit — they were manually UAT'd in the browser only. CI surfaced every stale fixture at once.
+- **Categories of breakage:**
+  1. **Missing `window.matchMedia` polyfill (8 tests)** — `HeroMetricCard` added a `useCountUp` hook reading `window.matchMedia('(prefers-reduced-motion: reduce)')`. jsdom does not implement matchMedia by default. Any page rendering a hero card in a test threw `TypeError: window.matchMedia is not a function`. One polyfill in `test/setup.ts` fixed all 8.
+  2. **Hook rewired to real API (9 tests across `useUserAdmin`, `AdminPage`, `LoanDetailPage`)** — tests that used to rely on in-hook fixture data now hit `apiClient` and got `undefined`. Fix: hoisted `vi.mock('@/lib/apiClient')` or `vi.mock('@/hooks/useUserAdmin')` with explicit fixtures.
+  3. **Component contract extended (6 tests `LoanDetailPage`)** — `LoanDetail` type grew `balance`, `migrationContext`, `schedule`, etc. Old flat mock (`borrowerName`, `principal`, `outstandingBalance`) threw `Cannot read properties of undefined`. Rebuilt fixture to match new shape.
+  4. **`useNavigate` added to a subcomponent (4 tests `PreSubmissionCheckpoint`)** — `PendingEventsTable` rendered inside the checkpoint component now uses `useNavigate` for event drill-down. Tests not wrapped in `MemoryRouter` threw. Fix: custom `render` helper wraps every test in `<MemoryRouter>`.
+  5. **Table → action-card rewrite (1 test `PreSubmissionCheckpoint`)** — pending events section renders cards now, not a third table. Assertion adjusted `toHaveLength(3)` → `toHaveLength(2)`.
+  6. **Label rename (3 tests)** — "Monthly Recovery" → "Declared Recovery" (UAT #9 non-punitive vocabulary). Touched `DashboardPage`, `MdaOfficerDashboard`, `MdaDetailPage`.
+  7. **Heading rename (1 test `MdaDetailPage`)** — "Submission History" → "Monthly Submissions".
+  8. **Page heading removed (1 test `OperationsHubPage`)** — page h1 replaced with `<WelcomeGreeting>` (conditional on auth user). Test now asserts on section headings instead.
+  9. **Dialog rewrite changed aria-label (1 test `SidebarCalculator`)** — evaluate button is now `aria-label="Evaluate"`, not `"evaluate expression"`.
+  10. **Service adopted raw SQL (2 tests `preSubmissionService`)** — `getPendingEvents` now uses `db.execute(sql\`...\`)` for transfer + unreconciled-event counts (UAT #24, #25). Test's `db` mock had only `select`; added `execute: vi.fn().mockResolvedValue({ rows: [{ count: 0 }] })`.
+- **Fix:** 11 test files updated. No production code changed. Full suite: 2,285 tests passing (shared 461 + client 750 + server unit 1072 + testing 2).
+- **Files:**
+  - `apps/client/src/test/setup.ts` — matchMedia polyfill
+  - `apps/client/src/hooks/useUserAdmin.test.tsx`
+  - `apps/client/src/pages/dashboard/AdminPage.test.tsx`
+  - `apps/client/src/pages/dashboard/DashboardPage.test.tsx`
+  - `apps/client/src/pages/dashboard/LoanDetailPage.test.tsx`
+  - `apps/client/src/pages/dashboard/MdaDetailPage.test.tsx`
+  - `apps/client/src/pages/dashboard/MdaOfficerDashboard.test.tsx`
+  - `apps/client/src/pages/dashboard/OperationsHubPage.test.tsx`
+  - `apps/client/src/pages/dashboard/components/PreSubmissionCheckpoint.test.tsx`
+  - `apps/client/src/components/sidebar/SidebarCalculator.test.tsx`
+  - `apps/server/src/services/preSubmissionService.test.ts`
+- **Status:** Resolved in `14862f1`
+
+### #52 — **PRODUCTION BUG: `baselineAmount` returned `'0.00'`** (commit `b9e01b1`)
+- **Severity:** **CRITICAL** — silent data bug, caught only by integration test
+- **Description:** `baselineService.createBaseline()` returned `baselineAmount: '0.00'` with a TODO comment `"Will be set from entry data"` that was never completed. This was introduced during the UAT refactor (#28–#31 duplicate guard) when the function was restructured to handle both "create new loan" and "link to existing loan" branches, and the unified return statement was stubbed out mid-edit.
+- **Callers affected:** Any client code or downstream process reading `baselineAmount` from the single-record baseline endpoint response. The ledger entry in the DB was correct — only the API response carried `0.00`.
+- **How it slipped past manual UAT:** the baseline UI surfaces confirmation via `loanReference` and flagged-count; `baselineAmount` is used in toast text and a downstream reconciliation check that is not yet wired. So functionally the UAT flow looked fine.
+- **How CI caught it:** `baseline.integration.test.ts` asserts `data.baselineAmount.toBe(BASELINE_1)` where `BASELINE_1 = TOTAL_LOAN - OUTSTANDING_1 = 416650.00`. Integration tests don't run in the local unit suite (`pnpm test`); they run via `pnpm --filter server test:integration` and only on CI gate.
+- **Fix:**
+  - New-loan branch: `baselineAmountStr = entry.amount` (use inserted ledger entry amount)
+  - Linked-loan branch: `baselineAmountStr = new Decimal(totalLoan).minus(new Decimal(effectiveOutstanding)).toFixed(2)` (derived from record fields)
+  - Single return statement now uses the computed value
+- **File:** `apps/server/src/services/baselineService.ts`
+- **Status:** Resolved in `b9e01b1`. **Integration suite 662/662 passing.**
+
+### #53 — Dashboard metrics MDA_OFFICER auth test stale
+- **Severity:** Low (test outdated, behaviour correct)
+- **Description:** `dashboardRoutes.integration.test.ts` asserted `GET /api/dashboard/metrics` returns `403` for MDA_OFFICER. UAT #16 intentionally opened this endpoint (and `/attention`, `/breakdown`, `/compliance`) to MDA_OFFICER, scoped via `scopeToMda` middleware. The other three endpoints already had "allows MDA_OFFICER access (scoped to their MDA)" assertions; `/metrics` was the one hold-out.
+- **Fix:** Test updated to assert `200` + `success: true` with scoping expectation noted inline.
+- **File:** `apps/server/src/routes/dashboardRoutes.integration.test.ts`
+- **Status:** Resolved in `b9e01b1`
+
+---
+
+## Summary of CI hardening commits
+
+| Commit | Scope | Tests affected |
+|---|---|---|
+| `ec02604` | Lint errors (3 unused-var) | 0 (mechanical) |
+| `14862f1` | Test fixture/mock updates after UAT rewrites | 26 client + 2 server |
+| `b9e01b1` | **Real bug:** `baselineAmount=0.00` + dashboard auth test | 2 integration |
+
+**Final state on `dev` (as of 2026-04-14 afternoon):**
+- Unit tests: 2,285 passing (shared 461 + client 750 + server unit 1072 + testing 2)
+- Integration tests: 662 passing
+- Lint: 0 errors (46 pre-existing warnings)
+- Typecheck: 0 errors
+
+---
+
+## Retrospective inputs — patterns worth discussing
+
+### Pattern 1: Manual UAT hides type-shape regressions that integration tests catch
+The `baselineAmount=0.00` bug (#52) would have shipped to production because no UI surface reads that field yet. The only reason we caught it was that an integration test written months ago hard-coded the expected value. **Takeaway:** integration tests on serialised API response shapes are load-bearing even when the field is "unused" in the current UI. The next feature that reads `baselineAmount` would have inherited the bug.
+
+### Pattern 2: "Rewrote a component" and "updated its test" need to be the same commit
+Of the 11 UAT stories touched in `8490d09`, at least 9 rewrote a component's data contract, hook dependency, or rendered output. Zero updated their companion test file. The result: a 26-failure cascade that took ~1 hour to triage. **Proposed team agreement (#15):** if a commit changes a component's data shape, hook contract, or rendered strings, the companion `.test.tsx` must be updated in the same commit — enforced by a pre-commit hint showing unchanged test files for changed components.
+
+### Pattern 3: CI has environment quirks that local dev masks
+`window.matchMedia` is undefined in jsdom. The code shipped and worked locally (browser has matchMedia). Tests that rendered `HeroMetricCard` via other components ran fine in the local watcher because the watcher only re-ran changed files. A cold CI run caught 8 files all at once. **Proposed addition to `test/setup.ts`:** a short section listing "jsdom polyfills we've had to add" (matchMedia, IntersectionObserver if added later, etc.) so the reason each polyfill exists is searchable.
+
+### Pattern 4: Lint gating on errors, not warnings, is correct — but `any` warnings are now ≥46 and growing
+Pre-existing 46 `@typescript-eslint/no-explicit-any` warnings. Each is individually trivial; together they form drag. **Proposed follow-up story:** type-tighten pass on the top 5 noisiest files (sandbox loaders, `autoStopService.test`, `beneficiaryLedger.integration.test`, `dashboardRoutes.ts`).
+
+### Pattern 5: TODO comments in return statements are booby-traps
+The `"Will be set from entry data"` TODO was syntactically valid, compiled clean, typechecked clean, and all unit tests passed because the unit tests don't exercise the wire response. It only blew up in integration. **Proposed tooling:** a lint rule or grep hook that flags `// (TODO|FIXME|Will be)` inside a `return {` block, as those are high-risk.
+
+---
+
+## Story for PM Agent (added this session): 11
+
+11. **Test-discipline audit for all UAT-touched components** — verify every component rewritten in `8490d09` has a test covering the new data shape. Retrospective candidate.
+
+*Post-UAT CI hardening completed 2026-04-14. All findings through #53 resolved. Go-live posture: green.*
 
 ### Files Changed (Complete List)
 

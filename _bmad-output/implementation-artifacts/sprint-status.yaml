@@ -304,6 +304,62 @@ development_status:
   15-0m-within-file-deduplication-check: done  # MEDIUM: same-person-same-period in single file — UAT #36. Three-layer defense: pre-baseline observation surface at validation (M1) + auto-baseline guard (createBatchBaseline) + review-path guard (baselineReviewedRecords, H1). normalizeName() parity with cross-MDA dedup (H2), distinct-employeeNo escape hatch (M3), structured error.details (M2), shared findWithinFileDuplicateGroups/assertNoWithinFileDuplicates helpers. Code review: 9 findings (2H 4M 3L), 8 fixed, L3 deferred (cosmetic migration name — rename risks hash drift). 16 tests total (12 original + 4 review follow-ups), migration 0044 applied
   15-0n-supersede-data-comparison-correction-reason: done  # HIGH+MEDIUM: record-level diff preview + mandatory reason for all corrections — UAT #40, #42. Code review: 6 findings (0H 3M 3L) all fixed
 
+  # ──────────────────────────────────────────────────────────────────────
+  # Multi-MDA Migration UAT Session (2026-04-12 → 2026-04-14)
+  # ──────────────────────────────────────────────────────────────────────
+  # End-to-end UAT after E15 prep completed (post-15.0n). Conducted against
+  # all 46 MDAs loaded into a sandbox DB to validate multi-MDA, multi-month
+  # migration behaviour before production go-live.
+  #
+  # OUTCOMES:
+  #   - 53 findings total, 46 resolved in code, 5 deferred to next sprint
+  #     as design/architectural stories, 2 validation findings (engine
+  #     working correctly), 1 non-blocking investigation (#47 baseline
+  #     over-count diagnostic)
+  #   - 1 CRITICAL production bug caught only by integration tests:
+  #     baselineService returned baselineAmount='0.00' stub (resolved b9e01b1)
+  #   - CI full green: 2,285 unit + 662 integration + lint/typecheck 0 errors
+  #
+  # COMMITS:
+  #   - 8490d09 feat: Epic 8 prep — multi-MDA migration UAT fixes + observations drilldown
+  #   - ec02604 fix: lint errors blocking CI (unused vars)
+  #   - 14862f1 fix: update test fixtures + mocks to match UAT-era component rewrites (26 client + 2 server)
+  #   - b9e01b1 fix: baselineAmount returned 0.00 + dashboard metrics auth test
+  #
+  # RUNNING DOCUMENT (source of truth for retro, audit, and architectural
+  # decision tracing): _bmad-output/implementation-artifacts/uat-findings-2026-04-12.md
+  #
+  # DEFERRED STORIES (10 proposed for PM) — extracted from running document:
+  #   1. #8  Migration-aware health score (UI + service)
+  #   2. #40 Three-view AG dashboard architecture (Verified | Awaiting | Full)
+  #   3. #43 "Most Likely Explanation" suggestion engine for variance correction
+  #   4. #44 Rate limiter migration to Redis (production hardening)
+  #   5. Source data cleanup workflow for Category 2 MDAs (within-file duplicates)
+  #   6. Temporal progression engine (subsequent month vs baseline)
+  #   7. Notification infrastructure (Epic 9 — already backlogged)
+  #   8. #46 MDA parent/child taxonomy (CDU ↔ Agriculture autonomous agencies)
+  #   9. #47 Baseline-vs-total-migrated diagnostic tooling
+  #  10. #48 Loan payment timeline section on LoanDetailPage
+  #  11. Test-discipline audit for all UAT-touched components (post-#51 retro candidate)
+  #
+  # RETRO INPUTS (patterns captured in running document §"Retrospective inputs"):
+  #   - Pattern 1: Manual UAT hides type-shape regressions that integration tests catch
+  #     (critical #52 baselineAmount=0.00 would have shipped silently)
+  #   - Pattern 2: Component rewrites and test-fixture updates must be same commit
+  #     (26-failure cascade from 11 stories that touched components without updating tests)
+  #   - Pattern 3: jsdom polyfill gaps (matchMedia) — local dev hides them, CI cold run exposes
+  #   - Pattern 4: 46 pre-existing `any` warnings form drag — type-tighten pass candidate
+  #   - Pattern 5: TODO comments inside `return {` blocks are booby-traps (typecheck-clean, unit-clean, integration-fail)
+  #
+  # PROPOSED NEW TEAM AGREEMENTS (for E15 retro vote):
+  #   15. Test-fixture parity — if a commit changes a component's data shape, hook
+  #       contract, or rendered strings, the companion test must be updated in the
+  #       same commit. Measured by: no "fix: update test fixtures" follow-up commits.
+  #   16. Pre-push integration sweep — before pushing a multi-story feature commit
+  #       to `dev`, run `pnpm test && pnpm --filter server test:integration` locally.
+  #       Not everyone does this; #52 shows the cost of skipping it.
+  uat-multi-mda-migration-2026-04-12: done  # 53 findings, 46 resolved, 1 CRITICAL bug caught by integration test (baselineAmount=0.00). Reference: uat-findings-2026-04-12.md. 4 commits: 8490d09 (main), ec02604 (lint), 14862f1 (test fixtures), b9e01b1 (integration + auth test). CI green on dev.
+
   # Epic 15: Beneficiary Onboarding & Verification Pipeline (Sprint 12 — after E15 prep sprint)
   # BLOCKED BY: E15 prep stories (15.0a–15.0n). All critical + high prep stories must complete before 15.1.
   # Story 15.5 has additional hard dependency on 8.0a/8.0b (three-vector model — already done).
