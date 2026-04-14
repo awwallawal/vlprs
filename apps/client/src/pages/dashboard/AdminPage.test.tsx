@@ -3,9 +3,24 @@ import { render, screen } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MemoryRouter } from 'react-router';
 import type { ReactNode } from 'react';
+import type { User } from '@vlprs/shared';
+
+// Hoisted so the vi.mock factory below can reference it (mocks are hoisted above imports)
+const { mockUseUsersImpl } = vi.hoisted(() => ({
+  mockUseUsersImpl: vi.fn(),
+}));
+
+vi.mock('@/hooks/useUserAdmin', async () => {
+  const actual = await vi.importActual<typeof import('@/hooks/useUserAdmin')>('@/hooks/useUserAdmin');
+  return {
+    ...actual,
+    useUsers: (...args: unknown[]) => mockUseUsersImpl(...args),
+    useMdas: () => ({ data: [], isSuccess: true, isPending: false }),
+  };
+});
+
 import { AdminPage } from './AdminPage';
 import { useAuthStore } from '@/stores/authStore';
-import type { User } from '@vlprs/shared';
 
 // Mock matchMedia for jsdom
 beforeAll(() => {
@@ -77,6 +92,19 @@ function createWrapper() {
 
 beforeEach(() => {
   useAuthStore.setState({ accessToken: null, user: null });
+  // By default, return all users; dept_admin test overrides with filtered set
+  mockUseUsersImpl.mockImplementation((filters?: { role?: string }) => {
+    const all = [superAdmin, deptAdmin, mdaOfficer];
+    const filtered = filters?.role ? all.filter((u) => u.role === filters.role) : all;
+    return {
+      data: {
+        data: filtered,
+        pagination: { page: 1, pageSize: 25, totalItems: filtered.length, totalPages: 1 },
+      },
+      isSuccess: true,
+      isPending: false,
+    };
+  });
 });
 
 describe('AdminPage', () => {

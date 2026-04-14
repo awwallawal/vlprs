@@ -123,7 +123,7 @@ describe('SidebarCalculator', () => {
     openCalculator();
     const input = screen.getByLabelText(/calculator expression/i) as HTMLInputElement;
     fireEvent.change(input, { target: { value: '1000 + 500' } });
-    fireEvent.click(screen.getByRole('button', { name: /evaluate expression/i }));
+    fireEvent.click(screen.getByRole('button', { name: /^evaluate$/i }));
 
     expect(screen.getByTestId('calculator-result').textContent).toBe('₦1,500.00');
   });

@@ -5,19 +5,40 @@ import { describe, expect, it, vi } from 'vitest';
 import { LoanDetailPage } from './LoanDetailPage';
 
 const mockLoan = {
-  loanId: 'loan-001',
-  borrowerName: 'Akinwale Babatunde',
+  id: 'loan-001',
   staffId: 'OY/MOH/2019/0451',
+  staffName: 'Akinwale Babatunde',
+  gradeLevel: 'Level 8',
+  mdaId: 'mda-003',
   mdaName: 'Ministry of Health',
-  loanRef: 'VL-2024-00451',
-  gradeLevelTier: 3,
-  principal: '2500000.00',
-  outstandingBalance: '1875000.00',
-  installmentsPaid: 10,
-  installmentsRemaining: 30,
-  lastDeductionDate: '2026-02-01T00:00:00Z',
+  mdaCode: 'MOH',
+  principalAmount: '2500000.00',
+  interestRate: '0.1333',
+  tenureMonths: 40,
+  moratoriumMonths: 0,
+  monthlyDeductionAmount: '83250.00',
+  approvalDate: '2024-01-01T00:00:00Z',
+  firstDeductionDate: '2024-02-01T00:00:00Z',
+  loanReference: 'VL-2024-00451',
   status: 'ACTIVE' as const,
-  retirementDate: '2035-06-30T00:00:00Z',
+  createdAt: '2024-01-01T00:00:00Z',
+  updatedAt: '2026-02-01T00:00:00Z',
+  balance: {
+    computedBalance: '1875000.00',
+    installmentsCompleted: 10,
+    installmentsRemaining: 30,
+    lastDeductionDate: '2026-02-01T00:00:00Z',
+    totalAmountPaid: '832500.00',
+    derivation: {
+      formula: 'Total Loan - Total Paid',
+      totalLoan: '3330000.00',
+    },
+  },
+  schedule: { schedule: [] as unknown[] },
+  ledgerEntryCount: 10,
+  temporalProfile: null,
+  gratuityProjection: null,
+  migrationContext: null,
 };
 
 vi.mock('react-router', async () => {
@@ -31,6 +52,22 @@ vi.mock('react-router', async () => {
 vi.mock('@/hooks/useLoanData', () => ({
   useLoanDetail: () => ({ data: mockLoan, isPending: false }),
   useLoanSearch: () => ({ data: [], isPending: false }),
+  useUpdateStaffId: () => ({ mutate: vi.fn(), isPending: false }),
+}));
+
+vi.mock('@/hooks/useCertificate', () => ({
+  useCertificate: () => ({ data: null, isPending: false }),
+  useDownloadCertificatePdf: () => ({ mutate: vi.fn(), isPending: false }),
+  useResendNotifications: () => ({ mutate: vi.fn(), isPending: false }),
+}));
+
+vi.mock('@/hooks/useExceptionData', () => ({
+  useExceptions: () => ({ data: { data: [], pagination: { page: 1, pageSize: 25, totalItems: 0, totalPages: 0 }, total: 0 }, isPending: false }),
+  useFlagException: () => ({ mutate: vi.fn(), isPending: false }),
+}));
+
+vi.mock('@/stores/authStore', () => ({
+  useAuthStore: (selector: (s: unknown) => unknown) => selector({ user: { role: 'super_admin' } }),
 }));
 
 function renderPage(initialEntries = ['/dashboard/mda/mda-003/loan/loan-001']) {
@@ -59,25 +96,19 @@ describe('LoanDetailPage', () => {
     expect(screen.getByText('Active')).toBeInTheDocument();
   });
 
-  it('renders loan detail cards', () => {
+  it('renders loan detail cards with MDA, reference, grade, tenure', () => {
     renderPage();
     expect(screen.getByText('Ministry of Health')).toBeInTheDocument();
     expect(screen.getByText('Loan Reference')).toBeInTheDocument();
     expect(screen.getByText('VL-2024-00451')).toBeInTheDocument();
-    expect(screen.getByText('Grade Level Tier')).toBeInTheDocument();
-    expect(screen.getByText('Tier 3')).toBeInTheDocument();
+    expect(screen.getByText('Grade Level')).toBeInTheDocument();
+    expect(screen.getByText('Level 8')).toBeInTheDocument();
+    expect(screen.getByText('Tenure')).toBeInTheDocument();
   });
 
-  it('renders placeholder sections for future features', () => {
+  it('renders repayment schedule accordion', () => {
     renderPage();
-    expect(screen.getByText('Repayment Schedule')).toBeInTheDocument();
-    expect(screen.getByText('Ledger History')).toBeInTheDocument();
-    expect(screen.getByText('Annotations')).toBeInTheDocument();
-  });
-
-  it('renders "How was this calculated?" accordion', () => {
-    renderPage();
-    expect(screen.getByText('How was this calculated?')).toBeInTheDocument();
+    expect(screen.getByText(/Repayment Schedule/)).toBeInTheDocument();
   });
 
   it('renders back to MDA button', () => {

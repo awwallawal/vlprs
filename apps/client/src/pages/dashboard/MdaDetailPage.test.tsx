@@ -24,6 +24,11 @@ const mockMdaDetail = {
   expectedMonthlyDeduction: '6000000.00',
   actualMonthlyRecovery: '5200000.00',
   variancePercent: -13.3,
+  // MdaDetailPage (UAT #7) now reads declaredRecovery + collectionPotential + recoveryVariancePercent
+  declaredRecovery: '5200000.00',
+  collectionPotential: '6000000.00',
+  recoveryVariancePercent: -13.3,
+  recoveryVarianceAmount: '-800000.00',
 };
 
 const mockSubmissions = [
@@ -119,13 +124,15 @@ describe('MdaDetailPage', () => {
     renderPage();
     expect(screen.getByText('Loan Count')).toBeInTheDocument();
     expect(screen.getByText('Total Exposure')).toBeInTheDocument();
-    expect(screen.getByText('Monthly Recovery')).toBeInTheDocument();
+    // "Monthly Recovery" renamed to "Declared Recovery" in UAT #9
+    expect(screen.getByText('Declared Recovery')).toBeInTheDocument();
   });
 
   it('renders submission history table', () => {
     renderPage();
+    // Renamed to "Monthly Submissions" in MDA detail page
     expect(
-      screen.getByRole('heading', { level: 2, name: 'Submission History' }),
+      screen.getByRole('heading', { level: 2, name: 'Monthly Submissions' }),
     ).toBeInTheDocument();
     expect(screen.getByText('MOH-2026-02-0001')).toBeInTheDocument();
   });
@@ -153,7 +160,9 @@ describe('MdaDetailPage', () => {
 
   it('renders variance information', () => {
     renderPage();
-    expect(screen.getByText(/below expected/)).toBeInTheDocument();
+    // Updated copy: shows "Recovery Analysis" with percent variance
+    expect(screen.getByText('Recovery Analysis')).toBeInTheDocument();
+    expect(screen.getByText(/% variance/)).toBeInTheDocument();
   });
 
   it('does not render pagination when totalPages is 1', () => {

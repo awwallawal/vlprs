@@ -5,7 +5,11 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 vi.mock('../db/index', () => ({
-  db: { select: vi.fn() },
+  // db.execute is used by getPendingEvents (UAT #24/#25) — default to zero-count rows
+  db: {
+    select: vi.fn(),
+    execute: vi.fn().mockResolvedValue({ rows: [{ count: 0 }] }),
+  },
 }));
 
 // Story 8.0i: Mock the effective event flag helper

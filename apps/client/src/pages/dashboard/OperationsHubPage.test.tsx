@@ -72,11 +72,12 @@ describe('OperationsHubPage', () => {
     mockNavigate.mockClear();
   });
 
-  it('renders page heading "Operations Hub"', () => {
+  it('renders Operations Hub main sections', () => {
     renderPage();
-    expect(
-      screen.getByRole('heading', { level: 1, name: 'Operations Hub' }),
-    ).toBeInTheDocument();
+    // Page heading replaced with WelcomeGreeting (conditional on auth user); assert on
+    // the section headings that are always present
+    expect(screen.getByRole('heading', { level: 2, name: 'Migration Status' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 2, name: 'Loan Search' })).toBeInTheDocument();
   });
 
   it('renders migration status section', () => {
