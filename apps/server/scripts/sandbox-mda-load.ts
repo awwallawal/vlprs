@@ -21,8 +21,7 @@ const FILE_FILTER = process.env.FILE_FILTER ?? 'BIR';
 async function run() {
   const { db } = await import('../src/db/index.ts');
   const { applyTriggers } = await import('../src/db/triggers.ts');
-  const { sql, count } = await import('drizzle-orm');
-  const { loans } = await import('../src/db/schema.ts');
+  const { sql } = await import('drizzle-orm');
   const migrationService = await import('../src/services/migrationService.ts');
   const baselineService = await import('../src/services/baselineService.ts');
   const validationService = await import('../src/services/migrationValidationService.ts');

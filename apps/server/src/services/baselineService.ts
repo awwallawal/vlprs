@@ -716,7 +716,7 @@ export async function createBatchBaseline(
       : 1;
 
     let loansCreated = 0;
-    let loansLinked = 0;
+    let _loansLinked = 0;
     let entriesCreated = 0;
     let newLoanSeq = 0;
     const byCategory: Record<string, number> = {};
@@ -743,7 +743,7 @@ export async function createBatchBaseline(
           period: record.periodYear && record.periodMonth ? `${record.periodYear}-${String(record.periodMonth).padStart(2, '0')}` : null,
         });
 
-        loansLinked++;
+        _loansLinked++;
       } else {
         // Generate loan reference from pre-computed sequence
         const refSeq = refStartSeq + newLoanSeq;
