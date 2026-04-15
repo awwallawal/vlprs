@@ -4016,3 +4016,123 @@ As the **Accountant General**, I want aggregate stability metrics and trend char
 
 7. **MetricHelp tooltips**
    - All stability metrics wrapped with `<MetricHelp>` explaining: what the metric measures, how it's computed, what "good" vs "needs attention" looks like
+
+---
+
+## Epic 17: Identity, Continuity & Authoritative Go-Live Readiness
+
+> **Added per Sprint Change Proposal 2026-04-15** following Multi-MDA UAT 2026-04-12 findings and the Alatise Bosede Susainah forensic audit (51 records, 8 observations) + Lamidi Morufu overdeduction discovery (36 records, cumulative ₦13,766 overpayment). **Blocks authoritative go-live.**
+
+**Full specification:** `_bmad-output/planning-artifacts/sprint-change-proposal-2026-04-15.md`
+**Decision log:** `_bmad-output/planning-artifacts/decision-log-2026-04-15.md`
+**Audit evidence (Deputy AG-facing):**
+- `docs/Car_Loan/analysis/reports/alatise-detailed-audit-report.pdf`
+- `docs/Car_Loan/analysis/reports/alatise-deputy-ag-summary.pdf`
+
+### Goal
+
+Establish a system-wide stable identity for beneficiaries and loans that survives haphazard upload, cross-MDA transfer, name variation, and MDA declaration error — such that AG dashboard figures can be gated by reconciliation status and published with confidence. The VLPRS app becomes the source of truth for scheme records.
+
+### Why this epic was created
+
+The Multi-MDA UAT session (2026-04-12 → 2026-04-14) and subsequent forensic audits revealed that the in-flight pipeline:
+
+- Treats the same beneficiary appearing in different months / MDAs / name spellings as different people with different loans
+- Trusts MDA-declared figures at face value without gating dashboard totals by reconciliation status
+- Has no first-class mechanism for walk-up lump-sum settlement (Path 3), leaving such loans indistinguishable from MDA-stopped-reporting
+- Has no cumulative-overdeduction detection (Lamidi Morufu's `paid=61, remaining=-1` arithmetic impossibility went unsurfaced)
+- Cannot produce authoritative "Active Loans" / "Total Exposure" / "Loans in Window" numbers that AG can defend
+
+The audit evidence is concrete and reproducible. Deferring the architectural redirect would mean publishing confidently-wrong numbers — a GovFin outcome compounding financial accountability risk with political-governance risk.
+
+### Epic structure — 36 stories in 11 sub-themes
+
+> **Amended per SCP review round 2 (2026-04-15):** added Story 17.0b (DRY_RUN infrastructure, cross-cutting) and Story 17.34a (shadow dashboard 14 days pre-BIR-pilot). Story 17.24 revised to upload-based scheme-account reconciliation (no external API). Agreements 17/18 linked; Agreement 21 reframed as system-health KPI; Agreement 22 gains AG-authorised out-of-band correction exception. CRITICAL finding defined precisely (3 crisp tests). See SCP §4.1, §4.3, §5, §7, §8, §9 for full detail.
+
+| Sub-theme | Stories | Purpose |
+|---|---|---|
+| A. CI Hardening | 17.0 lint ratchet (prod commit-blocking + test non-blocking), 17.0b DRY_RUN infrastructure | Prevents `any` warning growth; enables dry-run for every writing engine |
+| B. Discovery & utility port | 17.1 spike (with PO sign-off binding), 17.2 port side-quest utilities | Empirical answers to 8 questions; production code seeded from side-quest |
+| C. Identity layer | 17.3–17.7 (schemas, PersonIdentityService, link candidates, Review Queue merged with Exception Queue, unified Loan Detail Page) | Stable person identity across time/MDAs/name variants |
+| D. Loan & Lifecycle layer | 17.8–17.11 (loans schema, LoanIdentityService + lifecycle detector, Most Likely Explanation engine, missing-record detection) | Stable loan identity + lifecycle disambiguation |
+| E. Reconciliation & Truth State | 17.12–17.16 (PRP, upload integration + content validation, truth-state model, monthly snapshots, idempotency property tests) | Order-independent ingestion; records/persons carry truth state |
+| F. Dashboard & Observability | 17.17–17.20 (dual-truth rendering, `<VarianceBadge>`, pre-ingest preview, re-attribution UX) | AG reads Reconciled / Pending Review / Difference |
+| G. MDA Hierarchy | 17.21 (parent/child taxonomy + parent-aware queries) | CDU↔Agriculture and similar cases properly modelled |
+| H. Settlement, Cash & Overdeduction | 17.22–17.26 (Path 3 event, Unattributed Endings queue, bank reconciliation gate, overdeduction detection, refund workflow) | Path 3 first-class; stalled bucket drains; cash truth verified; overdeduction refund workflow |
+| I. Certificate Evolution | 17.27–17.29 (precondition gate, versioning/supersede, design preview UI) | Certificate-with-comment pattern + supersede chain; collaborative design preview for all roles |
+| J. Data Remediation & Policy | 17.30 remediation workflow, 17.31 scheme policy clarifications | Structured re-declaration path; Scheme Secretariat deliverables |
+| K. Backfill & Pilot | 17.32 external-auditor role, 17.33 retroactive backfill, 17.34 BIR pilot (cycle defined, CRITICAL precisely defined), 17.34a shadow dashboard pre-pilot | Historical data reconciled; pilot validates with precise acceptance criteria; K-gate = Epic 17 complete |
+
+### Key governance principles (Team Agreements 17–22, codified in SCP §4.3)
+
+| # | Agreement |
+|---|---|
+| 17 | **Audit before authority** — AG figures pass structured single-beneficiary audit before publication |
+| 18 | **Fixture-first** — every engine story has Awwal-verified ground truth fixture (Alatise, Lamidi, ADELEKE, CDU, +2-3 from spike) |
+| 19 | **Dual-truth by default** — Reconciled / Pending Review / Difference on every authoritative figure |
+| 20 | **Pilot before portfolio** — single-MDA pilot cycle before expansion (BIR is pilot MDA) |
+| 21 | **Dept Admin escape hatch** — engine proposes, humans dispose, audit trail mandatory |
+| 22 | **App is the source of truth** — bank statements corroborate, do not override |
+
+### Authority model (codified in SCP §7)
+
+- **Overdeduction refund approval:** AG (or Deputy AG in AG absence) sole authority. No threshold. No dual-signature. Dept Admin confirms payment post-approval only, has no approval role.
+- **Path 3 event filing:** Car Loan Department officer with dual-signature above threshold (scheme-policy-specified).
+- **Write-off:** Dept Admin proposes, AG approves.
+- **Re-attribution:** Engine-proposed, Dept Admin adjudicates with audit trail.
+- **Identity merge:** Dept Admin approves via identity_proposals flow.
+
+### No detection thresholds
+
+Engine detects every ₦1 overdeduction. Thresholds apply only at the authorisation layer (batch-approval UI for AG efficiency), never at detection. Rationale: any staff member querying their profile must be able to see every anomaly, however small. Thresholds at detection would deny legitimate complaints.
+
+### Certificate-with-comment pattern
+
+When loan reaches scheme total paid (observed outstanding=0 OR cumulative deducted ≥ scheme total):
+- If no open observations → `CERTIFICATE_CLEAN` (v1)
+- If overdeduction present → `CERTIFICATE_WITH_OBSERVATION_NOTE` (v1 with Scheme Observations section populated)
+- On refund confirmation → reissue clean v2, supersedes v1 with reason `OVERDEDUCTION_CLEARED`
+
+Public verification page shows full supersede chain; current version highlighted.
+
+### Relationship to existing reconciliation layers (three layers, Epic 17 adds the third)
+
+The system already has two reconciliation layers from completed work. Epic 17 adds a third; it does not replace the first two.
+
+| Layer | Source | Story | Status |
+|---|---|---|---|
+| Per-record three-vector | Scheme formula vs reverse-engineered vs MDA-declared | 8.0a | **Done** |
+| Aggregate three-way (payroll) | Expected (scheme) vs Declared (MDA submission) vs Actual (payroll extract upload) | 7.0h + 7.0i | **Done** |
+| Bank-level (scheme account) | Cash arrival in scheme recovery account vs MDA-declared remittance | **17.24 (new)** | Epic 17 |
+
+Payroll-extract reconciliation (Stories 7.0h + 7.0i) is already in production and feeds into the dual-truth dashboard (Story 17.17) as an existing observation source. No payroll re-integration work is needed in Epic 17.
+
+### Impact on existing epics
+
+See SCP §5 (Holistic Impact) and §6 (Post-E17 Restructure).
+
+Summary:
+- **Epic 13 retires** (13.3, 13.4 subsumed by Epic 17 Identity layer)
+- **Epic 15 reshapes** — 15.2 retires, 15.3–15.6 rescope smaller (5 → 4 stories)
+- **Epic 16 reshapes** — 16.1 dramatically shrinks, 16.3 becomes dashboard tab (4 → 3 stories)
+- **Epic 12 unchanged** — original 3 stories (12.1, 12.2, 12.3)
+- **Epic 9 unchanged** — enhanced with new event types but same scope
+- **Epic 8 extends** — certificate versioning + supersede + Precondition Gate
+
+### Acceptance criteria for Epic 17 complete (K-gate)
+
+- BIR pilot completes one full reconciliation cycle with zero CRITICAL findings
+- Dual-truth figures reviewed and accepted by AG
+- Overdeduction refund workflow exercised end-to-end (at least one case through full state machine)
+- Idempotency property test passes against all canonical fixtures (24-permutation test = byte-identical final state)
+- External-auditor read-only role demonstrated
+- Runbook for operations staff documented
+
+### Stories and dependencies
+
+Full story list and dependency graph in `_bmad-output/implementation-artifacts/sprint-status.yaml` (search `17-0` through `17-34`). Detailed specification in SCP §4.1.
+
+### Retrospective
+
+Retro 1 (Foundation) covers E15 Prep + Multi-MDA UAT 2026-04-12 + Epic 17 + BIR pilot. Scheduled post-K-gate. Retro 2 (Enhancement Cycle) and Retro 3 (Go-Live Meta) follow per SCP §7.
+

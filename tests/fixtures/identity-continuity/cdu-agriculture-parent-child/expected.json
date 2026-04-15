@@ -1,0 +1,69 @@
+{
+  "fixture_id": "cdu-agriculture-parent-child",
+  "origin": "UAT 2026-04-12 finding #46 — CDU autonomous agency cross-MDA duplicate",
+  "signed_off_by": "Awwal Lawal",
+  "signed_off_date": "2026-04-15",
+
+  "ground_truth_policy": {
+    "description": "CDU is an autonomous agency structurally under the Ministry of Agriculture, but for identity resolution purposes it MUST be treated as a standalone MDA with its own mda_id. Some MDAs submitted CDU data separately; others embedded CDU staff in Agriculture-branded files. In both cases, those staff resolve to CDU, not to Agriculture. The parent-child relationship is metadata used only for reporting rollups, never for identity routing.",
+
+    "rules": [
+      {
+        "rule_id": "cdu-is-standalone-mda",
+        "statement": "CDU has its own mda_id, distinct from the Ministry of Agriculture's mda_id. All identity queries (PersonIdentityService resolve and search) use mda_id directly with no parent-child traversal."
+      },
+      {
+        "rule_id": "records-in-agriculture-files-resolve-to-cdu",
+        "statement": "When the parser detects CDU sub-section headers within an Agriculture file (multi-word MDA name detection as already implemented in scripts/legacy-report/car-loan-parse.ts), those records resolve to CDU's mda_id, never to Agriculture's mda_id."
+      },
+      {
+        "rule_id": "cdu-separately-submitted-records",
+        "statement": "When CDU submits its own file (not embedded in Agriculture), records resolve identically to the same CDU mda_id."
+      },
+      {
+        "rule_id": "reporting-rollup-opt-in",
+        "statement": "mdas.reporting_parent_mda = AGRICULTURE is metadata. Reports that aggregate 'all Agriculture ministry including CDU' must opt into the rollup explicitly via a join on reporting_parent_mda. Default portfolio totals and dashboard figures do not implicitly include child MDAs — each MDA stands on its own mda_id."
+      }
+    ],
+
+    "schema_implication": {
+      "mdas": {
+        "columns_added": [
+          "is_autonomous BOOLEAN — CDU = true; most MDAs = false",
+          "reporting_parent_mda INT NULLABLE REFERENCES mdas.mda_id — CDU.reporting_parent_mda = AGRICULTURE.mda_id; most MDAs = NULL"
+        ]
+      }
+    },
+
+    "test_cases": [
+      {
+        "case_id": "cdu-staff-in-agriculture-file-resolves-to-cdu",
+        "input": "Record uploaded via an Agriculture-branded file, but appearing under a CDU sub-section header in the source spreadsheet",
+        "expected_mda": "CDU",
+        "expected_mda_file_label_in_source": "AGRICULTURE or AGRICULTURE AND RURAL DEVELOPMENT",
+        "must_not_resolve_to": "MINISTRY OF AGRICULTURE"
+      },
+      {
+        "case_id": "cdu-staff-in-cdu-standalone-file-resolves-to-cdu",
+        "input": "Record uploaded via a file labelled CDU directly (no Agriculture wrapper)",
+        "expected_mda": "CDU"
+      },
+      {
+        "case_id": "agriculture-ministry-rollup-includes-cdu-only-when-opted-in",
+        "input": "Dashboard tile showing Ministry of Agriculture Total Exposure",
+        "expected_behaviour_default": "Excludes CDU (each MDA stands alone)",
+        "expected_behaviour_opt_in": "Includes CDU when report explicitly joins on reporting_parent_mda"
+      }
+    ]
+  },
+
+  "records_pending": "Actual CDU-in-Agriculture-file record IDs from catalog.json to be populated at Story 17.21 (MDA parent/child taxonomy) kickoff. Side-quest mda-resolve.ts already contains the resolution logic that must be preserved in production. Policy above is signed-off ground truth.",
+
+  "related_stories": ["17.2", "17.21", "17.4"],
+  "related_agreements": ["Agreement 18 — fixture-first"],
+
+  "side_quest_reference": {
+    "resolver_location": "scripts/legacy-report/utils/mda-resolve.ts",
+    "note": "Contains 63 canonical MDAs + 200+ aliases + parent/child relationships including CDU. Port to production as part of Story 17.2."
+  }
+}
