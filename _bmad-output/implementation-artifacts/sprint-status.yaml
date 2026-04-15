@@ -3,8 +3,17 @@
 # project_key: NOKEY
 # tracking_system: file-system
 # story_location: _bmad-output/implementation-artifacts
-# sprint_sequence: 1→E1, 2→E14, 3→E2, 4→E10, 5→E3, 6→E4, 7→E5, 8→E11, 9→E7, 10→E6, 11→E8+E15(parallel)+16.0(discovery), 12→E12+E16(parallel), 13→E9, 14→E13
-# total_epics: 16
+# sprint_sequence (updated per SCP 2026-04-15):
+#   1→E1, 2→E14, 3→E2, 4→E10, 5→E3, 6→E4, 7→E5, 8→E11, 9→E7, 10→E6,
+#   11→E8+E15-prep(parallel)+16.0(discovery)+15.1,
+#   11.5→E15-prep retro + Multi-MDA UAT 2026-04-12 + SCP 2026-04-15,
+#   12→E17 (Identity, Continuity & Authoritative Go-Live Readiness — 34 stories, blocks authoritative go-live),
+#   13→E17 BIR pilot + AG review → authoritative go-live,
+#   14→E15-core (rescoped 4 stories) + E16-core (rescoped 3 stories) parallel,
+#   15→E12 (original 3 stories) + E9 (3 stories) parallel,
+#   16→E13-5 user guide (post go-live documentation)
+# Epic 13 RETIRED per SCP 2026-04-15 (13.3 and 13.4 subsumed by Epic 17 Identity layer; 13.5 orphaned to Phase 2 backlog).
+# total_epics: 17 (16 original + new E17; E13 retired)
 # total_stories: 121 (Epic 1: 12, Epic 14: 3, Epic 2: 8 incl. 2.0, Epic 3: 10 incl. 3.0a+3.0b prep from E10 retro, Epic 5: 5 (5.6 moved to E11), Epic 11: 8 incl. 11.0a+11.0b UAT remediation split + 11.2b split + 5.6 moved here, Epic 7: 13 incl. 7.0a-7.0i prep from E3-E11 mega-retro, Epic 6: 4, Epic 8: 13 incl. 8.0a-8.0j prep from E7+E6 retro + 8.0b UAT triage, Epic 10: 4, Epic 4: 4, Epic 12: 3, Epic 9: 3, Epic 13: 2, Epic 15: 20 incl. 15.0a-15.0n prep from E8 retro, Epic 16: 5 incl. 16.0 discovery spike (from E16 discovery 2026-04-02) — FR72/FR73 moved from Epic 13 to Epic 1, Story 2.0 added from Epic 1+14 retro, Epic 3 reshaped per PM alignment cascade 2026-03-01, Stories 3.0a+3.0b added per Epic 10 retro 2026-03-05, Story 5.6 moved from E5 to E11 sequence per PM validation 2026-03-16, Story 11.0 added then split into 11.0a+11.0b per PM decision 2026-03-17, FR91+FR92 added, Stories 7.0a-7.0g added per E3-E11 mega-retro 2026-03-20, Stories 7.0h+7.0i added during E7 prep, Stories 8.0a-8.0i added per E7+E6 retro 2026-03-29, Epic 15 added per E7+E6 retro planning item A 2026-03-29 — FR93-FR95 added, Stories 8.0h+8.0i added per Awwal zero-debt-forward mandate 2026-03-29, Story 8.0j added per PM triage of 8.0b UAT escalations 2026-04-02, Epic 16 added per PM triage 2026-04-02 — FRs TBD)
 
 # STATUS DEFINITIONS:
@@ -381,12 +390,14 @@ development_status:
   #   - MDA Alias Review with persistent saved mappings (novel reusable component)
   epic-15: in-progress
   15-1-committee-list-upload-pipeline: done  # Two-track wizard: 3-step approval (5-col) + 5-step retiree/deceased (17-col). Global MDA Alias Enhancement, dual schema detection, flexible batch model (FR93). Code review: 13 findings (2C 2H 6M 3L) all fixed
-  15-2-fuzzy-name-matching-engine: ready-for-dev  # Confidence bands: High ≥95% (auto-link), Medium 85-94% (review queue), Low <85% (flagged). Token-set similarity, benchmark Jaro-Winkler vs Levenshtein (FR85 extended)
-  15-3-monthly-onboarding-scan: ready-for-dev  # Hooks into Epic 5 submission pipeline, fire-and-forget. Tracks first_deduction_month, generates attention items at 3/6 months (FR85 extended, FR33(l) extended)
-  15-4-onboarding-pipeline-dashboard-report: ready-for-dev  # Onboarding curve, per-MDA breakdown, historical rates, Executive Summary population, branded PDF export (FR94)
-  15-5-retirement-deceased-verification-report: ready-for-dev  # RETIRED→Pathway 4 (gratuity), DECEASED→informational. Batch event filing, three-vector validation for 17-col loan creation. HARD dep on 8.0a/8.0b (FR95)
-  15-6-attention-items-observation-integration: ready-for-dev  # Wire FR33(l) onboarding lag, extend FR87(5) No Approval Match with temporal context
-  epic-15-retrospective: optional
+  # RETIRED per SCP 2026-04-15: fully subsumed by Epic 17.4 PersonIdentityService (system-wide scope, not onboarding-only)
+  15-2-fuzzy-name-matching-engine: retired  # SCP 2026-04-15: subsumed by 17.4
+  # Paused per SCP 2026-04-15: Epic 17 must complete first. Rescope on unblock (smaller scope — consumes 17.12 PRP + 17.14 truth-state)
+  15-3-monthly-onboarding-scan: backlog  # blocked-by: epic-17.12; rescope on unblock per SCP 2026-04-15
+  15-4-onboarding-pipeline-dashboard-report: backlog  # blocked-by: epic-17.17; extends dual-truth for onboarding view
+  15-5-retirement-deceased-verification-report: backlog  # blocked-by: epic-17.9 + 17.31 death-in-service policy + 17.32 external-auditor role
+  15-6-attention-items-observation-integration: backlog  # blocked-by: epic-17.14; rescope smaller
+  epic-15-retrospective: optional  # will be consolidated into Retro 1 (Foundation) post-Epic 17 K-gate per SCP 2026-04-15
 
   # Epic 12: Early Exit Processing (Sprint 12)
   epic-12: backlog
@@ -420,12 +431,13 @@ development_status:
   #   - Non-punitive: "Variance observed" not "Inconsistency detected", amber throughout
   #   - Progressive disclosure: portfolio → MDA → staff → finding detail
   #   - Auto-explain: link findings to employment events before surfacing to human
-  epic-16: in-progress  # discovery spike (16.0) in pipeline 2026-04-02
-  16-0-cross-month-discovery-spike: done  # Sprint 11: discovery completed 2026-04-02 — validated anomaly types, designed schema, mapped reuse surface, produced stories 16.1–16.4
-  16-1-cross-month-diffing-engine: ready-for-dev  # Core backend: auto-diff on submission confirmation, 5 finding types, severity scoring, auto-link to employment events. Story validated 2026-04-03
-  16-2-anomaly-resolution-event-context: ready-for-dev  # Review workflow: mark-expected + resolve + bulk-resolve, auto-resolution on event filing. Story validated 2026-04-03
-  16-3-cross-month-dashboard-drilldown: ready-for-dev  # Frontend: attention items, cross-month tab, per-MDA breakdown, staff timeline. Story validated 2026-04-03
-  16-4-portfolio-stability-metrics: ready-for-dev  # Aggregate: churn rate, deduction stability, trend charts, report integration. Story validated 2026-04-03
+  # Paused per SCP 2026-04-15: Epic 17 must complete first. 16.1 dramatically shrinks post-E17 (PRP + snapshots + attribution history deliver ~80%)
+  epic-16: in-progress  # core paused per SCP 2026-04-15; 16.0 discovery done
+  16-0-cross-month-discovery-spike: done  # Sprint 11: discovery completed 2026-04-02
+  16-1-cross-month-diffing-engine: backlog  # blocked-by: epic-17.12; dramatically smaller scope post-PRP per SCP 2026-04-15
+  16-2-anomaly-resolution-event-context: backlog  # blocked-by: epic-17.14
+  16-3-cross-month-dashboard-drilldown: backlog  # blocked-by: epic-17.17; becomes dashboard tab variant
+  16-4-portfolio-stability-metrics: backlog  # blocked-by: epic-17.15
   epic-16-retrospective: optional
 
   # Epic 9: Notifications & Automated Alerts (Sprint 13)
@@ -435,9 +447,116 @@ development_status:
   9-3-loan-completion-auto-stop-notifications: backlog
   epic-9-retrospective: optional
 
-  # Epic 13: Staff ID Governance (Sprint 14 — Stories 13.1/13.2 moved to Epic 1 as 1.9a/1.9b)
-  epic-13: backlog
-  13-3-staff-id-management: backlog
-  13-4-duplicate-staff-id-detection: backlog
-  13-5-comprehensive-end-user-guide: backlog  # moved from 8.0g per PO decision 2026-04-04. MUST be last story in E13 — all feature epics complete before execution
+  # Epic 13: RETIRED per SCP 2026-04-15 — 13.3 and 13.4 fully subsumed by Epic 17 Identity layer.
+  # 13.5 (end-user guide) moves OUT of E13 and becomes a Phase 2 (post-go-live) documentation story.
+  epic-13: retired  # SCP 2026-04-15: capability moved to Epic 17
+  13-3-staff-id-management: retired  # subsumed by 17.3 persons/aliases + 17.6 Review Queue
+  13-4-duplicate-staff-id-detection: retired  # subsumed by 17.4 PersonIdentityService namesake guard
+  13-5-comprehensive-end-user-guide: backlog  # Phase 2 / post-go-live documentation story (orphaned from retired E13 per SCP 2026-04-15)
+
+  # ──────────────────────────────────────────────────────────────────────
+  # Epic 17: Identity, Continuity & Authoritative Go-Live Readiness
+  # ──────────────────────────────────────────────────────────────────────
+  # MAJOR architectural track added per Sprint Change Proposal 2026-04-15.
+  # Origin: Multi-MDA UAT 2026-04-12 (53 findings, 4 deferred as architectural)
+  #         + Alatise Bosede Susainah forensic audit (51 records, 8 observations)
+  #         + Lamidi Morufu overdeduction discovery (36 records, cumulative ₦13,766 overpayment)
+  #
+  # GOAL: Establish system-wide stable identity for beneficiaries and loans that survives
+  # haphazard upload, cross-MDA transfer, name variation, and MDA declaration error —
+  # such that AG dashboard figures can be gated by reconciliation status and published
+  # with confidence. App becomes source of truth for scheme records.
+  #
+  # BLOCKING: Authoritative go-live paused pending Epic 17 + BIR pilot cycle complete.
+  # Operational (non-authoritative) mode continues during Epic 17 development.
+  #
+  # 34 stories in 11 sub-themes. Sub-theme completion gates A → K; K-gate = Epic 17 complete.
+  #
+  # Full specification: _bmad-output/planning-artifacts/sprint-change-proposal-2026-04-15.md
+  # Decision log:       _bmad-output/planning-artifacts/decision-log-2026-04-15.md
+  # Audit evidence:     docs/Car_Loan/analysis/reports/alatise-detailed-audit-report.pdf
+  #                     docs/Car_Loan/analysis/reports/alatise-deputy-ag-summary.pdf
+  # Regression fixtures:
+  #   - tests/fixtures/identity-continuity/alatise-bir-csc-2023-2026/ (Alatise 51 records, 8 observations)
+  #   - tests/fixtures/identity-continuity/lamidi-bir-2022-2024/ (Lamidi 36 records, cumulative overpayment)
+  #   - tests/fixtures/identity-continuity/adeleke-namesake/ (from UAT #30)
+  #   - tests/fixtures/identity-continuity/cdu-agriculture-parent-child/ (from UAT #46)
+  #
+  # KEY GOVERNANCE PRINCIPLES (codified as team agreements 17-22):
+  #   17. Audit before authority — AG figures pass structured single-beneficiary audit first
+  #   18. Fixture-first — every engine story has Awwal-verified ground truth fixture
+  #   19. Dual-truth by default — Reconciled / Pending Review / Difference everywhere
+  #   20. Pilot before portfolio — single-MDA pilot cycle before expansion
+  #   21. Dept Admin escape hatch — engine proposes, humans dispose, audit trail mandatory
+  #   22. App is source of truth — bank statements corroborate, do not override
+  #
+  # AG SOLE APPROVAL for overdeduction refund (no threshold, no dual-signature).
+  # Deputy AG acts with identical authority in AG absence. Dept Admin confirms payment only.
+  #
+  # NO DETECTION THRESHOLDS — every ₦1 overpayment surfaced. Thresholds apply only at
+  # authorisation layer (e.g., batch-approval UI for AG efficiency).
+  #
+  # CERTIFICATE-WITH-COMMENT pattern: issue certificate when scheme total paid + include
+  # Scheme Observations section if overdeduction present; reissue clean v2 on refund confirmation.
+  #
+  epic-17: backlog  # target start: post Deputy AG authorisation
+
+  # Sub-theme A — CI Hardening (enforced from day one)
+  17-0-lint-ratchet-any-warnings: backlog  # CI blocks commits that increase `any` warning count. Existing 46 warnings become visible countdown. Enforced day 1 so Epic 17 cannot inflate warnings.
+
+  # Sub-theme B — Discovery & utility port
+  17-1-discovery-spike-prevalence-survey: backlog  # Q1 collision rate, Q2 first-deduction-date coverage, Q3 zero-crossing vs gap rate, Q4 concurrent-loan prevalence, Q5 performance budget, Q6 variance contamination, Q7 haphazard-upload distribution, Q8 overpayment prevalence. Output gates sizing of remaining Epic 17 stories.
+  17-2-port-side-quest-utilities: backlog  # name-match, mda-resolve, number-parse, column-map, header-detect, period-extract into packages/shared with regression suite from March 2026 side-quest refinements
+
+  # Sub-theme C — Identity layer
+  17-3-persons-aliases-proposals-schema-seed: backlog  # persons + person_aliases + identity_proposals schema + migration + seed from Master Beneficiary Ledger (4,926 staff)
+  17-4-person-identity-service: backlog  # similarity bands + namesake frequency guard + cross-MDA flag (no auto-link) + confidence evidence persistence. ADELEKE UAT #30 fixture as regression test
+  17-5-person-link-candidates-transfer-handshake-wiring: backlog  # proactive Pending Handshake surfacing to both MDAs; wired to existing Transfer Handshake workflow
+  17-6-review-queue-ui-merged: backlog  # merged with existing Exception Queue into one triage surface; Dept Admin approves merges; MDA Officer confirms medium-confidence matches
+  17-7-loan-detail-page-unified: backlog  # Identity | Timeline (blank months explicit) | Variance | Certificates | Activity Log tabs. Scoped by role. Staff self-service view = Phase 2.
+
+  # Sub-theme D — Loan & Lifecycle layer
+  17-8-loans-schema-extension-attribution-history: backlog  # person_key FK + fingerprint columns + loan_attribution_history (append-only re-attribution audit)
+  17-9-loan-identity-service-lifecycle-detector: backlog  # fingerprint resolver + outstanding-zero-crossing detector with dormant-period guard + TEMPLATE_ROLLOVER_ERROR detection + negative-value hard-fail (handles Lamidi paid=61, remaining=-1). Lamidi fixture as regression test.
+  17-10-most-likely-explanation-suggestion-engine: backlog  # from UAT #43. "Declared monthly consistent with tenure=50, not declared 28 — likely tenure misrecording." Built on reverse-engineered-tenure logic from Alatise audit.
+  17-11-missing-record-detection-mda-prompt: backlog  # detects expected-but-missing months per active loan; notifies MDA with SLA; escalates on expiry
+
+  # Sub-theme E — Reconciliation & Truth State
+  17-12-person-reconciliation-pass-prp: backlog  # set-based, idempotent, per-person recompute. Triggered by upload/correction/handshake. Output is function of input set, not input order.
+  17-13-upload-pipeline-integration-content-validation: backlog  # rejects non-car-loan files at boundary (OYSHMB class). Rate limiter Redis migration (UAT #44) integrated here — ICR pipeline multiplies request volume.
+  17-14-truth-state-model: backlog  # per-record: CLEAN, IN_VARIANCE, LIFECYCLE_REVIEW, OVERPAYMENT_ADJUDICATION, PENDING_COMPLETION_EVIDENCE, RESOLVED_OUT_OF_SYSTEM, CERTIFICATE_WITH_OBSERVATION_NOTE, CERTIFICATE_CLEAN, APP_BANK_STATEMENT_VARIANCE. Per-person: SETTLED, PROVISIONAL, IN_TRANSFER.
+  17-15-monthly-dashboard-snapshots: backlog  # preserve historical figures despite re-attribution
+  17-16-idempotency-property-test-framework: backlog  # 24-permutation test for Alatise + Lamidi + ADELEKE + CDU fixtures. Final state must be byte-identical across all orderings.
+
+  # Sub-theme F — Dashboard & Observability
+  17-17-dual-truth-dashboard-rendering: backlog  # Reconciled / Pending Review / Difference on every AG headline figure. Absorbs UAT #8 (health score), #40 (three-view dashboard), #47 (baseline diagnostic).
+  17-18-variance-badge-direction-explicit: backlog  # <VarianceBadge> component: ↓ Outstanding to scheme / ↑ Refund due to staff / ⚠ Pending classification. Amber/grey only, non-punitive.
+  17-19-pre-ingest-aggregated-preview: backlog  # "N new persons, M continuations, K new loans, F flags" before commit, with drill-down to flagged items only
+  17-20-re-attribution-ux: backlog  # audit-log feed on AG dashboard data quality panel + affected-record MDA Officer notifications
+
+  # Sub-theme G — MDA Hierarchy
+  17-21-mda-parent-child-taxonomy: backlog  # from UAT #46 CDU/Agriculture case. mdas.parent_mda_id column + parent-aware identity queries + MDA hierarchy in filtering/reporting.
+
+  # Sub-theme H — Settlement, Cash & Overdeduction
+  17-22-settlement-pathway-3-event-car-loan-dept-ux: backlog  # explicit LUMP_SUM_SETTLEMENT event with receipt reference + bank-receipt cross-reference. Car Loan Dept officer files.
+  17-23-unattributed-loan-endings-queue: backlog  # Car Loan Dept receives candidates from legacy "stalled" bucket (778 from side quest). Must file Path 3 / retirement / death / transfer event, or route to AG/Dept Admin for RESOLVED_OUT_OF_SYSTEM or WRITE_OFF.
+  17-24-bank-reconciliation-gate: backlog  # periodic pull of bank statements; match against MDA-declared per (mda, period); emit BANK_CASH_VARIANCE observations. PREREQUISITE: Scheme Secretariat specifies bank + API/feed mechanism before implementation.
+  17-25-overdeduction-detection-adjudication: backlog  # NO threshold — every ₦1 overpayment surfaced. CUMULATIVE_OVERPAYMENT observation at month cumulative deducted crosses scheme total. Direction-aware via <VarianceBadge>. Lamidi overdeduction (~₦13,766) as regression test.
+  17-26-overdeduction-refund-workflow: backlog  # overdeduction_cases table + 6-state progression (DETECTED → PENDING_AG_APPROVAL → AG_APPROVED → AWAITING_PAYMENT_CONFIRMATION → PAYMENT_CONFIRMED → CERTIFICATE_REISSUED → CLOSED). AG sole authority; Deputy AG substitute; Dept Admin routes + confirms payment only. Batch-approval UI for AG efficiency.
+
+  # Sub-theme I — Certificate Evolution
+  17-27-certificate-issuance-precondition-gate: backlog  # Issues when scheme total paid (observed outstanding=0 OR cumulative deducted ≥ scheme total) OR explicit settlement event. Certificate-with-comment pattern for overdeduction cases. No auto-issue on inferred-complete without evidence. Epic 8 extension.
+  17-28-certificate-versioning-supersede-chain: backlog  # certificates.version + supersedes_id + supersede_reason schema. Public verification page shows full chain. Supersede reasons: OVERDEDUCTION_CLEARED, DATA_ERROR_CORRECTED, RE_ATTRIBUTION, WITHDRAWAL.
+  17-29-certificate-design-preview-ui: backlog  # sidebar entry for AG/Deputy AG/Dept Admin/MDA Officer. Renders sample v1 (Scheme Observations), v2 (clean), Path 3, Path 4 variants. Watermarked SAMPLE, no valid QR. Feedback form.
+
+  # Sub-theme J — Data Remediation & Policy
+  17-30-mda-source-data-remediation-workflow: backlog  # Category 2 MDAs with within-file duplicates — structured re-declaration request path
+  17-31-scheme-policy-clarifications: backlog  # Scheme Secretariat deliverables: concurrent-loan policy, death-in-service handling, scheme rule history (rate + tenure + principal caps over time, with effective-date ranges), overdeduction refund authority thresholds, write-off authority thresholds, external-auditor role definition
+
+  # Sub-theme K — Backfill & Pilot
+  17-32-external-auditor-read-only-role: backlog  # scoped queries + audit-log feed + standard-format export. Designed for federal AG, civil society, parliamentary access.
+  17-33-retroactive-backfill-74k-records: backlog  # run all 74,138 catalog records through PRP. Route medium-confidence to Dept Admin review. Sign-off gate before cutover. Dry-run + preview + rollback capability.
+  17-34-bir-pilot-one-reconciliation-cycle: backlog  # pilot with Board of Internal Revenue (deepest data, cleanest reporting, engaged MDA). One full cycle, documented findings, go/no-go for expansion. K-gate = Epic 17 complete.
+
+  epic-17-retrospective: optional  # Retro 1 (Foundation) — covers E15 Prep + Multi-MDA UAT 2026-04-12 + Epic 17 (all 34 stories + BIR pilot). Scheduled for post-Epic 17 K-gate per SCP 2026-04-15.
   epic-13-retrospective: optional
