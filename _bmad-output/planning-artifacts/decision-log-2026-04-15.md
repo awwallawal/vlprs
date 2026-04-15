@@ -352,4 +352,59 @@ Second review pass by an independent Claude session produced 10 tightening point
 
 ---
 
-**End of decision log. All decisions persisted in SCP, sprint-status.yaml, epics.md, and memory files.**
+---
+
+# Amendments Round 3 — same session, 2026-04-15 (evening)
+
+Domain refinement conversation around ADELEKE namesake handling (UAT #30) and CDU autonomous-agency handling (UAT #46). Awwal provided Google-search-suggest analogy for SEARCH operation and signed off fixtures for both cases.
+
+## D-37 — PersonIdentityService splits into SEARCH + MATCH APIs
+
+- **Context:** Awwal's Google-search-suggest analogy — typing "Adeleke O" should return all Adeleke-O-prefix candidates (for human selection) without any implication they are the same person. This is a distinct operation from ingestion-time match resolution.
+- **Decision:** Story 17.4 exposes two APIs: `searchPersons(query) → Person[]` (broad, inclusive, for Review Queue UI + Loan Detail Page search); `resolvePerson(record) → {person_key, confidence, action}` (strict, for ingestion decision). Same comparator, different action thresholds.
+- **Rationale:** Distinct user tasks (looking up a person vs ingesting a record) warrant distinct APIs. Prevents engineers from blurring SEARCH into MATCH and creating false auto-links.
+- **Owners:** Dev team.
+- **References:** SCP §4.1 Story 17.4 (revised); `tests/fixtures/identity-continuity/adeleke-namesake/expected.json` test case `search-adeleke-o-prefix`.
+
+## D-38 — Fuzzy-Jaccard comparator with per-token Levenshtein bands
+
+- **Context:** Awwal challenged that `Adeleke Olufemi` vs `Adeleke Oluwafemi` should classify firmly as HIGH or MEDIUM, not as perpetual ambiguity. Original layered comparator (strict Jaccard + per-token Levenshtein + Jaro-Winkler) would have dropped this at the primary gate because strict Jaccard = 0.33.
+- **Decision:** Fuzzy Jaccard — tokens considered "same" if their Levenshtein is below threshold (≤2 edits). Now `Adeleke Olufemi` vs `Adeleke Oluwafemi` → fuzzy Jaccard = 1.0, max token Levenshtein = 2 → MEDIUM band (review queue). Firm classification, no limbo.
+- **Bands:** Jaccard < 0.5 → NOT_MATCH. Jaccard ≥ 0.5 with max token Levenshtein 0 → HIGH (auto-link). Levenshtein 1 → HIGH_WITH_TYPO_FLAG (auto-link with audit note). Levenshtein 2–4 → MEDIUM (review). Levenshtein ≥ 5 → NOT_MATCH. Namesake frequency guard downgrades HIGH to MEDIUM when normalised name frequency exceeds threshold.
+- **Rationale:** Every realistic case lands in exactly one of HIGH / HIGH-TYPO / MEDIUM / NOT_MATCH. Awwal's specific concern resolved.
+- **Owners:** Dev team.
+- **References:** SCP §4.1 Story 17.4 (revised); ADELEKE fixture.
+
+## D-39 — ADELEKE fixture signed off
+
+- **Context:** Awwal confirmed ground truth during this session.
+- **Decision:** Fixture policy captured at `tests/fixtures/identity-continuity/adeleke-namesake/expected.json`. Five test cases covering NOT_MATCH, MEDIUM, HIGH, HIGH_WITH_TYPO_FLAG, and SEARCH operations. Awwal-signed-off 2026-04-15. Records-pending: actual record IDs from UAT-era data populated at Story 17.4 kickoff.
+- **Owners:** Dana (QA) captures; Dev team populates records at story kickoff.
+- **References:** Fixture file.
+
+## D-40 — CDU is a standalone MDA at identity layer; parent/child is reporting metadata only
+
+- **Context:** Awwal: "CDU is an Autonomous Agency but for ease we should treat it as a standalone MDA since it is Autonomous." Original Story 17.21 had parent-aware identity queries; over-engineered for this scheme's operational model.
+- **Decision:** Identity resolution uses `mda_id` directly; CDU has its own `mda_id` distinct from Agriculture. Parent/child relationship (`mdas.reporting_parent_mda`) is metadata consumed only by opt-in reporting rollups, never by identity queries. Side-quest `utils/mda-resolve.ts` logic preserved in production via Story 17.2 port.
+- **Rationale:** Operational simplicity. Autonomous agencies operate distinctly; treating them as child-of-parent at the identity layer creates more confusion than it resolves. Reporting rollups are an explicit opt-in use case, not the default.
+- **Owners:** Dev team (17.2 port preserves logic; 17.21 adds metadata columns only).
+- **References:** SCP §4.1 Story 17.21 (simplified); CDU fixture.
+
+## D-41 — CDU fixture signed off
+
+- **Context:** Awwal confirmed CDU-as-standalone treatment during this session.
+- **Decision:** Fixture policy captured at `tests/fixtures/identity-continuity/cdu-agriculture-parent-child/expected.json`. Three rules + three test cases. Awwal-signed-off 2026-04-15. Records-pending: actual record IDs populated at Story 17.21 kickoff.
+- **Owners:** Dana (QA) captures; Dev team populates records at story kickoff.
+- **References:** Fixture file.
+
+## D-42 — Review Queue UI (17.6) gains search-then-confirm pattern
+
+- **Context:** Elena's concern — if SEARCH and MATCH are different APIs with different thresholds, a manual SEARCH-then-pick could bypass MATCH's safeguards. Needs a safety check.
+- **Decision:** When a user picks a candidate from `searchPersons` results for a correction action, the system renders match score + evidence as a confirmation step before committing. Not a hard block — a visible "confirm?" with engine analysis attached. Keeps human judgment primary.
+- **Rationale:** Preserves SEARCH's broad usefulness while preventing accidental wrong-person attribution. Small UX, material safety.
+- **Owners:** Dev team + UX.
+- **References:** SCP §4.1 Story 17.6 (revised).
+
+---
+
+**End of decision log through Amendment Round 3. All decisions persisted in SCP, sprint-status.yaml, epics.md, fixture files, and memory files.**

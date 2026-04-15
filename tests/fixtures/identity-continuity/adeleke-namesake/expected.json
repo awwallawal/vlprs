@@ -1,0 +1,96 @@
+{
+  "fixture_id": "adeleke-namesake",
+  "origin": "UAT 2026-04-12 finding #30 — fuzzy match false positive",
+  "signed_off_by": "Awwal Lawal",
+  "signed_off_date": "2026-04-15",
+
+  "ground_truth_policy": {
+    "description": "Two beneficiaries sharing an initial pattern must not be auto-linked as the same person. The engine must distinguish by full token-level comparison and resolve them to distinct person_key values.",
+
+    "test_cases": [
+      {
+        "case_id": "adeleke-olufemi-vs-adeleke-oluwasegun-sunday",
+        "inputs": {
+          "person_a_name": "Adeleke Olufemi",
+          "person_b_name": "Adeleke Oluwasegun Sunday"
+        },
+        "expected_outcome": {
+          "band": "NOT_MATCH",
+          "auto_link": false,
+          "reason": "Token-set Jaccard = 1/3 (only 'adeleke' shared; second tokens have Levenshtein >= 6); falls below primary-gate threshold"
+        },
+        "must_not_link": true
+      },
+      {
+        "case_id": "adeleke-olufemi-vs-adeleke-oluwafemi",
+        "inputs": {
+          "person_a_name": "Adeleke Olufemi",
+          "person_b_name": "Adeleke Oluwafemi"
+        },
+        "expected_outcome": {
+          "band": "MEDIUM",
+          "auto_link": false,
+          "surface_to_review_queue": true,
+          "reason": "Fuzzy Jaccard = 1.0 (both tokens match within Levenshtein <= 2); per-token Levenshtein = 2 on olufemi/oluwafemi (insert 'wa'); genuine spelling-variant ambiguity, human decides"
+        },
+        "must_not_link": "unless_human_confirms"
+      },
+      {
+        "case_id": "adeleke-olufemi-vs-olufemi-adeleke",
+        "inputs": {
+          "person_a_name": "Adeleke Olufemi",
+          "person_b_name": "Olufemi Adeleke"
+        },
+        "expected_outcome": {
+          "band": "HIGH",
+          "auto_link": true,
+          "reason": "Name order does not affect identity; both tokens exact match; fuzzy Jaccard = 1.0 with Levenshtein = 0"
+        }
+      },
+      {
+        "case_id": "adeleke-olufemi-vs-adeleke-olufeemi",
+        "inputs": {
+          "person_a_name": "Adeleke Olufemi",
+          "person_b_name": "Adeleke Olufeemi"
+        },
+        "expected_outcome": {
+          "band": "HIGH_WITH_TYPO_FLAG",
+          "auto_link": true,
+          "audit_note": "Likely typo — 1-character Levenshtein on second token",
+          "reason": "Fuzzy Jaccard = 1.0; per-token Levenshtein = 1; single-character typo is high-confidence same-person"
+        }
+      },
+      {
+        "case_id": "search-adeleke-o-prefix",
+        "inputs": {
+          "search_query": "Adeleke O"
+        },
+        "expected_outcome": {
+          "operation": "SEARCH",
+          "result_type": "candidate_list",
+          "must_return_all_of": [
+            "Adeleke Olufemi",
+            "Adeleke Oluwasegun Sunday",
+            "Adeleke Oluwafemi David",
+            "Adeleke Okonkwo",
+            "Adeleke Obinna"
+          ],
+          "must_not_suggest_same_person": true,
+          "reason": "SEARCH is Google-suggest-style: returns all candidates matching the prefix for human selection. No auto-link implication."
+        }
+      }
+    ],
+
+    "engine_principles": [
+      "SEARCH and MATCH are distinct operations. SEARCH returns all candidates (broad, inclusive); MATCH applies confidence bands to decide auto-link vs review vs new-person.",
+      "Fuzzy Jaccard (with per-token Levenshtein threshold <= 2) is the primary gate for MATCH. Jaccard < 0.5 => NOT_MATCH regardless of any other signal.",
+      "Above primary gate: max per-token Levenshtein determines band. 0 = HIGH (exact). 1 = HIGH_WITH_TYPO_FLAG. 2-4 = MEDIUM (review). >= 5 = NOT_MATCH.",
+      "Namesake frequency guard applies on top of HIGH band: if normalised name frequency exceeds MDA-scoped or state-scoped threshold, downgrade to MEDIUM (force review) regardless of similarity."
+    ]
+  },
+
+  "records_pending": "Actual record IDs from UAT-era data to be populated at Story 17.4 (PersonIdentityService) kickoff. Policy above is signed-off ground truth; records fill in the input dataset.",
+
+  "related_stories": ["17.4", "17.6"],
+  "related_agreements": ["Agreement 18 — fixture-first"]
+}

@@ -518,9 +518,9 @@ development_status:
 
   # Sub-theme C — Identity layer
   17-3-persons-aliases-proposals-schema-seed: backlog  # persons + person_aliases + identity_proposals schema + migration + seed from Master Beneficiary Ledger (4,926 staff)
-  17-4-person-identity-service: backlog  # similarity bands + namesake frequency guard + cross-MDA flag (no auto-link) + confidence evidence persistence. ADELEKE UAT #30 fixture as regression test
+  17-4-person-identity-service: backlog  # SCP amendment round 3 (2026-04-15): SEARCH + MATCH split APIs. Fuzzy-Jaccard comparator with per-token Levenshtein <=2 for token equivalence (primary gate); Jaro-Winkler tiebreaker. Bands: Jaccard<0.5=NOT_MATCH; Lev=0 HIGH auto-link; Lev=1 HIGH_WITH_TYPO_FLAG; Lev=2-4 MEDIUM review; Lev>=5 NOT_MATCH. Namesake frequency guard on top. ADELEKE fixture signed off by Awwal 2026-04-15 at tests/fixtures/identity-continuity/adeleke-namesake/expected.json
   17-5-person-link-candidates-transfer-handshake-wiring: backlog  # proactive Pending Handshake surfacing to both MDAs; wired to existing Transfer Handshake workflow
-  17-6-review-queue-ui-merged: backlog  # merged with existing Exception Queue into one triage surface; Dept Admin approves merges; MDA Officer confirms medium-confidence matches
+  17-6-review-queue-ui-merged: backlog  # merged with existing Exception Queue. Dept Admin approves merges; MDA Officer confirms medium-confidence matches. SCP amendment 2026-04-15: adds search-then-confirm pattern — when user picks a candidate from searchPersons results, confirmation step shows match score + evidence before commit.
   17-7-loan-detail-page-unified: backlog  # Identity | Timeline (blank months explicit) | Variance | Certificates | Activity Log tabs. Scoped by role. Staff self-service view = Phase 2.
 
   # Sub-theme D — Loan & Lifecycle layer
@@ -543,7 +543,7 @@ development_status:
   17-20-re-attribution-ux: backlog  # audit-log feed on AG dashboard data quality panel + affected-record MDA Officer notifications
 
   # Sub-theme G — MDA Hierarchy
-  17-21-mda-parent-child-taxonomy: backlog  # from UAT #46 CDU/Agriculture case. mdas.parent_mda_id column + parent-aware identity queries + MDA hierarchy in filtering/reporting.
+  17-21-mda-autonomy-model: backlog  # SCP amendment 2026-04-15 (scope simplified): autonomous agencies (CDU etc.) are standalone mda_id for identity resolution. Parent/child is metadata for opt-in reporting rollups only, never identity routing. Schema: mdas.is_autonomous BOOLEAN + mdas.reporting_parent_mda INT NULLABLE. CDU fixture signed off by Awwal 2026-04-15.
 
   # Sub-theme H — Settlement, Cash & Overdeduction
   17-22-settlement-pathway-3-event-car-loan-dept-ux: backlog  # explicit LUMP_SUM_SETTLEMENT event with receipt reference + bank-receipt cross-reference. Car Loan Dept officer files.

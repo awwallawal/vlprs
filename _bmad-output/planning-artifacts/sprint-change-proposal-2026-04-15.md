@@ -171,9 +171,9 @@ Epic 17 adds the third layer; it does not replace the first two. The payroll-ext
 | # | Title | Notes |
 |---|---|---|
 | 17.3 | `persons` + `person_aliases` + `identity_proposals` schema + migration + seed from Master Beneficiary Ledger | |
-| 17.4 | `PersonIdentityService` with similarity bands, namesake frequency guard, cross-MDA flag (no auto-link), confidence evidence persistence | ADELEKE fixture (UAT #30) as regression test |
+| 17.4 | `PersonIdentityService` — SEARCH + MATCH APIs with fuzzy-Jaccard comparator, similarity bands, namesake frequency guard, cross-MDA flag (no auto-link), confidence evidence persistence | **Two distinct operations:** `searchPersons(query)` returns broad candidate list (Google-suggest style, for Review Queue UI + LoanDetailPage search); `resolvePerson(record)` returns strict match decision (for ingestion). Same comparator, different action thresholds. **Fuzzy-Jaccard comparator:** token-set Jaccard with per-token Levenshtein <= 2 for token equivalence (primary gate); Jaro-Winkler as tiebreaker. Bands: Jaccard < 0.5 → NOT_MATCH; Jaccard >= 0.5 with max token Levenshtein = 0 → HIGH auto-link; Levenshtein = 1 → HIGH_WITH_TYPO_FLAG auto-link with audit note; Levenshtein 2–4 → MEDIUM review queue; Levenshtein >= 5 → NOT_MATCH. Namesake frequency guard downgrades HIGH to MEDIUM when normalised name frequency exceeds threshold. ADELEKE fixture (UAT #30) as regression test — see `tests/fixtures/identity-continuity/adeleke-namesake/expected.json` for signed-off ground truth including the edge case `Adeleke Olufemi` vs `Adeleke Oluwafemi` (MEDIUM band, not perpetual ambiguity). |
 | 17.5 | `person_link_candidates` table + proactive Pending Handshake surfacing to both MDAs + Transfer Handshake wiring | |
-| 17.6 | Review Queue UI — merged with existing Exception Queue | Dept Admin approves merges; MDA Officer confirms medium-confidence matches |
+| 17.6 | Review Queue UI — merged with existing Exception Queue + search-then-confirm pattern | Dept Admin approves merges; MDA Officer confirms medium-confidence matches. **Search-then-confirm:** when a user manually picks a candidate from `searchPersons` results (e.g., during a correction), the confirmation step renders match score + evidence before committing. Not a hard block — a visible "we resolved to person X at similarity Y because of evidence Z; confirm?" step. Keeps human judgment primary with engine analysis as context. |
 | 17.7 | Loan Detail Page (merged Person-Centric admin view + loan timeline) | Tabs: Identity | Timeline (with blank months explicit) | Variance | Certificates | Activity Log. AG/Dept Admin/MDA Officer access (scoped). Staff self-service = Phase 2. |
 
 #### Sub-theme D — Loan & Lifecycle layer (4 stories)
@@ -204,7 +204,7 @@ Epic 17 adds the third layer; it does not replace the first two. The payroll-ext
 #### Sub-theme G — MDA Hierarchy (1 story)
 | # | Title | Notes |
 |---|---|---|
-| 17.21 | MDA parent/child taxonomy + parent-aware identity queries | From UAT #46 CDU/Agriculture case. Side quest already resolved at parse time; this productionises it |
+| 17.21 | MDA autonomy model — `is_autonomous` + `reporting_parent_mda` metadata (reporting rollups only, not identity routing) | **Scope simplified per Awwal 2026-04-15:** autonomous agencies (e.g., CDU under Agriculture) are standalone `mda_id` for identity resolution. Parent/child is metadata consumed only by opt-in reporting rollups, never by identity queries. Schema adds `mdas.is_autonomous BOOLEAN` + `mdas.reporting_parent_mda INT NULLABLE REFERENCES mdas.mda_id`. Side-quest `utils/mda-resolve.ts` logic preserved in production via Story 17.2 port. CDU fixture at `tests/fixtures/identity-continuity/cdu-agriculture-parent-child/expected.json` with signed-off ground truth. |
 
 #### Sub-theme H — Settlement, Cash & Overdeduction (5 stories)
 | # | Title | Notes |
