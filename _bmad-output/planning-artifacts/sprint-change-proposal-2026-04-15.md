@@ -267,6 +267,7 @@ Epic 17 adds the third layer; it does not replace the first two. The payroll-ext
 | 20 | **Pilot-before-portfolio** — any engine change affecting authoritative figures ships first as single-MDA pilot for one reconciliation cycle before expanding | Epic 17 risk management |
 | 21 | **Dept Admin escape hatch** — every engine-enforced gate must have a Dept Admin authority escape hatch with audit trail. Engine proposes, humans dispose. **Override rate is a system-health KPI, not a discipline KPI** — high override rate signals engine mis-calibration; low override rate signals engine trust. Reframing prevents perverse incentive to under-override when override is correct. | Operational realism |
 | 22 | **App is the source of truth** — VLPRS records are authoritative for scheme figures. Bank statements, MDA reports, external documents corroborate; they do not override. Every authoritative figure defensible from the app alone. **Exception:** under AG-authorised out-of-band correction (e.g., court order, external-audit-firm finding), the correction flows through the app via a formal event record with AG authorisation, so the app remains the system of record for what was done and why. | AG policy directive |
+| 23 | **Editable placeholders over external blockers** — any value that would normally require external-party confirmation (Scheme Secretariat policy, bank account details, rate thresholds, SLA durations, authority limits) is implemented as an **AG-editable configuration value** with a reasonable default placeholder. Screens render the current value with an inline edit control for AG-role users. This follows the existing pattern from the AG Dashboard Fund Amount field (set by AG, not hardcoded). Build never blocks on external input — values ship with sensible placeholders and get updated through the UI when official values arrive. | Awwal directive 2026-04-15: "anything that may require external input we make it editable via the ui and put reasonable values pending official values" |
 
 ### 4.4 UAT 2026-04-12 triage — no duplicates
 
@@ -481,6 +482,51 @@ Per correct-course workflow taxonomy: MAJOR requires PM/Architect involvement.
 
 ---
 
+## Section 11 — Silent Build Strategy (Amendment Round 4, 2026-04-15)
+
+**Decision:** Build Epic 17 in its entirety without Deputy AG engagement until the engine is demonstration-ready. Epic 17 completes on internal authority; external engagement (Deputy AG authorisation, Scheme Secretariat policy clarifications, BIR pilot) happens *after* the engine demonstrates correct behaviour against the signed-off regression fixtures.
+
+**Rationale:** Walking into the Deputy AG conversation with a live, working system + regenerated audit + demonstrable dual-truth dashboard changes the narrative from "grant me permission" to "look at what's ready." Politically stronger. Technically feasible via Agreement 23 — editable placeholders for every value that would otherwise require external input.
+
+**Operational consequences:**
+- All 36 Epic 17 stories are buildable in silence. Every story that would have blocked on Scheme Secretariat policy (refund authority thresholds, concurrent-loan rules, death-in-service handling, write-off authority, SLA durations, scheme-rule history effective-dates) now ships with a **reasonable default placeholder** and an **AG-editable UI control**.
+- Story 17.31 ("Scheme Policy Clarifications") is **re-scoped from a blocking prerequisite to a documentation artefact**. The engine runs on placeholders; 17.31 becomes the task of getting official values entered through the UI when Scheme Secretariat provides them.
+- Story 17.34 (BIR pilot) remains the only story that genuinely requires external engagement. It becomes the **trigger for the Deputy AG conversation**, not a pre-requisite to engine completion. Stories 17.0 through 17.33 + 17.34a complete before this trigger fires.
+- Story 17.34a (shadow dashboard) runs internally during the silent phase, AG+PO visible-to-Awwal-only, producing the daily divergence evidence that feeds the eventual Deputy AG brief.
+
+**Editable-placeholder application across Epic 17 stories:**
+
+| Story | External dependency | Placeholder strategy |
+|---|---|---|
+| 17.4 PersonIdentityService | Namesake frequency threshold (MDA-scoped, state-scoped) | Default: 2 within MDA, 3 state-wide. AG-editable via Admin Settings panel. |
+| 17.4 / 17.5 Similarity thresholds | Band boundaries per Scheme Secretariat preference | Default per fuzzy-Jaccard spec: Jaccard 0.5 gate, Levenshtein 2 MEDIUM boundary, Levenshtein 5 NOT_MATCH boundary. AG-editable. |
+| 17.9 Lifecycle zero-crossing | Dormant-period guard (months of zero before declaring new-loan) | Default: 2 months. AG-editable. |
+| 17.9 Last-installment tolerance | Tolerance around zero for completion detection | Default: 1 × monthly deduction. AG-editable. |
+| 17.11 Missing record detection SLA | Days before escalation to Dept Admin | Default: 14 days. AG-editable. |
+| 17.14 Truth-state thresholds | Variance tolerances for CLEAN vs IN_VARIANCE | Default: ₦50 per Scheme formula tolerance. AG-editable per MDA. |
+| 17.17 Dashboard Difference column warning threshold | Difference fraction above which "Portfolio in review phase" banner appears | Default: 20%. AG-editable. |
+| 17.22 Path 3 walk-up settlement dual-signature threshold | Amount above which two signatures required | Default: ₦100,000. AG-editable. |
+| 17.23 Unattributed Loan Endings queue — write-off authority threshold | Amount below which Dept Admin writes off; above which AG required | Default: ₦50,000. AG-editable. |
+| 17.24 Bank reconciliation — scheme account details | Bank name, account number, statement format | Default: placeholder values with "Configure in Admin Settings" CTA. AG-editable. Statement parser runs on first upload regardless. |
+| 17.25 Overdeduction detection | No threshold (per Awwal directive — detect every ₦1) | No placeholder needed. Hard-coded zero tolerance. |
+| 17.26 Overdeduction refund workflow SLAs | PENDING_AG_APPROVAL, AWAITING_PAYMENT_CONFIRMATION, CERTIFICATE_REISSUED time-boxes | Defaults: 14, 30, 7 days. AG-editable. |
+| 17.31 Scheme rule history (rate, tenure, principal caps over time) | Effective-date ranges and values per scheme rule change | Default: single rule entry with current known values (13.33% rate, 60-month base, 7-tenure set {24,30,36,40,48,50,60}), effective-from = scheme inception. AG-editable to add historical rule versions when dates confirmed. |
+| 17.31 Concurrent-loan policy | Scheme rule: permitted or not | Default: NOT permitted (detection surfaces as observation). AG-editable to toggle to permitted when confirmed. |
+| 17.31 Death-in-service pathway | Settlement path for death-in-service | Default: routes to AG/Deputy AG for case-by-case adjudication with policy placeholder "Pending Scheme Secretariat clarification." AG-editable. |
+| 17.31 External-auditor role scope | Queryable tables and export formats | Default: read-only access to all non-PII aggregate views, standard CSV/Excel export. AG-editable role definition. |
+| 17.34 BIR pilot cycle duration | Time-box for one reconciliation cycle | Default: 21 days. AG-editable. |
+
+**Admin Settings surface:** a new screen added to Epic 17 scope (extension of Story 17.17 or new micro-story 17.17b if split becomes cleaner during implementation). Role-gated to AG / Deputy AG only. Every editable placeholder value appears here with current value, description, default value, and Save action. Changes audit-logged with before/after values and actor.
+
+**Re-scoping Story 17.31:**
+Story 17.31 is **no longer a prerequisite** for any other Epic 17 story. It transforms from "wait for Scheme Secretariat to provide values" to "UI + data model for receiving values when available." The placeholder values ship, the UI exists, Scheme Secretariat engagement populates real values when Awwal schedules it.
+
+**Go-live readiness definition:**
+Epic 17 reaches **demonstration-ready** when Stories 17.0 through 17.33 + 17.34a are complete (all 35 stories). Story 17.34 (BIR pilot) is the only remaining story at that point. Demonstration-ready is the internal signal that external engagement can begin.
+
+**Go-live readiness gate (unchanged):**
+Authoritative go-live requires Story 17.34 (BIR pilot cycle complete with zero CRITICAL findings as precisely defined in Section 7). Deputy AG authorisation for BIR pilot engagement is obtained *after* demonstration-ready, not before.
+
 ## Section 10 — Supporting Evidence
 
 - `docs/Car_Loan/analysis/reports/alatise-detailed-audit-report.pdf` — Alatise forensic audit (51 records, 4 signatures, 8 observations)
@@ -491,7 +537,9 @@ Per correct-course workflow taxonomy: MAJOR requires PM/Architect involvement.
 - `scripts/legacy-report/alatise-bosede-focused.ts` — single-beneficiary trace
 - `scripts/legacy-report/completion-evidence-check.ts` — Lamidi + Alatise + BIR fragmentation scan
 - `scripts/legacy-report/WAKEUP.md` — side-quest context (engine capabilities + known issues)
-- Memory records: `project_scp_2026_04_15.md`, `project_alatise_lamidi_fixtures.md`, `project_no_go_live_position_2026_04_15.md`, `feedback_app_as_source_of_truth.md`, `feedback_ag_sole_approval.md`, `feedback_team_agreements_epic17.md`, `domain_overdeduction_pattern.md`
+- Memory records: `project_scp_2026_04_15.md`, `project_alatise_lamidi_fixtures.md`, `feedback_app_as_source_of_truth.md`, `feedback_team_agreements_epic17.md`, `domain_overdeduction_pattern.md`
+- Deputy AG briefing HTML: `docs/Car_Loan/analysis/reports/alatise-deputy-ag-summary.html` (print-to-PDF)
+- Detailed audit HTML: `docs/Car_Loan/analysis/reports/alatise-detailed-audit-report.html` (print-to-PDF, 6 pages)
 
 ---
 

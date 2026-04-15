@@ -407,4 +407,63 @@ Domain refinement conversation around ADELEKE namesake handling (UAT #30) and CD
 
 ---
 
-**End of decision log through Amendment Round 3. All decisions persisted in SCP, sprint-status.yaml, epics.md, fixture files, and memory files.**
+---
+
+# Amendments Round 4 — same session, 2026-04-15 (evening)
+
+Awwal decision to build Epic 17 silently before Deputy AG engagement, enabled by editable-placeholders architectural principle.
+
+## D-43 — Silent build strategy adopted
+
+- **Context:** Awwal: "I have to finish Epic 17 before reaching out." Team read is Interpretation B — build to demonstration-readiness, then engage Deputy AG with a working system.
+- **Decision:** Epic 17 Stories 17.0 through 17.33 + 17.34a build in silence on internal authority. Story 17.34 (BIR pilot) becomes the trigger for Deputy AG engagement, not a prerequisite. No external stakeholder engagement until demonstration-ready.
+- **Rationale:** Politically stronger to engage with a live system than with a request for permission. Engine correctness provable via committed regression fixtures (Alatise, Lamidi, ADELEKE, CDU signed off; 2-3 more from discovery spike).
+- **Owners:** Awwal (external engagement timing), Dev team (build execution).
+- **References:** SCP §11 (new).
+
+## D-44 — Team Agreement 23: editable placeholders over external blockers
+
+- **Context:** Awwal: "Anything that may require external input we make it editable via the ui and put reasonable values pending official values or leave blank and editable like the Fund Amount in the AG Dashboard."
+- **Decision:** New Team Agreement 23 codifies the pattern. Every externally-dependent value (Scheme policy, bank details, thresholds, SLAs, authority limits) is implemented as an AG-editable configuration with reasonable default placeholder. Follows existing Fund Amount pattern.
+- **Rationale:** Unblocks silent build. No story waits for external input. External values arrive through the UI when available.
+- **Owners:** All roles; Dev team enforces via implementation pattern.
+- **References:** SCP §4.3 Agreement 23, §11 placeholder table.
+
+## D-45 — Story 17.31 re-scoped from prerequisite to UI-for-receiving-values
+
+- **Context:** Original 17.31 blocked stories on Scheme Secretariat policy clarifications. Under silent-build + Agreement 23, this blocker dissolves.
+- **Decision:** Story 17.31 transforms from "wait for Secretariat values" to "UI + data model for receiving values when available." Placeholders ship with engine; UI exists for Awwal to populate real values when Scheme Secretariat provides them.
+- **Rationale:** Aligns 17.31 with Agreement 23. Removes blocker from all downstream stories.
+- **Owners:** Dev team.
+- **References:** SCP §11 Story 17.31 re-scope.
+
+## D-46 — Admin Settings screen added to Epic 17 scope
+
+- **Context:** Agreement 23 requires a UI surface where AG/Deputy AG can edit placeholder values.
+- **Decision:** New screen, role-gated to AG/Deputy AG only, exposes every editable placeholder value with current/default values + Save action. Changes audit-logged with before/after + actor. Added as extension of Story 17.17 (or split into 17.17b during implementation if cleaner).
+- **Rationale:** Single-surface management prevents scattered configuration. Auditable by design.
+- **Owners:** Dev team, UX.
+- **References:** SCP §11 Admin Settings section.
+
+## D-47 — HTML audit reports produced alongside PDFs
+
+- **Context:** Awwal asked for HTML versions of the Deputy AG reports (for browser print-to-PDF).
+- **Decision:** Two HTML files written to `docs/Car_Loan/analysis/reports/`:
+  - `alatise-deputy-ag-summary.html` (one-page A4 brief)
+  - `alatise-detailed-audit-report.html` (6-page A4 detailed audit)
+- Both self-contained, print-optimized with `@page A4` CSS, browser-printable to PDF, observation-style language + non-punitive palette per project standards.
+- **Rationale:** Awwal control over final PDF generation (browser print vs @react-pdf renderer). Both formats now available.
+- **Owners:** John (PM) generated.
+- **References:** SCP §10 Supporting Evidence.
+
+## D-48 — Demonstration-ready as new milestone preceding go-live-ready
+
+- **Context:** Silent build needs a named internal milestone distinct from authoritative go-live.
+- **Decision:** Epic 17 reaches **demonstration-ready** when Stories 17.0 through 17.33 + 17.34a are complete (35 of 36 stories). Story 17.34 (BIR pilot) is the only remaining gate to authoritative go-live. Demonstration-ready is the internal signal to begin external engagement.
+- **Rationale:** Clear trigger for Deputy AG conversation; clear definition of "Epic 17 complete" in the silent-build phase.
+- **Owners:** All roles; trigger recognition by Awwal.
+- **References:** SCP §11 go-live readiness definition.
+
+---
+
+**End of decision log through Amendment Round 4. All decisions persisted in SCP, sprint-status.yaml, epics.md, fixture files, HTML audit reports, and memory files.**

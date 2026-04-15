@@ -559,7 +559,7 @@ development_status:
 
   # Sub-theme J — Data Remediation & Policy
   17-30-mda-source-data-remediation-workflow: backlog  # Category 2 MDAs with within-file duplicates — structured re-declaration request path
-  17-31-scheme-policy-clarifications: backlog  # Scheme Secretariat deliverables: concurrent-loan policy, death-in-service handling, scheme rule history (rate + tenure + principal caps over time, with effective-date ranges), overdeduction refund authority thresholds, write-off authority thresholds, external-auditor role definition
+  17-31-scheme-policy-ui-editable-placeholders: backlog  # SCP amendment round 4 (2026-04-15): re-scoped from prerequisite-block to UI-for-receiving-values under Agreement 23. Every policy value ships with reasonable default placeholder + AG-editable Admin Settings surface. Scheme Secretariat values entered through UI when available. NO story blocks on external input.
 
   # Sub-theme K — Backfill & Pilot
   17-32-external-auditor-read-only-role: backlog  # scoped queries + audit-log feed + standard-format export. Designed for federal AG, civil society, parliamentary access.
