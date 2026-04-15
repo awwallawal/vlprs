@@ -470,7 +470,7 @@ development_status:
   # BLOCKING: Authoritative go-live paused pending Epic 17 + BIR pilot cycle complete.
   # Operational (non-authoritative) mode continues during Epic 17 development.
   #
-  # 36 stories in 11 sub-themes (34 core + 17.0b DRY_RUN infrastructure + 17.34a shadow dashboard, added via SCP amendment 2026-04-15).
+  # 37 stories in 11 sub-themes (34 core + 17.0b DRY_RUN + 17.34a shadow dashboard + 17.3b MDA Payroll Snapshot Ingestion, added via SCP amendments 2026-04-15).
   # Sub-theme completion gates A → K; K-gate = Epic 17 complete.
   #
   # Three reconciliation layers in the system (17.24 is NEW; 7.0h/7.0i/8.0a already done):
@@ -517,7 +517,8 @@ development_status:
   17-2-port-side-quest-utilities: backlog  # name-match, mda-resolve, number-parse, column-map, header-detect, period-extract into packages/shared with regression suite from March 2026 side-quest refinements
 
   # Sub-theme C — Identity layer
-  17-3-persons-aliases-proposals-schema-seed: backlog  # persons + person_aliases + identity_proposals schema + migration + seed from Master Beneficiary Ledger (4,926 staff)
+  17-3-persons-aliases-proposals-schema-seed: backlog  # persons + person_aliases + identity_proposals schema + migration + seed from Master Beneficiary Ledger (4,926 staff). person_aliases.alias_type extended with HR_ROSTER (highest confidence, from 17.3b).
+  17-3b-mda-payroll-snapshot-ingestion: backlog  # SCP amendment round 5 (2026-04-15): NEW story. MDA-level monthly payroll upload (BIR CSV + OYSIPA xls pattern): 249 staff × 134 active CAR LOAN deductions × ₦1.67M discovered in BIR Feb 2026. payroll_snapshots table + HR_ROSTER aliases + PAYROLL_VS_MDA_VARIANCE observation. Staging input at VLPRS-Upload-Staging/_PAYROLL-ROSTERS/. Distinct from existing AG-level consolidated payroll (7.0h + 7.0i done).
   17-4-person-identity-service: backlog  # SCP amendment round 3 (2026-04-15): SEARCH + MATCH split APIs. Fuzzy-Jaccard comparator with per-token Levenshtein <=2 for token equivalence (primary gate); Jaro-Winkler tiebreaker. Bands: Jaccard<0.5=NOT_MATCH; Lev=0 HIGH auto-link; Lev=1 HIGH_WITH_TYPO_FLAG; Lev=2-4 MEDIUM review; Lev>=5 NOT_MATCH. Namesake frequency guard on top. ADELEKE fixture signed off by Awwal 2026-04-15 at tests/fixtures/identity-continuity/adeleke-namesake/expected.json
   17-5-person-link-candidates-transfer-handshake-wiring: backlog  # proactive Pending Handshake surfacing to both MDAs; wired to existing Transfer Handshake workflow
   17-6-review-queue-ui-merged: backlog  # merged with existing Exception Queue. Dept Admin approves merges; MDA Officer confirms medium-confidence matches. SCP amendment 2026-04-15: adds search-then-confirm pattern — when user picks a candidate from searchPersons results, confirmation step shows match score + evidence before commit.

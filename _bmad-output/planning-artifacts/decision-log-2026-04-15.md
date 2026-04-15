@@ -466,4 +466,51 @@ Awwal decision to build Epic 17 silently before Deputy AG engagement, enabled by
 
 ---
 
-**End of decision log through Amendment Round 4. All decisions persisted in SCP, sprint-status.yaml, epics.md, fixture files, HTML audit reports, and memory files.**
+---
+
+# Amendments Round 5 — same session, 2026-04-15 (late evening)
+
+Discovery during VLPRS-Upload-Staging run: the BIR CSV (previously flagged as "staff roster, not car loan") is actually a full MDA monthly payroll snapshot with 249 staff × 134 non-zero CAR LOAN deductions × ₦1,672,630 total Feb 2026 recovery. Same class as OYSIPA Apr 2021 xls. This changes Story 17.3 scope and adds Story 17.3b.
+
+## D-49 — MDA Payroll Snapshot as a new evidence layer
+
+- **Context:** BIR CSV contains Staff ID + Full Name + Job Title + Grade + Department + Bank + CAR LOAN deduction amount per staff for Feb 2026. Not just an HR roster; also actual payroll deduction data + rich employment context.
+- **Decision:** New Story 17.3b — MDA Payroll Snapshot Ingestion. Separate from the existing AG-level consolidated payroll flow (Stories 7.0h + 7.0i, done). Each MDA can upload its own monthly payroll snapshot; system ingests into three tables simultaneously: `person_aliases` (HR_ROSTER type), `payroll_snapshots`, and enriched person records. Cross-reference with MDA-declared submission emits `PAYROLL_VS_MDA_VARIANCE` observation on divergence.
+- **Rationale:** Four distinct reconciliation layers now in the system architecture: per-record three-vector (8.0a, done) + AG-level consolidated payroll three-way (7.0h+7.0i, done) + **per-MDA payroll snapshot (17.3b, NEW)** + bank statement (17.24, new). Each catches a different class of error; together they provide defence in depth.
+- **Owners:** Dev team (17.3b implementation). Side-quest staging already routes these files to `VLPRS-Upload-Staging/_PAYROLL-ROSTERS/` for ingest batch.
+- **References:** SCP §4.1 Story 17.3b, §4.1 reconciliation-layers table updated, Story 17.14 truth-state extended with five new observation types.
+
+## D-50 — HR_ROSTER alias type takes precedence over OFFICIAL
+
+- **Context:** Prior SCP had four alias types: OFFICIAL, PROVISIONAL, FUZZY_LINKED, HISTORICAL. Payroll-snapshot ingestion needs strongest-confidence anchor.
+- **Decision:** Extend `person_aliases.alias_type` with `HR_ROSTER` — highest-confidence. Rationale: loan files submitted by finance/payroll may mis-type; HR roster is the identity register for that MDA's employees (OFFICIAL represents staff_id as declared in a loan file, which is less authoritative than the HR-owned roster).
+- **Owners:** Dev team (17.3 schema update).
+- **References:** SCP §4.1 Story 17.3 extended.
+
+## D-51 — resolvePerson upgraded to staff_id-first
+
+- **Context:** Current 17.4 design uses fuzzy-Jaccard as primary match. With HR_ROSTER aliases seeded from payroll-snapshot ingestion, exact staff_id match becomes available for many records.
+- **Decision:** `PersonIdentityService.resolvePerson(record)` gains a new first step — if incoming record has staff_id matching any HR_ROSTER or OFFICIAL alias for same MDA → HIGH auto-link, no fuzzy name needed. Falls through to fuzzy-Jaccard only when staff_id blank or unmatched. Many current MEDIUM-band review-queue cases become HIGH auto-links.
+- **Rationale:** Converts the "no reliable staff_id to anchor on" problem (surfaced by Alatise audit — blank employee_no across all her records) into "strong anchor when HR roster exists for that MDA." Namesake/fuzzy concerns concentrate on MDAs without rosters only.
+- **Owners:** Dev team (17.4 update).
+- **References:** SCP §4.1 Story 17.4 matching precedence.
+
+## D-52 — `BIR FEB, 2026. FINAL.csv` reclassified; staging script extended
+
+- **Context:** Originally routed to `_NON-CAR-LOAN/` based on WAKEUP.md note. File contents prove otherwise.
+- **Decision:** Staging script gains new classification `payroll-roster` + new special folder `_PAYROLL-ROSTERS/`. `PAYROLL_ROSTER_MARKERS` regex list identifies BIR CSV + OYSIPA xls pattern. On next run, both files move from `_NON-CAR-LOAN/` to `_PAYROLL-ROSTERS/` with MDA + period prefix.
+- **Rationale:** Correct routing for Story 17.3b ingest when Epic 17 kicks off. These files are the first batch for payroll-snapshot ingestion.
+- **Owners:** Staging script (side-quest, uncommitted per convention).
+- **References:** `scripts/legacy-report/stage-archive-by-mda.ts` (local, not committed).
+
+## D-53 — "Please upload your payroll snapshot" becomes MDA onboarding ask
+
+- **Context:** BIR volunteered a roster. Other MDAs may not have, simply because they haven't been asked.
+- **Decision:** Part of MDA onboarding in Epic 17 — MDA Officer dashboard surfaces a soft "Please provide your HR staff roster and/or monthly payroll snapshot if available" action item. Not a hard gate (Agreement 23 editable-placeholders pattern applies — MDAs without rosters still work via fallback name-matching); strong encouragement.
+- **Rationale:** MDAs with payroll snapshots get materially stronger identity matching + an additional evidence layer. Worth asking. Ask is easier to make post-demonstration-ready when VLPRS has a working system to show in exchange.
+- **Owners:** UX (dashboard copy) + Dept Admin (outreach workflow).
+- **References:** SCP §4.1 Story 17.30 (MDA source data remediation) gains this soft-ask pattern.
+
+---
+
+**End of decision log through Amendment Round 5. Epic 17 now at 37 stories. All decisions persisted in SCP, sprint-status.yaml, epics.md, fixture files, HTML audit reports, memory files, and the VLPRS-Upload-Staging working folder.**
