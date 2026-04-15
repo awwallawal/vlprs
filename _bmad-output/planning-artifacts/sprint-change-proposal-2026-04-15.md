@@ -143,17 +143,28 @@ The original PRD's implicit MVP was "all sixteen epics complete through E13." Th
 
 **Epic goal:** Establish a system-wide stable identity for beneficiaries and loans that survives haphazard upload, cross-MDA transfer, name variation, and MDA declaration error, such that AG dashboard figures can be gated by reconciliation status and published with confidence. The app becomes the source of truth for scheme records.
 
-**Total: 34 stories in 11 sub-themes.** Lint ratchet is Story 17.0 — enforced from day one, no `any` warning count increase during Epic 17 work.
+**Total: 36 stories in 11 sub-themes.** Lint ratchet is Story 17.0 — enforced from day one, no `any` warning count increase during Epic 17 work.
 
-#### Sub-theme A — CI Hardening (1 story)
+**Relationship to existing reconciliation layers (already built, not duplicated):**
+
+| Layer | Source of truth | Story | Status |
+|---|---|---|---|
+| Per-record three-vector | Scheme formula vs reverse-engineered vs MDA-declared | 8.0a | **Done** |
+| Aggregate three-way (payroll) | Expected (scheme) vs Declared (MDA submission) vs **Actual (payroll extract upload)** | 7.0h + 7.0i | **Done** |
+| Bank-level (scheme account) | Cash arrival in scheme recovery account vs MDA-declared remittance | **17.24 (new)** | Epic 17 |
+
+Epic 17 adds the third layer; it does not replace the first two. The payroll-extract reconciliation (Stories 7.0h + 7.0i) is already in production and becomes an input to the dual-truth dashboard (Story 17.17) rather than a scope candidate.
+
+#### Sub-theme A — CI Hardening (2 stories)
 | # | Title | Notes |
 |---|---|---|
-| 17.0 | Lint ratchet for `any` warnings | CI blocks commits that increase `any` warning count. Existing 46 warnings become a visible countdown. Enforced from day one so Epic 17 itself cannot silently inflate warnings. |
+| 17.0 | Lint ratchet for `any` warnings — split prod vs test | **Production code:** CI commit-blocking ratchet on `any` warning count. **Test code:** parallel non-blocking countdown tracked in CI summary (PR comment only). Most of the 46 warnings live in test helpers where `any` is often pragmatic (mock types); commit-blocking there would create CI-thrash without meaningful gain. Enforced from day one so Epic 17 prod code cannot silently inflate warnings. |
+| 17.0b | DRY_RUN infrastructure for all writing engines | Cross-cutting story: `DRY_RUN=1` mode supported by PRP, fingerprint assignment, backfill, re-attribution, overdeduction detection, certificate issuance. Produces the same diff report without committing. All downstream writing stories inherit the convention. Operationally essential for pilot risk management. |
 
 #### Sub-theme B — Discovery & utility port (2 stories)
 | # | Title | Notes |
 |---|---|---|
-| 17.1 | Discovery spike — prevalence survey of 8 assumptions | Q1 collision rate, Q2 first-deduction-date coverage, Q3 zero-crossing vs gap rate, Q4 concurrent-loan prevalence, Q5 performance budget, Q6 variance contamination, Q7 haphazard-upload distribution, Q8 overpayment prevalence |
+| 17.1 | Discovery spike — prevalence survey of 8 assumptions | Q1 collision rate, Q2 first-deduction-date coverage, Q3 zero-crossing vs gap rate, Q4 concurrent-loan prevalence, Q5 performance budget, Q6 variance contamination, Q7 haphazard-upload distribution, Q8 overpayment prevalence. **Deliverable:** `_bmad-output/implementation-artifacts/17.1-spike-output.md` with decisions-log entries per question + quantitative findings. **Alice (PO) signs off as basis for re-sizing Stories 17.4 / 17.8 / 17.12 / 17.25 before their kickoff.** Prevents spike output from being orphaned. |
 | 17.2 | Port side-quest utilities to production | `name-match`, `mda-resolve`, `number-parse`, `column-map`, `header-detect`, `period-extract` into server codebase with regression fixture suite from side-quest March 2026 refinements |
 
 #### Sub-theme C — Identity layer (5 stories)
@@ -176,7 +187,7 @@ The original PRD's implicit MVP was "all sixteen epics complete through E13." Th
 #### Sub-theme E — Reconciliation & Truth State (5 stories)
 | # | Title | Notes |
 |---|---|---|
-| 17.12 | Person Reconciliation Pass (PRP) — set-based, idempotent, per-person recompute | Triggered by upload/correction/handshake; operates on union of known records; outputs provisional until settled |
+| 17.12 | Person Reconciliation Pass (PRP) — set-based, idempotent, per-person recompute | Triggered by upload/correction/handshake; operates on union of known records; outputs provisional until settled. **Admin CLI:** `pnpm recompute-person <personKey>` and `pnpm recompute-mda <mdaId>` with `--dry-run` and `--commit` modes for schema migrations, corruption recovery, and manual operational intervention. **Idempotency scope:** idempotent within a single schema version only; schema changes affecting PRP inputs require a full-backfill job (coordinated via 17.33). |
 | 17.13 | Upload pipeline integration + content validation gate | Rejects non-car-loan files at boundary (OYSHMB class) |
 | 17.14 | Truth-state model | `CLEAN`, `IN_VARIANCE`, `LIFECYCLE_REVIEW`, `OVERPAYMENT_ADJUDICATION`, `PENDING_COMPLETION_EVIDENCE`, `RESOLVED_OUT_OF_SYSTEM`, `CERTIFICATE_WITH_OBSERVATION_NOTE`, `CERTIFICATE_CLEAN`, `APP_BANK_STATEMENT_VARIANCE` per record; `SETTLED`, `PROVISIONAL`, `IN_TRANSFER` per person |
 | 17.15 | Monthly dashboard snapshots at month-close | Preserve historical figures despite re-attribution |
@@ -185,7 +196,7 @@ The original PRD's implicit MVP was "all sixteen epics complete through E13." Th
 #### Sub-theme F — Dashboard & Observability (4 stories)
 | # | Title | Notes |
 |---|---|---|
-| 17.17 | Dual-truth dashboard rendering (Reconciled / Pending Review / Difference) | Absorbs UAT #8 (health score), #40 (three-view), #47 (baseline-vs-migrated diagnostic). Difference is a first-class data quality KPI |
+| 17.17 | Dual-truth dashboard rendering (Reconciled / Pending Review / Difference) + per-MDA `dashboard_mode` enum | Absorbs UAT #8 (health score), #40 (three-view), #47 (baseline-vs-migrated diagnostic). Difference is a first-class data quality KPI. **Per-MDA rollout control:** `mdas.dashboard_mode ∈ {legacy, dual_truth_shadow, dual_truth_live}` with Dept Admin flip authority per MDA post-BIR-pilot, enabling graceful portfolio migration instead of all-or-nothing cutover. Aligns with Agreement 20 at finer grain. **Difference column UI:** when Pending Review exceeds Reconciled, headline shows Pending with amber "Portfolio in review phase" banner; Reconciled shown as fraction; prevents negative/zero-authoritative-figure display. |
 | 17.18 | `<VarianceBadge>` component — direction-explicit | ↓ Outstanding to scheme / ↑ Refund due to staff / ⚠ Pending classification. Applied to Review Queue + Loan Detail Page |
 | 17.19 | Pre-ingest aggregated preview | "N new persons, M continuations, K new loans, F flags" with drill-down |
 | 17.20 | Re-attribution UX — audit-log feed + affected-record notifications | |
@@ -200,9 +211,9 @@ The original PRD's implicit MVP was "all sixteen epics complete through E13." Th
 |---|---|---|
 | 17.22 | Settlement Pathway 3 (walk-up lump-sum) event + Car Loan Dept UX | Explicit event filing with receipt reference |
 | 17.23 | Unattributed Loan Endings queue | Car Loan Dept receives candidates from legacy "stalled" bucket; must file settlement event, transfer, retirement, death, or mark as AG/Dept Admin-escalated write-off |
-| 17.24 | Bank reconciliation gate | Periodic pull of bank statements; match against MDA-declared per (mda, period); emit `BANK_CASH_VARIANCE` observations. Data source + bank API specification is a prerequisite before implementation begins |
+| 17.24 | Bank statement reconciliation (upload-based, no API) | **Revised per critique round 2:** upload-based scheme account reconciliation (monthly, by Dept Admin) + staff-level dispute statement attachment (per-case, per-complaint). PDF/CSV parsing built on side-quest utility port (17.2). **No external integration required.** Emits `BANK_CASH_VARIANCE` (scheme-level: sum of MDA-declared deductions vs credits actually landed in scheme account) and attaches evidence to dispute cases (staff-level: personal statement vs ledger_entries for their loan). **Distinct from existing payroll reconciliation** (Stories 7.0h + 7.0i, done) — payroll reconciliation matches payroll-deducted vs MDA-declared; bank reconciliation matches bank-credited vs MDA-declared. Both are complementary evidence layers. **Prerequisite:** none external. Scheme account details are internal knowledge. |
 | 17.25 | Overdeduction Detection & Adjudication | NO threshold — every ₦1 overpayment surfaced. `CUMULATIVE_OVERPAYMENT` observation at the month cumulative deducted crosses scheme total. Direction-aware via `<VarianceBadge>` |
-| 17.26 | Overdeduction Refund Workflow — state machine + AG sole approval | `overdeduction_cases` table + 6-state progression (DETECTED → PENDING_AG_APPROVAL → AG_APPROVED → AWAITING_PAYMENT_CONFIRMATION → PAYMENT_CONFIRMED → CERTIFICATE_REISSUED → CLOSED). AG/Deputy AG sole authority (no threshold, no dual-signature). Dept Admin surfaces + confirms payment only, no approval role |
+| 17.26 | Overdeduction Refund Workflow — state machine + AG sole approval + SLA semantics | `overdeduction_cases` table + 6-state progression (DETECTED → PENDING_AG_APPROVAL → AG_APPROVED → AWAITING_PAYMENT_CONFIRMATION → PAYMENT_CONFIRMED → CERTIFICATE_REISSUED → CLOSED). AG/Deputy AG sole authority (no threshold, no dual-signature). Dept Admin surfaces + confirms payment only, no approval role. Batch-approval UI for AG efficiency. **Each state transition has an SLA**; expiry generates an attention item routed to escalation (Deputy AG on AG absence; AG on Dept Admin absence). **SLA values** TBD per 17.31 Scheme Secretariat clarifications; suggested starting values — PENDING_AG_APPROVAL ≤ 14 days, AWAITING_PAYMENT_CONFIRMATION ≤ 30 days, CERTIFICATE_REISSUED ≤ 7 days after confirmation. |
 
 #### Sub-theme I — Certificate Evolution (3 stories)
 | # | Title | Notes |
@@ -222,7 +233,8 @@ The original PRD's implicit MVP was "all sixteen epics complete through E13." Th
 |---|---|---|
 | 17.32 | External-auditor read-only role | New role with scoped queries + audit-log feed + standard-format export. Designed from day one for federal AG, civil society, parliamentary access |
 | 17.33 | Retroactive backfill — run 74,138 catalog records through PRP | Route medium-confidence to Dept Admin review; sign-off gate before cutover; dry-run + preview + rollback capability |
-| 17.34 | BIR pilot — one reconciliation cycle, documented findings, go/no-go gate for expansion | Acceptance criterion for Epic 17 complete |
+| 17.34 | BIR pilot — one reconciliation cycle, documented findings, go/no-go gate | **Reconciliation cycle defined:** one monthly BIR upload → PRP runs → dual-truth dashboard renders → AG reviews → written sign-off OR findings log. Cycle time-boxed per 17.31 policy decision (suggested: 21 calendar days). **CRITICAL defined precisely:** a finding is CRITICAL if and only if any of: (a) app publishes a figure the AG cannot defend in writing, (b) break in append-only audit invariant, (c) overdeduction refund allowed without AG approval. Anything else is HIGH/MEDIUM and does not gate go-live expansion. |
+| 17.34a | Shadow dashboard — 14 days pre-BIR-pilot-cutover | Run dual-truth dashboard in production against real data, visible to AG + PO only (not MDA Officer or external). Compare outputs to legacy dashboard daily. Systematic divergence surfaces as pre-pilot finding. Catches integration issues before BIR officer ever sees new UI. Lowers pilot risk materially. |
 
 ### 4.2 Story status changes (effective on proposal approval)
 
@@ -249,12 +261,12 @@ The original PRD's implicit MVP was "all sixteen epics complete through E13." Th
 |---|---|---|
 | 15 | **Test-fixture parity** — if a commit changes a component's data shape, hook contract, or rendered strings, the companion test must be updated in the same commit | UAT #51 |
 | 16 | **Pre-push integration sweep** — before pushing a multi-story feature commit to `dev`, run `pnpm test && pnpm --filter server test:integration` locally | UAT #52 |
-| 17 | **Audit before authority** — any headline figure proposed for AG-facing publication must first pass a structured single-beneficiary audit against the side-quest catalog | Alatise audit pattern |
-| 18 | **Fixture-first for architectural tracks** — new engine stories must have a gold-standard regression fixture with Awwal-verified ground truth before implementation starts | Alatise 51-record + Lamidi 36-record pattern |
+| 17 | **Audit before authority** — any headline figure proposed for AG-facing publication must first pass a structured single-beneficiary audit against the side-quest catalog. *Publication-time expression of Agreement 18.* | Alatise audit pattern |
+| 18 | **Fixture-first for architectural tracks** — new engine stories must have a gold-standard regression fixture with Awwal-verified ground truth before implementation starts. *Development-time expression of Agreement 17.* | Alatise 51-record + Lamidi 36-record pattern |
 | 19 | **Dual-truth by default** — any newly-published authoritative figure must render Reconciled / Pending Review / Difference. Single-number publication requires explicit PO sign-off | Dashboard gating principle |
 | 20 | **Pilot-before-portfolio** — any engine change affecting authoritative figures ships first as single-MDA pilot for one reconciliation cycle before expanding | Epic 17 risk management |
-| 21 | **Dept Admin escape hatch** — every engine-enforced gate must have a Dept Admin authority escape hatch with audit trail. Engine proposes, humans dispose. Override rate per MDA is a governance KPI | Operational realism |
-| 22 | **App is the source of truth** — VLPRS records are authoritative for scheme figures. Bank statements, MDA reports, external documents corroborate; they do not override. Every authoritative figure defensible from the app alone | AG policy directive |
+| 21 | **Dept Admin escape hatch** — every engine-enforced gate must have a Dept Admin authority escape hatch with audit trail. Engine proposes, humans dispose. **Override rate is a system-health KPI, not a discipline KPI** — high override rate signals engine mis-calibration; low override rate signals engine trust. Reframing prevents perverse incentive to under-override when override is correct. | Operational realism |
+| 22 | **App is the source of truth** — VLPRS records are authoritative for scheme figures. Bank statements, MDA reports, external documents corroborate; they do not override. Every authoritative figure defensible from the app alone. **Exception:** under AG-authorised out-of-band correction (e.g., court order, external-audit-firm finding), the correction flows through the app via a formal event record with AG authorisation, so the app remains the system of record for what was done and why. | AG policy directive |
 
 ### 4.4 UAT 2026-04-12 triage — no duplicates
 
@@ -318,7 +330,7 @@ Detailed by epic — read this section for "what does Epic 17 change about what 
 | **E8 Auto-Stop Certificate** | EXTEND | Certificate preconditions tighten (17.27) — no auto-issue on inferred-complete. Certificate-with-comment pattern + versioning + supersede chain (17.28). Path 3 settlements can trigger auto-stop. Certificate Design Preview for role collaboration (17.29). |
 | **E10 Temporal Profile** | LEVERAGE | `employment_events` gains `LUMP_SUM_SETTLEMENT`, `DEATH_IN_SERVICE`. Gratuity computation unchanged. Retiree verification report absorbs dual-truth. |
 | **E11 Pre-Submission** | EXTEND | Mid-cycle events extend to Path 3. Pre-submission checkpoint becomes truth-state aware. Old per-submission reconciliation stays; PRP is new cross-time engine. |
-| **E14 Public Website** | NO IMPACT | Untouched. Public certificate verification page extends to show supersede chain (17.28) but this is a minor schema addition. |
+| **E14 Public Website** | EXTEND (minor) | Public certificate verification page extends to render supersede chain (Story 17.28) — current version highlighted, prior versions accessible with supersede reason. Small schema addition to verification endpoint response; UI update to verification page component. |
 
 ---
 
@@ -391,6 +403,7 @@ Enhanced by Epic 17 events (re-attribution, handshake candidates, Path 3 confirm
 | **Dual-truth by default** (Agreement 19) | Reconciled / Pending Review / Difference rendering for every authoritative figure. Single-number publication requires explicit PO sign-off. |
 | **Order-independent reconciliation** | Engine output is a function of input set, not input order. Property-tested via N! permutation test. |
 | **Append-only audit despite mutable re-attribution** | `loan.person_key` is mutable; every change writes immutable row to `loan_attribution_history`. Historical state always reconstructable. |
+| **CRITICAL finding, defined precisely** | A finding is CRITICAL if and only if any of: (a) the app publishes a figure the AG cannot defend in writing, (b) the append-only audit invariant is broken, (c) an overdeduction refund is allowed without AG approval. Anything else is HIGH/MEDIUM and does not gate pilot sign-off or go-live expansion. Prevents the binary "zero CRITICAL" gate from creating implicit pressure to downgrade legitimate findings. |
 
 ---
 
@@ -432,6 +445,10 @@ Per correct-course workflow taxonomy: MAJOR requires PM/Architect involvement.
 | Team agreements degrade without enforcement | Low | Low | 17.0 lint ratchet + test-fixture CI checks provide mechanical enforcement |
 | Political exposure of per-MDA data quality | Medium | High | Pre-brief affected MDAs (30-day window per MDA) before public dashboard exposure |
 | Certificate versioning creates third-party verification confusion | Low | Low | Verification page clearly shows "You scanned v1. Current is v2" with context |
+| PDF format variance across bank statement exports | Medium | Low-Medium | Format samples collected during 17.1 discovery spike; parser tolerates two known formats with manual-transcription fallback for others |
+| Spike output orphaned (findings produced but not applied to story sizing) | Low | Medium | 17.1 deliverable binds to Alice (PO) sign-off as precondition for 17.4 / 17.8 / 17.12 / 17.25 kickoff |
+| Lint ratchet causes CI-thrash on test-heavy stories | Low | Low | 17.0 splits prod-code ratchet (commit-blocking) from test-code countdown (tracking only, non-blocking) |
+| FSM states stick indefinitely (PENDING_AG_APPROVAL etc.) | Medium | Medium | 17.26 SLA semantics added; expiry → attention item + escalation path (Deputy AG / AG substitution) |
 
 ---
 
@@ -450,15 +467,17 @@ Per correct-course workflow taxonomy: MAJOR requires PM/Architect involvement.
 5. PRD update (PM)
 6. Architecture doc update (Architect)
 7. UX spec update (UX)
-8. Story 17.0 (lint ratchet) kickoff — enforced from day one of Epic 17
-9. Story 17.1 (discovery spike) kickoff
-10. Retro 1 scheduled (post-Epic 17 K-gate)
+8. Story 17.0 (lint ratchet, prod-code commit-blocking) kickoff — enforced from day one of Epic 17
+9. Story 17.0b (DRY_RUN infrastructure) kickoff in parallel — precedes any writing engine story
+10. Story 17.1 (discovery spike) kickoff
+11. Retro 1 scheduled (post-Epic 17 K-gate)
+12. Bank statement format samples collection begins (supports 17.24 parser — no vendor procurement needed)
 
 ### Discovery spike output (17.1) feeds
-11. Empirical answers to Q1–Q8
-12. Additional regression fixtures (4–6 beyond Alatise + Lamidi + ADELEKE + CDU)
-13. Refined story sizing for Epic 17 core stories
-14. Staffing model for review queues
+13. Empirical answers to Q1–Q8
+14. Additional regression fixtures (4–6 beyond Alatise + Lamidi + ADELEKE + CDU)
+15. Refined story sizing for Epic 17 core stories — **Alice (PO) sign-off on `17.1-spike-output.md` is a precondition for kickoff of Stories 17.4 / 17.8 / 17.12 / 17.25**
+16. Staffing model for review queues
 
 ---
 

@@ -228,15 +228,128 @@
 
 ---
 
-## Outstanding for next sessions
+---
 
-- Deputy AG briefing (Awwal)
-- Scheme Secretariat policy clarifications (Awwal)
-- PRD / Architecture / UX spec updates (John / Winston / Sally)
-- Story 17.0 lint ratchet kickoff (Dev)
-- Story 17.1 discovery spike kickoff (Dev)
-- Retro 1 scheduling (Bob, post-Epic 17 K-gate)
+# Amendments Round 2 — same session, 2026-04-15 (afternoon)
+
+Second review pass by an independent Claude session produced 10 tightening points, 4 additions, and one reconsider. Awwal challenged the "bank API" premise separately. Following decisions result from that critique absorbed into the SCP.
+
+## D-23 — Bank reconciliation (17.24) is upload-based, no external API
+
+- **Context:** Original 17.24 spec called for "periodic pull of bank statements" implying API/feed integration. Awwal challenged: "What do we need a Bank API for? Bank reconciliation is just a printout of the Bank Statement."
+- **Decision:** 17.24 revised to upload-based. Dept Admin uploads scheme account statement monthly (PDF/CSV); per-case upload for staff dispute evidence. No vendor procurement, no API client. Parser built on 17.2 side-quest utility port.
+- **Rationale:** Bank reconciliation in this context is monthly and dispute-driven, not real-time. Upload model is sufficient, zero external-integration risk, no blocking dependency on Deputy AG procurement action.
+- **Owners:** Dev team (17.24 implementation).
+- **References:** SCP §4.1 story 17.24 (revised), §8 risks (bank-API-procurement row dropped, PDF format variance row added), §9 within-14-days (bank API procurement item removed).
+
+## D-24 — Payroll integration is already done (7.0h + 7.0i); 17.24 is bank-specific
+
+- **Context:** Review raised question whether payroll-system integration belonged in Epic 17 as Phase 2 enhancement.
+- **Decision:** Confirmed 7.0h (payroll extract upload + MDA delineation, done) and 7.0i (three-way reconciliation engine: expected/declared/actual, done) already cover payroll. 17.24 is a distinct third layer (bank-level), complementary not duplicative. Epic 17 references existing payroll reconciliation as input to 17.17 dual-truth dashboard.
+- **Rationale:** Three reconciliation layers in the system: per-record three-vector (8.0a), aggregate three-way with payroll (7.0h+7.0i), bank-level (17.24 new). Epic 17 adds the third without re-integrating the first two.
+- **Owners:** Dev team (integration notes in 17.17 + 17.24).
+- **References:** SCP §4.1 reconciliation-layers table; epics.md Epic 17 section.
+
+## D-25 — Lint ratchet (17.0) splits production code from test code
+
+- **Context:** Original 17.0 applied uniformly. Most of the 46 `any` warnings live in test helpers where `any` is often pragmatic (mock types). Uniform blocking creates CI-thrash without meaningful gain.
+- **Decision:** Production code ratchet is commit-blocking; test code countdown is non-blocking, tracked as PR comment only.
+- **Rationale:** Pressure on prod code; tolerance on test pragmatism; prevents Epic 17 test authors from fighting CI.
+- **Owners:** Dev team, CI infrastructure.
+- **References:** SCP §4.1 story 17.0.
+
+## D-26 — DRY_RUN infrastructure as new cross-cutting Story 17.0b
+
+- **Context:** Every writing engine component (PRP, fingerprint, backfill, re-attribution, overdeduction detection, certificate issuance) should support a `DRY_RUN=1` mode that produces the same diff report without committing. Saves operational risk at pilot cutover.
+- **Decision:** New Story 17.0b — DRY_RUN infrastructure, cross-cutting, inherited by all downstream writing stories. Precedes any writing story kickoff.
+- **Rationale:** Pilot risk management. Idempotency property testing (17.16) also benefits.
+- **Owners:** Dev team.
+- **References:** SCP §4.1 story 17.0b; sprint-status.yaml.
+
+## D-27 — Shadow dashboard pre-pilot as new Story 17.34a
+
+- **Context:** Pilot cutover is when AG first sees new UI. Without a shadow period, integration issues surface during pilot, not before.
+- **Decision:** New Story 17.34a — run dual-truth dashboard in production against real data for 14 days before BIR pilot cutover, AG + PO visible only. Daily divergence report vs legacy dashboard.
+- **Rationale:** Lowers pilot risk materially; catches integration issues before BIR officer sees anything new.
+- **Owners:** Dev team + AG / PO for daily review.
+- **References:** SCP §4.1 story 17.34a.
+
+## D-28 — Per-MDA dashboard_mode enum for graceful post-pilot rollout
+
+- **Context:** After BIR pilot succeeds, bringing additional MDAs onto dual-truth dashboards should be per-MDA, not portfolio cutover.
+- **Decision:** Story 17.17 extended with `mdas.dashboard_mode ∈ {legacy, dual_truth_shadow, dual_truth_live}`. Dept Admin flip authority per MDA. Aligns with Agreement 20 (pilot before portfolio) at finer grain.
+- **Rationale:** Enables graceful migration post-pilot; avoids all-or-nothing cutover risk.
+- **Owners:** Dev team (17.17 scope extension).
+- **References:** SCP §4.1 story 17.17 (extended).
+
+## D-29 — PRP (17.12) admin CLI for operational override
+
+- **Context:** Original 17.12 triggered only by app events (upload, correction, handshake). Schema migrations, corruption recovery, manual operational intervention have no trigger path.
+- **Decision:** Add `pnpm recompute-person <personKey>` and `pnpm recompute-mda <mdaId>` admin CLI with `--dry-run` and `--commit` modes to 17.12 scope.
+- **Rationale:** Prevents synthesising fake events as the only way to force recompute. Operationally essential.
+- **Owners:** Dev team.
+- **References:** SCP §4.1 story 17.12 (extended).
+
+## D-30 — Overdeduction FSM (17.26) gains SLA semantics
+
+- **Context:** Original 6-state FSM had no timeout handling. Cases could stick in PENDING_AG_APPROVAL indefinitely.
+- **Decision:** Each state transition has an SLA; expiry generates attention item routed to escalation path (Deputy AG on AG absence; AG on Dept Admin absence). SLA values TBD per 17.31 policy clarifications. Starting values: PENDING_AG_APPROVAL ≤ 14 days, AWAITING_PAYMENT_CONFIRMATION ≤ 30 days, CERTIFICATE_REISSUED ≤ 7 days after confirmation.
+- **Rationale:** Prevents governance bottleneck cases from becoming invisible.
+- **Owners:** Dev team + Scheme Secretariat (policy).
+- **References:** SCP §4.1 story 17.26 (extended).
+
+## D-31 — BIR pilot (17.34) — cycle defined + CRITICAL precisely defined
+
+- **Context:** Original 17.34 described "one reconciliation cycle" without operational definition. "Zero CRITICAL findings" created binary gate with implicit downgrade pressure.
+- **Decision:** (a) Reconciliation cycle = one monthly BIR upload → PRP runs → dual-truth dashboard renders → AG reviews → written sign-off OR findings log; time-boxed per 17.31 policy (suggested 21 days). (b) CRITICAL is precisely: (i) app publishes figure AG cannot defend in writing, (ii) break in append-only audit invariant, (iii) overdeduction refund without AG approval. Anything else = HIGH/MEDIUM, doesn't gate.
+- **Rationale:** Testable, unambiguous, resistant to pressure to downgrade severity for shipping.
+- **Owners:** Dev team + AG for pilot review.
+- **References:** SCP §4.1 story 17.34, §7 governance principles (CRITICAL row added), §8 risks.
+
+## D-32 — Agreement 21 reframed as system-health KPI (not discipline KPI)
+
+- **Context:** "Override rate per MDA is a governance KPI" created perverse incentive for Dept Admins to resist overriding even when correct.
+- **Decision:** Reframed: "Override rate is a system-health KPI — high override rate signals engine mis-calibration; low override rate signals engine trust."
+- **Rationale:** Preserves escape-hatch honesty; shifts metric from discipline to diagnostic.
+- **Owners:** All roles; PO communicates reframing.
+- **References:** SCP §4.3 agreement 21 (reframed), §7 governance.
+
+## D-33 — Agreement 22 gains AG-authorised out-of-band correction exception
+
+- **Context:** "App is source of truth" as absolute principle collides with legitimate scenarios — court orders, external-audit findings — where correction originates outside the app.
+- **Decision:** Appended exception: "Under AG-authorised out-of-band correction, the correction flows through the app via a formal event record with AG authorisation, so the app remains the system of record for what was done and why."
+- **Rationale:** Preserves source-of-truth principle while accommodating real-world edge cases. External correction still logged in-app, so auditable and defensible.
+- **Owners:** All roles.
+- **References:** SCP §4.3 agreement 22 (appended).
+
+## D-34 — Agreements 17 and 18 linked explicitly
+
+- **Context:** Other-agent critique: agreements 17 and 18 perceived as redundant; risk "one will quietly die."
+- **Decision:** Explicit linking text — Agreement 18 is the development-time expression of Agreement 17; Agreement 17 is the publication-time expression of Agreement 18. Both stand.
+- **Rationale:** Preserves distinct lifecycle moments (dev-time fixture gate vs publication-time audit gate) while clarifying they reinforce rather than duplicate.
+- **Owners:** All roles.
+- **References:** SCP §4.3 agreements 17, 18 (annotated).
+
+## D-35 — Story 17.1 spike deliverable binds to PO sign-off
+
+- **Context:** Risk that discovery spike produces findings but team moves on without re-sizing affected stories.
+- **Decision:** Spike deliverable is `_bmad-output/implementation-artifacts/17.1-spike-output.md`. Alice (PO) signs off as precondition for kickoff of Stories 17.4 / 17.8 / 17.12 / 17.25.
+- **Rationale:** Prevents spike-output orphaning. High leverage, low cost.
+- **Owners:** Alice (PO).
+- **References:** SCP §4.1 story 17.1 (extended), §9 within-14-days item 15.
+
+## D-36 — E14 Public Website reclassified NO IMPACT → EXTEND (minor)
+
+- **Context:** E14 row in §5 said "NO IMPACT" but Story 17.28 extends the public verification page with certificate supersede chain rendering.
+- **Decision:** Row updated to EXTEND (minor) with specific note about supersede-chain rendering on verification endpoint + UI.
+- **Rationale:** Consistency between §4.1 and §5.
+- **Owners:** Dev team (17.28 includes E14 verification page update).
+- **References:** SCP §5 E14 row.
+
+## Epic 17 total after amendments
+
+**34 → 36 stories** (17.0b DRY_RUN + 17.34a shadow dashboard added).
 
 ---
 
-**End of decision log.**
+**End of decision log. All decisions persisted in SCP, sprint-status.yaml, epics.md, and memory files.**

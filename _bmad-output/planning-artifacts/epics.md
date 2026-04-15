@@ -4045,12 +4045,14 @@ The Multi-MDA UAT session (2026-04-12 → 2026-04-14) and subsequent forensic au
 
 The audit evidence is concrete and reproducible. Deferring the architectural redirect would mean publishing confidently-wrong numbers — a GovFin outcome compounding financial accountability risk with political-governance risk.
 
-### Epic structure — 34 stories in 11 sub-themes
+### Epic structure — 36 stories in 11 sub-themes
+
+> **Amended per SCP review round 2 (2026-04-15):** added Story 17.0b (DRY_RUN infrastructure, cross-cutting) and Story 17.34a (shadow dashboard 14 days pre-BIR-pilot). Story 17.24 revised to upload-based scheme-account reconciliation (no external API). Agreements 17/18 linked; Agreement 21 reframed as system-health KPI; Agreement 22 gains AG-authorised out-of-band correction exception. CRITICAL finding defined precisely (3 crisp tests). See SCP §4.1, §4.3, §5, §7, §8, §9 for full detail.
 
 | Sub-theme | Stories | Purpose |
 |---|---|---|
-| A. CI Hardening | 17.0 lint ratchet (first story, day 1) | Prevents `any` warning growth during Epic 17 work |
-| B. Discovery & utility port | 17.1 spike, 17.2 port side-quest utilities | Empirical answers to 8 questions; production code seeded from side-quest |
+| A. CI Hardening | 17.0 lint ratchet (prod commit-blocking + test non-blocking), 17.0b DRY_RUN infrastructure | Prevents `any` warning growth; enables dry-run for every writing engine |
+| B. Discovery & utility port | 17.1 spike (with PO sign-off binding), 17.2 port side-quest utilities | Empirical answers to 8 questions; production code seeded from side-quest |
 | C. Identity layer | 17.3–17.7 (schemas, PersonIdentityService, link candidates, Review Queue merged with Exception Queue, unified Loan Detail Page) | Stable person identity across time/MDAs/name variants |
 | D. Loan & Lifecycle layer | 17.8–17.11 (loans schema, LoanIdentityService + lifecycle detector, Most Likely Explanation engine, missing-record detection) | Stable loan identity + lifecycle disambiguation |
 | E. Reconciliation & Truth State | 17.12–17.16 (PRP, upload integration + content validation, truth-state model, monthly snapshots, idempotency property tests) | Order-independent ingestion; records/persons carry truth state |
@@ -4059,7 +4061,7 @@ The audit evidence is concrete and reproducible. Deferring the architectural red
 | H. Settlement, Cash & Overdeduction | 17.22–17.26 (Path 3 event, Unattributed Endings queue, bank reconciliation gate, overdeduction detection, refund workflow) | Path 3 first-class; stalled bucket drains; cash truth verified; overdeduction refund workflow |
 | I. Certificate Evolution | 17.27–17.29 (precondition gate, versioning/supersede, design preview UI) | Certificate-with-comment pattern + supersede chain; collaborative design preview for all roles |
 | J. Data Remediation & Policy | 17.30 remediation workflow, 17.31 scheme policy clarifications | Structured re-declaration path; Scheme Secretariat deliverables |
-| K. Backfill & Pilot | 17.32 external-auditor role, 17.33 retroactive backfill, 17.34 BIR pilot | Historical data reconciled; pilot validates; K-gate = Epic 17 complete |
+| K. Backfill & Pilot | 17.32 external-auditor role, 17.33 retroactive backfill, 17.34 BIR pilot (cycle defined, CRITICAL precisely defined), 17.34a shadow dashboard pre-pilot | Historical data reconciled; pilot validates with precise acceptance criteria; K-gate = Epic 17 complete |
 
 ### Key governance principles (Team Agreements 17–22, codified in SCP §4.3)
 
@@ -4092,6 +4094,18 @@ When loan reaches scheme total paid (observed outstanding=0 OR cumulative deduct
 - On refund confirmation → reissue clean v2, supersedes v1 with reason `OVERDEDUCTION_CLEARED`
 
 Public verification page shows full supersede chain; current version highlighted.
+
+### Relationship to existing reconciliation layers (three layers, Epic 17 adds the third)
+
+The system already has two reconciliation layers from completed work. Epic 17 adds a third; it does not replace the first two.
+
+| Layer | Source | Story | Status |
+|---|---|---|---|
+| Per-record three-vector | Scheme formula vs reverse-engineered vs MDA-declared | 8.0a | **Done** |
+| Aggregate three-way (payroll) | Expected (scheme) vs Declared (MDA submission) vs Actual (payroll extract upload) | 7.0h + 7.0i | **Done** |
+| Bank-level (scheme account) | Cash arrival in scheme recovery account vs MDA-declared remittance | **17.24 (new)** | Epic 17 |
+
+Payroll-extract reconciliation (Stories 7.0h + 7.0i) is already in production and feeds into the dual-truth dashboard (Story 17.17) as an existing observation source. No payroll re-integration work is needed in Epic 17.
 
 ### Impact on existing epics
 
