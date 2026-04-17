@@ -4022,12 +4022,20 @@ As the **Accountant General**, I want aggregate stability metrics and trend char
 ## Epic 17: Identity, Continuity & Authoritative Go-Live Readiness
 
 > **Added per Sprint Change Proposal 2026-04-15** following Multi-MDA UAT 2026-04-12 findings and the Alatise Bosede Susainah forensic audit (51 records, 8 observations) + Lamidi Morufu overdeduction discovery (36 records, cumulative ₦13,766 overpayment). **Blocks authoritative go-live.**
+>
+> **Amended per Addendum 1 2026-04-18** following the Reconciliation Inventory v1 (2026-04-16) + v2 (2026-04-18) empirical validation. **Post-amendment: 39 stories** (+2 net: 17.6a + 17.33a + 17.3c + 17.3d + 17.3e added; 17.19 + 17.20 + 17.21 retired, merged into 17.17). New variance class `RESOLVER_ALIAS_MISSING` (cross-cuts 17.2). New Pass 0.5 register cross-check adds 4 register-driven variance classes consuming authoritative scheme registers.
 
 **Full specification:** `_bmad-output/planning-artifacts/sprint-change-proposal-2026-04-15.md`
+**Published addendum (2026-04-18):** `_bmad-output/planning-artifacts/scp-2026-04-15-addendum-1.md`
 **Decision log:** `_bmad-output/planning-artifacts/decision-log-2026-04-15.md`
 **Audit evidence (Deputy AG-facing):**
 - `docs/Car_Loan/analysis/reports/alatise-detailed-audit-report.pdf`
 - `docs/Car_Loan/analysis/reports/alatise-deputy-ag-summary.pdf`
+
+**Inventory evidence base (feeds Addendum 1 amendments):**
+- `reconciliation-inventory-2026-04-16/` — v1 baseline (catalog SHA `fc8b5bcb…`; 74,138 records / 46 MDAs / 40,062 variances)
+- `C:\Users\DELL\Desktop\VLPRS-Reconciliation-2026-04-18\` — v2 post-register-enriched (catalog SHA `4960e273…`; 89,502 records / 50 MDAs / 48,518 catalog variances + 5,000 register exceptions)
+- `C:\Users\DELL\Desktop\VLPRS-Reconciliation-2026-04-18\LESSONS_LEARNED.md` — reduce-step analysis
 
 ### Goal
 
@@ -4045,7 +4053,7 @@ The Multi-MDA UAT session (2026-04-12 → 2026-04-14) and subsequent forensic au
 
 The audit evidence is concrete and reproducible. Deferring the architectural redirect would mean publishing confidently-wrong numbers — a GovFin outcome compounding financial accountability risk with political-governance risk.
 
-### Epic structure — 36 stories in 11 sub-themes
+### Epic structure — 39 stories in 11 sub-themes (post-Addendum 1 2026-04-18)
 
 > **Amended per SCP review round 2 (2026-04-15):** added Story 17.0b (DRY_RUN infrastructure, cross-cutting) and Story 17.34a (shadow dashboard 14 days pre-BIR-pilot). Story 17.24 revised to upload-based scheme-account reconciliation (no external API). Agreements 17/18 linked; Agreement 21 reframed as system-health KPI; Agreement 22 gains AG-authorised out-of-band correction exception. CRITICAL finding defined precisely (3 crisp tests). See SCP §4.1, §4.3, §5, §7, §8, §9 for full detail.
 

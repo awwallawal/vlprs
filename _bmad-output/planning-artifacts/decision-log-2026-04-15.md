@@ -513,4 +513,120 @@ Discovery during VLPRS-Upload-Staging run: the BIR CSV (previously flagged as "s
 
 ---
 
-**End of decision log through Amendment Round 5. Epic 17 now at 37 stories. All decisions persisted in SCP, sprint-status.yaml, epics.md, fixture files, HTML audit reports, memory files, and the VLPRS-Upload-Staging working folder.**
+**End of decision log through Amendment Round 5. Epic 17 at 37 stories.**
+
+---
+
+## Addendum 1 Decisions (2026-04-18 — post-Reconciliation-Inventory v1+v2)
+
+## D-54 — Content-level MDA verification becomes ingest-time hard gate + folder-aware fallback
+
+- **Context:** v1 found 14 silent MDA attribution disagreements (~1,432 corrupted records). v2 surfaced a different silent-bug class: WCOS fuzzy-resolving to BCOS (36 Water Corporation files silently attributed to Broadcasting Corporation) before alias fix shipped.
+- **Decision:** Story 17.2 scope amended: (a) content-level MDA verification at ingest as hard gate (first 5 title rows, 3-layer resolver, disagreement → Review Queue); (b) folder-aware 4th resolver layer (when filename+title+column all fail, check parent folder name); (c) emit `RESOLVER_ALIAS_MISSING` observation whenever fuzzy wins over absent-alias (Lev ≤ 2 to wrong MDA, no alias to correct one).
+- **Rationale:** Three-gate ingest catches both attribution-disagreement and alias-missing classes. Removes silent-corruption failure mode entirely.
+- **Owners:** Dev team (17.2).
+- **References:** Addendum 1 §3 17.2; LESSONS_LEARNED items 8, 18.
+
+## D-55 — Five cross-MDA verdicts enumerated + bidirectional signature test
+
+- **Context:** v1 invented `OVERLAPPING_MDA_PRESENCE` mid-build (53 of 358 cases). v2 scale-tested to 558 cases. Original 17.4 binary (transfer/namesake) misses the class entirely.
+- **Decision:** Story 17.4 scope amended to enumerate 5 verdicts explicitly (LOAN_CONTINUATION_CONSISTENT / VARIANT / FRESH_PRINCIPAL / OVERLAPPING_MDA_PRESENCE / AMBIGUOUS) + bidirectional A→B, B→A signature test + namesake-frequency calibration starter bound N≥3 from catalog+register union.
+- **Owners:** Dev team (17.4).
+- **References:** Addendum 1 §3 17.4; LESSONS_LEARNED item 2.
+
+## D-56 — Overlap-MDA workflow distinct from Transfer Handshake
+
+- **Context:** Overlap cases would be mishandled as transfer candidates if routed through 17.5's existing Pending Handshake flow. Overlap means "same person in two MDAs at the same time" — never a transfer.
+- **Decision:** Story 17.5 scope amended: OVERLAPPING_MDA_PRESENCE cases route to (1) namesake frequency check, (2) MDA hierarchy check (shared `reporting_parent_mda`), (3) Dept Admin manual disposition.
+- **Owners:** Dev team (17.5).
+- **References:** Addendum 1 §3 17.5.
+
+## D-57 — Review Queue capacity planning as explicit story + CRITICAL SLA widened 7→14 days
+
+- **Context:** v2 backfill sizing: ~53,518 items (48,518 catalog variances + 5,000 register exceptions). CRITICAL bucket: ~5,550 items. 7-day SLA would require ~793 AG adjudications/day — infeasible.
+- **Decision:** NEW Story 17.6a. Queue partitioning by 9 verdict classes + SLA matrix (CRITICAL 14d widened from 7d, HIGH 14d, MEDIUM 30d) + staffing model + escalation paths + per-MDA throughput KPI.
+- **Owners:** Bob (SM) + Dept Admin.
+- **References:** Addendum 1 §3 17.6a; LESSONS_LEARNED item 7.
+
+## D-58 — Scheme config tolerance externalization
+
+- **Context:** v1 engine hard-coded 8 tolerance values as constants. Scheme policy clarifications (17.31) will legitimately change these; code-change-plus-redeploy per shift is unacceptable friction.
+- **Decision:** Story 17.8 scope amended: externalize 8 tolerance keys to `scheme_config` table. Engine reads via config at boot.
+- **Owners:** Dev team (17.8) + Winston (architecture).
+- **References:** Addendum 1 §3 17.8.
+
+## D-59 — Three new variance classes + BALANCE_DECREASE severity demoted
+
+- **Context:** v1 found 2,112 BALANCE_INCREASE instances + 717 MISSING_PRINCIPAL instances. v2 LESSONS_LEARNED §12 showed BALANCE_DECREASE_BEYOND_MONTHLY signal-to-noise is low (Path 3 settlement dominates, not fraud).
+- **Decision:** Story 17.9 adds BALANCE_INCREASE (MEDIUM default, HIGH if delta > ₦50K), BALANCE_DECREASE_BEYOND_MONTHLY (**MEDIUM** — demoted from HIGH), MISSING_PRINCIPAL (MEDIUM).
+- **Owners:** Dev team (17.9).
+- **References:** Addendum 1 §3 17.9; LESSONS_LEARNED item 12.
+
+## D-60 — Most Likely Explanation broadened to 14 narrative patterns
+
+- **Context:** Original 17.10 scope was tenure-mis-recording only. Dept Admin + AG workflow benefits from explicit narratives across all CRITICAL + HIGH classes including register-driven classes.
+- **Decision:** Story 17.10 covers 14 narratives spanning TENURE, CUMULATIVE_OVERDEDUCTION, ARITHMETIC_IMPOSSIBILITY, BALANCE_INCREASE, BALANCE_DECREASE_BEYOND_MONTHLY, OVERLAPPING_MDA_PRESENCE, MDA_ATTRIBUTION_DISAGREEMENT, RESOLVER_ALIAS_MISSING, APPROVED_BUT_NO_RECORD (3 sub-class narratives), RECORD_WITHOUT_APPROVAL, RETIRED_BUT_STILL_DEDUCTED, DECEASED_BUT_STILL_DEDUCTED.
+- **Owners:** Dev team (17.10) + UX (copy review).
+- **References:** Addendum 1 §3 17.10.
+
+## D-61 — Explicit PRP DRY_RUN mode + cross-reference with 17.0b
+
+- **Context:** Policy tuning + pre-commit preview + Scheme Secretariat policy-impact preview all require explicit dry-run.
+- **Decision:** Story 17.12 gains explicit `DRY_RUN=true` mode. Architect to reconcile with 17.0b (engine-wide DRY_RUN infrastructure) at implementation — if 17.0b covers, 17.12 conforms to that contract.
+- **Owners:** Dev team (17.12) + Winston (architecture).
+- **References:** Addendum 1 §3 17.12.
+
+## D-62 — 17.17 absorbs 17.19/17.20/17.21 UI surface + 6-tile Scheme Participation block
+
+- **Context:** 17.19 (pre-ingest preview), 17.20 (re-attribution UX), 17.21 UI (MDA parent/child surface) all extend the same dashboard data model. v2 added a 2-register-dimension Venn worth 6 tiles.
+- **Decision:** RETIRE 17.19, 17.20, 17.21. Story 17.17 absorbs as panels. Add 6-tile Scheme Participation block (catalog-participation / register-approved / overlap-confirmed / catalog-only / register-only-with-subclass-colour / post-event-active) + ₦-weighted severity + `<RegisterExceptionPanel>` with sub-class colour.
+- **Note:** 17.21 data-model portion (`mdas.is_autonomous` + `mdas.reporting_parent_mda`) was already landed in Round 3 and remains shipped. This retirement covers the UI surface only.
+- **Owners:** Dev team (17.17) + Sally (UX) + Winston (architecture).
+- **References:** Addendum 1 §3 17.17.
+
+## D-63 — Retroactive backfill carries catalog + script + register hashes
+
+- **Context:** External auditor (17.32) must independently verify any system figure by rerunning against same inputs. Opacity = unverifiable.
+- **Decision:** Story 17.33 amended: every output row (`loan_attribution_history`, `audit_log`, dashboard snapshots) carries catalog SHA-256, script SHA-256, and all register SHA-256s. Reruns diff-able by hash.
+- **Owners:** Dev team (17.33) + Winston (architecture).
+- **References:** Addendum 1 §3 17.33.
+
+## D-64 — Quarterly Reconciliation Inventory regeneration as governance heartbeat
+
+- **Context:** v1 → v2 delta (40,062 → 48,518 variances; 1,700 new register exceptions surfaced) demonstrates the improvement-tracking artefact value.
+- **Decision:** NEW Story 17.33a. Scheduled cron (quarterly) regenerates full inventory. Diff-to-previous published to AG as scheme health heartbeat. Per-MDA CRITICAL trend. Versioned output with engine SHA-256. On-demand ad-hoc regeneration allowed with AG approval.
+- **Owners:** Dev team (17.33a).
+- **References:** Addendum 1 §3 17.33a.
+
+## D-65 — Scheme Beneficiary Register ingest as new evidence layer (NEW story 17.3c)
+
+- **Context:** v2 Stage 2 ingested 2,502 approved beneficiaries across COLLATION 2024 + 2025 + INTERVENTION 2024. Pass 0.5a cross-check produced 1,700 APPROVED_BUT_NO_RECORD + 3,290 RECORD_WITHOUT_APPROVAL observations. No Epic 17 story currently covers beneficiary-register evidence.
+- **Decision:** NEW Story 17.3c. `scheme_beneficiary_register` table + upload-based ingest with SHA-256 provenance + Pass 0.5a cross-check emitting two new variance classes.
+- **Owners:** Dev team (17.3c) + Winston (schema).
+- **References:** Addendum 1 §3 17.3c; LESSONS_LEARNED item 13.
+
+## D-66 — Employment Event Register ingest (NEW story 17.3d)
+
+- **Context:** v2 Stage 2 ingested 202 events (188 retired + 14 deceased). Pass 0.5b surfaces RETIRED_BUT_STILL_DEDUCTED (10 cases — adjudicable today) + DECEASED_BUT_STILL_DEDUCTED (0 cases — positive governance signal).
+- **Decision:** NEW Story 17.3d. `employment_event_register` table + Pass 0.5b cross-check. Zero-DECEASED count explicitly captured as governance reassurance signal in the Deputy AG brief.
+- **Owners:** Dev team (17.3d).
+- **References:** Addendum 1 §3 17.3d; LESSONS_LEARNED items 15, 16.
+
+## D-67 — APPROVED_BUT_NO_RECORD sub-class tiering (NEW story 17.3e)
+
+- **Context:** v2 surfaced 1,700 APPROVED_BUT_NO_RECORD. Sub-classification shows: 17.4% FUZZY_MATCH_WITHIN_MDA (PIS auto-merge target), 0% NAMESAKE_CROSS_MDA, **66.6% MDA_COVERAGE_GAP (MDA compliance flag — not beneficiary issue)**, 0% POSSIBLE_AWAITING_DISBURSEMENT, **15.9% NO_TRACE (true AG red flag)**. Flat 1,700 count misrepresents governance concern as 6.3× the real red flag count.
+- **Decision:** NEW Story 17.3e. Sub-classifier runs post-17.3c. Drives Review Queue partitioning, SLA (NO_TRACE = CRITICAL AG 14d; MDA_COVERAGE_GAP = MEDIUM MDA Officer 30d; FUZZY_MATCH_WITHIN_MDA = PIS auto-handle), and dashboard sub-class colour. Required — flat count is governance risk.
+- **Rationale:** Sub-classification protects political framing + accurate MDA relationships + accurate AG escalation priority.
+- **Owners:** Dev team (17.3e) + Sally (UX — dashboard sub-class colour).
+- **References:** Addendum 1 §3 17.3e; LESSONS_LEARNED item 14; `register-exceptions-approved-no-record-subclasses.md`.
+
+## D-68 — Deputy AG briefing update (pre-Epic-17 package expansion)
+
+- **Context:** Existing Deputy AG package (Alatishe detailed audit + one-pager) was v1-sized. v2 surfaces two new adjudication-ready case sets independent of Epic 17 shipping.
+- **Decision:** Addendum 1 §4.1 — append to Deputy AG package: (a) 10 RETIRED_BUT_STILL_DEDUCTED cases, (b) 271 NO_TRACE APPROVED_BUT_NO_RECORD cases (post-sub-classification), (c) explicit 0 DECEASED_BUT_STILL_DEDUCTED as positive governance signal.
+- **Owners:** Awwal (assembly) + Dev team (PDF generator extension in Task 12).
+- **References:** Addendum 1 §4.1; LESSONS_LEARNED item 15.
+
+---
+
+**End of decision log through Addendum 1 (2026-04-18). Epic 17 now at 39 stories.** All decisions persisted in SCP + Addendum 1 + sprint-status.yaml + epics.md + memory files + Inventory v1/v2 folders.

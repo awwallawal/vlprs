@@ -470,7 +470,7 @@ development_status:
   # BLOCKING: Authoritative go-live paused pending Epic 17 + BIR pilot cycle complete.
   # Operational (non-authoritative) mode continues during Epic 17 development.
   #
-  # 37 stories in 11 sub-themes (34 core + 17.0b DRY_RUN + 17.34a shadow dashboard + 17.3b MDA Payroll Snapshot Ingestion, added via SCP amendments 2026-04-15).
+  # 39 stories in 11 sub-themes (34 core + 17.0b DRY_RUN + 17.34a shadow dashboard + 17.3b MDA Payroll Snapshot + 17.6a Review Queue capacity + 17.33a Quarterly regen + 17.3c Beneficiary Register + 17.3d Event Register + 17.3e Match Tiering; 17.19, 17.20, 17.21 retired by Addendum 1 2026-04-18). New variance class: RESOLVER_ALIAS_MISSING (HIGH, cross-cuts 17.2).
   # Sub-theme completion gates A → K; K-gate = Epic 17 complete.
   #
   # Three reconciliation layers in the system (17.24 is NEW; 7.0h/7.0i/8.0a already done):
@@ -480,9 +480,12 @@ development_status:
   # Epic 17 adds the third layer; payroll reconciliation is already in production.
   #
   # Full specification: _bmad-output/planning-artifacts/sprint-change-proposal-2026-04-15.md
+  # Published addendum: _bmad-output/planning-artifacts/scp-2026-04-15-addendum-1.md (2026-04-18 — post-Inventory v1+v2)
   # Decision log:       _bmad-output/planning-artifacts/decision-log-2026-04-15.md
   # Audit evidence:     docs/Car_Loan/analysis/reports/alatise-detailed-audit-report.pdf
   #                     docs/Car_Loan/analysis/reports/alatise-deputy-ag-summary.pdf
+  # Inventory v1:       reconciliation-inventory-2026-04-16/ (catalog SHA fc8b5bcb...)
+  # Inventory v2:       C:\Users\DELL\Desktop\VLPRS-Reconciliation-2026-04-18\ (catalog SHA 4960e273...)
   # Regression fixtures:
   #   - tests/fixtures/identity-continuity/alatise-bir-csc-2023-2026/ (Alatise 51 records, 8 observations)
   #   - tests/fixtures/identity-continuity/lamidi-bir-2022-2024/ (Lamidi 36 records, cumulative overpayment)
@@ -514,37 +517,41 @@ development_status:
 
   # Sub-theme B — Discovery & utility port
   17-1-discovery-spike-prevalence-survey: backlog  # Q1 collision rate, Q2 first-deduction-date coverage, Q3 zero-crossing vs gap rate, Q4 concurrent-loan prevalence, Q5 performance budget, Q6 variance contamination, Q7 haphazard-upload distribution, Q8 overpayment prevalence. Output gates sizing of remaining Epic 17 stories.
-  17-2-port-side-quest-utilities: backlog  # name-match, mda-resolve, number-parse, column-map, header-detect, period-extract into packages/shared with regression suite from March 2026 side-quest refinements
+  17-2-port-side-quest-utilities: backlog  # name-match, mda-resolve, number-parse, column-map, header-detect, period-extract into packages/shared with regression suite from March 2026 side-quest refinements. ADDENDUM 1 (2026-04-18): + content-level MDA verification at ingest as hard gate + folder-aware resolver fallback layer (4th resolution layer) + RESOLVER_ALIAS_MISSING observation on fuzzy-wins-over-absent-alias (WCOS→BCOS class caught in v2).
 
   # Sub-theme C — Identity layer
   17-3-persons-aliases-proposals-schema-seed: backlog  # persons + person_aliases + identity_proposals schema + migration + seed from Master Beneficiary Ledger (4,926 staff). person_aliases.alias_type extended with HR_ROSTER (highest confidence, from 17.3b).
   17-3b-mda-payroll-snapshot-ingestion: backlog  # SCP amendment round 5 (2026-04-15): NEW story. MDA-level monthly payroll upload (BIR CSV + OYSIPA xls pattern): 249 staff × 134 active CAR LOAN deductions × ₦1.67M discovered in BIR Feb 2026. payroll_snapshots table + HR_ROSTER aliases + PAYROLL_VS_MDA_VARIANCE observation. Staging input at VLPRS-Upload-Staging/_PAYROLL-ROSTERS/. Distinct from existing AG-level consolidated payroll (7.0h + 7.0i done).
-  17-4-person-identity-service: backlog  # SCP amendment round 3 (2026-04-15): SEARCH + MATCH split APIs. Fuzzy-Jaccard comparator with per-token Levenshtein <=2 for token equivalence (primary gate); Jaro-Winkler tiebreaker. Bands: Jaccard<0.5=NOT_MATCH; Lev=0 HIGH auto-link; Lev=1 HIGH_WITH_TYPO_FLAG; Lev=2-4 MEDIUM review; Lev>=5 NOT_MATCH. Namesake frequency guard on top. ADELEKE fixture signed off by Awwal 2026-04-15 at tests/fixtures/identity-continuity/adeleke-namesake/expected.json
-  17-5-person-link-candidates-transfer-handshake-wiring: backlog  # proactive Pending Handshake surfacing to both MDAs; wired to existing Transfer Handshake workflow
+  17-3c-scheme-beneficiary-register-ingest: backlog  # ADDENDUM 1 (2026-04-18): NEW. Ingest Scheme Secretariat's approved beneficiary lists (COLLATION 2024 + 2025 + INTERVENTION 2024 upload pattern). scheme_beneficiary_register table + SHA-256 provenance per row. Pass 0.5a cross-check: emits APPROVED_BUT_NO_RECORD (CRITICAL) + RECORD_WITHOUT_APPROVAL (HIGH). v2 evidence: 2,502 approved beneficiaries ingested; 1,700 APPROVED_BUT_NO_RECORD + 3,290 RECORD_WITHOUT_APPROVAL surfaced.
+  17-3d-employment-event-register-ingest: backlog  # ADDENDUM 1 (2026-04-18): NEW. Ingest Scheme Secretariat's retired/deceased register. employment_event_register table. Pass 0.5b cross-check: emits RETIRED_BUT_STILL_DEDUCTED (CRITICAL) + DECEASED_BUT_STILL_DEDUCTED (CRITICAL). v2 evidence: 202 events ingested (188 retired + 14 deceased); 10 RETIRED_BUT_STILL_DEDUCTED + 0 DECEASED_BUT_STILL_DEDUCTED — adjudication-ready pre-Epic-17.
+  17-3e-register-to-catalog-match-tiering: backlog  # ADDENDUM 1 (2026-04-18): NEW. Sub-classifier for APPROVED_BUT_NO_RECORD. Five sub-classes: FUZZY_MATCH_WITHIN_MDA (PIS merge candidate, ~17%) / NAMESAKE_CROSS_MDA / MDA_COVERAGE_GAP (MDA compliance flag, ~67%) / POSSIBLE_AWAITING_DISBURSEMENT / NO_TRACE (true AG red flag, ~16%). Drives Review Queue partitioning + dashboard sub-class colour. Required — flat count misrepresents governance concern.
+  17-4-person-identity-service: backlog  # SCP amendment round 3 (2026-04-15): SEARCH + MATCH split APIs. Fuzzy-Jaccard comparator with per-token Levenshtein <=2 for token equivalence (primary gate); Jaro-Winkler tiebreaker. Bands: Jaccard<0.5=NOT_MATCH; Lev=0 HIGH auto-link; Lev=1 HIGH_WITH_TYPO_FLAG; Lev=2-4 MEDIUM review; Lev>=5 NOT_MATCH. Namesake frequency guard on top. ADELEKE fixture signed off by Awwal 2026-04-15 at tests/fixtures/identity-continuity/adeleke-namesake/expected.json. ADDENDUM 1 (2026-04-18): + enumerate 5 cross-MDA verdicts explicitly (LOAN_CONTINUATION_CONSISTENT / VARIANT / FRESH_PRINCIPAL / OVERLAPPING_MDA_PRESENCE / AMBIGUOUS) + bidirectional signature continuity test + namesake-frequency starter bound N≥3 from catalog+register union.
+  17-5-person-link-candidates-transfer-handshake-wiring: backlog  # proactive Pending Handshake surfacing to both MDAs; wired to existing Transfer Handshake workflow. ADDENDUM 1 (2026-04-18): + distinct workflow for OVERLAPPING_MDA_PRESENCE (namesake check + MDA hierarchy check; NOT Pending Handshake — overlap means same person in two MDAs at same time, never a transfer).
   17-6-review-queue-ui-merged: backlog  # merged with existing Exception Queue. Dept Admin approves merges; MDA Officer confirms medium-confidence matches. SCP amendment 2026-04-15: adds search-then-confirm pattern — when user picks a candidate from searchPersons results, confirmation step shows match score + evidence before commit.
+  17-6a-review-queue-capacity-planning: backlog  # ADDENDUM 1 (2026-04-18): NEW. Queue partitioning (9 verdict classes) + SLA matrix (CRITICAL 14d, HIGH 14d, MEDIUM 30d; widened CRITICAL from 7d given +53% volume) + staffing model sized to ~53,518 backfill items (48,518 catalog variances + 5,000 register exceptions) + escalation paths + per-MDA queue-throughput KPI (Agreement 21 override rate).
   17-7-loan-detail-page-unified: backlog  # Identity | Timeline (blank months explicit) | Variance | Certificates | Activity Log tabs. Scoped by role. Staff self-service view = Phase 2.
 
   # Sub-theme D — Loan & Lifecycle layer
-  17-8-loans-schema-extension-attribution-history: backlog  # person_key FK + fingerprint columns + loan_attribution_history (append-only re-attribution audit)
-  17-9-loan-identity-service-lifecycle-detector: backlog  # fingerprint resolver + outstanding-zero-crossing detector with dormant-period guard + TEMPLATE_ROLLOVER_ERROR detection + negative-value hard-fail (handles Lamidi paid=61, remaining=-1). Lamidi fixture as regression test.
-  17-10-most-likely-explanation-suggestion-engine: backlog  # from UAT #43. "Declared monthly consistent with tenure=50, not declared 28 — likely tenure misrecording." Built on reverse-engineered-tenure logic from Alatise audit.
+  17-8-loans-schema-extension-attribution-history: backlog  # person_key FK + fingerprint columns + loan_attribution_history (append-only re-attribution audit). ADDENDUM 1 (2026-04-18): + externalize tolerance bands to scheme_config (8 keys: interest_tolerance_kobo, monthly_tolerance_kobo, math_tolerance_kobo, signature_monthly_rounding_kobo, outstanding_continuity_tolerance_pct, balance_increase_min_kobo, principal_drift_threshold_kobo, frozen_template_min_periods).
+  17-9-loan-identity-service-lifecycle-detector: backlog  # fingerprint resolver + outstanding-zero-crossing detector with dormant-period guard + TEMPLATE_ROLLOVER_ERROR detection + negative-value hard-fail (handles Lamidi paid=61, remaining=-1). Lamidi fixture as regression test. ADDENDUM 1 (2026-04-18): + 3 new variance classes: BALANCE_INCREASE (MEDIUM/HIGH if >₦50K delta), BALANCE_DECREASE_BEYOND_MONTHLY (MEDIUM — demoted from HIGH per v2 signal-to-noise analysis; Path 3 settlement is dominant legitimate explanation), MISSING_PRINCIPAL (MEDIUM).
+  17-10-most-likely-explanation-suggestion-engine: backlog  # from UAT #43. "Declared monthly consistent with tenure=50, not declared 28 — likely tenure misrecording." Built on reverse-engineered-tenure logic from Alatise audit. ADDENDUM 1 (2026-04-18): + broaden scope to all CRITICAL + HIGH variance classes (12 narratives): TENURE, CUMULATIVE_OVERDEDUCTION, ARITHMETIC_IMPOSSIBILITY, BALANCE_INCREASE, BALANCE_DECREASE_BEYOND_MONTHLY, OVERLAPPING_MDA_PRESENCE, MDA_ATTRIBUTION_DISAGREEMENT, RESOLVER_ALIAS_MISSING, APPROVED_BUT_NO_RECORD (3 sub-class narratives), RECORD_WITHOUT_APPROVAL, RETIRED_BUT_STILL_DEDUCTED, DECEASED_BUT_STILL_DEDUCTED.
   17-11-missing-record-detection-mda-prompt: backlog  # detects expected-but-missing months per active loan; notifies MDA with SLA; escalates on expiry
 
   # Sub-theme E — Reconciliation & Truth State
-  17-12-person-reconciliation-pass-prp: backlog  # set-based, idempotent, per-person recompute. Triggered by upload/correction/handshake. Output is function of input set, not input order.
+  17-12-person-reconciliation-pass-prp: backlog  # set-based, idempotent, per-person recompute. Triggered by upload/correction/handshake. Output is function of input set, not input order. ADDENDUM 1 (2026-04-18): + explicit DRY_RUN=true mode (PRP runs all passes against proposed input, produces diff report, emits no writes). Cross-reference with 17.0b DRY_RUN infrastructure — reconcile scope at implementation: if 17.0b covers engine-wide dry-run, 17.12 conforms to that contract.
   17-13-upload-pipeline-integration-content-validation: backlog  # rejects non-car-loan files at boundary (OYSHMB class). Rate limiter Redis migration (UAT #44) integrated here — ICR pipeline multiplies request volume.
   17-14-truth-state-model: backlog  # per-record: CLEAN, IN_VARIANCE, LIFECYCLE_REVIEW, OVERPAYMENT_ADJUDICATION, PENDING_COMPLETION_EVIDENCE, RESOLVED_OUT_OF_SYSTEM, CERTIFICATE_WITH_OBSERVATION_NOTE, CERTIFICATE_CLEAN, APP_BANK_STATEMENT_VARIANCE. Per-person: SETTLED, PROVISIONAL, IN_TRANSFER.
   17-15-monthly-dashboard-snapshots: backlog  # preserve historical figures despite re-attribution
   17-16-idempotency-property-test-framework: backlog  # 24-permutation test for Alatise + Lamidi + ADELEKE + CDU fixtures. Final state must be byte-identical across all orderings.
 
   # Sub-theme F — Dashboard & Observability
-  17-17-dual-truth-dashboard-rendering: backlog  # Reconciled / Pending Review / Difference on every AG headline figure. Absorbs UAT #8 (health score), #40 (three-view dashboard), #47 (baseline diagnostic).
+  17-17-dual-truth-dashboard-rendering: backlog  # Reconciled / Pending Review / Difference on every AG headline figure. Absorbs UAT #8 (health score), #40 (three-view dashboard), #47 (baseline diagnostic). ADDENDUM 1 (2026-04-18): ABSORBS 17.19 + 17.20 + 17.21 UI surface. Adds 6-tile Scheme Participation block (catalog-participation / register-approved / overlap-confirmed / catalog-only / register-only-with-subclass / post-event-active) + ₦-weighted severity metrics + re-attribution feed + pre-ingest preview + MDA parent/child surface + RegisterExceptionPanel with sub-class colour.
   17-18-variance-badge-direction-explicit: backlog  # <VarianceBadge> component: ↓ Outstanding to scheme / ↑ Refund due to staff / ⚠ Pending classification. Amber/grey only, non-punitive.
-  17-19-pre-ingest-aggregated-preview: backlog  # "N new persons, M continuations, K new loans, F flags" before commit, with drill-down to flagged items only
-  17-20-re-attribution-ux: backlog  # audit-log feed on AG dashboard data quality panel + affected-record MDA Officer notifications
+  17-19-pre-ingest-aggregated-preview: retired  # ADDENDUM 1 (2026-04-18): merged into 17.17 (same dashboard data model).
+  17-20-re-attribution-ux: retired  # ADDENDUM 1 (2026-04-18): merged into 17.17 (re-attribution feed panel).
 
   # Sub-theme G — MDA Hierarchy
-  17-21-mda-autonomy-model: backlog  # SCP amendment 2026-04-15 (scope simplified): autonomous agencies (CDU etc.) are standalone mda_id for identity resolution. Parent/child is metadata for opt-in reporting rollups only, never identity routing. Schema: mdas.is_autonomous BOOLEAN + mdas.reporting_parent_mda INT NULLABLE. CDU fixture signed off by Awwal 2026-04-15.
+  17-21-mda-autonomy-model: retired  # ADDENDUM 1 (2026-04-18): UI surface merged into 17.17 MDA parent/child view. Data model portion (mdas.is_autonomous + mdas.reporting_parent_mda) was already landed in SCP 2026-04-15 Round 3 and remains shipped.
 
   # Sub-theme H — Settlement, Cash & Overdeduction
   17-22-settlement-pathway-3-event-car-loan-dept-ux: backlog  # explicit LUMP_SUM_SETTLEMENT event with receipt reference + bank-receipt cross-reference. Car Loan Dept officer files.
@@ -564,7 +571,8 @@ development_status:
 
   # Sub-theme K — Backfill & Pilot
   17-32-external-auditor-read-only-role: backlog  # scoped queries + audit-log feed + standard-format export. Designed for federal AG, civil society, parliamentary access.
-  17-33-retroactive-backfill-74k-records: backlog  # run all 74,138 catalog records through PRP. Route medium-confidence to Dept Admin review. Sign-off gate before cutover. Dry-run + preview + rollback capability.
+  17-33-retroactive-backfill-74k-records: backlog  # run all 74,138 catalog records through PRP (now 89,502 post-Stage-1 qa_qa ingest per v2 Inventory 2026-04-18). Route medium-confidence to Dept Admin review. Sign-off gate before cutover. Dry-run + preview + rollback capability. ADDENDUM 1 (2026-04-18): + carry catalog SHA-256 + script SHA-256 + all register SHA-256s on every output row (loan_attribution_history, audit_log, dashboard snapshots). Reruns diff-able by hash.
+  17-33a-quarterly-reconciliation-inventory-regen: backlog  # ADDENDUM 1 (2026-04-18): NEW. Scheduled cron (quarterly) regenerates full Reconciliation Inventory. Diff vs previous quarter published to AG as scheme health heartbeat. Per-MDA CRITICAL trend. Versioned output with diff-to-previous carrying engine SHA-256. v1 (2026-04-16) → v2 (2026-04-18) delta demonstrates improvement-tracking value.
   17-34-bir-pilot-one-reconciliation-cycle: backlog  # pilot with Board of Internal Revenue. Cycle defined: monthly BIR upload → PRP → dual-truth dashboard → AG review → sign-off or findings log. Time-boxed per 17.31 policy. CRITICAL precisely defined per SCP §7. K-gate = Epic 17 complete.
   17-34a-shadow-dashboard-pre-pilot: backlog  # 14 days pre-cutover: dual-truth dashboard runs in production against real data, AG+PO visible only. Daily divergence report vs legacy. Catches integration issues before BIR officer sees new UI. SCP amendment 2026-04-15.
 
