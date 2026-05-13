@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Beneficiary Audit · Executive Summary · For Deputy Auditor General</title>
+<style>
+  @page { size: A4; margin: 14mm 16mm; }
+  @media print {
+    body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .no-print { display: none; }
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: Helvetica, Arial, sans-serif;
+    font-size: 10pt;
+    color: #525252;
+    line-height: 1.4;
+    margin: 0;
+    padding: 0;
+  }
+  .page {
+    width: 210mm;
+    min-height: 297mm;
+    padding: 14mm 16mm;
+    margin: 0 auto;
+    background: white;
+  }
+  @media screen {
+    body { background: #e5e5e5; padding: 20px 0; }
+    .page { box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+  }
+  .header-bar {
+    border-bottom: 2px solid #1e3a5f;
+    padding-bottom: 6px;
+    margin-bottom: 10px;
+  }
+  h1 { font-size: 16pt; color: #1e3a5f; margin: 0 0 2px; font-weight: bold; }
+  .subtitle { font-size: 9pt; color: #525252; margin: 0; }
+  .micro { font-size: 8pt; color: #525252; margin: 0 0 4px; }
+  .section-label {
+    font-size: 8pt;
+    font-weight: bold;
+    color: #b8860b;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-top: 10px;
+    margin-bottom: 4px;
+  }
+  p { font-size: 9.5pt; line-height: 1.5; margin: 0 0 4px; }
+  table { border-collapse: collapse; width: 100%; font-size: 8.5pt; margin: 4px 0; }
+  table.inventory { border: 0.5px solid #d4d4d4; }
+  table.inventory thead th {
+    background: #1e3a5f;
+    color: white;
+    padding: 5px 4px;
+    text-align: left;
+    font-size: 8pt;
+    font-weight: bold;
+  }
+  table.inventory tbody td {
+    border-top: 0.25px solid #d4d4d4;
+    padding: 5px 4px;
+    vertical-align: top;
+  }
+  table.inventory tbody tr:nth-child(even) td { background: #f5f5f5; }
+  .recommendation {
+    background: #fdf6e3;
+    border-left: 3px solid #b8860b;
+    padding: 10px 12px;
+    margin-top: 8px;
+    font-size: 9.5pt;
+    line-height: 1.45;
+  }
+  .rec-header { font-weight: bold; color: #1e3a5f; margin-bottom: 4px; font-size: 10pt; }
+  .footer {
+    border-top: 0.5px solid #d4d4d4;
+    padding-top: 6px;
+    margin-top: 20px;
+    font-size: 7.5pt;
+    color: #525252;
+    display: flex;
+    justify-content: space-between;
+  }
+  .bullets { margin: 4px 0 4px 0; padding-left: 16px; }
+  .bullets li { margin-bottom: 3px; font-size: 9.5pt; line-height: 1.45; }
+  .no-print {
+    background: #1e3a5f;
+    color: white;
+    padding: 8px 16px;
+    text-align: center;
+    font-size: 9pt;
+    margin-bottom: 0;
+  }
+</style>
+</head>
+<body>
+<div class="no-print">Print this page to PDF from your browser (Ctrl+P / Cmd+P). Designed for A4.</div>
+
+<div class="page">
+  <div class="header-bar">
+    <h1>Beneficiary Audit &middot; Executive Summary</h1>
+    <p class="subtitle">For the attention of the Deputy Auditor General &middot; 2026-04-15 &middot; One-page brief</p>
+  </div>
+
+  <p class="micro"><strong>SUBJECT:</strong> Reconciliation of one beneficiary's records (Alatise / Alatishe Bosede Susainah) against the Car Loan Scheme's standard computation formula.</p>
+  <p class="micro"><strong>SCOPE:</strong> 51 monthly payroll records, January 2023 to February 2026, two MDAs.</p>
+
+  <div class="section-label">The observation in three lines</div>
+  <p>
+    One beneficiary appears in side-quest data under two name spellings, in two MDAs, with four distinct loan signatures. Today's pipeline would treat her as four separate beneficiaries with four loans; the Variance Engine would correctly compute per-record variances but would not gate AG dashboard totals. The four signatures and their data quality observations are tabulated below.
+  </p>
+
+  <div class="section-label">The four loans, and what is observable in each</div>
+  <table class="inventory">
+    <thead>
+      <tr>
+        <th style="width:6%;">#</th>
+        <th style="width:23%;">MDA</th>
+        <th style="width:13%;">Principal</th>
+        <th style="width:8%;">Tenure</th>
+        <th style="width:14%;">Period span</th>
+        <th style="width:36%;">Observation for review</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>1</td>
+        <td>BIR</td>
+        <td>&#8358;750,000</td>
+        <td>28 mo</td>
+        <td>Jan &ndash; Dec 2023</td>
+        <td>Tenure declared 28; scheme math indicates 50. Lifetime variance &#8776; &#8358;320,656.</td>
+      </tr>
+      <tr>
+        <td>2</td>
+        <td>BIR</td>
+        <td>&mdash;</td>
+        <td>&mdash;</td>
+        <td>Dec 2023</td>
+        <td>Orphan duplicate row with monthly amount only; principal and tenure absent.</td>
+      </tr>
+      <tr>
+        <td>3</td>
+        <td>BIR</td>
+        <td>&#8358;450,000</td>
+        <td>30 mo</td>
+        <td>Feb 2024 &rarr; Feb 2026</td>
+        <td>installments_remaining inflated by 20 across 25 consecutive records; outstanding overstated by &#8776; &#8358;320,000 per record.</td>
+      </tr>
+      <tr>
+        <td>4</td>
+        <td>Civil Service Commission</td>
+        <td>&#8358;450,000</td>
+        <td>36 mo</td>
+        <td>Jan 2025 &rarr; Feb 2026</td>
+        <td>Frozen-template suspicion: paid=1 unchanged across 13 monthly files. Overlaps Group 3 in time; cross-MDA presence without Transfer Handshake event.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="section-label">What this means at population scale</div>
+  <ul class="bullets">
+    <li>One beneficiary produced eight distinct observations across four loan signatures. The 4,926-beneficiary scheme population is not expected to be uniformly clean. Even modest contamination rates are material at portfolio level.</li>
+    <li>Today's authoritative figures (Active Loans, Total Exposure, Loans in Window) sum MDA-declared values without gating by reconciliation status. The gap between MDA-declared and reconciled is not visible to AG.</li>
+    <li>Settlement Pathway 3 (walk-up lump-sum payoff at the Car Loan Department) has no first-class event in the system today. Such loans appear as "stalled" indistinguishably from MDAs that have stopped reporting a beneficiary, transferred without handshake, or not filed a death or retirement event.</li>
+  </ul>
+
+  <div class="recommendation">
+    <div class="rec-header">Recommendation for the Deputy AG's consideration</div>
+    <p style="margin:0;">
+      (a) Pause production go-live of VLPRS authoritative figures pending completion of an Identity, Continuity and Reconciliation discovery spike and a first pilot cycle. (b) Commission the Identity, Continuity and Reconciliation engineering track (three coupled gates: Identity, Variance, Lifecycle; plus a Person Reconciliation Pass for order-independent ingestion). (c) Begin pilot with the Board of Internal Revenue, the MDA with the deepest existing data engagement. (d) Add Settlement Pathway 3 as a first-class event with explicit Car Loan Department officer filing and bank-receipt cross-reference. (e) Adopt dual-truth dashboard presentation (Reconciled / Pending Review) so AG can read both the current and the reconciled portfolio at a glance. The detailed audit report (separately attached) documents the per-record evidence supporting these recommendations.
+    </p>
+  </div>
+
+  <div class="footer">
+    <span>VLPRS Side-Quest Analysis Engine &middot; Internal &mdash; Auditor General's Office</span>
+    <span>Detailed report: alatise-detailed-audit-report.html</span>
+  </div>
+</div>
+
+</body>
+</html>

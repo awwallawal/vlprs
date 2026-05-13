@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Beneficiary Reconciliation Audit · Alatise Bosede Susainah</title>
+<style>
+  @page { size: A4; margin: 18mm 18mm; }
+  @media print {
+    body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .no-print { display: none; }
+    .page-break { page-break-before: always; }
+    section { page-break-inside: avoid; }
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: Helvetica, Arial, sans-serif;
+    font-size: 9pt;
+    color: #525252;
+    line-height: 1.4;
+    margin: 0;
+    padding: 0;
+  }
+  @media screen {
+    body { background: #e5e5e5; padding: 20px 0; }
+    .page { box-shadow: 0 4px 20px rgba(0,0,0,0.1); margin-bottom: 20px; }
+  }
+  .page {
+    width: 210mm;
+    min-height: 297mm;
+    padding: 18mm 18mm;
+    margin: 0 auto;
+    background: white;
+  }
+  .no-print {
+    background: #1e3a5f;
+    color: white;
+    padding: 8px 16px;
+    text-align: center;
+    font-size: 9pt;
+    margin-bottom: 20px;
+  }
+  .header-strip {
+    border-bottom: 2px solid #1e3a5f;
+    padding-bottom: 6px;
+    margin-bottom: 14px;
+  }
+  .header-title { font-size: 12pt; font-weight: bold; color: #1e3a5f; margin: 0; }
+  .header-sub { font-size: 7.5pt; color: #525252; margin: 2px 0 0; }
+  h1 { font-size: 17pt; color: #1e3a5f; margin: 0 0 4px; font-weight: bold; }
+  h2 {
+    font-size: 13pt;
+    color: #1e3a5f;
+    margin: 14px 0 6px;
+    padding-bottom: 2px;
+    border-bottom: 0.5px solid #d4d4d4;
+  }
+  h3 { font-size: 10.5pt; color: #1e3a5f; margin: 10px 0 4px; }
+  .subtitle { font-size: 11pt; color: #1e3a5f; margin: 0 0 12px; }
+  p { margin: 0 0 6px; text-align: justify; }
+  .meta-row { display: flex; margin-bottom: 4px; font-size: 9pt; }
+  .meta-label { font-weight: bold; color: #1e3a5f; width: 32mm; flex-shrink: 0; }
+  .meta-value { flex: 1; }
+  table { border-collapse: collapse; width: 100%; font-size: 8pt; margin: 6px 0 10px; border: 0.5px solid #d4d4d4; }
+  thead th {
+    background: #1e3a5f;
+    color: white;
+    padding: 4px;
+    text-align: left;
+    font-size: 8pt;
+    font-weight: bold;
+  }
+  tbody td {
+    border-top: 0.25px solid #d4d4d4;
+    padding: 4px;
+    vertical-align: top;
+  }
+  tbody tr:nth-child(even) td { background: #f5f5f5; }
+  .callout {
+    background: #fdf6e3;
+    border-left: 3px solid #b8860b;
+    padding: 8px 10px;
+    margin: 8px 0;
+    font-size: 9pt;
+  }
+  .callout-title { font-weight: bold; color: #1e3a5f; margin-bottom: 3px; }
+  .footer {
+    position: absolute;
+    bottom: 10mm;
+    left: 18mm;
+    right: 18mm;
+    border-top: 0.5px solid #d4d4d4;
+    padding-top: 6px;
+    font-size: 7pt;
+    color: #525252;
+    display: flex;
+    justify-content: space-between;
+  }
+  @media screen {
+    .footer { position: static; margin-top: 16px; }
+  }
+  .page { position: relative; }
+  code, .mono { font-family: 'Courier New', monospace; font-size: 8pt; }
+  ul.tight { margin: 4px 0; padding-left: 18px; }
+  ul.tight li { margin-bottom: 2px; }
+</style>
+</head>
+<body>
+<div class="no-print">Print this page to PDF from your browser (Ctrl+P / Cmd+P). Designed for A4. Page breaks auto-applied between sections.</div>
+
+<!-- Page 1 — Cover + Executive Summary -->
+<div class="page">
+  <div class="header-strip">
+    <p class="header-title">Audit Report</p>
+    <p class="header-sub">VLPRS Side-Quest Analysis Engine &middot; Internal &mdash; Auditor General's Office</p>
+  </div>
+
+  <h1>Beneficiary Reconciliation Audit</h1>
+  <p class="subtitle">Subject: Alatise / Alatishe Bosede Susainah &mdash; 51 records, 38-month observation window</p>
+
+  <div class="meta-row"><div class="meta-label">Report Date</div><div class="meta-value">2026-04-15</div></div>
+  <div class="meta-row"><div class="meta-label">Reporting Window</div><div class="meta-value">January 2023 to February 2026</div></div>
+  <div class="meta-row"><div class="meta-label">Source Data</div><div class="meta-value"><span class="mono">docs/Car_Loan/analysis/foundation/catalog.json</span> (374 source files, 74,138 deduplicated records)</div></div>
+  <div class="meta-row"><div class="meta-label">Audit Method</div><div class="meta-value">Side-quest engine + manual reconciliation against scheme formula</div></div>
+  <div class="meta-row"><div class="meta-label">Audit Script</div><div class="meta-value"><span class="mono">scripts/legacy-report/alatise-bosede-focused.ts</span></div></div>
+  <div class="meta-row"><div class="meta-label">Confidentiality</div><div class="meta-value">Internal &mdash; Auditor General's Office</div></div>
+
+  <h2>Executive Summary</h2>
+  <p>This report documents the reconciliation of 51 monthly payroll-deduction records attributable to one beneficiary (Alatise / Alatishe Bosede Susainah) against the Oyo State Car Loan Scheme's standard computation formula (Principal &times; 13.33% over a 60-month base, regardless of chosen tenure). The records span 38 months across two Ministries, Departments and Agencies and decompose into four distinct loan signatures.</p>
+  <p>Multiple data quality observations were identified across all four loan signatures, including a tenure misrecording with a lifetime variance of approximately &#8358;320,656 against scheme expected, an arithmetic inconsistency in the installments-remaining column inflated by exactly 20 across 25 consecutive monthly records, and a frozen-template pattern in which a single row replicates unchanged across 13 monthly files. The cross-MDA presence of the same beneficiary in two Ministries simultaneously is currently indistinguishable, by data alone, from a transferred employee, a parallel loan, or a clerical error.</p>
+  <p>These observations are presented for review. Each would be detectable by a production-grade Identity, Variance and Lifecycle reconciliation engine. None are currently surfaced by the in-flight VLPRS pipeline at the portfolio level. The pattern is unlikely to be unique to this beneficiary and is expected to repeat across the 4,926-strong scheme population at material rates.</p>
+
+  <h3>Findings at a glance</h3>
+  <table>
+    <thead>
+      <tr>
+        <th style="width:6%;">#</th>
+        <th style="width:54%;">Observation</th>
+        <th style="width:18%;">Severity (for go-live)</th>
+        <th style="width:22%;">Affected loan</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td>1</td><td>Two name spellings present in source files &mdash; "ALATISE" and "ALATISHE" &mdash; same person</td><td>For review (high)</td><td>All groups</td></tr>
+      <tr><td>2</td><td>Loan A tenure declared as 28 months; scheme math indicates 50 months</td><td>For review (high)</td><td>BIR / &#8358;750K</td></tr>
+      <tr><td>3</td><td>installments_remaining column overstated by 20 across 25 consecutive monthly records</td><td>For review (high)</td><td>BIR / &#8358;450K, 30-mo</td></tr>
+      <tr><td>4</td><td>Single row replicated unchanged across 13 monthly files (frozen template)</td><td>For review (medium)</td><td>CSC / &#8358;450K, 36-mo</td></tr>
+      <tr><td>5</td><td>Beneficiary present in two MDAs simultaneously without Transfer Handshake event</td><td>For review (high)</td><td>Groups 3 and 4</td></tr>
+      <tr><td>6</td><td>No explicit loan-end events recorded; lifecycle inferred from absence of records</td><td>For review (medium)</td><td>Group 1</td></tr>
+      <tr><td>7</td><td>Orphan duplicate row (December 2023) with monthly amount only, no principal or tenure</td><td>For review (low)</td><td>Group 2</td></tr>
+      <tr><td>8</td><td>Variance engine catches per-record variance but does not gate AG dashboard totals</td><td>For review (high)</td><td>System-wide</td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout">
+    <div class="callout-title">Note on language</div>
+    Per project standards, this report uses observation-style language. "Variance" is used in place of "discrepancy"; "for review" in place of "flagged." Severity bands use amber and grey; no red badges are used. Severity refers to impact on go-live readiness, not to attribution of fault to any individual or MDA.
+  </div>
+
+  <div class="footer"><span>alatise-detailed-audit-report.html &middot; 2026-04-15</span><span>Page 1</span></div>
+</div>
+
+<!-- Page 2 — Loan Inventory -->
+<div class="page page-break">
+  <div class="header-strip">
+    <p class="header-title">Audit Report &mdash; Alatise Bosede Susainah</p>
+    <p class="header-sub">Loan Inventory</p>
+  </div>
+
+  <h2>Identity profile</h2>
+  <div class="meta-row"><div class="meta-label">Distinct names</div><div class="meta-value">"ALATISE BOSEDE SUSAINAH" &nbsp;&nbsp;&nbsp;"ALATISHE BOSEDE SUSAINAH"</div></div>
+  <div class="meta-row"><div class="meta-label">Distinct MDAs</div><div class="meta-value">Board of Internal Revenue &nbsp;|&nbsp; Civil Service Commission</div></div>
+  <div class="meta-row"><div class="meta-label">Earliest record</div><div class="meta-value">Jan 2023</div></div>
+  <div class="meta-row"><div class="meta-label">Latest record</div><div class="meta-value">Feb 2026</div></div>
+  <div class="meta-row"><div class="meta-label">Total records</div><div class="meta-value">51</div></div>
+
+  <h2>Four distinct loan signatures detected</h2>
+  <table>
+    <thead>
+      <tr>
+        <th style="width:8%;">Group</th>
+        <th style="width:24%;">MDA</th>
+        <th style="width:14%;">Principal</th>
+        <th style="width:10%;">Tenure</th>
+        <th style="width:20%;">Period span</th>
+        <th style="width:8%;">Records</th>
+        <th style="width:16%;">Lifecycle</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td>1</td><td>Board of Internal Revenue</td><td>&#8358;750,000</td><td>28 mo</td><td>Jan 2023 &rarr; Dec 2023</td><td>12</td><td>Reached declared tenure</td></tr>
+      <tr><td>2</td><td>Board of Internal Revenue</td><td>&mdash;</td><td>&mdash;</td><td>Dec 2023</td><td>1</td><td>Orphan row</td></tr>
+      <tr><td>3</td><td>Board of Internal Revenue</td><td>&#8358;450,000</td><td>30 mo</td><td>Feb 2024 &rarr; Feb 2026</td><td>25</td><td>Active (advancing)</td></tr>
+      <tr><td>4</td><td>Civil Service Commission</td><td>&#8358;450,000</td><td>36 mo</td><td>Jan 2025 &rarr; Feb 2026</td><td>13</td><td>Frozen-template (paid unchanged)</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Why four loan signatures matter</h2>
+  <p>Today's pipeline assigns staff identifier and loan identifier per upload. The same person appearing in four distinct (MDA, Principal, Tenure) signatures across 51 records is therefore represented as four separate beneficiaries with four separate loans. Cross-month tracking, loan completion detection and variance attribution all become unreliable. Each of the four signatures is examined individually below.</p>
+
+  <div class="footer"><span>alatise-detailed-audit-report.html &middot; 2026-04-15</span><span>Page 2</span></div>
+</div>
+
+<!-- Page 3 — Group 1 detail -->
+<div class="page page-break">
+  <div class="header-strip">
+    <p class="header-title">Audit Report &mdash; Alatise Bosede Susainah</p>
+    <p class="header-sub">Group 1 detail &middot; Board of Internal Revenue &middot; &#8358;750,000 &middot; tenure 28 months declared</p>
+  </div>
+
+  <h1>Group 1: BIR &#8358;750K loan</h1>
+  <p style="font-size:9pt; color:#525252; margin-bottom:8px;">Signature: (BIR | Principal &#8358;750,000 | Tenure 28 months declared) &middot; 12 records &middot; Jan 2023 &rarr; Dec 2023</p>
+
+  <h3>Scheme reconciliation</h3>
+  <table>
+    <thead>
+      <tr>
+        <th style="width:40%;">Field</th>
+        <th style="width:20%;">Scheme expected</th>
+        <th style="width:20%;">MDA declared</th>
+        <th style="width:20%;">Variance</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td>Monthly deduction</td><td>&#8358;28,452</td><td>&#8358;17,000</td><td>&minus;&#8358;11,452 per month</td></tr>
+      <tr><td>Total interest (life of loan)</td><td>&#8358;46,655</td><td>&#8358;99,975</td><td>+&#8358;53,320</td></tr>
+      <tr><td>Total loan (P + interest)</td><td>&#8358;796,655</td><td>&#8358;849,975</td><td>+&#8358;53,320</td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout">
+    <div class="callout-title">Tenure reconciliation analysis</div>
+    The monthly deduction declared by the MDA (&#8358;17,000) is inconsistent with the declared tenure of 28 months at scheme expected (&#8358;28,452). Working backward from the declared monthly deduction and the declared principal, the implied tenure is approximately 48.9 months. The most plausible explanation is a tenure misrecording at source: the loan is materially consistent with a 50-month tenure rather than the declared 28-month tenure. Lifetime variance against scheme expected, accumulated across the declared 28 monthly records, is approximately &#8358;320,656.
+  </div>
+
+  <h3>Period-by-period record (Jan &ndash; Dec 2023)</h3>
+  <table>
+    <thead>
+      <tr>
+        <th style="width:14%;">Period</th>
+        <th style="width:14%;">Principal</th>
+        <th style="width:10%;">Tenure</th>
+        <th style="width:10%;">Paid</th>
+        <th style="width:10%;">Rem.</th>
+        <th style="width:14%;">Monthly</th>
+        <th style="width:28%;">Source file</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td>Jan 2023</td><td>&#8358;750,000</td><td>28</td><td>17</td><td>11</td><td>&#8358;17,000</td><td>BIR CAR LOAN JAN, 2023.xlsx</td></tr>
+      <tr><td>Feb 2023</td><td>&#8358;750,000</td><td>28</td><td>18</td><td>10</td><td>&#8358;17,000</td><td>BIR CAR LOAN FEB, 2023.xlsx</td></tr>
+      <tr><td>Mar 2023</td><td>&#8358;750,000</td><td>28</td><td>19</td><td>9</td><td>&#8358;17,000</td><td>BIR CAR LOAN MARCH, 2023.xlsx</td></tr>
+      <tr><td>Apr 2023</td><td>&#8358;750,000</td><td>28</td><td>20</td><td>8</td><td>&#8358;17,000</td><td>BIR CAR LOAN APRIL2023.xlsx</td></tr>
+      <tr><td>May 2023</td><td>&#8358;750,000</td><td>28</td><td>21</td><td>7</td><td>&#8358;17,000</td><td>BIR CAR LOAN MAY,2023.xlsx</td></tr>
+      <tr><td>Jun 2023</td><td>&#8358;750,000</td><td>28</td><td>22</td><td>6</td><td>&#8358;17,000</td><td>BIR CAR LOAN JUNE ,2023.xlsx</td></tr>
+      <tr><td>Jul 2023</td><td>&#8358;750,000</td><td>28</td><td>23</td><td>5</td><td>&#8358;17,000</td><td>BIR CAR LOAN JULY ,2023.xlsx</td></tr>
+      <tr><td>Aug 2023</td><td>&#8358;750,000</td><td>28</td><td>24</td><td>4</td><td>&#8358;17,000</td><td>BIR CAR LOAN AUGUST ,2023.xlsx</td></tr>
+      <tr><td>Sep 2023</td><td>&#8358;750,000</td><td>28</td><td>25</td><td>3</td><td>&#8358;17,000</td><td>BIR CAR LOAN SEPTEMBER ,2023.xlsx</td></tr>
+      <tr><td>Oct 2023</td><td>&#8358;750,000</td><td>28</td><td>26</td><td>2</td><td>&#8358;17,000</td><td>BIR CAR LOAN OCTOBER ,2023.xlsx</td></tr>
+      <tr><td>Nov 2023</td><td>&#8358;750,000</td><td>28</td><td>27</td><td>1</td><td>&#8358;17,000</td><td>BIR CAR LOAN NOVEMBER ,2023.xlsx</td></tr>
+      <tr><td>Dec 2023</td><td>&#8358;750,000</td><td>28</td><td>28</td><td>0</td><td>&#8358;17,000</td><td>BIR CAR LOAN DECEMBER, 2023.xlsx</td></tr>
+    </tbody>
+  </table>
+
+  <div class="footer"><span>alatise-detailed-audit-report.html &middot; 2026-04-15</span><span>Page 3</span></div>
+</div>
+
+<!-- Page 4 — Group 3 detail -->
+<div class="page page-break">
+  <div class="header-strip">
+    <p class="header-title">Audit Report &mdash; Alatise Bosede Susainah</p>
+    <p class="header-sub">Group 3 detail &middot; Board of Internal Revenue &middot; &#8358;450,000 &middot; tenure 30 months</p>
+  </div>
+
+  <h1>Group 3: BIR &#8358;450K loan (30-month)</h1>
+  <p style="font-size:9pt; color:#525252; margin-bottom:8px;">Signature: (BIR | Principal &#8358;450,000 | Tenure 30 months) &middot; 25 records &middot; Feb 2024 &rarr; Feb 2026</p>
+
+  <h3>Scheme reconciliation</h3>
+  <table>
+    <thead>
+      <tr>
+        <th style="width:40%;">Field</th>
+        <th style="width:20%;">Scheme expected</th>
+        <th style="width:20%;">MDA declared</th>
+        <th style="width:20%;">Variance</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td>Monthly deduction</td><td>&#8358;16,000</td><td>&#8358;16,000</td><td>&#8358;0 (reconciled)</td></tr>
+      <tr><td>Total interest (life of loan)</td><td>&#8358;29,993</td><td>&#8358;29,985</td><td>&minus;&#8358;8 (within rounding)</td></tr>
+      <tr><td>Total loan (P + interest)</td><td>&#8358;479,993</td><td>&#8358;479,985</td><td>&minus;&#8358;8 (within rounding)</td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout">
+    <div class="callout-title">Installments-remaining column observation</div>
+    Across all 25 reconciled records in this group, the value (installments_paid + installments_remaining) consistently equals 50 where the declared tenure is 30. The remaining-column overstates the true remaining count by exactly 20 every month. Where outstanding balance is computed downstream as monthly_deduction &times; installments_remaining, this overstates outstanding by approximately &#8358;320,000 per record, repeated across all 25 monthly observations. Across the 4,926-beneficiary population, if even 5% have a similar inflation pattern, AG total exposure would be overstated by tens of millions of naira.
+  </div>
+
+  <h3>Selected period records (Feb 2024, Jul 2024 gap, Jan 2025 pause, Feb 2026 latest)</h3>
+  <table>
+    <thead>
+      <tr>
+        <th style="width:14%;">Period</th>
+        <th style="width:14%;">Principal</th>
+        <th style="width:10%;">Tenure</th>
+        <th style="width:10%;">Paid</th>
+        <th style="width:10%;">Rem.</th>
+        <th style="width:14%;">Monthly</th>
+        <th style="width:28%;">Observation</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td>Feb 2024</td><td>&#8358;450,000</td><td>30</td><td>1</td><td>49</td><td>&#8358;16,000</td><td>Start of visible record. rem overstated by 20.</td></tr>
+      <tr><td>Jun 2024</td><td>&#8358;450,000</td><td>30</td><td>5</td><td>45</td><td>&#8358;16,000</td><td>Last pre-gap record.</td></tr>
+      <tr><td>Jul 2024</td><td>&#8358;450,000</td><td>30</td><td>7</td><td>43</td><td>&#8358;16,000</td><td>Paid jumps +2 (expected +1). Either MDA caught up an arrear, or June was wrong, or double deduction in July.</td></tr>
+      <tr><td>Dec 2024</td><td>&#8358;450,000</td><td>30</td><td>12</td><td>38</td><td>&#8358;16,000</td><td>&mdash;</td></tr>
+      <tr><td>Jan 2025</td><td>&#8358;450,000</td><td>30</td><td>12</td><td>38</td><td>&#8358;16,000</td><td>Paid unchanged from Dec. MDA filed without updating.</td></tr>
+      <tr><td>Feb 2025</td><td>&#8358;450,000</td><td>30</td><td>13</td><td>37</td><td>&#8358;16,000</td><td>Advance resumed.</td></tr>
+      <tr><td>Feb 2026</td><td>&#8358;450,000</td><td>30</td><td>24</td><td>26</td><td>&#8358;16,000</td><td>Latest observed. Per declared tenure, 6 months remain. Per declared rem, nearly 2 years remain. AG would read two different stories.</td></tr>
+    </tbody>
+  </table>
+
+  <div class="footer"><span>alatise-detailed-audit-report.html &middot; 2026-04-15</span><span>Page 4</span></div>
+</div>
+
+<!-- Page 5 — Group 4 detail -->
+<div class="page page-break">
+  <div class="header-strip">
+    <p class="header-title">Audit Report &mdash; Alatise Bosede Susainah</p>
+    <p class="header-sub">Group 4 detail &middot; Civil Service Commission &middot; &#8358;450,000 &middot; tenure 36 months declared</p>
+  </div>
+
+  <h1>Group 4: CSC &#8358;450K loan (frozen-template)</h1>
+  <p style="font-size:9pt; color:#525252; margin-bottom:8px;">Signature: (CSC | Principal &#8358;450,000 | Tenure 36 months declared) &middot; 13 records &middot; Jan 2025 &rarr; Feb 2026</p>
+
+  <h3>Scheme reconciliation</h3>
+  <table>
+    <thead>
+      <tr>
+        <th style="width:40%;">Field</th>
+        <th style="width:20%;">Scheme expected</th>
+        <th style="width:20%;">MDA declared</th>
+        <th style="width:20%;">Variance</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td>Monthly deduction</td><td>&#8358;13,500</td><td>&#8358;17,000</td><td>+&#8358;3,500 per month</td></tr>
+      <tr><td>Total interest (life of loan)</td><td>&#8358;35,991</td><td>&#8358;59,985</td><td>+&#8358;23,994</td></tr>
+      <tr><td>Total loan (P + interest)</td><td>&#8358;485,991</td><td>&#8358;509,985</td><td>+&#8358;23,994</td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout">
+    <div class="callout-title">Tenure reconciliation analysis (variance reconciles at tenure 30, not 36)</div>
+    The monthly deduction declared by the MDA (&#8358;17,000) is inconsistent with the declared tenure of 36 months at scheme expected (&#8358;13,500). Working backward, the implied tenure is approximately 28 months &mdash; consistent with 30-month tenure rather than the declared 36-month. The variance pattern mirrors the BIR &#8358;450K 30-month loan (Group 3). This is compatible with either (a) Alatise transferred from BIR to CSC and CSC is reporting the same loan with a mis-stated tenure, or (b) CSC is filing a placeholder record for a beneficiary who is actually tracked at BIR.
+  </div>
+
+  <div class="callout">
+    <div class="callout-title">Frozen-template observation</div>
+    The value of installments_paid is unchanged at 1 across all 13 consecutive monthly records (Jan 2025 &rarr; Feb 2026). The most plausible explanation is that the source file template at CSC was prepared once and re-uploaded each month without advancing the payment counter. A less likely alternative is that all monthly deductions failed for 13 consecutive months, which would itself constitute a separate observation worth review.
+  </div>
+
+  <h3>Period-by-period record (Jan 2025 &ndash; Feb 2026)</h3>
+  <table>
+    <thead>
+      <tr>
+        <th style="width:14%;">Period</th>
+        <th style="width:14%;">Principal</th>
+        <th style="width:10%;">Tenure</th>
+        <th style="width:10%;">Paid</th>
+        <th style="width:10%;">Rem.</th>
+        <th style="width:14%;">Monthly</th>
+        <th style="width:28%;">Source file</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td>Jan 2025</td><td>&#8358;450,000</td><td>36</td><td>1</td><td>35</td><td>&#8358;17,000</td><td>CAR LOAN DEDUCTION JAN,2025.xlsx</td></tr>
+      <tr><td>Mar 2025</td><td>&#8358;450,000</td><td>36</td><td>1</td><td>35</td><td>&#8358;17,000</td><td>CAR LOAN DEDUCTION MARCH,2025.xlsx</td></tr>
+      <tr><td>Apr 2025</td><td>&#8358;450,000</td><td>36</td><td>1</td><td>35</td><td>&#8358;17,000</td><td>CAR LOAN DEDUCTION APRIL,2025.xlsx</td></tr>
+      <tr><td>May &rarr; Dec 2025</td><td colspan="5" style="text-align:center; font-style:italic;">(all 8 records identical: paid=1, rem=35, monthly=&#8358;17,000)</td><td></td></tr>
+      <tr><td>Jan 2026</td><td>&#8358;450,000</td><td>36</td><td>1</td><td>35</td><td>&#8358;17,000</td><td>CAR LOAN DEDUCTION JANUARY ,2026.xlsx</td></tr>
+      <tr><td>Feb 2026</td><td>&#8358;450,000</td><td>36</td><td>1</td><td>35</td><td>&#8358;17,000</td><td>CAR LOAN DEDUCTION FEBRUARY ,2026.xlsx</td></tr>
+    </tbody>
+  </table>
+
+  <div class="footer"><span>alatise-detailed-audit-report.html &middot; 2026-04-15</span><span>Page 5</span></div>
+</div>
+
+<!-- Page 6 — Cross-cutting + Recommendation + Methodology -->
+<div class="page page-break">
+  <div class="header-strip">
+    <p class="header-title">Audit Report &mdash; Alatise Bosede Susainah</p>
+    <p class="header-sub">Cross-cutting observations and recommendations</p>
+  </div>
+
+  <h2>Cross-cutting observations</h2>
+
+  <h3>Cross-MDA presence without Transfer Handshake</h3>
+  <p>Group 3 (Board of Internal Revenue, &#8358;450,000, 30-month) and Group 4 (Civil Service Commission, &#8358;450,000, 36-month declared) overlap in time from January 2025 through February 2026. Three readings are possible: (a) the beneficiary transferred from BIR to CSC and the BIR file continued to include her erroneously; (b) the beneficiary holds two concurrent loans across two MDAs, which would require explicit Scheme Secretariat clarification of whether concurrent loans are permitted; or (c) one of the two MDAs is filing the wrong beneficiary or a stale row. The data alone cannot distinguish these. Resolution requires either a Transfer Handshake event filed by both MDAs, an authoritative scheme rule on concurrent loans, or direct enquiry with both MDAs.</p>
+
+  <h3>Lifecycle inference from absence</h3>
+  <p>Group 1 (BIR, &#8358;750,000) reaches the declared tenure of 28 months by December 2023 and disappears from subsequent BIR files. No explicit loan-completion event is recorded. The system has no observable means to distinguish (a) normal completion, (b) accelerated payoff (Settlement Pathway 2), (c) walk-up lump-sum settlement at the Car Loan Department (Settlement Pathway 3), (d) gratuity-deduct on retirement (Settlement Pathway 4), or (e) MDA simply ceasing to report this beneficiary. Each pathway has different financial implications for AG. Without explicit settlement events, the loan-end is recorded as inference, not fact.</p>
+
+  <h3>Variance engine versus dashboard total</h3>
+  <p>The Variance Engine in the in-flight pipeline correctly computes the per-record variance for Group 1 (lifetime approximately &#8358;320,656 against scheme expected). However, today's dashboard aggregations sum MDA-declared values without gating by variance status. A record with a known variance contributes to AG headline figures (Active Loans, Total Exposure, Loans in Window) at face value. The gap between "MDA declared" and "Reconciled" is therefore not visible to AG today.</p>
+
+  <h3>Population scaling</h3>
+  <p>A single beneficiary produced eight distinct observations of varying severity. The 4,926-strong scheme population is unlikely to be uniformly clean. Even at modest contamination rates, the cumulative impact on portfolio totals is material. Empirical characterisation across the full population is recommended as a priority discovery activity prior to the publication of authoritative figures.</p>
+
+  <h2>Recommendation</h2>
+  <p>That a structured Identity, Continuity and Reconciliation track be commissioned, comprising a discovery spike against the existing 4,926-record population and a phased build of three coupled engine gates (Identity, Variance, Lifecycle) plus a Person Reconciliation Pass for set-based, order-independent ingestion. Initial pilot is recommended against a single cooperative MDA (Board of Internal Revenue is the natural candidate given existing data depth and engagement). Authoritative dashboard figures should adopt a dual-truth presentation (Reconciled / Pending Review) to surface data quality honestly to AG and beneficiaries.</p>
+  <p>That production go-live of VLPRS authoritative figures be paused pending completion of the discovery spike and the first pilot cycle. Existing infrastructure (in-flight upload, exception, reporting and certificate workflows) should remain available in non-authoritative mode for continued operational use and engagement.</p>
+  <p>That Settlement Pathway 3 (walk-up lump-sum settlement) be added as a first-class event with explicit Car Loan Department officer filing, dual-signature requirement above a threshold, and bank-receipt cross-reference, to close the current observability gap and the associated fraud surface.</p>
+
+  <h2>Methodology and provenance</h2>
+  <div class="meta-row"><div class="meta-label">Source catalog</div><div class="meta-value"><span class="mono">docs/Car_Loan/analysis/foundation/catalog.json</span></div></div>
+  <div class="meta-row"><div class="meta-label">Catalog construction</div><div class="meta-value">374 raw Excel files parsed, 140,722 duplicate records resolved (64.7%), 74,138 unique records retained (most-complete)</div></div>
+  <div class="meta-row"><div class="meta-label">Population coverage</div><div class="meta-value">47 of 63 MDAs in source data; 4,926 unique beneficiaries</div></div>
+  <div class="meta-row"><div class="meta-label">Filter applied</div><div class="meta-value">record.name contains 'ALATISE BOSEDE' or 'ALATISHE BOSEDE' (case-insensitive)</div></div>
+  <div class="meta-row"><div class="meta-label">Scheme formula</div><div class="meta-value">Monthly deduction = (Principal / Tenure) + (Principal &times; 0.1333 / 60); tolerance &#8358;50</div></div>
+  <div class="meta-row"><div class="meta-label">Audit script</div><div class="meta-value"><span class="mono">scripts/legacy-report/alatise-bosede-focused.ts</span></div></div>
+  <div class="meta-row"><div class="meta-label">Side-quest engine</div><div class="meta-value"><span class="mono">scripts/legacy-report/</span> &mdash; separate from VLPRS production code, uncommitted</div></div>
+  <div class="meta-row"><div class="meta-label">Report generator</div><div class="meta-value">manual HTML (this document) + <span class="mono">scripts/legacy-report/alatise-pdf-reports.tsx</span> (PDF variant)</div></div>
+
+  <div class="footer"><span>alatise-detailed-audit-report.html &middot; 2026-04-15</span><span>Page 6</span></div>
+</div>
+
+</body>
+</html>

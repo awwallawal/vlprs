@@ -407,4 +407,110 @@ Domain refinement conversation around ADELEKE namesake handling (UAT #30) and CD
 
 ---
 
-**End of decision log through Amendment Round 3. All decisions persisted in SCP, sprint-status.yaml, epics.md, fixture files, and memory files.**
+---
+
+# Amendments Round 4 — same session, 2026-04-15 (evening)
+
+Awwal decision to build Epic 17 silently before Deputy AG engagement, enabled by editable-placeholders architectural principle.
+
+## D-43 — Silent build strategy adopted
+
+- **Context:** Awwal: "I have to finish Epic 17 before reaching out." Team read is Interpretation B — build to demonstration-readiness, then engage Deputy AG with a working system.
+- **Decision:** Epic 17 Stories 17.0 through 17.33 + 17.34a build in silence on internal authority. Story 17.34 (BIR pilot) becomes the trigger for Deputy AG engagement, not a prerequisite. No external stakeholder engagement until demonstration-ready.
+- **Rationale:** Politically stronger to engage with a live system than with a request for permission. Engine correctness provable via committed regression fixtures (Alatise, Lamidi, ADELEKE, CDU signed off; 2-3 more from discovery spike).
+- **Owners:** Awwal (external engagement timing), Dev team (build execution).
+- **References:** SCP §11 (new).
+
+## D-44 — Team Agreement 23: editable placeholders over external blockers
+
+- **Context:** Awwal: "Anything that may require external input we make it editable via the ui and put reasonable values pending official values or leave blank and editable like the Fund Amount in the AG Dashboard."
+- **Decision:** New Team Agreement 23 codifies the pattern. Every externally-dependent value (Scheme policy, bank details, thresholds, SLAs, authority limits) is implemented as an AG-editable configuration with reasonable default placeholder. Follows existing Fund Amount pattern.
+- **Rationale:** Unblocks silent build. No story waits for external input. External values arrive through the UI when available.
+- **Owners:** All roles; Dev team enforces via implementation pattern.
+- **References:** SCP §4.3 Agreement 23, §11 placeholder table.
+
+## D-45 — Story 17.31 re-scoped from prerequisite to UI-for-receiving-values
+
+- **Context:** Original 17.31 blocked stories on Scheme Secretariat policy clarifications. Under silent-build + Agreement 23, this blocker dissolves.
+- **Decision:** Story 17.31 transforms from "wait for Secretariat values" to "UI + data model for receiving values when available." Placeholders ship with engine; UI exists for Awwal to populate real values when Scheme Secretariat provides them.
+- **Rationale:** Aligns 17.31 with Agreement 23. Removes blocker from all downstream stories.
+- **Owners:** Dev team.
+- **References:** SCP §11 Story 17.31 re-scope.
+
+## D-46 — Admin Settings screen added to Epic 17 scope
+
+- **Context:** Agreement 23 requires a UI surface where AG/Deputy AG can edit placeholder values.
+- **Decision:** New screen, role-gated to AG/Deputy AG only, exposes every editable placeholder value with current/default values + Save action. Changes audit-logged with before/after + actor. Added as extension of Story 17.17 (or split into 17.17b during implementation if cleaner).
+- **Rationale:** Single-surface management prevents scattered configuration. Auditable by design.
+- **Owners:** Dev team, UX.
+- **References:** SCP §11 Admin Settings section.
+
+## D-47 — HTML audit reports produced alongside PDFs
+
+- **Context:** Awwal asked for HTML versions of the Deputy AG reports (for browser print-to-PDF).
+- **Decision:** Two HTML files written to `docs/Car_Loan/analysis/reports/`:
+  - `alatise-deputy-ag-summary.html` (one-page A4 brief)
+  - `alatise-detailed-audit-report.html` (6-page A4 detailed audit)
+- Both self-contained, print-optimized with `@page A4` CSS, browser-printable to PDF, observation-style language + non-punitive palette per project standards.
+- **Rationale:** Awwal control over final PDF generation (browser print vs @react-pdf renderer). Both formats now available.
+- **Owners:** John (PM) generated.
+- **References:** SCP §10 Supporting Evidence.
+
+## D-48 — Demonstration-ready as new milestone preceding go-live-ready
+
+- **Context:** Silent build needs a named internal milestone distinct from authoritative go-live.
+- **Decision:** Epic 17 reaches **demonstration-ready** when Stories 17.0 through 17.33 + 17.34a are complete (35 of 36 stories). Story 17.34 (BIR pilot) is the only remaining gate to authoritative go-live. Demonstration-ready is the internal signal to begin external engagement.
+- **Rationale:** Clear trigger for Deputy AG conversation; clear definition of "Epic 17 complete" in the silent-build phase.
+- **Owners:** All roles; trigger recognition by Awwal.
+- **References:** SCP §11 go-live readiness definition.
+
+---
+
+---
+
+# Amendments Round 5 — same session, 2026-04-15 (late evening)
+
+Discovery during VLPRS-Upload-Staging run: the BIR CSV (previously flagged as "staff roster, not car loan") is actually a full MDA monthly payroll snapshot with 249 staff × 134 non-zero CAR LOAN deductions × ₦1,672,630 total Feb 2026 recovery. Same class as OYSIPA Apr 2021 xls. This changes Story 17.3 scope and adds Story 17.3b.
+
+## D-49 — MDA Payroll Snapshot as a new evidence layer
+
+- **Context:** BIR CSV contains Staff ID + Full Name + Job Title + Grade + Department + Bank + CAR LOAN deduction amount per staff for Feb 2026. Not just an HR roster; also actual payroll deduction data + rich employment context.
+- **Decision:** New Story 17.3b — MDA Payroll Snapshot Ingestion. Separate from the existing AG-level consolidated payroll flow (Stories 7.0h + 7.0i, done). Each MDA can upload its own monthly payroll snapshot; system ingests into three tables simultaneously: `person_aliases` (HR_ROSTER type), `payroll_snapshots`, and enriched person records. Cross-reference with MDA-declared submission emits `PAYROLL_VS_MDA_VARIANCE` observation on divergence.
+- **Rationale:** Four distinct reconciliation layers now in the system architecture: per-record three-vector (8.0a, done) + AG-level consolidated payroll three-way (7.0h+7.0i, done) + **per-MDA payroll snapshot (17.3b, NEW)** + bank statement (17.24, new). Each catches a different class of error; together they provide defence in depth.
+- **Owners:** Dev team (17.3b implementation). Side-quest staging already routes these files to `VLPRS-Upload-Staging/_PAYROLL-ROSTERS/` for ingest batch.
+- **References:** SCP §4.1 Story 17.3b, §4.1 reconciliation-layers table updated, Story 17.14 truth-state extended with five new observation types.
+
+## D-50 — HR_ROSTER alias type takes precedence over OFFICIAL
+
+- **Context:** Prior SCP had four alias types: OFFICIAL, PROVISIONAL, FUZZY_LINKED, HISTORICAL. Payroll-snapshot ingestion needs strongest-confidence anchor.
+- **Decision:** Extend `person_aliases.alias_type` with `HR_ROSTER` — highest-confidence. Rationale: loan files submitted by finance/payroll may mis-type; HR roster is the identity register for that MDA's employees (OFFICIAL represents staff_id as declared in a loan file, which is less authoritative than the HR-owned roster).
+- **Owners:** Dev team (17.3 schema update).
+- **References:** SCP §4.1 Story 17.3 extended.
+
+## D-51 — resolvePerson upgraded to staff_id-first
+
+- **Context:** Current 17.4 design uses fuzzy-Jaccard as primary match. With HR_ROSTER aliases seeded from payroll-snapshot ingestion, exact staff_id match becomes available for many records.
+- **Decision:** `PersonIdentityService.resolvePerson(record)` gains a new first step — if incoming record has staff_id matching any HR_ROSTER or OFFICIAL alias for same MDA → HIGH auto-link, no fuzzy name needed. Falls through to fuzzy-Jaccard only when staff_id blank or unmatched. Many current MEDIUM-band review-queue cases become HIGH auto-links.
+- **Rationale:** Converts the "no reliable staff_id to anchor on" problem (surfaced by Alatise audit — blank employee_no across all her records) into "strong anchor when HR roster exists for that MDA." Namesake/fuzzy concerns concentrate on MDAs without rosters only.
+- **Owners:** Dev team (17.4 update).
+- **References:** SCP §4.1 Story 17.4 matching precedence.
+
+## D-52 — `BIR FEB, 2026. FINAL.csv` reclassified; staging script extended
+
+- **Context:** Originally routed to `_NON-CAR-LOAN/` based on WAKEUP.md note. File contents prove otherwise.
+- **Decision:** Staging script gains new classification `payroll-roster` + new special folder `_PAYROLL-ROSTERS/`. `PAYROLL_ROSTER_MARKERS` regex list identifies BIR CSV + OYSIPA xls pattern. On next run, both files move from `_NON-CAR-LOAN/` to `_PAYROLL-ROSTERS/` with MDA + period prefix.
+- **Rationale:** Correct routing for Story 17.3b ingest when Epic 17 kicks off. These files are the first batch for payroll-snapshot ingestion.
+- **Owners:** Staging script (side-quest, uncommitted per convention).
+- **References:** `scripts/legacy-report/stage-archive-by-mda.ts` (local, not committed).
+
+## D-53 — "Please upload your payroll snapshot" becomes MDA onboarding ask
+
+- **Context:** BIR volunteered a roster. Other MDAs may not have, simply because they haven't been asked.
+- **Decision:** Part of MDA onboarding in Epic 17 — MDA Officer dashboard surfaces a soft "Please provide your HR staff roster and/or monthly payroll snapshot if available" action item. Not a hard gate (Agreement 23 editable-placeholders pattern applies — MDAs without rosters still work via fallback name-matching); strong encouragement.
+- **Rationale:** MDAs with payroll snapshots get materially stronger identity matching + an additional evidence layer. Worth asking. Ask is easier to make post-demonstration-ready when VLPRS has a working system to show in exchange.
+- **Owners:** UX (dashboard copy) + Dept Admin (outreach workflow).
+- **References:** SCP §4.1 Story 17.30 (MDA source data remediation) gains this soft-ask pattern.
+
+---
+
+**End of decision log through Amendment Round 5. Epic 17 now at 37 stories. All decisions persisted in SCP, sprint-status.yaml, epics.md, fixture files, HTML audit reports, memory files, and the VLPRS-Upload-Staging working folder.**

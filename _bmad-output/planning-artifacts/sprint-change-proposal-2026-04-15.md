@@ -143,14 +143,15 @@ The original PRD's implicit MVP was "all sixteen epics complete through E13." Th
 
 **Epic goal:** Establish a system-wide stable identity for beneficiaries and loans that survives haphazard upload, cross-MDA transfer, name variation, and MDA declaration error, such that AG dashboard figures can be gated by reconciliation status and published with confidence. The app becomes the source of truth for scheme records.
 
-**Total: 36 stories in 11 sub-themes.** Lint ratchet is Story 17.0 — enforced from day one, no `any` warning count increase during Epic 17 work.
+**Total: 37 stories in 11 sub-themes.** Lint ratchet is Story 17.0 — enforced from day one, no `any` warning count increase during Epic 17 work. Story 17.3b added 2026-04-15 following MDA payroll-snapshot discovery (BIR Feb 2026 + OYSIPA Apr 2021).
 
 **Relationship to existing reconciliation layers (already built, not duplicated):**
 
 | Layer | Source of truth | Story | Status |
 |---|---|---|---|
 | Per-record three-vector | Scheme formula vs reverse-engineered vs MDA-declared | 8.0a | **Done** |
-| Aggregate three-way (payroll) | Expected (scheme) vs Declared (MDA submission) vs **Actual (payroll extract upload)** | 7.0h + 7.0i | **Done** |
+| Aggregate three-way (AG-level consolidated payroll) | Expected (scheme) vs Declared (MDA submission) vs Actual (AG consolidated payroll extract) | 7.0h + 7.0i | **Done** |
+| **Per-MDA payroll snapshot** | MDA's own monthly payroll CSV with CAR LOAN column — cross-reference to MDA-declared submission | **17.3b (new)** | Epic 17 |
 | Bank-level (scheme account) | Cash arrival in scheme recovery account vs MDA-declared remittance | **17.24 (new)** | Epic 17 |
 
 Epic 17 adds the third layer; it does not replace the first two. The payroll-extract reconciliation (Stories 7.0h + 7.0i) is already in production and becomes an input to the dual-truth dashboard (Story 17.17) rather than a scope candidate.
@@ -167,10 +168,11 @@ Epic 17 adds the third layer; it does not replace the first two. The payroll-ext
 | 17.1 | Discovery spike — prevalence survey of 8 assumptions | Q1 collision rate, Q2 first-deduction-date coverage, Q3 zero-crossing vs gap rate, Q4 concurrent-loan prevalence, Q5 performance budget, Q6 variance contamination, Q7 haphazard-upload distribution, Q8 overpayment prevalence. **Deliverable:** `_bmad-output/implementation-artifacts/17.1-spike-output.md` with decisions-log entries per question + quantitative findings. **Alice (PO) signs off as basis for re-sizing Stories 17.4 / 17.8 / 17.12 / 17.25 before their kickoff.** Prevents spike output from being orphaned. |
 | 17.2 | Port side-quest utilities to production | `name-match`, `mda-resolve`, `number-parse`, `column-map`, `header-detect`, `period-extract` into server codebase with regression fixture suite from side-quest March 2026 refinements |
 
-#### Sub-theme C — Identity layer (5 stories)
+#### Sub-theme C — Identity layer (6 stories)
 | # | Title | Notes |
 |---|---|---|
-| 17.3 | `persons` + `person_aliases` + `identity_proposals` schema + migration + seed from Master Beneficiary Ledger | |
+| 17.3 | `persons` + `person_aliases` + `identity_proposals` schema + migration + seed from Master Beneficiary Ledger | `person_aliases.alias_type` extended with `HR_ROSTER` (highest-confidence, sourced from MDA-issued payroll-roster uploads via 17.3b). Story 17.4 resolver treats HR_ROSTER staff_id as primary match anchor before fuzzy name match. |
+| 17.3b | **MDA Payroll Snapshot Ingestion** | **Discovery 2026-04-15:** BIR Feb 2026 CSV (249 staff, 134 with active car-loan deductions, ₦1,672,630 total) is a full monthly payroll snapshot containing Staff ID + Full Name + Job Title + Grade + Department + Bank + actual CAR LOAN deduction. Same for OYSIPA Apr 2021. These are not just HR rosters — they're **three evidence layers in one file**: (a) authoritative Staff ID + Name bindings (HR roster), (b) actual monthly car-loan deductions (third evidence layer alongside per-record three-vector 8.0a and aggregate three-way payroll 7.0h+7.0i), (c) rich employment context (grade, department, bank) for identity disambiguation. New schema: `payroll_snapshots(id, mda_id, snapshot_date, uploaded_by, file_hash)` + `payroll_snapshot_rows(snapshot_id, staff_id, full_name, grade, department, car_loan_deducted, basic_salary, ...)`. Upload UI: MDA Officer (primary) + Dept Admin + AG (override). Parser: reuses side-quest `column-map.ts`; detects Staff ID column, Full Name column, CAR LOAN column. On ingest, three outputs: (1) `person_aliases` seeded with HR_ROSTER type at highest confidence; (2) `payroll_snapshots` + rows populated; (3) cross-reference: payroll CAR LOAN amount compared against MDA-declared submission for same `(staff_id, period, mda)` → emits `PAYROLL_VS_MDA_VARIANCE` observation when they diverge. Staging files at `VLPRS-Upload-Staging/_PAYROLL-ROSTERS/` become the initial ingest batch. |
 | 17.4 | `PersonIdentityService` — SEARCH + MATCH APIs with fuzzy-Jaccard comparator, similarity bands, namesake frequency guard, cross-MDA flag (no auto-link), confidence evidence persistence | **Two distinct operations:** `searchPersons(query)` returns broad candidate list (Google-suggest style, for Review Queue UI + LoanDetailPage search); `resolvePerson(record)` returns strict match decision (for ingestion). Same comparator, different action thresholds. **Fuzzy-Jaccard comparator:** token-set Jaccard with per-token Levenshtein <= 2 for token equivalence (primary gate); Jaro-Winkler as tiebreaker. Bands: Jaccard < 0.5 → NOT_MATCH; Jaccard >= 0.5 with max token Levenshtein = 0 → HIGH auto-link; Levenshtein = 1 → HIGH_WITH_TYPO_FLAG auto-link with audit note; Levenshtein 2–4 → MEDIUM review queue; Levenshtein >= 5 → NOT_MATCH. Namesake frequency guard downgrades HIGH to MEDIUM when normalised name frequency exceeds threshold. ADELEKE fixture (UAT #30) as regression test — see `tests/fixtures/identity-continuity/adeleke-namesake/expected.json` for signed-off ground truth including the edge case `Adeleke Olufemi` vs `Adeleke Oluwafemi` (MEDIUM band, not perpetual ambiguity). |
 | 17.5 | `person_link_candidates` table + proactive Pending Handshake surfacing to both MDAs + Transfer Handshake wiring | |
 | 17.6 | Review Queue UI — merged with existing Exception Queue + search-then-confirm pattern | Dept Admin approves merges; MDA Officer confirms medium-confidence matches. **Search-then-confirm:** when a user manually picks a candidate from `searchPersons` results (e.g., during a correction), the confirmation step renders match score + evidence before committing. Not a hard block — a visible "we resolved to person X at similarity Y because of evidence Z; confirm?" step. Keeps human judgment primary with engine analysis as context. |
@@ -189,7 +191,7 @@ Epic 17 adds the third layer; it does not replace the first two. The payroll-ext
 |---|---|---|
 | 17.12 | Person Reconciliation Pass (PRP) — set-based, idempotent, per-person recompute | Triggered by upload/correction/handshake; operates on union of known records; outputs provisional until settled. **Admin CLI:** `pnpm recompute-person <personKey>` and `pnpm recompute-mda <mdaId>` with `--dry-run` and `--commit` modes for schema migrations, corruption recovery, and manual operational intervention. **Idempotency scope:** idempotent within a single schema version only; schema changes affecting PRP inputs require a full-backfill job (coordinated via 17.33). |
 | 17.13 | Upload pipeline integration + content validation gate | Rejects non-car-loan files at boundary (OYSHMB class) |
-| 17.14 | Truth-state model | `CLEAN`, `IN_VARIANCE`, `LIFECYCLE_REVIEW`, `OVERPAYMENT_ADJUDICATION`, `PENDING_COMPLETION_EVIDENCE`, `RESOLVED_OUT_OF_SYSTEM`, `CERTIFICATE_WITH_OBSERVATION_NOTE`, `CERTIFICATE_CLEAN`, `APP_BANK_STATEMENT_VARIANCE` per record; `SETTLED`, `PROVISIONAL`, `IN_TRANSFER` per person |
+| 17.14 | Truth-state model | `CLEAN`, `IN_VARIANCE`, `LIFECYCLE_REVIEW`, `OVERPAYMENT_ADJUDICATION`, `PENDING_COMPLETION_EVIDENCE`, `RESOLVED_OUT_OF_SYSTEM`, `CERTIFICATE_WITH_OBSERVATION_NOTE`, `CERTIFICATE_CLEAN`, `APP_BANK_STATEMENT_VARIANCE` per record; `SETTLED`, `PROVISIONAL`, `IN_TRANSFER` per person. New observation types from Story 17.3b MDA payroll-snapshot ingestion: `LOAN_RECORD_WITHOUT_ROSTER_MATCH` (staff_id on loan record not present in any HR roster for that MDA), `NAME_MISMATCH_BETWEEN_LOAN_AND_ROSTER` (staff_id matches but Full Name differs from roster record — typo vs name change), `HR_ROSTER_STAFF_NEVER_TOOK_LOAN` (informational coverage metric), `HR_ROSTER_STAFF_DISAPPEARED_FROM_UPDATE` (between two roster versions — retired/died/transferred/data error), `PAYROLL_VS_MDA_VARIANCE` (CAR LOAN column in payroll snapshot diverges from MDA-declared submission for same (staff_id, period)). |
 | 17.15 | Monthly dashboard snapshots at month-close | Preserve historical figures despite re-attribution |
 | 17.16 | Idempotency property test framework | 24-permutation test for Alatise fixture + 4–6 additional fixtures |
 
@@ -267,6 +269,7 @@ Epic 17 adds the third layer; it does not replace the first two. The payroll-ext
 | 20 | **Pilot-before-portfolio** — any engine change affecting authoritative figures ships first as single-MDA pilot for one reconciliation cycle before expanding | Epic 17 risk management |
 | 21 | **Dept Admin escape hatch** — every engine-enforced gate must have a Dept Admin authority escape hatch with audit trail. Engine proposes, humans dispose. **Override rate is a system-health KPI, not a discipline KPI** — high override rate signals engine mis-calibration; low override rate signals engine trust. Reframing prevents perverse incentive to under-override when override is correct. | Operational realism |
 | 22 | **App is the source of truth** — VLPRS records are authoritative for scheme figures. Bank statements, MDA reports, external documents corroborate; they do not override. Every authoritative figure defensible from the app alone. **Exception:** under AG-authorised out-of-band correction (e.g., court order, external-audit-firm finding), the correction flows through the app via a formal event record with AG authorisation, so the app remains the system of record for what was done and why. | AG policy directive |
+| 23 | **Editable placeholders over external blockers** — any value that would normally require external-party confirmation (Scheme Secretariat policy, bank account details, rate thresholds, SLA durations, authority limits) is implemented as an **AG-editable configuration value** with a reasonable default placeholder. Screens render the current value with an inline edit control for AG-role users. This follows the existing pattern from the AG Dashboard Fund Amount field (set by AG, not hardcoded). Build never blocks on external input — values ship with sensible placeholders and get updated through the UI when official values arrive. | Awwal directive 2026-04-15: "anything that may require external input we make it editable via the ui and put reasonable values pending official values" |
 
 ### 4.4 UAT 2026-04-12 triage — no duplicates
 
@@ -481,6 +484,51 @@ Per correct-course workflow taxonomy: MAJOR requires PM/Architect involvement.
 
 ---
 
+## Section 11 — Silent Build Strategy (Amendment Round 4, 2026-04-15)
+
+**Decision:** Build Epic 17 in its entirety without Deputy AG engagement until the engine is demonstration-ready. Epic 17 completes on internal authority; external engagement (Deputy AG authorisation, Scheme Secretariat policy clarifications, BIR pilot) happens *after* the engine demonstrates correct behaviour against the signed-off regression fixtures.
+
+**Rationale:** Walking into the Deputy AG conversation with a live, working system + regenerated audit + demonstrable dual-truth dashboard changes the narrative from "grant me permission" to "look at what's ready." Politically stronger. Technically feasible via Agreement 23 — editable placeholders for every value that would otherwise require external input.
+
+**Operational consequences:**
+- All 36 Epic 17 stories are buildable in silence. Every story that would have blocked on Scheme Secretariat policy (refund authority thresholds, concurrent-loan rules, death-in-service handling, write-off authority, SLA durations, scheme-rule history effective-dates) now ships with a **reasonable default placeholder** and an **AG-editable UI control**.
+- Story 17.31 ("Scheme Policy Clarifications") is **re-scoped from a blocking prerequisite to a documentation artefact**. The engine runs on placeholders; 17.31 becomes the task of getting official values entered through the UI when Scheme Secretariat provides them.
+- Story 17.34 (BIR pilot) remains the only story that genuinely requires external engagement. It becomes the **trigger for the Deputy AG conversation**, not a pre-requisite to engine completion. Stories 17.0 through 17.33 + 17.34a complete before this trigger fires.
+- Story 17.34a (shadow dashboard) runs internally during the silent phase, AG+PO visible-to-Awwal-only, producing the daily divergence evidence that feeds the eventual Deputy AG brief.
+
+**Editable-placeholder application across Epic 17 stories:**
+
+| Story | External dependency | Placeholder strategy |
+|---|---|---|
+| 17.4 PersonIdentityService | Namesake frequency threshold (MDA-scoped, state-scoped) | Default: 2 within MDA, 3 state-wide. AG-editable via Admin Settings panel. |
+| 17.4 / 17.5 Similarity thresholds | Band boundaries per Scheme Secretariat preference | Default per fuzzy-Jaccard spec: Jaccard 0.5 gate, Levenshtein 2 MEDIUM boundary, Levenshtein 5 NOT_MATCH boundary. AG-editable. |
+| 17.9 Lifecycle zero-crossing | Dormant-period guard (months of zero before declaring new-loan) | Default: 2 months. AG-editable. |
+| 17.9 Last-installment tolerance | Tolerance around zero for completion detection | Default: 1 × monthly deduction. AG-editable. |
+| 17.11 Missing record detection SLA | Days before escalation to Dept Admin | Default: 14 days. AG-editable. |
+| 17.14 Truth-state thresholds | Variance tolerances for CLEAN vs IN_VARIANCE | Default: ₦50 per Scheme formula tolerance. AG-editable per MDA. |
+| 17.17 Dashboard Difference column warning threshold | Difference fraction above which "Portfolio in review phase" banner appears | Default: 20%. AG-editable. |
+| 17.22 Path 3 walk-up settlement dual-signature threshold | Amount above which two signatures required | Default: ₦100,000. AG-editable. |
+| 17.23 Unattributed Loan Endings queue — write-off authority threshold | Amount below which Dept Admin writes off; above which AG required | Default: ₦50,000. AG-editable. |
+| 17.24 Bank reconciliation — scheme account details | Bank name, account number, statement format | Default: placeholder values with "Configure in Admin Settings" CTA. AG-editable. Statement parser runs on first upload regardless. |
+| 17.25 Overdeduction detection | No threshold (per Awwal directive — detect every ₦1) | No placeholder needed. Hard-coded zero tolerance. |
+| 17.26 Overdeduction refund workflow SLAs | PENDING_AG_APPROVAL, AWAITING_PAYMENT_CONFIRMATION, CERTIFICATE_REISSUED time-boxes | Defaults: 14, 30, 7 days. AG-editable. |
+| 17.31 Scheme rule history (rate, tenure, principal caps over time) | Effective-date ranges and values per scheme rule change | Default: single rule entry with current known values (13.33% rate, 60-month base, 7-tenure set {24,30,36,40,48,50,60}), effective-from = scheme inception. AG-editable to add historical rule versions when dates confirmed. |
+| 17.31 Concurrent-loan policy | Scheme rule: permitted or not | Default: NOT permitted (detection surfaces as observation). AG-editable to toggle to permitted when confirmed. |
+| 17.31 Death-in-service pathway | Settlement path for death-in-service | Default: routes to AG/Deputy AG for case-by-case adjudication with policy placeholder "Pending Scheme Secretariat clarification." AG-editable. |
+| 17.31 External-auditor role scope | Queryable tables and export formats | Default: read-only access to all non-PII aggregate views, standard CSV/Excel export. AG-editable role definition. |
+| 17.34 BIR pilot cycle duration | Time-box for one reconciliation cycle | Default: 21 days. AG-editable. |
+
+**Admin Settings surface:** a new screen added to Epic 17 scope (extension of Story 17.17 or new micro-story 17.17b if split becomes cleaner during implementation). Role-gated to AG / Deputy AG only. Every editable placeholder value appears here with current value, description, default value, and Save action. Changes audit-logged with before/after values and actor.
+
+**Re-scoping Story 17.31:**
+Story 17.31 is **no longer a prerequisite** for any other Epic 17 story. It transforms from "wait for Scheme Secretariat to provide values" to "UI + data model for receiving values when available." The placeholder values ship, the UI exists, Scheme Secretariat engagement populates real values when Awwal schedules it.
+
+**Go-live readiness definition:**
+Epic 17 reaches **demonstration-ready** when Stories 17.0 through 17.33 + 17.34a are complete (all 35 stories). Story 17.34 (BIR pilot) is the only remaining story at that point. Demonstration-ready is the internal signal that external engagement can begin.
+
+**Go-live readiness gate (unchanged):**
+Authoritative go-live requires Story 17.34 (BIR pilot cycle complete with zero CRITICAL findings as precisely defined in Section 7). Deputy AG authorisation for BIR pilot engagement is obtained *after* demonstration-ready, not before.
+
 ## Section 10 — Supporting Evidence
 
 - `docs/Car_Loan/analysis/reports/alatise-detailed-audit-report.pdf` — Alatise forensic audit (51 records, 4 signatures, 8 observations)
@@ -491,7 +539,9 @@ Per correct-course workflow taxonomy: MAJOR requires PM/Architect involvement.
 - `scripts/legacy-report/alatise-bosede-focused.ts` — single-beneficiary trace
 - `scripts/legacy-report/completion-evidence-check.ts` — Lamidi + Alatise + BIR fragmentation scan
 - `scripts/legacy-report/WAKEUP.md` — side-quest context (engine capabilities + known issues)
-- Memory records: `project_scp_2026_04_15.md`, `project_alatise_lamidi_fixtures.md`, `project_no_go_live_position_2026_04_15.md`, `feedback_app_as_source_of_truth.md`, `feedback_ag_sole_approval.md`, `feedback_team_agreements_epic17.md`, `domain_overdeduction_pattern.md`
+- Memory records: `project_scp_2026_04_15.md`, `project_alatise_lamidi_fixtures.md`, `feedback_app_as_source_of_truth.md`, `feedback_team_agreements_epic17.md`, `domain_overdeduction_pattern.md`
+- Deputy AG briefing HTML: `docs/Car_Loan/analysis/reports/alatise-deputy-ag-summary.html` (print-to-PDF)
+- Detailed audit HTML: `docs/Car_Loan/analysis/reports/alatise-detailed-audit-report.html` (print-to-PDF, 6 pages)
 
 ---
 
