@@ -1,0 +1,31 @@
+{
+  "syncedAt": "2026-06-26T17:11:49.700Z",
+  "note": "SHA-256 of each parent source at snapshot time. Drift here means a vendored copy may need review.",
+  "sources": [
+    {
+      "item": "vocabulary",
+      "sourcePath": "packages/shared/src/constants/vocabulary.ts",
+      "sha256": "f0b2e13dc8e1acf11a0cc5d3e86738cc8686d5d06a8bfa9786101638fc5b7434",
+      "vendoredVia": "verbatim snapshot",
+      "snapshotTo": "vendor/vocabulary.snapshot.ts.txt"
+    },
+    {
+      "item": "loan-model",
+      "sourcePath": "scripts/legacy-report/WAKEUP.md",
+      "sha256": "7c32081813381dfd0fd204005a5225066d91a0daa5c36fa3911b6cd4dd29a625",
+      "vendoredVia": "authored from source in vendor/loan-model.ts"
+    },
+    {
+      "item": "normalizeName",
+      "sourcePath": "scripts/legacy-report/utils/name-match.ts",
+      "sha256": "36abfe1149ecd1ca02632e922cc1413d7f107348867538238eb8340b447ecc4f",
+      "vendoredVia": "copied into src/lib/normalize.ts"
+    },
+    {
+      "item": "canonicalize",
+      "sourcePath": "scripts/legacy-report/utils/yoruba-name-normalize.ts",
+      "sha256": "5648db545668ba581876548d48c853d7c7324478525e5f57c5d75825067d78fe",
+      "vendoredVia": "copied into src/lib/normalize.ts"
+    }
+  ]
+}

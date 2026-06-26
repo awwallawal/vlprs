@@ -47,7 +47,21 @@ stories:
   - id: SQ2-2
     title: "catalog.db build + vendor snapshot"
     phase: 1
-    status: backlog
+    status: done           # 2026-06-26
+    result:
+      driver: "better-sqlite3@12 (read-only mode; prebuilt win-x64 native binary)"
+      build_script: "scripts/build-catalog-db.ts (pnpm build:catalog) — atomic temp-swap, idempotent"
+      sync_script: "scripts/sync-from-parent.ts (pnpm sync:parent) — SHA-stamps sources, drift warning"
+      schema: "src/lib/catalog-db.ts — 23 cols, period flattened to year/month, normalizedName + canonicalName"
+      indexes: "normalizedName, canonicalName, mda, (year,month), outstandingBalance"
+      vendored:
+        - "src/lib/normalize.ts: normalizeName + canonicalize (copied from SQ-1 utils) + canonicalKey (composed)"
+        - "vendor/loan-model.ts: 13.33% / ÷60 / ₦50 (authored from WAKEUP.md, parity-noted)"
+        - "vendor/vocabulary.snapshot.ts.txt: verbatim snapshot of packages/shared vocabulary.ts"
+        - "vendor/provenance.json: SHA-256 + date of all 4 parent sources"
+      real_build: "101,602 records; catalog sha a9c7444ffad7… MATCHES WAKEUP.md documented SHA; 35 MB; ~23s"
+      proof: "typecheck clean; 27/27 vitest (incl read-only-handle + idempotency + ALATISHE/ALATISE canary + ₦750k tenure table); catalog.db gitignored"
+      note: "canonicalize (faithful copy) does NOT strip parentheticals; station composes canonicalize(normalizeName()) as the search key instead of forking the vendored fn"
   - id: SQ2-3
     title: "The four read-only tools"
     phase: 1

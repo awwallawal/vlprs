@@ -50,5 +50,11 @@ pnpm test                         # vitest run
 ```
 
 ## Status
-SQ2-0 ✅ (Gate 0 passed) · SQ2-1 ✅ (this scaffold) · SQ2-2 next (catalog.db + vendor snapshot).
+SQ2-0 ✅ (Gate 0, qwen2.5:7b pinned) · SQ2-1 ✅ (scaffold/isolation) · SQ2-2 ✅ (catalog.db +
+vendor snapshot) · **SQ2-3 next** (the four read-only tools).
 Ladder + DoD: `planning/epic.md`. Status: `planning/sprint-status.yaml`.
+
+## Data refresh (new MDA spreadsheets arrive)
+On the BUILD machine only: drop files into `docs/Car_Loan/` → re-run the SQ-1 engine
+(`scripts/legacy-report/` Layer A) → `pnpm sync:parent` → `pnpm build:catalog`. Copy ONLY the
+fresh `data/catalog.db` to the laptop. `pnpm sync:parent` warns if a vendored source drifted.
