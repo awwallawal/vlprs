@@ -7,7 +7,9 @@ export default tseslint.config(
   ...tseslint.configs.recommended,
   prettier,
   {
-    ignores: ["**/dist/", "**/node_modules/", "**/*.cjs", "scripts/", "!eslint.config.js"],
+    // auditor-station/ is the SQ-2 side quest — a severable, self-isolating folder with its own
+    // toolchain. It must never be linted by the app's config (fence: SCP 2026-06-23).
+    ignores: ["**/dist/", "**/node_modules/", "**/*.cjs", "scripts/", "auditor-station/", "!eslint.config.js"],
   },
   {
     rules: {

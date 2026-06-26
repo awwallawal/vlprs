@@ -1,0 +1,76 @@
+# SQ-2 Auditor Station — OWN sprint status (NOT the app's sprint-status.yaml)
+# This file is intentionally separate. SQ-2 never enters the VLPRS app sprint.
+# Owner-run parallel side quest; gated by owner time, not sprint sequencing.
+
+track: SQ-2
+name: Auditor Station — offline local-Ollama car-loan analyst (AG office)
+mode: operational-non-authoritative
+owner: Awwal
+brain: ollama (local only)
+fence_record: _bmad-output/planning-artifacts/sprint-change-proposal-2026-06-23.md
+created: 2026-06-23
+
+stories:
+  # Phase 1 — the quick win
+  - id: SQ2-0
+    title: "Gate 0: local model smoke test & selection"
+    phase: 1
+    status: done           # cleared 2026-06-26 on target laptop
+    gates: all             # passed — build work is now unblocked
+    result:
+      ran_on: 2026-06-26
+      laptop_ram_gb: 15.8  # 16 GB tier
+      repeats: 5
+      # all four candidates emitted the tool call 5/5 — fallback router is insurance, not load-bearing
+      candidates:
+        - { model: "qwen2.5:14b", tool_call_rate: "5/5", tok_s: 1.9 }
+        - { model: "qwen2.5:7b",  tool_call_rate: "5/5", tok_s: 3.6 }
+        - { model: "qwen2.5:3b",  tool_call_rate: "5/5", tok_s: 8.1 }
+        - { model: "llama3.2:3b", tool_call_rate: "5/5", tok_s: 7.3 }
+      pinned_default: "qwen2.5:7b"   # best routing + narration of the viable speeds
+      fast_mode: "qwen2.5:3b"        # configurable snappy alternative (8.1 tok/s)
+      log: "D:/audit/gate0-smoke-2026-06-26-114755.txt (on the device)"
+      record: auditor-station/planning/sq2-0-gate0-result.md
+  - id: SQ2-1
+    title: "Folder scaffold + isolation"
+    phase: 1
+    status: done           # 2026-06-26
+    result:
+      scaffold: "src/ data/ audit/ vendor/ web/ + package.json, tsconfig.json, .gitignore, CLAUDE.md"
+      own_lockfile: "auditor-station/pnpm-lock.yaml via `pnpm install --ignore-workspace`"
+      isolation:
+        - "pnpm-workspace.yaml: !auditor-station/** (explicit non-member; root lockfile unchanged)"
+        - "eslint.config.js: auditor-station/ in ignores (root lint = 0 errors, none from station)"
+        - ".dockerignore: auditor-station (out of image build context)"
+      pii_hygiene: "data/ + audit/ contents gitignored; .gitkeep preserves dirs; verified via git check-ignore"
+      proof: "standalone typecheck clean + 3/3 vitest; root frozen-install OK; root lint exit 0"
+  - id: SQ2-2
+    title: "catalog.db build + vendor snapshot"
+    phase: 1
+    status: backlog
+  - id: SQ2-3
+    title: "The four read-only tools"
+    phase: 1
+    status: backlog
+  - id: SQ2-4
+    title: "Ollama adapter + deterministic fallback router"
+    phase: 1
+    status: backlog
+  - id: SQ2-5
+    title: "Local server + system prompt + audit"
+    phase: 1
+    status: backlog
+  - id: SQ2-6
+    title: "Chat UI + vocabulary lint"
+    phase: 1
+    status: backlog
+  # Phase 2 — harden (pending, free)
+  - id: SQ2-7
+    title: "At-rest encryption + governance (SQLCipher, BitLocker, copy-log, integrity gate)"
+    phase: 2
+    status: pending
+  # Phase 3 — productionize (pending, free)
+  - id: SQ2-8
+    title: "Packaging & distribution (Tauri + Ollama sidecar, RAM->model profile, update channel)"
+    phase: 3
+    status: pending

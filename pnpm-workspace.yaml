@@ -1,3 +1,7 @@
 packages:
   - "apps/*"
   - "packages/*"
+  # SQ-2 Auditor Station is a severable side quest with its own package.json + lockfile.
+  # It is already outside the globs above; this negation makes the fence explicit and
+  # survives any future broadening of the patterns (fence: SCP 2026-06-23).
+  - "!auditor-station/**"

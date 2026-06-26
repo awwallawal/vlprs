@@ -1,0 +1,24 @@
+{
+  "name": "auditor-station",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "SQ-2 — offline local-Ollama car-loan analyst for the Auditor-General's office. Severable side quest; NOT a VLPRS workspace member.",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "build:catalog": "echo \"[SQ2-2] build-catalog-db not implemented yet\" && exit 1",
+    "sync:parent": "echo \"[SQ2-2] sync-from-parent not implemented yet\" && exit 1",
+    "start": "echo \"[SQ2-5] local server not implemented yet\" && exit 1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.8"
+  }
+}
