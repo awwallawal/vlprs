@@ -13,6 +13,8 @@
     "test:watch": "vitest",
     "build:catalog": "tsx scripts/build-catalog-db.ts",
     "sync:parent": "tsx scripts/sync-from-parent.ts",
+    "refresh": "tsx scripts/refresh.ts",
+    "stage-data": "tsx scripts/stage-data.ts",
     "smoke:ask": "tsx scripts/smoke-ask.ts",
     "copy-log": "tsx scripts/copy-log.ts",
     "audit:export": "tsx scripts/export-audit.ts",

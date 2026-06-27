@@ -78,7 +78,12 @@ function loadPreviousShas(): Map<string, string> {
   return prev;
 }
 
-function main(): void {
+export interface SyncResult {
+  missing: number;
+  drifted: number;
+}
+
+export function syncFromParent(): SyncResult {
   const prev = loadPreviousShas();
   const entries: ProvenanceEntry[] = [];
   let missing = 0;
@@ -124,8 +129,12 @@ function main(): void {
   if (missing) console.log(`(${missing} source(s) missing — provenance is partial.)`);
   if (drifted) {
     console.log(`\n${drifted} source(s) DRIFTED. Review vendored copies before trusting the build.`);
-    process.exit(2);
   }
+  return { missing, drifted };
 }
 
-main();
+// Run directly (pnpm sync:parent): exit 2 on drift so the operator notices.
+if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  const { drifted } = syncFromParent();
+  if (drifted) process.exit(2);
+}

@@ -136,6 +136,7 @@ stories:
       audit_export: "src/server/audit-export.ts auditToCsv() + scripts/export-audit.ts (pnpm audit:export) -> audit/exports/*.csv for AG review"
       launcher: "run-station.cmd double-click (cd + pnpm start)"
       bundle: "scripts/package-bundle.ts (pnpm bundle) — clean checksummed distributable (excludes node_modules/.env/plaintext-db/audit/tests; ships encrypted catalog + manifest); BUNDLE.sha256 over every file. Smoke: 62 files, no leaks."
+      refresh_flow: "pnpm refresh (= sync:parent + build:catalog; sync-from-parent refactored to export syncFromParent()) + pnpm stage-data (--drive D:, copies only catalog.db.enc + MANIFEST.sha256 + READ-ME). Smoke verified both end-to-end. SQ-2 never auto-updates from SQ-1 — refresh is deliberate + logged."
       packaging_doc: "PACKAGING.md — Layer 1 (built today: folder + run-station.cmd + bundle) vs Layer 2 (funded Tauri installer + Ollama sidecar + signed update channel, documented-not-built)"
       proof: "typecheck clean; 108/108 vitest incl RAM tiers, CSV escaping, bundle exclusion predicate; live bundle smoke verified exclusions + checksum"
       scoping: "Tauri/Ollama-sidecar/signed-channel deliberately DOCUMENTED not built — needs Rust toolchain + target machine + APEX code-signing cert, not verifiable on build box. Layer 1 already delivers double-click/offline/decrypt/answer/audit. SQLCipher avoided in SQ2-7. Pilot does not need Layer 2."

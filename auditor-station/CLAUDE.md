@@ -73,5 +73,8 @@ Ladder + DoD: `planning/epic.md`. Status: `planning/sprint-status.yaml`.
 
 ## Data refresh (new MDA spreadsheets arrive)
 On the BUILD machine only: drop files into `docs/Car_Loan/` → re-run the SQ-1 engine
-(`scripts/legacy-report/` Layer A) → `pnpm sync:parent` → `pnpm build:catalog`. Copy ONLY the
-fresh `data/catalog.db` to the laptop. `pnpm sync:parent` warns if a vendored source drifted.
+(`scripts/legacy-report/` Layer A) → **`pnpm refresh`** (= `sync:parent` + `build:catalog`) →
+**`pnpm stage-data -- --drive D:`** (copies just `catalog.db.enc` + `MANIFEST.sha256`). On the
+laptop, drop those two files into `auditor-station\data\` and restart `run-station.cmd`. The brain,
+code, and node_modules are untouched. SQ-2 does NOT auto-update — the snapshot is frozen until you
+rebuild (provenance shows "data as of <date>"). `pnpm refresh` warns if a vendored source drifted.
