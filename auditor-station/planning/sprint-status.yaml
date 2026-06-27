@@ -104,7 +104,15 @@ stories:
   - id: SQ2-6
     title: "Chat UI + vocabulary lint"
     phase: 1
-    status: backlog
+    status: done           # 2026-06-26 — PHASE 1 (quick win) COMPLETE
+    result:
+      vocab_lint: "src/lib/vocab-lint.ts lintNonPunitive() — deterministic backstop rewrites banned terms (anomaly->observation, discrepancy->variance, flagged->marked for review, over-deduction->balance below zero, red flag, culprit/offender); guarantees no banned term rendered; violations audited"
+      chat_ui: "web/ plain page (NOT React): index.html + style.css (amber/gold/grey, no red) + app.js (vanilla, ESM)"
+      streaming: "SSE POST /api/ask/stream — tool-progress events ('searching the catalog…'), incremental text chunks, done event replaces raw with sanitized answer + citation chips + provenance banner"
+      server: "static serving (/ , /app.js, /style.css) + SSE; ask() onTool hook for progress"
+      live_smoke: "real server booted on 127.0.0.1:8717 vs live 101,602-record catalog.db: /api/health + provenance OK, / serves page, /api/ask graceful error w/o Ollama"
+      proof: "typecheck clean; 85/85 vitest incl vocab-lint rewrites, handler sanitize+audit, SSE tool+done events, static page served"
+    note: "PHASE 1 quick win complete — auditor opens page, asks, gets cited non-punitive offline answer with provenance. Live model round-trip (pnpm smoke:ask / chat) validated on the auditor laptop."
   # Phase 2 — harden (pending, free)
   - id: SQ2-7
     title: "At-rest encryption + governance (SQLCipher, BitLocker, copy-log, integrity gate)"

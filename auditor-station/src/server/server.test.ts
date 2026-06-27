@@ -67,4 +67,45 @@ describe("station HTTP server", () => {
     const res = await fetch(`${baseUrl}/nope`);
     expect(res.status).toBe(404);
   });
+
+  it("serves the chat page at /", async () => {
+    const res = await fetch(`${baseUrl}/`);
+    expect(res.status).toBe(200);
+    expect(res.headers.get("content-type")).toMatch(/text\/html/);
+    expect(await res.text()).toMatch(/Auditor Station/);
+  });
+
+  it("POST /api/ask/stream emits tool + done SSE events", async () => {
+    // New stub for this request (the beforeAll one was consumed).
+    const config = loadConfig(tmpdir(), { dbPath: DBOUT, auditFile: AUDIT });
+    const client = new StubLlmClient([
+      toolCallResponse("get_mda_summary", { mda: "WORKS" }),
+      proseResponse("WORKS has one beneficiary."),
+    ]);
+    const s = createStationServer({ db, client, config, auditor: createAuditor(AUDIT) });
+    await new Promise<void>((r) => s.listen(0, "127.0.0.1", () => r()));
+    const port = (s.address() as AddressInfo).port;
+    try {
+      const res = await fetch(`http://127.0.0.1:${port}/api/ask/stream`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ question: "Summary of WORKS" }),
+      });
+      expect(res.headers.get("content-type")).toMatch(/text\/event-stream/);
+      const text = await res.text();
+      const events = text
+        .split("\n\n")
+        .map((b) => b.split("\n").find((l) => l.startsWith("data: ")))
+        .filter((l): l is string => Boolean(l))
+        .map((l) => JSON.parse(l.slice(6)));
+      const types = events.map((e) => e.type);
+      expect(types).toContain("tool");
+      expect(types).toContain("done");
+      const done = events.find((e) => e.type === "done");
+      expect(done.answer).toMatch(/WORKS/);
+      expect(done.banner).toMatch(/non-authoritative/i);
+    } finally {
+      await new Promise<void>((r) => s.close(() => r()));
+    }
+  });
 });

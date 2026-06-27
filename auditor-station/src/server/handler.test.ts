@@ -85,6 +85,18 @@ describe("handleAsk", () => {
     expect(auditor.readAll()[0].status).toBe("error");
   });
 
+  it("sanitizes punitive language from the answer and records the rewrite", async () => {
+    const client = new StubLlmClient([
+      toolCallResponse("query_catalog", { balanceBelowZero: true }),
+      proseResponse("This is an anomaly that should be flagged."),
+    ]);
+    const out = await handleAsk({ db, client, config, auditor, now: () => NOW }, { question: "Any issues?" });
+    expect(out.answer).toBe("This is an observation that should be marked for review.");
+    expect(out.answer).not.toMatch(/anomaly|flagged/i);
+    expect(out.violations?.length).toBe(2);
+    expect(auditor.readAll()[0].violations).toHaveLength(2); // model's slip is on record
+  });
+
   it("surfaces provenance with the answer", async () => {
     const client = new StubLlmClient([proseResponse("hi")]);
     const out = await handleAsk({ db, client, config, auditor, now: () => NOW }, { question: "hello" });

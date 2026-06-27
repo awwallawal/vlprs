@@ -51,6 +51,8 @@ export interface AskOptions {
   model?: string;
   /** Optional streaming sink for the narration turn. */
   onText?: (chunk: string) => void;
+  /** Optional progress hook — fires once per tool just before it runs (UI "searching…"). */
+  onTool?: (name: string, args: Record<string, unknown>) => void;
 }
 
 function toolResultForModel(r: ToolResult): string {
@@ -94,6 +96,7 @@ export async function ask(opts: AskOptions): Promise<AskResult> {
   const citations = new Set<string>();
   const toolMessages: ChatMessage[] = [];
   for (const tc of toolCalls) {
+    opts.onTool?.(tc.function.name, tc.function.arguments ?? {});
     const result = runTool(db, tc.function.name, tc.function.arguments ?? {});
     toolRuns.push({ name: tc.function.name, args: tc.function.arguments ?? {}, result });
     for (const c of result.citations) citations.add(c);

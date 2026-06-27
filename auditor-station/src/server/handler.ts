@@ -9,6 +9,7 @@
 import type { DB } from "../lib/catalog-db.js";
 import { ask, type AskResult } from "../llm/ask.js";
 import type { LlmClient } from "../llm/types.js";
+import { lintNonPunitive, type VocabViolation } from "../lib/vocab-lint.js";
 import type { StationConfig } from "./config.js";
 import { checkPin } from "./auth.js";
 import type { Auditor } from "./audit.js";
@@ -27,6 +28,7 @@ export interface AskInput {
   question: string;
   pin?: string;
   onText?: (chunk: string) => void;
+  onTool?: (name: string, args: Record<string, unknown>) => void;
 }
 
 export interface AskOutput {
@@ -35,6 +37,8 @@ export interface AskOutput {
   toolRuns?: AskResult["toolRuns"];
   citations?: string[];
   routedBy?: AskResult["routedBy"];
+  /** Non-punitive rewrites applied to the answer before returning it. */
+  violations?: VocabViolation[];
   provenance: Provenance;
   banner: string;
   error?: string;
@@ -60,23 +64,30 @@ export async function handleAsk(deps: HandlerDeps, input: AskInput): Promise<Ask
 
   try {
     const system = buildSystemPrompt(db);
-    const result = await ask({ db, client, question, system, model: config.model, onText: input.onText });
+    const result = await ask({
+      db, client, question, system, model: config.model,
+      onText: input.onText, onTool: input.onTool,
+    });
+    // Deterministic non-punitive backstop: guarantee no banned term is rendered.
+    const { clean, violations } = lintNonPunitive(result.answer);
     auditor.append({
       ts: now(),
       status: "success",
       question,
-      answer: result.answer,
+      answer: result.answer, // record what the model actually said
       tools: result.toolRuns.map((t) => ({ name: t.name, args: t.args })),
       routedBy: result.routedBy,
       citations: result.citations,
       model: config.model,
+      ...(violations.length ? { violations } : {}),
     });
     return {
       ok: true,
-      answer: result.answer,
+      answer: clean,
       toolRuns: result.toolRuns,
       citations: result.citations,
       routedBy: result.routedBy,
+      violations,
       provenance,
       banner,
     };

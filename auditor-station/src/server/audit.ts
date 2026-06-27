@@ -20,6 +20,8 @@ export interface AuditEntry {
   routedBy?: string;
   citations?: string[];
   model?: string;
+  /** Non-punitive rewrites applied to the answer, if any. */
+  violations?: { term: string; suggestion: string }[];
   error?: string;
 }
 
