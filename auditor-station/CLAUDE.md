@@ -54,8 +54,9 @@ SQ2-0 ✅ (Gate 0, qwen2.5:7b pinned) · SQ2-1 ✅ (scaffold/isolation) · SQ2-2
 vendor snapshot) · SQ2-3 ✅ (four read-only tools in `src/tools/`) · SQ2-4 ✅ (Ollama adapter +
 router + `ask()` in `src/llm/`) · SQ2-5 ✅ (server + system prompt + audit + optional PIN in
 `src/server/`) · SQ2-6 ✅ (chat UI in `web/` + SSE streaming + vocab lint) · SQ2-7 ✅ (AES-256-GCM
-at-rest encryption + MANIFEST.sha256 integrity gate + governance). **PHASE 1 + 2 COMPLETE.**
-Phase 3 (SQ2-8 packaging) remains, post-pilot.
+at-rest encryption + MANIFEST.sha256 integrity gate + governance) · SQ2-8 ✅ (RAM→model auto-select,
+audit CSV export, double-click launcher, checksummed bundle; Tauri/signing documented in PACKAGING.md).
+**ALL 9 STORIES DONE.** Distribute: `pnpm bundle` → copy folder → laptop `pnpm install --ignore-workspace` → `.env` → `run-station.cmd`.
 Run locally: `pnpm start` (needs Ollama + a built catalog.db) → open http://127.0.0.1:8717.
 Live ask check: `pnpm smoke:ask "…"`.
 

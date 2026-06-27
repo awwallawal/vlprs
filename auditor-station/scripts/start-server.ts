@@ -7,9 +7,11 @@
  */
 
 import { existsSync } from "node:fs";
+import { totalmem } from "node:os";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { OllamaClient } from "../src/llm/ollama.js";
+import { selectModelForRam } from "../src/lib/model-profile.js";
 import { createAuditor, createStationServer, loadConfig, openConfiguredCatalog } from "../src/server/index.js";
 import { getProvenance, provenanceBanner } from "../src/server/system-prompt.js";
 
@@ -20,6 +22,14 @@ const envPath = resolve(STATION_ROOT, ".env");
 if (existsSync(envPath)) process.loadEnvFile(envPath);
 
 const config = loadConfig(STATION_ROOT);
+
+// Auto-select the model by RAM unless STATION_MODEL was pinned explicitly.
+let modelNote = "pinned";
+if (!process.env.STATION_MODEL) {
+  const prof = selectModelForRam(totalmem());
+  config.model = prof.model;
+  modelNote = `auto (${prof.tier})${prof.belowFloor ? " — below 8GB floor, may be slow" : ""}`;
+}
 
 let opened;
 try {
@@ -37,7 +47,7 @@ const server = createStationServer({ db, client, config, auditor });
 server.listen(config.port, "127.0.0.1", () => {
   console.log(`Auditor Station listening on http://127.0.0.1:${config.port}`);
   console.log(provenanceBanner(getProvenance(db)));
-  console.log(`Model: ${config.model} · Ollama: ${config.ollamaBaseUrl} · Auth: ${config.pin ? "PIN required" : "open (no PIN)"}`);
+  console.log(`Model: ${config.model} (${modelNote}) · Ollama: ${config.ollamaBaseUrl} · Auth: ${config.pin ? "PIN required" : "open (no PIN)"}`);
   console.log(`At-rest: ${encrypted ? "encrypted (AES-256-GCM)" : "plain (dev)"} · Integrity: ${integrity}`);
   console.log(`Audit log: ${config.auditFile}`);
 });

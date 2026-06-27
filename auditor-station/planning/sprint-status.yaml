@@ -128,6 +128,14 @@ stories:
       note: "SQLCipher deferred in favor of node:crypto AES-GCM — same at-rest guarantee, no native driver swap. DoD met: copied .enc useless without passphrase; mismatched snapshot refused."
   # Phase 3 — productionize (pending, free)
   - id: SQ2-8
-    title: "Packaging & distribution (Tauri + Ollama sidecar, RAM->model profile, update channel)"
+    title: "Packaging & distribution (RAM->model profile, audit export, checksummed bundle; Tauri documented)"
     phase: 3
-    status: pending
+    status: done           # 2026-06-26 — pragmatic subset built+tested; Tauri/signing documented
+    result:
+      ram_profile: "src/lib/model-profile.ts selectModelForRam() — 32GB->14b, 16GB->7b, 8GB->3b floor; start-server auto-selects unless STATION_MODEL pinned"
+      audit_export: "src/server/audit-export.ts auditToCsv() + scripts/export-audit.ts (pnpm audit:export) -> audit/exports/*.csv for AG review"
+      launcher: "run-station.cmd double-click (cd + pnpm start)"
+      bundle: "scripts/package-bundle.ts (pnpm bundle) — clean checksummed distributable (excludes node_modules/.env/plaintext-db/audit/tests; ships encrypted catalog + manifest); BUNDLE.sha256 over every file. Smoke: 62 files, no leaks."
+      packaging_doc: "PACKAGING.md — Layer 1 (built today: folder + run-station.cmd + bundle) vs Layer 2 (funded Tauri installer + Ollama sidecar + signed update channel, documented-not-built)"
+      proof: "typecheck clean; 108/108 vitest incl RAM tiers, CSV escaping, bundle exclusion predicate; live bundle smoke verified exclusions + checksum"
+      scoping: "Tauri/Ollama-sidecar/signed-channel deliberately DOCUMENTED not built — needs Rust toolchain + target machine + APEX code-signing cert, not verifiable on build box. Layer 1 already delivers double-click/offline/decrypt/answer/audit. SQLCipher avoided in SQ2-7. Pilot does not need Layer 2."
