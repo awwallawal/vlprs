@@ -13,6 +13,7 @@
     "test:watch": "vitest",
     "build:catalog": "tsx scripts/build-catalog-db.ts",
     "sync:parent": "tsx scripts/sync-from-parent.ts",
+    "smoke:ask": "tsx scripts/smoke-ask.ts",
     "start": "echo \"[SQ2-5] local server not implemented yet\" && exit 1"
   },
   "devDependencies": {

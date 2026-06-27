@@ -78,7 +78,16 @@ stories:
   - id: SQ2-4
     title: "Ollama adapter + deterministic fallback router"
     phase: 1
-    status: backlog
+    status: done           # 2026-06-26
+    result:
+      layer: "src/llm/ — types (LlmClient), ollama (real client), stub (tests), router, ask (orchestrator), index"
+      adapter: "OllamaClient: POST localhost:11434/api/chat, chat() + chatStream() (NDJSON), maps tool-call shape; default model qwen2.5:7b, keep_alive 30m"
+      orchestrator: "ask(): model->tools->narrate; routedBy = model|router|none; citations flow from tool results"
+      fallback_router: "routeToTool() keyword-classifies prose-only responses to the right tool + typed args (verify amount/tenure, balance-below-zero, largest+year, mda summary, name search); insurance not load-bearing"
+      safety: "router only chooses tool+typed args; tools stay parameterized/read-only; extractAmount ignores tenure numbers; name fallback drops conversational filler"
+      live_harness: "scripts/smoke-ask.ts (pnpm smoke:ask) for on-laptop real-Ollama check"
+      proof: "typecheck clean; 57/57 vitest (router branches + ask model-path + ROUTER-CATCHES-PROSE path + none path + streaming + schemas-passed)"
+      note: "live Ollama HTTP round-trip not run on dev machine (Ollama is on the auditor laptop) — covered by stub contract tests + smoke:ask deferred to laptop"
   - id: SQ2-5
     title: "Local server + system prompt + audit"
     phase: 1

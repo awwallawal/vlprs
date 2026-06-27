@@ -51,8 +51,9 @@ pnpm test                         # vitest run
 
 ## Status
 SQ2-0 ✅ (Gate 0, qwen2.5:7b pinned) · SQ2-1 ✅ (scaffold/isolation) · SQ2-2 ✅ (catalog.db +
-vendor snapshot) · SQ2-3 ✅ (four read-only tools in `src/tools/`) · **SQ2-4 next** (Ollama
-adapter + deterministic fallback router).
+vendor snapshot) · SQ2-3 ✅ (four read-only tools in `src/tools/`) · SQ2-4 ✅ (Ollama adapter +
+router + `ask()` orchestrator in `src/llm/`) · **SQ2-5 next** (local server + system prompt +
+audit). Live check: `pnpm smoke:ask "…"` on a machine with Ollama + a built catalog.db.
 Ladder + DoD: `planning/epic.md`. Status: `planning/sprint-status.yaml`.
 
 ## Data refresh (new MDA spreadsheets arrive)
