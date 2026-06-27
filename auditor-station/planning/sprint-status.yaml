@@ -91,7 +91,16 @@ stories:
   - id: SQ2-5
     title: "Local server + system prompt + audit"
     phase: 1
-    status: backlog
+    status: done           # 2026-06-26
+    result:
+      layer: "src/server/ — config, auth, audit, system-prompt, handler, server, index + scripts/start-server.ts (pnpm start)"
+      system_prompt: "buildSystemPrompt(db): durable prefix (loan model, pathways, MDA overrides, non-punitive rules, worked example) + volatile suffix (live stats + provenance); getProvenance + provenanceBanner"
+      audit: "append-only JSONL at audit/audit-log.jsonl (gitignored); logs success + blocked + error with ts/question/answer/tools+args/routedBy/citations/model"
+      auth: "optional local PIN gate (checkPin); unset = open single trusted laptop; BitLocker is the real at-rest control"
+      handler: "handleAsk() DI-structured (db/client/config/auditor/now) — auth->ask->audit; unit-testable without HTTP or live Ollama"
+      server: "createStationServer() node:http — GET /api/health|/api/meta, POST /api/ask (JSON; SSE streaming + static web in SQ2-6); localhost only"
+      proof: "typecheck clean; 73/73 vitest incl real HTTP round-trip (server.test fetch), blocked-never-reaches-model, audit success+blocked+error, provenance surfaced"
+      decision: "local-auth = optional shared PIN (off by default) for the standalone quick win; richer per-user roles out of scope"
   - id: SQ2-6
     title: "Chat UI + vocabulary lint"
     phase: 1
