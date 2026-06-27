@@ -96,7 +96,7 @@ stories:
       layer: "src/server/ — config, auth, audit, system-prompt, handler, server, index + scripts/start-server.ts (pnpm start)"
       system_prompt: "buildSystemPrompt(db): durable prefix (loan model, pathways, MDA overrides, non-punitive rules, worked example) + volatile suffix (live stats + provenance); getProvenance + provenanceBanner"
       audit: "append-only JSONL at audit/audit-log.jsonl (gitignored); logs success + blocked + error with ts/question/answer/tools+args/routedBy/citations/model"
-      auth: "optional local PIN gate (checkPin); unset = open single trusted laptop; BitLocker is the real at-rest control"
+      auth: "optional local PIN gate (checkPin, constant-time compare); configured via .env STATION_PIN (zero-dep process.loadEnvFile); .env gitignored + .env.example committed; unset = open; BitLocker is real at-rest control. Set/change/remove = edit .env + restart."
       handler: "handleAsk() DI-structured (db/client/config/auditor/now) — auth->ask->audit; unit-testable without HTTP or live Ollama"
       server: "createStationServer() node:http — GET /api/health|/api/meta, POST /api/ask (JSON; SSE streaming + static web in SQ2-6); localhost only"
       proof: "typecheck clean; 73/73 vitest incl real HTTP round-trip (server.test fetch), blocked-never-reaches-model, audit success+blocked+error, provenance surfaced"

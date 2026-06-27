@@ -15,6 +15,11 @@ import { createAuditor, createStationServer, loadConfig } from "../src/server/in
 import { getProvenance, provenanceBanner } from "../src/server/system-prompt.js";
 
 const STATION_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
+
+// Load .env (PIN + overrides) with zero dependencies — Node built-in. Optional.
+const envPath = resolve(STATION_ROOT, ".env");
+if (existsSync(envPath)) process.loadEnvFile(envPath);
+
 const config = loadConfig(STATION_ROOT);
 
 if (!existsSync(config.dbPath)) {

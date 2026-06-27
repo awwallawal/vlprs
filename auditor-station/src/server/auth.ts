@@ -7,6 +7,7 @@
  * standalone quick win.
  */
 
+import { timingSafeEqual } from "node:crypto";
 import type { StationConfig } from "./config.js";
 
 export interface AuthResult {
@@ -14,8 +15,16 @@ export interface AuthResult {
   error?: string;
 }
 
+/** Constant-time string compare so a wrong PIN leaks nothing via response timing. */
+function safeEqual(a: string, b: string): boolean {
+  const ba = Buffer.from(a, "utf8");
+  const bb = Buffer.from(b, "utf8");
+  if (ba.length !== bb.length) return false; // length is not secret enough to matter here
+  return timingSafeEqual(ba, bb);
+}
+
 export function checkPin(config: Pick<StationConfig, "pin">, provided?: string): AuthResult {
   if (!config.pin) return { ok: true };
-  if (provided && provided === config.pin) return { ok: true };
+  if (provided && safeEqual(provided, config.pin)) return { ok: true };
   return { ok: false, error: "This station is locked. Enter the access PIN to continue." };
 }
