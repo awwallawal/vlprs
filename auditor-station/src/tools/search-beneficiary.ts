@@ -108,13 +108,18 @@ export const searchBeneficiary: ToolDef = {
       mdaLabel = res.label;
     }
 
-    const rows = db
+    // Hard cap on rows scanned for grouping. Fetch CAP+1 so we can tell the user honestly
+    // when the result was truncated rather than silently undercounting.
+    const ROW_CAP = 5000;
+    const fetched = db
       .prepare(
         `SELECT name, canonicalName, mda, year, month, outstandingBalance, sourceFile
          FROM records WHERE ${where.join(" AND ")}
-         ORDER BY canonicalName, year, month LIMIT 5000`,
+         ORDER BY canonicalName, year, month LIMIT ${ROW_CAP + 1}`,
       )
       .all(...params) as Row[];
+    const truncated = fetched.length > ROW_CAP;
+    const rows = truncated ? fetched.slice(0, ROW_CAP) : fetched;
 
     if (!rows.length) {
       return {
@@ -127,19 +132,24 @@ export const searchBeneficiary: ToolDef = {
     }
 
     const limit = asLimit(args.limit);
-    const groups = group(rows).slice(0, limit);
+    const allGroups = group(rows);
+    const groups = allGroups.slice(0, limit);
     const allMdas = [...new Set(rows.map((r) => r.mda).filter(Boolean) as string[])];
+    const truncNote = truncated
+      ? ` (showing the first ${ROW_CAP} records — refine the name for a complete view)`
+      : "";
+    const limitNote = allGroups.length > limit ? ` Showing the top ${limit} of ${allGroups.length} persons.` : "";
     const summary =
-      groups.length === 1
+      groups.length === 1 && !truncated
         ? `Found ${groups[0].name} — ${groups[0].recordCount} record(s) across ${groups[0].mdas.length} MDA(s) (${groups[0].mdas.join(", ")}), ${groups[0].firstPeriod}–${groups[0].lastPeriod}.`
-        : `Found ${groups.length} person(s) matching "${name}"${mdaLabel ? ` in ${mdaLabel}` : ""} across ${allMdas.length} MDA(s).`;
+        : `Found ${allGroups.length} person(s) matching "${name}"${mdaLabel ? ` in ${mdaLabel}` : ""} across ${allMdas.length} MDA(s)${truncNote}.${limitNote}`;
 
     return {
       ok: true,
       summary,
       rows: groups,
       citations: citationsFrom(rows),
-      meta: { personCount: groups.length, recordCount: rows.length, mdas: allMdas },
+      meta: { personCount: allGroups.length, returned: groups.length, recordCount: rows.length, truncated, mdas: allMdas },
     };
   },
 };

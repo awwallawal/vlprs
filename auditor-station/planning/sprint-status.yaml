@@ -72,6 +72,7 @@ stories:
       mda_resolve: "src/lib/mda-resolve.ts — DB-driven (distinct mda/mdaName), no heavy alias vendor"
       safety: "parameterized SQL only; ORDER BY from allowlist; injection attempt falls back to default order"
       citations: "every result carries distinct sourceFiles"
+      no_silent_caps: "search + verify-by-name surface truncation (truncated flag + summary note); query_catalog reports totalMatches vs returned — per 'every number is a doorway'"
       real_data_smoke: "BADMUS->28 persons/19 MDAs; ALATISHE BOSEDE->1 person 61 recs across BIR+CSC (variant collapsed); BIR->5,325 recs/231 persons/₦56.5M; ₦750k/36mo aligned; balanceBelowZero->1,302"
       proof: "typecheck clean; 43/43 vitest (16 tool tests incl injection guard + ₦750k tenure + variant-collapse + read-only)"
   - id: SQ2-4

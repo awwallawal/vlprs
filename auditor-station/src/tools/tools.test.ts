@@ -67,6 +67,15 @@ describe("search_beneficiary", () => {
   it("requires a name", () => {
     expect(runTool(db, "search_beneficiary", {}).error).toMatch(/name is required/i);
   });
+
+  it("reports total persons vs returned (no silent cap)", () => {
+    const r = runTool(db, "search_beneficiary", { name: "A", limit: 2 });
+    const m = r.meta as { personCount: number; returned: number; truncated: boolean };
+    expect(m.personCount).toBeGreaterThanOrEqual(3); // ALATISE, BANKOLE, OLUSEGUN all contain 'A'
+    expect(m.returned).toBe(2);
+    expect(m.truncated).toBe(false);
+    expect(r.summary).toMatch(/Showing the top 2/);
+  });
 });
 
 describe("get_mda_summary", () => {

@@ -105,14 +105,17 @@ export const verifyLoanComputation: ToolDef = {
         where.push(`mda IN (${res.codes.map(() => "?").join(", ")})`);
         params.push(...res.codes);
       }
-      const rows = db
+      const ROW_CAP = 200;
+      const fetched = db
         .prepare(
           `SELECT name, mda, year, month, principal, interest, monthlyDeduction, installmentCount, sourceFile
            FROM records WHERE ${where.join(" AND ")}
              AND principal IS NOT NULL AND installmentCount IS NOT NULL
-           ORDER BY year, month LIMIT 200`,
+           ORDER BY year, month LIMIT ${ROW_CAP + 1}`,
         )
         .all(...params) as Row[];
+      const truncated = fetched.length > ROW_CAP;
+      const rows = truncated ? fetched.slice(0, ROW_CAP) : fetched;
 
       if (!rows.length) {
         return { ok: true, summary: `No records with principal + tenure found for "${name}" to verify.`, rows: [], citations: [], meta: { mode: "by-name", verified: 0 } };
@@ -126,15 +129,16 @@ export const verifyLoanComputation: ToolDef = {
         ...verifyOne(r.principal!, r.installmentCount!, r.interest),
       }));
       const forReview = checked.filter((c) => c.withinTolerance === false);
+      const truncNote = truncated ? ` (first ${ROW_CAP} records — narrow by MDA to verify all)` : "";
       return {
         ok: true,
         summary:
           forReview.length === 0
-            ? `Verified ${checked.length} record(s) for ${rows[0].name} — all interest figures align with the formula (within ₦${TOLERANCE_NAIRA}).`
-            : `Verified ${checked.length} record(s) for ${rows[0].name} — ${forReview.length} show a variance for review.`,
+            ? `Verified ${checked.length} record(s) for ${rows[0].name} — all interest figures align with the formula (within ₦${TOLERANCE_NAIRA})${truncNote}.`
+            : `Verified ${checked.length} record(s) for ${rows[0].name} — ${forReview.length} show a variance for review${truncNote}.`,
         rows: checked,
         citations: citationsFrom(rows),
-        meta: { mode: "by-name", verified: checked.length, forReview: forReview.length },
+        meta: { mode: "by-name", verified: checked.length, forReview: forReview.length, truncated },
       };
     }
 
