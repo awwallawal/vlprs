@@ -16,10 +16,12 @@
 
 import { createHash } from "node:crypto";
 import { existsSync, readFileSync, rmSync, renameSync, mkdirSync } from "node:fs";
-import { dirname, resolve } from "node:path";
+import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import Database from "better-sqlite3";
 import { canonicalKey, normalizeName } from "../src/lib/normalize.js";
+import { encryptDbFile } from "../src/lib/crypto-db.js";
+import { writeManifest } from "../src/lib/integrity.js";
 import {
   type CatalogFile,
   RECORD_COLUMNS,
@@ -28,6 +30,9 @@ import {
 } from "../src/lib/catalog-db.js";
 
 const STATION_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
+// Load .env so STATION_DB_KEY can drive at-rest encryption at build time.
+const ENV_PATH = resolve(STATION_ROOT, ".env");
+if (existsSync(ENV_PATH)) process.loadEnvFile(ENV_PATH);
 const DEFAULT_SOURCE = resolve(
   STATION_ROOT,
   "..",
@@ -35,17 +40,38 @@ const DEFAULT_SOURCE = resolve(
 );
 const DEFAULT_OUT = resolve(STATION_ROOT, "data/catalog.db");
 
-export function parseArgs(argv: string[]): { source: string; out: string } {
+export function parseArgs(argv: string[]): { source: string; out: string; key?: string } {
   let source = DEFAULT_SOURCE;
   let out = DEFAULT_OUT;
+  let key = process.env.STATION_DB_KEY?.trim() || undefined;
   for (let i = 0; i < argv.length; i++) {
     if (argv[i] === "--source") source = resolve(argv[++i]);
     else if (argv[i] === "--out") out = resolve(argv[++i]);
+    else if (argv[i] === "--key") key = argv[++i];
   }
-  return { source, out };
+  return { source, out, key };
 }
 
-export function buildCatalogDb(source: string, out: string): void {
+/** Encrypt (if a key is given) and write the integrity manifest for the final artifact. */
+function finalizeArtifact(plainOut: string, key?: string): void {
+  const dir = dirname(plainOut);
+  const manifestPath = join(dir, "MANIFEST.sha256");
+  if (key) {
+    const encPath = `${plainOut}.enc`;
+    encryptDbFile(plainOut, encPath, key);
+    rmSync(plainOut, { force: true }); // no plaintext db left on disk
+    const sha = writeManifest(encPath, manifestPath);
+    console.log(`Encrypted: ${encPath} (AES-256-GCM)`);
+    console.log(`Manifest : ${manifestPath} (${sha.slice(0, 12)}…)`);
+    console.log("At-rest encryption ON — the laptop needs STATION_DB_KEY to open it.");
+  } else {
+    const sha = writeManifest(plainOut, manifestPath);
+    console.log(`Manifest : ${manifestPath} (${sha.slice(0, 12)}…)`);
+    console.log("At-rest encryption OFF (dev) — set STATION_DB_KEY to encrypt.");
+  }
+}
+
+export function buildCatalogDb(source: string, out: string, key?: string): void {
   if (!existsSync(source)) {
     console.error(`Source catalog not found: ${source}`);
     console.error("Pass --source <path> or run the SQ-1 engine first.");
@@ -130,11 +156,12 @@ export function buildCatalogDb(source: string, out: string): void {
   if (existsSync(out)) rmSync(out, { force: true });
   renameSync(tmp, out);
   console.log(`Built  : ${out}`);
-  console.log(`Done. Snapshot ${catalogSha256.slice(0, 12)}… — ${records.length.toLocaleString()} records.`);
+  console.log(`Snapshot ${catalogSha256.slice(0, 12)}… — ${records.length.toLocaleString()} records.`);
+  finalizeArtifact(out, key);
 }
 
 // Run only when invoked directly (tsx scripts/build-catalog-db.ts), not when imported by tests.
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
-  const { source, out } = parseArgs(process.argv.slice(2));
-  buildCatalogDb(source, out);
+  const { source, out, key } = parseArgs(process.argv.slice(2));
+  buildCatalogDb(source, out, key);
 }

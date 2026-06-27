@@ -115,9 +115,17 @@ stories:
     note: "PHASE 1 quick win complete — auditor opens page, asks, gets cited non-punitive offline answer with provenance. Live model round-trip (pnpm smoke:ask / chat) validated on the auditor laptop."
   # Phase 2 — harden (pending, free)
   - id: SQ2-7
-    title: "At-rest encryption + governance (SQLCipher, BitLocker, copy-log, integrity gate)"
+    title: "At-rest encryption + governance (BitLocker, copy-log, integrity gate)"
     phase: 2
-    status: pending
+    status: done           # 2026-06-26
+    result:
+      encryption: "src/lib/crypto-db.ts — AES-256-GCM (scrypt key from STATION_DB_KEY), zero new deps (chose node:crypto + in-memory Buffer open over swapping to SQLCipher native driver). Decrypts to memory only; no plaintext db on disk at runtime."
+      integrity: "src/lib/integrity.ts — MANIFEST.sha256 written at build, verified at launch; mismatch refuses to open. GCM auth tag is a second cryptographic check for encrypted artifacts."
+      open: "src/server/db-open.ts openConfiguredCatalog() — picks enc vs plain, verifies manifest, decrypts, returns read-only handle (better-sqlite3 Buffer open keeps SQLITE_READONLY)."
+      build: "build-catalog-db.ts encrypts to data/catalog.db.enc + removes plain db + writes MANIFEST.sha256 when STATION_DB_KEY set (loads .env). Plain+manifest in dev."
+      governance: "GOVERNANCE.md (BitLocker mandatory + key-delivered-separately + integrity + copy-log policy); scripts/copy-log.ts (pnpm copy-log) appends audit/copy-log.jsonl."
+      proof: "typecheck clean; 99/99 vitest incl crypto round-trip/wrong-key/tamper, integrity match/mismatch/missing, encrypted build->open (plaintext removed, read-only, wrong key refused, tampered enc refused)."
+      note: "SQLCipher deferred in favor of node:crypto AES-GCM — same at-rest guarantee, no native driver swap. DoD met: copied .enc useless without passphrase; mismatched snapshot refused."
   # Phase 3 — productionize (pending, free)
   - id: SQ2-8
     title: "Packaging & distribution (Tauri + Ollama sidecar, RAM->model profile, update channel)"

@@ -13,3 +13,5 @@ export type { Provenance } from "./system-prompt.js";
 export { handleAsk } from "./handler.js";
 export type { AskInput, AskOutput, HandlerDeps } from "./handler.js";
 export { createStationServer } from "./server.js";
+export { openConfiguredCatalog } from "./db-open.js";
+export type { OpenedCatalog } from "./db-open.js";

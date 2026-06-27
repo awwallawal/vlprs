@@ -20,6 +20,12 @@ export interface StationConfig {
   /** Optional launch PIN (plaintext in .env). Unset => open. */
   pin?: string;
   dbPath: string;
+  /** Encrypted catalog artifact (used when dbKey is set). */
+  encPath: string;
+  /** Integrity manifest for the catalog artifact. */
+  manifestFile: string;
+  /** Passphrase for the at-rest-encrypted catalog. Unset => plain catalog.db (dev). */
+  dbKey?: string;
   auditFile: string;
 }
 
@@ -31,6 +37,9 @@ export function loadConfig(stationRoot: string, overrides: Partial<StationConfig
     model: env.STATION_MODEL ?? MODEL.default,
     pin: env.STATION_PIN && env.STATION_PIN.trim() ? env.STATION_PIN.trim() : undefined,
     dbPath: env.STATION_DB ?? resolve(stationRoot, "data/catalog.db"),
+    encPath: env.STATION_DB_ENC ?? resolve(stationRoot, "data/catalog.db.enc"),
+    manifestFile: env.STATION_MANIFEST ?? resolve(stationRoot, "data/MANIFEST.sha256"),
+    dbKey: env.STATION_DB_KEY && env.STATION_DB_KEY.trim() ? env.STATION_DB_KEY.trim() : undefined,
     auditFile: env.STATION_AUDIT ?? resolve(stationRoot, "audit/audit-log.jsonl"),
   };
   return { ...base, ...overrides };

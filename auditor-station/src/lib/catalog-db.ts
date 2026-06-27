@@ -148,6 +148,14 @@ export function openCatalogReadonly(path: string): DB {
   return new Database(path, { readonly: true, fileMustExist: true });
 }
 
+/**
+ * Open a read-only catalog from decrypted bytes held in memory (SQ2-7). No plaintext DB
+ * touches disk; writes still throw (SQLITE_READONLY).
+ */
+export function openCatalogBufferReadonly(buffer: Buffer): DB {
+  return new Database(buffer, { readonly: true });
+}
+
 /** Read all meta rows into a typed object. */
 export function readMeta(db: DB): Partial<CatalogMeta> {
   const rows = db.prepare("SELECT key, value FROM meta").all() as { key: string; value: string }[];

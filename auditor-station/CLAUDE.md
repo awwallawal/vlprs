@@ -53,15 +53,21 @@ pnpm test                         # vitest run
 SQ2-0 ✅ (Gate 0, qwen2.5:7b pinned) · SQ2-1 ✅ (scaffold/isolation) · SQ2-2 ✅ (catalog.db +
 vendor snapshot) · SQ2-3 ✅ (four read-only tools in `src/tools/`) · SQ2-4 ✅ (Ollama adapter +
 router + `ask()` in `src/llm/`) · SQ2-5 ✅ (server + system prompt + audit + optional PIN in
-`src/server/`) · SQ2-6 ✅ (chat UI in `web/` + SSE streaming + vocab lint). **PHASE 1 (quick win)
-COMPLETE.** Phase 2 (SQ2-7 harden) + Phase 3 (SQ2-8 package) remain, post-pilot.
+`src/server/`) · SQ2-6 ✅ (chat UI in `web/` + SSE streaming + vocab lint) · SQ2-7 ✅ (AES-256-GCM
+at-rest encryption + MANIFEST.sha256 integrity gate + governance). **PHASE 1 + 2 COMPLETE.**
+Phase 3 (SQ2-8 packaging) remains, post-pilot.
 Run locally: `pnpm start` (needs Ollama + a built catalog.db) → open http://127.0.0.1:8717.
 Live ask check: `pnpm smoke:ask "…"`.
 
 ## PIN (local-auth)
 `.env` is the only knob (gitignored). `cp .env.example .env`, set `STATION_PIN=…`, `pnpm start`.
-Change = edit + restart. Remove = clear value / delete `.env` + restart. Unset = open (BitLocker
-is the real at-rest control). Constant-time check.
+Change = edit + restart. Remove = clear value / delete `.env` + restart. Unset = open. Constant-time check.
+
+## At-rest encryption (SQ2-7)
+Set `STATION_DB_KEY` in `.env`, then `pnpm build:catalog` → `data/catalog.db.enc` (no plain db) +
+`data/MANIFEST.sha256`. Launch verifies the manifest and decrypts in memory; wrong key or tamper is
+refused. Deliver the key separately from the bundle. See `GOVERNANCE.md`. Record deployments with
+`pnpm copy-log -- --laptop "<id>" --operator "<name>"`.
 Ladder + DoD: `planning/epic.md`. Status: `planning/sprint-status.yaml`.
 
 ## Data refresh (new MDA spreadsheets arrive)

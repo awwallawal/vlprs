@@ -14,6 +14,7 @@
     "build:catalog": "tsx scripts/build-catalog-db.ts",
     "sync:parent": "tsx scripts/sync-from-parent.ts",
     "smoke:ask": "tsx scripts/smoke-ask.ts",
+    "copy-log": "tsx scripts/copy-log.ts",
     "start": "tsx scripts/start-server.ts"
   },
   "devDependencies": {
