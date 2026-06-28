@@ -59,13 +59,27 @@ function toolResultForModel(r: ToolResult): string {
   return JSON.stringify({ summary: r.summary, rows: r.rows, meta: r.meta, error: r.error });
 }
 
+/** Did the model/provider reject the tools array because the model can't do tool-calling? */
+function isToolsUnsupported(err: unknown): boolean {
+  const m = (err as Error)?.message ?? "";
+  return /does not support tools|tools? (are )?not supported|tool[\s-]?call/i.test(m);
+}
+
 export async function ask(opts: AskOptions): Promise<AskResult> {
   const { db, client, question, model } = opts;
   const system = opts.system ?? DEFAULT_SYSTEM;
   const messages: ChatMessage[] = [{ role: "user", content: question }];
 
   // 1. Tool-decision turn (non-streaming — we need the full tool_calls).
-  const first = await client.chat({ model, system, messages, tools: ollamaToolSchemas() });
+  // If the model can't do tool-calling at all (e.g. Llama 3.0), Ollama rejects the tools
+  // array — catch that and retry WITHOUT tools so the deterministic router can carry the query.
+  let first;
+  try {
+    first = await client.chat({ model, system, messages, tools: ollamaToolSchemas() });
+  } catch (err) {
+    if (!isToolsUnsupported(err)) throw err;
+    first = await client.chat({ model, system, messages });
+  }
 
   let toolCalls: ToolCall[] = first.toolCalls;
   let routedBy: AskResult["routedBy"] = toolCalls.length ? "model" : "none";

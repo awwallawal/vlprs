@@ -49,6 +49,24 @@ describe("ask orchestrator", () => {
     expect(r.toolRuns[0].args).toMatchObject({ balanceBelowZero: true });
   });
 
+  it("falls back to the router when the model rejects the tools array (non-tool model)", async () => {
+    const client = new StubLlmClient([
+      new Error("llama3:8b does not support tools"), // first turn (with tools) → Ollama rejects
+      proseResponse("I will describe what I can."), // retry without tools → prose
+      proseResponse("These records show a balance below zero."), // narration
+    ]);
+    const r = await ask({ db, client, question: "Which staff have a balance below zero?" });
+    expect(r.routedBy).toBe("router");
+    expect(r.toolRuns[0].name).toBe("query_catalog");
+    expect(Array.isArray(client.requests[0].tools)).toBe(true); // first attempt sent tools
+    expect(client.requests[1].tools).toBeUndefined(); // retry sent none
+  });
+
+  it("rethrows a non-tools error (e.g. Ollama down)", async () => {
+    const client = new StubLlmClient([new Error("fetch failed")]);
+    await expect(ask({ db, client, question: "anything" })).rejects.toThrow(/fetch failed/);
+  });
+
   it("none path: no tool from model or router returns the prose with no tool runs", async () => {
     const client = new StubLlmClient([proseResponse("Hello! How can I help with the car-loan data?")]);
     const r = await ask({ db, client, question: "hello there" });

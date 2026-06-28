@@ -26,7 +26,8 @@ param(
 )
 
 # Known-good tool-capable candidates, largest -> smallest. Auto-detect tests whichever are pulled.
-$Candidates = @("qwen2.5:14b", "qwen2.5:7b", "qwen2.5:3b", "llama3.2:3b")
+# NB: llama3:8b (Llama 3.0) is intentionally NOT here — it lacks tool-calling. Use llama3.1:8b.
+$Candidates = @("qwen2.5:14b", "llama3.1:8b", "qwen2.5:7b", "qwen2.5:3b", "llama3.2:3b")
 
 $ErrorActionPreference = "Stop"
 

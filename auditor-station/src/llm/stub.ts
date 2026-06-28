@@ -17,16 +17,18 @@ export function proseResponse(content: string): ChatResponse {
 
 export class StubLlmClient implements LlmClient {
   readonly requests: ChatRequest[] = [];
-  private readonly queue: ChatResponse[];
+  private readonly queue: (ChatResponse | Error)[];
 
-  constructor(scripted: ChatResponse[]) {
+  // A scripted Error in the queue is thrown when reached (simulates e.g. Ollama rejecting tools).
+  constructor(scripted: (ChatResponse | Error)[]) {
     this.queue = [...scripted];
   }
 
   async chat(req: ChatRequest): Promise<ChatResponse> {
     this.requests.push(req);
     const next = this.queue.shift();
-    if (!next) throw new Error("StubLlmClient: no scripted response left");
+    if (next === undefined) throw new Error("StubLlmClient: no scripted response left");
+    if (next instanceof Error) throw next;
     return next;
   }
 
