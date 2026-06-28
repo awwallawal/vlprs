@@ -53,6 +53,16 @@ export interface AskOptions {
   onText?: (chunk: string) => void;
   /** Optional progress hook — fires once per tool just before it runs (UI "searching…"). */
   onTool?: (name: string, args: Record<string, unknown>) => void;
+  /**
+   * If false, SKIP the LLM narration turn and return the tools' deterministic summaries
+   * directly — much faster on CPU (no second model call). Default true.
+   */
+  narrate?: boolean;
+  /**
+   * If true, skip the LLM ENTIRELY: the deterministic router picks the tool and the answer
+   * is the tool summary. Near-instant; best for slow CPUs. Default false.
+   */
+  deterministic?: boolean;
 }
 
 // Cap how many rows we feed the model to narrate. The model only needs the summary, the
@@ -80,47 +90,64 @@ function isToolsUnsupported(err: unknown): boolean {
   return /does not support tools|tools? (are )?not supported|tool[\s-]?call/i.test(m);
 }
 
+/** Build a direct answer from the tools' deterministic summaries (no LLM). */
+function composeAnswer(toolRuns: ToolRun[]): string {
+  const parts = toolRuns.map((r) => r.result.error || r.result.summary).filter(Boolean);
+  return parts.join("\n\n") || "No matching records found.";
+}
+
 export async function ask(opts: AskOptions): Promise<AskResult> {
   const { db, client, question, model } = opts;
   const system = opts.system ?? DEFAULT_SYSTEM;
+  const narrate = opts.narrate !== false;
+  const deterministic = opts.deterministic === true;
   const messages: ChatMessage[] = [{ role: "user", content: question }];
 
-  // 1. Tool-decision turn (non-streaming — we need the full tool_calls).
-  // If the model can't do tool-calling at all (e.g. Llama 3.0), Ollama rejects the tools
-  // array — catch that and retry WITHOUT tools so the deterministic router can carry the query.
-  let first;
-  try {
-    first = await client.chat({ model, system, messages, tools: ollamaToolSchemas() });
-  } catch (err) {
-    if (!isToolsUnsupported(err)) throw err;
-    first = await client.chat({ model, system, messages });
-  }
+  let toolCalls: ToolCall[] = [];
+  let routedBy: AskResult["routedBy"] = "none";
+  let firstContent = "";
 
-  let toolCalls: ToolCall[] = first.toolCalls;
-  let routedBy: AskResult["routedBy"] = toolCalls.length ? "model" : "none";
-
-  // 2. Fallback router if the model returned prose.
-  if (!toolCalls.length) {
+  if (deterministic) {
+    // No LLM at all — the deterministic router picks the tool.
     const routed = routeToTool(db, question);
     if (routed) {
       toolCalls = [{ function: { name: routed.name, arguments: routed.args } }];
       routedBy = "router";
     }
+  } else {
+    // 1. Tool-decision turn. If the model can't do tool-calling (e.g. Llama 3.0), Ollama
+    //    rejects the tools array — catch that and retry WITHOUT tools so the router can carry it.
+    let first;
+    try {
+      first = await client.chat({ model, system, messages, tools: ollamaToolSchemas() });
+    } catch (err) {
+      if (!isToolsUnsupported(err)) throw err;
+      first = await client.chat({ model, system, messages });
+    }
+    firstContent = first.content;
+    toolCalls = first.toolCalls;
+    routedBy = toolCalls.length ? "model" : "none";
+
+    // 2. Fallback router if the model returned prose.
+    if (!toolCalls.length) {
+      const routed = routeToTool(db, question);
+      if (routed) {
+        toolCalls = [{ function: { name: routed.name, arguments: routed.args } }];
+        routedBy = "router";
+      }
+    }
   }
 
-  // 4. Nothing to run — return the model's prose with a caveat.
+  // Nothing to run — return prose/help with a caveat.
   if (!toolCalls.length) {
-    return {
-      answer:
-        first.content ||
-        "I can answer questions about car-loan beneficiaries, MDA summaries, loan-computation checks, and record queries. Could you rephrase?",
-      toolRuns: [],
-      citations: [],
-      routedBy: "none",
-    };
+    const answer =
+      firstContent ||
+      "I can answer questions about car-loan beneficiaries, MDA summaries, loan-computation checks, and record queries. Could you rephrase?";
+    if (opts.onText) opts.onText(answer);
+    return { answer, toolRuns: [], citations: [], routedBy: "none" };
   }
 
-  // 3a. Execute the chosen tool(s).
+  // Execute the chosen tool(s).
   const toolRuns: ToolRun[] = [];
   const citations = new Set<string>();
   const toolMessages: ChatMessage[] = [];
@@ -132,10 +159,17 @@ export async function ask(opts: AskOptions): Promise<AskResult> {
     toolMessages.push({ role: "tool", tool_name: tc.function.name, content: toolResultForModel(result) });
   }
 
-  // 3b. Narration turn — model explains the deterministic results (stream if requested).
+  // Fast path: skip the LLM narration turn — return the deterministic tool summary directly.
+  if (deterministic || !narrate) {
+    const answer = composeAnswer(toolRuns);
+    if (opts.onText) opts.onText(answer);
+    return { answer, toolRuns, citations: [...citations], routedBy };
+  }
+
+  // Narration turn — model explains the deterministic results (stream if requested).
   const narrationMessages: ChatMessage[] = [
     ...messages,
-    { role: "assistant", content: first.content, tool_calls: toolCalls },
+    { role: "assistant", content: firstContent, tool_calls: toolCalls },
     ...toolMessages,
   ];
   const narration =
@@ -143,10 +177,5 @@ export async function ask(opts: AskOptions): Promise<AskResult> {
       ? await client.chatStream({ model, system, messages: narrationMessages }, opts.onText)
       : await client.chat({ model, system, messages: narrationMessages });
 
-  return {
-    answer: narration.content,
-    toolRuns,
-    citations: [...citations],
-    routedBy,
-  };
+  return { answer: narration.content, toolRuns, citations: [...citations], routedBy };
 }

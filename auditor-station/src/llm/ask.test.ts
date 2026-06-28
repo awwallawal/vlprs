@@ -86,6 +86,23 @@ describe("ask orchestrator", () => {
     expect(r.toolRuns[0].name).toBe("get_mda_summary");
   });
 
+  it("deterministic mode: no LLM call at all — router picks the tool, answer is the summary", async () => {
+    const client = new StubLlmClient([]); // must never be called
+    const r = await ask({ db, client, question: "Summary of WORKS", deterministic: true });
+    expect(client.requests).toHaveLength(0);
+    expect(r.routedBy).toBe("router");
+    expect(r.toolRuns[0].name).toBe("get_mda_summary");
+    expect(r.answer).toMatch(/WORKS/);
+  });
+
+  it("narrate:false — one LLM call (tool decision), then answer from the tool summary", async () => {
+    const client = new StubLlmClient([toolCallResponse("get_mda_summary", { mda: "WORKS" })]);
+    const r = await ask({ db, client, question: "Summary of WORKS", narrate: false });
+    expect(client.requests).toHaveLength(1); // no narration turn
+    expect(r.routedBy).toBe("model");
+    expect(r.answer).toMatch(/WORKS/);
+  });
+
   it("passes the tool schemas to the model on the first turn", async () => {
     const client = new StubLlmClient([proseResponse("hi")]);
     await ask({ db, client, question: "anything" });

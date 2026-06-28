@@ -48,6 +48,7 @@ server.listen(config.port, "127.0.0.1", () => {
   console.log(`Auditor Station listening on http://127.0.0.1:${config.port}`);
   console.log(provenanceBanner(getProvenance(db)));
   console.log(`Model: ${config.model} (${modelNote}) · Ollama: ${config.ollamaBaseUrl} · Auth: ${config.pin ? "PIN required" : "open (no PIN)"}`);
-  console.log(`At-rest: ${encrypted ? "encrypted (AES-256-GCM)" : "plain (dev)"} · Integrity: ${integrity}`);
+  const speed = config.deterministic ? "deterministic (no LLM)" : config.narrate ? "narrated (2 turns)" : "fast (no narration)";
+  console.log(`At-rest: ${encrypted ? "encrypted (AES-256-GCM)" : "plain (dev)"} · Integrity: ${integrity} · Mode: ${speed}`);
   console.log(`Audit log: ${config.auditFile}`);
 });

@@ -67,6 +67,7 @@ export async function handleAsk(deps: HandlerDeps, input: AskInput): Promise<Ask
     const result = await ask({
       db, client, question, system, model: config.model,
       onText: input.onText, onTool: input.onTool,
+      narrate: config.narrate, deterministic: config.deterministic,
     });
     // Deterministic non-punitive backstop: guarantee no banned term is rendered.
     const { clean, violations } = lintNonPunitive(result.answer);

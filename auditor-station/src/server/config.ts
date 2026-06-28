@@ -28,6 +28,10 @@ export interface StationConfig {
   dbKey?: string;
   /** Cap tokens generated per turn (bounds CPU latency). Default 512. */
   numPredict?: number;
+  /** Skip the LLM narration turn — answer from tool summaries. Faster on CPU. Default true (narrate). */
+  narrate: boolean;
+  /** Skip the LLM entirely — router picks the tool, answer is the tool summary. Default false. */
+  deterministic: boolean;
   auditFile: string;
 }
 
@@ -43,6 +47,8 @@ export function loadConfig(stationRoot: string, overrides: Partial<StationConfig
     manifestFile: env.STATION_MANIFEST ?? resolve(stationRoot, "data/MANIFEST.sha256"),
     dbKey: env.STATION_DB_KEY && env.STATION_DB_KEY.trim() ? env.STATION_DB_KEY.trim() : undefined,
     numPredict: env.STATION_NUM_PREDICT ? Number(env.STATION_NUM_PREDICT) : undefined,
+    narrate: env.STATION_NARRATE ? !/^(0|false|no)$/i.test(env.STATION_NARRATE) : true,
+    deterministic: /^(1|true|yes)$/i.test(env.STATION_DETERMINISTIC ?? ""),
     auditFile: env.STATION_AUDIT ?? resolve(stationRoot, "audit/audit-log.jsonl"),
   };
   return { ...base, ...overrides };
