@@ -26,6 +26,8 @@ export interface StationConfig {
   manifestFile: string;
   /** Passphrase for the at-rest-encrypted catalog. Unset => plain catalog.db (dev). */
   dbKey?: string;
+  /** Cap tokens generated per turn (bounds CPU latency). Default 512. */
+  numPredict?: number;
   auditFile: string;
 }
 
@@ -40,6 +42,7 @@ export function loadConfig(stationRoot: string, overrides: Partial<StationConfig
     encPath: env.STATION_DB_ENC ?? resolve(stationRoot, "data/catalog.db.enc"),
     manifestFile: env.STATION_MANIFEST ?? resolve(stationRoot, "data/MANIFEST.sha256"),
     dbKey: env.STATION_DB_KEY && env.STATION_DB_KEY.trim() ? env.STATION_DB_KEY.trim() : undefined,
+    numPredict: env.STATION_NUM_PREDICT ? Number(env.STATION_NUM_PREDICT) : undefined,
     auditFile: env.STATION_AUDIT ?? resolve(stationRoot, "audit/audit-log.jsonl"),
   };
   return { ...base, ...overrides };

@@ -40,7 +40,7 @@ try {
 }
 const { db, encrypted, integrity } = opened;
 
-const client = new OllamaClient({ baseUrl: config.ollamaBaseUrl, model: config.model });
+const client = new OllamaClient({ baseUrl: config.ollamaBaseUrl, model: config.model, numPredict: config.numPredict });
 const auditor = createAuditor(config.auditFile);
 
 const server = createStationServer({ db, client, config, auditor });

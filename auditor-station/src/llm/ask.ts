@@ -55,8 +55,23 @@ export interface AskOptions {
   onTool?: (name: string, args: Record<string, unknown>) => void;
 }
 
+// Cap how many rows we feed the model to narrate. The model only needs the summary, the
+// counts (meta), and a few examples — sending all rows balloons CPU prefill time. The user
+// still gets full citations + counts (those flow separately), so nothing is lost on screen.
+const MODEL_ROW_CAP = 8;
+
 function toolResultForModel(r: ToolResult): string {
-  return JSON.stringify({ summary: r.summary, rows: r.rows, meta: r.meta, error: r.error });
+  const rows = Array.isArray(r.rows) ? r.rows : [];
+  const shown = rows.slice(0, MODEL_ROW_CAP);
+  return JSON.stringify({
+    summary: r.summary,
+    meta: r.meta,
+    rows: shown,
+    ...(rows.length > shown.length
+      ? { rowsNote: `showing ${shown.length} of ${rows.length}; use the summary/meta counts for totals` }
+      : {}),
+    error: r.error,
+  });
 }
 
 /** Did the model/provider reject the tools array because the model can't do tool-calling? */

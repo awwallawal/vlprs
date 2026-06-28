@@ -14,6 +14,10 @@ export interface OllamaConfig {
   model?: string;
   /** Keep the model resident between calls so the cold load is paid once. */
   keepAlive?: string;
+  /** Cap tokens generated per turn — bounds worst-case latency on CPU. Default 512. */
+  numPredict?: number;
+  /** Low temperature for stable tool-calling + concise narration. Default 0.2. */
+  temperature?: number;
 }
 
 function buildMessages(req: ChatRequest) {
@@ -50,11 +54,15 @@ export class OllamaClient implements LlmClient {
   private readonly baseUrl: string;
   private readonly model: string;
   private readonly keepAlive: string;
+  private readonly numPredict: number;
+  private readonly temperature: number;
 
   constructor(cfg: OllamaConfig = {}) {
     this.baseUrl = (cfg.baseUrl ?? "http://localhost:11434").replace(/\/$/, "");
     this.model = cfg.model ?? MODEL.default;
     this.keepAlive = cfg.keepAlive ?? "30m";
+    this.numPredict = cfg.numPredict ?? 512;
+    this.temperature = cfg.temperature ?? 0.2;
   }
 
   private body(req: ChatRequest, stream: boolean) {
@@ -64,7 +72,7 @@ export class OllamaClient implements LlmClient {
       keep_alive: this.keepAlive,
       messages: buildMessages(req),
       ...(req.tools?.length ? { tools: req.tools } : {}),
-      ...(req.options ? { options: req.options } : {}),
+      options: { temperature: this.temperature, num_predict: this.numPredict, ...(req.options ?? {}) },
     });
   }
 
