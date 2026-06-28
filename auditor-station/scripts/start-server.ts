@@ -11,6 +11,8 @@ import { totalmem } from "node:os";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { OllamaClient } from "../src/llm/ollama.js";
+import { AnthropicClient } from "../src/llm/anthropic.js";
+import type { LlmClient } from "../src/llm/types.js";
 import { selectModelForRam } from "../src/lib/model-profile.js";
 import { createAuditor, createStationServer, loadConfig, openConfiguredCatalog } from "../src/server/index.js";
 import { getProvenance, provenanceBanner } from "../src/server/system-prompt.js";
@@ -23,12 +25,17 @@ if (existsSync(envPath)) process.loadEnvFile(envPath);
 
 const config = loadConfig(STATION_ROOT);
 
-// Auto-select the model by RAM unless STATION_MODEL was pinned explicitly.
+// Local Ollama auto-selects the model by RAM unless STATION_MODEL was pinned. Cloud uses the pin.
 let modelNote = "pinned";
-if (!process.env.STATION_MODEL) {
+if (config.provider === "ollama" && !process.env.STATION_MODEL) {
   const prof = selectModelForRam(totalmem());
   config.model = prof.model;
   modelNote = `auto (${prof.tier})${prof.belowFloor ? " — below 8GB floor, may be slow" : ""}`;
+}
+
+if (config.provider === "anthropic" && !process.env.ANTHROPIC_API_KEY) {
+  console.error("STATION_PROVIDER=anthropic but ANTHROPIC_API_KEY is not set. Add it to .env.");
+  process.exit(1);
 }
 
 let opened;
@@ -40,14 +47,18 @@ try {
 }
 const { db, encrypted, integrity } = opened;
 
-const client = new OllamaClient({ baseUrl: config.ollamaBaseUrl, model: config.model, numPredict: config.numPredict });
+const client: LlmClient =
+  config.provider === "anthropic"
+    ? new AnthropicClient({ model: config.model })
+    : new OllamaClient({ baseUrl: config.ollamaBaseUrl, model: config.model, numPredict: config.numPredict });
 const auditor = createAuditor(config.auditFile);
 
 const server = createStationServer({ db, client, config, auditor });
 server.listen(config.port, "127.0.0.1", () => {
   console.log(`Auditor Station listening on http://127.0.0.1:${config.port}`);
   console.log(provenanceBanner(getProvenance(db)));
-  console.log(`Model: ${config.model} (${modelNote}) · Ollama: ${config.ollamaBaseUrl} · Auth: ${config.pin ? "PIN required" : "open (no PIN)"}`);
+  const brain = config.provider === "anthropic" ? `Anthropic API (${config.model})` : `Ollama ${config.ollamaBaseUrl} (${config.model}, ${modelNote})`;
+  console.log(`Brain: ${brain} · Auth: ${config.pin ? "PIN required" : "open (no PIN)"}`);
   const speed = config.deterministic ? "deterministic (no LLM)" : config.narrate ? "narrated (2 turns)" : "fast (no narration)";
   console.log(`At-rest: ${encrypted ? "encrypted (AES-256-GCM)" : "plain (dev)"} · Integrity: ${integrity} · Mode: ${speed}`);
   console.log(`Audit log: ${config.auditFile}`);

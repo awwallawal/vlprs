@@ -60,6 +60,14 @@ audit CSV export, double-click launcher, checksummed bundle; Tauri/signing docum
 Run locally: `pnpm start` (needs Ollama + a built catalog.db) → open http://127.0.0.1:8717.
 Live ask check: `pnpm smoke:ask "…"`.
 
+## Brain (provider) — Ollama (default) or Anthropic
+`LlmClient` abstracts the model; everything else is provider-agnostic. Default = local **Ollama**
+(no egress). To use **cloud Claude**: `.env` → `STATION_PROVIDER=anthropic` + `ANTHROPIC_API_KEY=…`
+(from console.anthropic.com — NOT the $20 Pro sub, which has no API) + `STATION_MODEL=claude-haiku-4-5`
+(default). `src/llm/anthropic.ts` maps our tool/message shape to the Messages API. **PII:** cloud
+sends catalog data to Anthropic — use ONLY with a DPA + Zero Data Retention (GOVERNANCE.md). No-egress
+deployments stay on Ollama.
+
 ## PIN (local-auth)
 `.env` is the only knob (gitignored). `cp .env.example .env`, set `STATION_PIN=…`, `pnpm start`.
 Change = edit + restart. Remove = clear value / delete `.env` + restart. Unset = open. Constant-time check.

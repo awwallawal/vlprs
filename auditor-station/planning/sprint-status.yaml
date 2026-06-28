@@ -3,7 +3,10 @@
 # Owner-run parallel side quest; gated by owner time, not sprint sequencing.
 
 track: SQ-2
-name: Auditor Station — offline local-Ollama car-loan analyst (AG office)
+name: Auditor Station — car-loan analyst (AG office); local-Ollama default, optional cloud-Claude
+# 2026-06-28: added optional Anthropic provider (Haiku 4.5) behind LlmClient — cloud brain reusing
+# all tools/catalog/audit/web; needs ANTHROPIC_API_KEY + DPA/ZDR (the $20 Pro sub is NOT an API).
+# Local Ollama remains the default/no-egress path. src/llm/anthropic.ts; STATION_PROVIDER=anthropic.
 mode: operational-non-authoritative
 owner: Awwal
 brain: ollama (local only)

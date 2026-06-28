@@ -15,6 +15,8 @@ import { MODEL } from "../station.js";
 
 export interface StationConfig {
   port: number;
+  /** Which brain: local Ollama (default, no egress) or cloud Anthropic (needs API key + DPA/ZDR). */
+  provider: "ollama" | "anthropic";
   ollamaBaseUrl: string;
   model: string;
   /** Optional launch PIN (plaintext in .env). Unset => open. */
@@ -37,10 +39,13 @@ export interface StationConfig {
 
 export function loadConfig(stationRoot: string, overrides: Partial<StationConfig> = {}): StationConfig {
   const env = process.env;
+  const provider: StationConfig["provider"] = /^anthropic$/i.test(env.STATION_PROVIDER ?? "") ? "anthropic" : "ollama";
+  const defaultModel = provider === "anthropic" ? "claude-haiku-4-5" : MODEL.default;
   const base: StationConfig = {
     port: env.STATION_PORT ? Number(env.STATION_PORT) : 8717,
+    provider,
     ollamaBaseUrl: env.STATION_OLLAMA_URL ?? "http://localhost:11434",
-    model: env.STATION_MODEL ?? MODEL.default,
+    model: env.STATION_MODEL ?? defaultModel,
     pin: env.STATION_PIN && env.STATION_PIN.trim() ? env.STATION_PIN.trim() : undefined,
     dbPath: env.STATION_DB ?? resolve(stationRoot, "data/catalog.db"),
     encPath: env.STATION_DB_ENC ?? resolve(stationRoot, "data/catalog.db.enc"),
