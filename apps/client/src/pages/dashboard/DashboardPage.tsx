@@ -190,6 +190,7 @@ function AdminDashboard() {
             trend={metrics.data?.trends?.totalExposure}
             isPending={metrics.isPending}
             helpKey="dashboard.totalExposure"
+            provenance={{ basis: 'declared', latestEntryPeriod: null }}
             onClick={() => navigate('/dashboard/drill-down/total-exposure')}
           />
           {/* Fund Available — conditional rendering for unconfigured state */}
@@ -239,6 +240,7 @@ function AdminDashboard() {
               format="currency"
               isPending={false}
               helpKey="dashboard.fundAvailable"
+              provenance={{ basis: 'declared', latestEntryPeriod: null }}
               onClick={() => navigate('/dashboard/drill-down/fund-available')}
             />
           )}
@@ -252,6 +254,7 @@ function AdminDashboard() {
               trend={metrics.data?.trends?.monthlyRecovery}
               isPending={metrics.isPending}
               helpKey="dashboard.monthlyRecovery"
+              provenance={Number(metrics.data?.monthlyRecovery ?? 0) > 0 ? metrics.data?.dataBasis : undefined}
               onClick={() => navigate('/dashboard/drill-down/monthly-recovery')}
             />
             {metrics.data?.recoveryPeriod && (
@@ -304,6 +307,7 @@ function AdminDashboard() {
             format="currency"
             isPending={metrics.isPending}
             helpKey="dashboard.outstandingReceivables"
+            provenance={metrics.data?.dataBasis}
             onClick={() => navigate('/dashboard/drill-down/outstanding-receivables')}
           />
           <HeroMetricCard
@@ -312,6 +316,7 @@ function AdminDashboard() {
             format="currency"
             isPending={metrics.isPending}
             helpKey="dashboard.collectionPotential"
+            provenance={{ basis: 'declared', latestEntryPeriod: null }}
             onClick={() => navigate('/dashboard/drill-down/collection-potential')}
           />
           <HeroMetricCard
@@ -320,6 +325,7 @@ function AdminDashboard() {
             format="currency"
             isPending={metrics.isPending}
             helpKey="dashboard.atRisk"
+            provenance={metrics.data?.dataBasis}
             onClick={() => navigate('/dashboard/drill-down/at-risk')}
           />
           <HeroMetricCard

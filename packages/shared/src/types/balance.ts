@@ -4,6 +4,21 @@ export interface LedgerEntryForBalance {
   principalComponent: string;
   interestComponent: string;
   entryType: string;
+  periodMonth?: number | null;
+  periodYear?: number | null;
+}
+
+/**
+ * Date-basis disclosure for a computed money figure (Story 17f.2, D-a).
+ * - 'live'     — at least one posted PAYROLL event feeds this figure
+ * - 'baseline' — only migration-baseline / adjustment events feed it (frozen as at the latest period)
+ * - 'declared' — derives from registered/declared loan terms, not ledger events
+ * - 'none'     — no ledger events exist for this record
+ * - 'unknown'  — basis not determinable on this computation path (no chip rendered)
+ */
+export interface BalanceProvenance {
+  basis: 'live' | 'baseline' | 'declared' | 'none' | 'unknown';
+  latestEntryPeriod: string | null;  // "YYYY-MM" of the newest contributing entry, when known
 }
 
 /** Result of an outstanding balance computation */
@@ -18,6 +33,7 @@ export interface BalanceResult {
   installmentsRemaining: number;  // tenureMonths - installmentsCompleted
   entryCount: number;             // total ledger entries used in computation
   asOfDate: string | null;        // null = current, ISO date string = historical
+  provenance?: BalanceProvenance; // date-basis disclosure (17f.2); optional for fixture tolerance, always sent by the server
   derivation: {
     formula: string;              // "totalLoan - sum(entries.amount)"
     totalLoan: string;

@@ -73,6 +73,12 @@ export interface DashboardMetrics {
     monthlyRecovery: { direction: 'up' | 'down' | 'flat'; label: string };
     completionRate: { direction: 'up' | 'down' | 'flat'; label: string };
   };
+
+  // Date-basis disclosure for ledger-computed figures (Story 17f.2, D-a)
+  dataBasis?: {
+    basis: 'live' | 'baseline' | 'none';
+    latestEntryPeriod: string | null;  // "YYYY-MM" of the newest ledger entry portfolio-wide
+  };
 }
 
 export type AttentionItemType =

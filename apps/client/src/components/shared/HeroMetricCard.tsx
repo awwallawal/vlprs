@@ -3,6 +3,7 @@ import { cn } from '@/lib/utils';
 import { formatCount } from '@/lib/formatters';
 import { NairaDisplay } from './NairaDisplay';
 import { MetricHelp } from './MetricHelp';
+import { ProvenanceChip, type ProvenanceBasis } from './ProvenanceChip';
 import { Skeleton } from '@/components/ui/skeleton';
 
 function useCountUp(target: number, duration = 200) {
@@ -48,6 +49,8 @@ interface HeroMetricCardProps {
   isPending?: boolean;
   helpKey?: string;
   className?: string;
+  /** Date-basis disclosure rendered under the value (Story 17f.2) */
+  provenance?: ProvenanceBasis | null;
 }
 
 const trendConfig = {
@@ -65,6 +68,7 @@ export function HeroMetricCard({
   isPending: loading,
   helpKey,
   className,
+  provenance,
 }: HeroMetricCardProps) {
   const numericValue = typeof value === 'number' ? value : parseFloat(value) || 0;
   const animatedCount = useCountUp(format === 'count' ? numericValue : 0);
@@ -128,6 +132,7 @@ export function HeroMetricCard({
     >
       <p className="text-sm text-text-secondary mb-1 min-h-[2.5rem] flex items-end flex-wrap">{label}{helpKey && <MetricHelp metric={helpKey} />}</p>
       <div className="mb-1 min-w-0 overflow-hidden">{displayValue()}</div>
+      {provenance && <div className="mb-1"><ProvenanceChip provenance={provenance} /></div>}
       {trend && (
         <p className={cn('text-xs', trendConfig[trend.direction].color)}>
           <span aria-hidden="true">{trendConfig[trend.direction].arrow}</span>{' '}

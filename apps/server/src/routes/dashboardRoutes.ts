@@ -195,6 +195,27 @@ router.get(
       ? `${actualRecovery.periodYear}-${String(actualRecovery.periodMonth).padStart(2, '0')}`
       : '';
 
+    // Date-basis disclosure for ledger-computed figures (Story 17f.2, D-a):
+    // 'live' once any PAYROLL event exists; 'baseline' while only migration/adjustment
+    // events feed computed money; scoped to the requester's MDA where applicable.
+    const basisScopeCondition = withMdaScope(ledgerEntries.mdaId, mdaScope);
+    const [basisRow] = await db
+      .select({
+        entryCount: sql<number>`count(*)::int`,
+        hasPayroll: sql<boolean>`coalesce(bool_or(${ledgerEntries.entryType} = 'PAYROLL'), false)`,
+        latestKey: sql<number | null>`max(${ledgerEntries.periodYear} * 100 + ${ledgerEntries.periodMonth})`,
+      })
+      .from(ledgerEntries)
+      .where(basisScopeCondition ?? undefined);
+    const dataBasis = {
+      basis: (!basisRow || basisRow.entryCount === 0
+        ? 'none'
+        : basisRow.hasPayroll ? 'live' : 'baseline') as 'live' | 'baseline' | 'none',
+      latestEntryPeriod: basisRow?.latestKey
+        ? `${Math.floor(basisRow.latestKey / 100)}-${String(basisRow.latestKey % 100).padStart(2, '0')}`
+        : null,
+    };
+
     // MoM trends from metric snapshots
     const now = new Date();
     const snapshot = await metricSnapshotService.getPreviousMonthSnapshot(now.getFullYear(), now.getMonth() + 1);
@@ -241,6 +262,9 @@ router.get(
 
       // MoM trends
       trends,
+
+      // Date-basis disclosure (Story 17f.2)
+      dataBasis,
     };
 
     res.json({ success: true, data: metrics });

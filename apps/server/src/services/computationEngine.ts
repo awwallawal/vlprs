@@ -268,6 +268,36 @@ export function computeRemainingServiceMonths(
 }
 
 /**
+ * Derive the date-basis disclosure for a set of ledger entries (Story 17f.2).
+ * Pure function. 'live' when any PAYROLL event contributes; 'baseline' when only
+ * migration/adjustment events do; 'none' when no entries exist. The latest period
+ * is taken from periodYear/periodMonth when the caller's rows carry them.
+ */
+function deriveProvenance(entries: LedgerEntryForBalance[]): NonNullable<BalanceResult['provenance']> {
+  if (entries.length === 0) {
+    return { basis: 'none', latestEntryPeriod: null };
+  }
+  let hasPayroll = false;
+  let latestKey = 0;
+  for (const entry of entries) {
+    if (entry.entryType === 'PAYROLL') hasPayroll = true;
+    if (
+      typeof entry.periodYear === 'number' && typeof entry.periodMonth === 'number' &&
+      entry.periodYear > 0 && entry.periodMonth >= 1 && entry.periodMonth <= 12
+    ) {
+      const key = entry.periodYear * 100 + entry.periodMonth;
+      if (key > latestKey) latestKey = key;
+    }
+  }
+  return {
+    basis: hasPayroll ? 'live' : 'baseline',
+    latestEntryPeriod: latestKey > 0
+      ? `${Math.floor(latestKey / 100)}-${String(latestKey % 100).padStart(2, '0')}`
+      : null,
+  };
+}
+
+/**
  * Compute outstanding balance from loan parameters and ledger entries.
  * Pure function — no DB access. All arithmetic via decimal.js.
  */
@@ -322,6 +352,7 @@ export function computeBalanceFromEntries(
     installmentsRemaining: Math.max(0, tenureMonths - payrollCount),
     entryCount: entries.length,
     asOfDate,
+    provenance: deriveProvenance(entries),
     derivation: {
       formula: 'totalLoan - sum(entries.amount)',
       totalLoan: totalLoan.toFixed(2),
@@ -409,6 +440,12 @@ export function computeBalanceForLoan(params: {
     installmentsRemaining: Math.max(0, tenureMonths - payrollCount),
     entryCount,
     asOfDate: params.asOfDate ?? null,
+    // Entries path: exact basis. Aggregated totalPaid path: entry types are not
+    // visible here, so the basis is honestly 'unknown' (no chip rendered) rather
+    // than a guessed label — imputed never wears the clothes of observed.
+    provenance: params.entries
+      ? deriveProvenance(params.entries)
+      : { basis: 'unknown', latestEntryPeriod: null },
     derivation: {
       formula: limitedComputation
         ? 'MAX(0, totalLoan - sum(entries)) [limited-computation]'

@@ -33,6 +33,12 @@ export const dashboardMetricsSchema = z.object({
     monthlyRecovery: z.object({ direction: z.enum(['up', 'down', 'flat']), label: z.string() }),
     completionRate: z.object({ direction: z.enum(['up', 'down', 'flat']), label: z.string() }),
   }).optional(),
+
+  // Date-basis disclosure (Story 17f.2, D-a)
+  dataBasis: z.object({
+    basis: z.enum(['live', 'baseline', 'none']),
+    latestEntryPeriod: z.string().nullable(),
+  }).optional(),
 });
 
 export type DashboardMetricsResponse = z.infer<typeof dashboardMetricsSchema>;

@@ -33,8 +33,8 @@ interface LoanForClassification {
 }
 
 interface LedgerEntryWithPeriod extends LedgerEntryForBalance {
-  periodMonth?: number;
-  periodYear?: number;
+  periodMonth?: number | null;
+  periodYear?: number | null;
 }
 
 // ─── Pure Functions (no DB, no side effects) ───────────────────────

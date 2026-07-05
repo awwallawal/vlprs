@@ -17,6 +17,7 @@ import {
   AccordionTrigger,
 } from '@/components/ui/accordion';
 import { MetricHelp } from '@/components/shared/MetricHelp';
+import { ProvenanceChip } from '@/components/shared/ProvenanceChip';
 import { FlagExceptionDialog } from './components/FlagExceptionDialog';
 import { LoanAnnotations } from './components/LoanAnnotations';
 import { EventFlagCorrections } from './components/EventFlagCorrections';
@@ -219,6 +220,7 @@ export function LoanDetailPage() {
                 variant="body"
                 className="font-bold text-lg"
               />
+              <ProvenanceChip provenance={loanDetail.data.balance.provenance} className="mt-2" />
             </div>
             <div className="rounded-lg border bg-white p-6">
               <p className="text-sm text-text-secondary mb-1">
