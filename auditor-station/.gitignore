@@ -1,0 +1,23 @@
+# Auditor Station — self-contained .gitignore (travels with the folder).
+# PII NEVER gets committed: the catalog DB and the local audit log are gitignored.
+
+# Toolchain
+node_modules/
+dist/
+*.tsbuildinfo
+*.log
+
+# Local config / secrets (PIN lives here) — keep the example, ignore the real one
+.env
+!.env.example
+
+# PII — citizen financial data (built/copied locally, never to git).
+# Keep the dirs as structure; ignore everything inside them.
+data/*
+!data/.gitkeep
+audit/*
+!audit/.gitkeep
+
+# OS
+.DS_Store
+Thumbs.db

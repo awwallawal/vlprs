@@ -4,11 +4,11 @@ import { loans, ledgerEntries, mdas, mdaSubmissions, loanCompletions, observatio
 import { eq, and, sql, inArray } from 'drizzle-orm';
 import { withMdaScope } from '../lib/mdaScope';
 import { generateUuidv7 } from '../lib/uuidv7';
-import { computeBalanceForLoan } from './computationEngine';
+import { computeBalanceForLoan, deriveProvenance } from './computationEngine';
 import * as loanClassificationService from './loanClassificationService';
 import { LoanClassification } from './loanClassificationService';
 import type { AttentionItem } from '@vlprs/shared';
-import type { LedgerEntryForBalance } from '@vlprs/shared';
+import type { LedgerEntryForBalance, LedgerDataBasis } from '@vlprs/shared';
 
 // ─── Orchestrator ────────────────────────────────────────────────
 
@@ -640,7 +640,20 @@ export function buildPerMdaItems(
  * Batch-compute sum of outstanding balances for a set of loan IDs.
  */
 export async function computeBalanceSumForIds(loanIds: string[]): Promise<string> {
-  if (loanIds.length === 0) return '0.00';
+  const { total } = await computeBalanceSumWithBasisForIds(loanIds);
+  return total;
+}
+
+/**
+ * Batch-compute sum of outstanding balances PLUS the figure's own date-basis
+ * (Story 17f.2 review fix): the basis is derived from the SUBSET's ledger
+ * entries — already fetched for the sum, zero extra I/O — never from a wider
+ * scope. A portfolio-wide 'live' must not caption a baseline-frozen subset.
+ */
+export async function computeBalanceSumWithBasisForIds(
+  loanIds: string[],
+): Promise<{ total: string; basis: LedgerDataBasis }> {
+  if (loanIds.length === 0) return { total: '0.00', basis: { basis: 'none', latestEntryPeriod: null } };
 
   const loanRows = await db
     .select({
@@ -660,6 +673,8 @@ export async function computeBalanceSumForIds(loanIds: string[]): Promise<string
       principalComponent: ledgerEntries.principalComponent,
       interestComponent: ledgerEntries.interestComponent,
       entryType: ledgerEntries.entryType,
+      periodMonth: ledgerEntries.periodMonth,
+      periodYear: ledgerEntries.periodYear,
     })
     .from(ledgerEntries)
     .where(inArray(ledgerEntries.loanId, loanIds));
@@ -686,7 +701,7 @@ export async function computeBalanceSumForIds(loanIds: string[]): Promise<string
     if (bal.gt(0)) total = total.plus(bal);
   }
 
-  return total.toFixed(2);
+  return { total: total.toFixed(2), basis: deriveProvenance(allEntries) };
 }
 
 /**

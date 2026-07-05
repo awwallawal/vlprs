@@ -6,12 +6,12 @@ import { authorise } from '../middleware/authorise';
 import { scopeToMda } from '../middleware/scopeToMda';
 import { readLimiter } from '../middleware/rateLimiter';
 import { auditLog } from '../middleware/auditLog';
-import { ROLES, breakdownQuerySchema, schemeFundBodySchema, apiResponseSchema, dashboardMetricsSchema, attentionItemsResponseSchema, complianceResponseSchema, mdaBreakdownRowSchema, schemeFundDataSchema, type MdaComplianceRow } from '@vlprs/shared';
+import { ROLES, breakdownQuerySchema, schemeFundBodySchema, apiResponseSchema, dashboardMetricsSchema, attentionItemsResponseSchema, complianceResponseSchema, mdaBreakdownRowSchema, schemeFundDataSchema, formatPeriod, type MdaComplianceRow, type LedgerDataBasis } from '@vlprs/shared';
 import { z } from 'zod/v4';
 import { validateResponse } from '../middleware/validateResponse';
 import { db } from '../db';
 import { loans, ledgerEntries } from '../db/schema';
-import { eq, and, sql, count, inArray } from 'drizzle-orm';
+import { eq, and, sql, count, inArray, desc } from 'drizzle-orm';
 import { withMdaScope } from '../lib/mdaScope';
 import * as loanClassificationService from '../services/loanClassificationService';
 import { LoanClassification } from '../services/loanClassificationService';
@@ -19,7 +19,7 @@ import * as revenueProjectionService from '../services/revenueProjectionService'
 import * as schemeConfigService from '../services/schemeConfigService';
 import * as gratuityProjectionService from '../services/gratuityProjectionService';
 import * as attentionItemService from '../services/attentionItemService';
-import { computeBalanceSumForIds } from '../services/attentionItemService';
+import { computeBalanceSumWithBasisForIds } from '../services/attentionItemService';
 import * as mdaAggregationService from '../services/mdaAggregationService';
 import * as submissionCoverageService from '../services/submissionCoverageService';
 import { listMdas } from '../services/mdaService';
@@ -46,6 +46,8 @@ router.get(
     const scopeCondition = withMdaScope(loans.mdaId, mdaScope);
 
     // Phase 1: Run ALL independent queries in parallel (no sequential phases)
+    const basisScopeCondition = withMdaScope(ledgerEntries.mdaId, mdaScope);
+
     const [
       activeLoansResult,
       classifications,
@@ -56,6 +58,8 @@ router.get(
       gratuityExposure,
       loansInWindow,
       completionRateLifetime,
+      latestEntryRow,
+      payrollExistsRow,
     ] = await Promise.all([
       // Active loans count
       (async () => {
@@ -120,6 +124,29 @@ router.get(
 
       // Completion rate lifetime
       loanClassificationService.getLoanCompletionRateLifetime(mdaScope),
+
+      // Date-basis probes (Story 17f.2, review fix): index-friendly LIMIT-1
+      // lookups replacing a WHERE-less full-table aggregate; run in parallel
+      // with everything else instead of as an extra serial round-trip.
+      (async () => {
+        const [row] = await db
+          .select({ periodYear: ledgerEntries.periodYear, periodMonth: ledgerEntries.periodMonth })
+          .from(ledgerEntries)
+          .where(basisScopeCondition ?? undefined)
+          .orderBy(desc(ledgerEntries.periodYear), desc(ledgerEntries.periodMonth))
+          .limit(1);
+        return row ?? null;
+      })(),
+      (async () => {
+        const payrollConditions = [eq(ledgerEntries.entryType, 'PAYROLL' as const)];
+        if (basisScopeCondition) payrollConditions.push(basisScopeCondition);
+        const [row] = await db
+          .select({ id: ledgerEntries.id })
+          .from(ledgerEntries)
+          .where(and(...payrollConditions))
+          .limit(1);
+        return row ?? null;
+      })(),
     ]);
 
     // Phase 2: Derive metrics from already-fetched classifications (no extra DB calls)
@@ -162,11 +189,15 @@ router.get(
       }
     }
 
-    // Batch-compute balances for at-risk and receivable loan sets in parallel
-    const [atRiskAmount, totalOutstandingReceivables] = await Promise.all([
-      computeBalanceSumForIds(atRiskIds),
-      computeBalanceSumForIds(receivableIds),
+    // Batch-compute balances for at-risk and receivable loan sets in parallel,
+    // each carrying its OWN subset date-basis (review fix: a portfolio-wide
+    // 'live' must never caption a baseline-frozen subset figure)
+    const [atRiskResult, receivablesResult] = await Promise.all([
+      computeBalanceSumWithBasisForIds(atRiskIds),
+      computeBalanceSumWithBasisForIds(receivableIds),
     ]);
+    const atRiskAmount = atRiskResult.total;
+    const totalOutstandingReceivables = receivablesResult.total;
 
     // Compute fund available
     let fundAvailable: string | null = null;
@@ -194,6 +225,17 @@ router.get(
     const recoveryPeriod = actualRecovery.periodYear > 0
       ? `${actualRecovery.periodYear}-${String(actualRecovery.periodMonth).padStart(2, '0')}`
       : '';
+
+    // Date-basis disclosure for ledger-computed figures (Story 17f.2, D-a):
+    // whole-(MDA-)scope basis assembled from the Phase-1 probes — 'live' once
+    // any PAYROLL event exists; 'baseline' while only migration/adjustment
+    // events feed computed money; 'none' when the ledger is empty.
+    const dataBasis: LedgerDataBasis = {
+      basis: latestEntryRow === null ? 'none' : payrollExistsRow !== null ? 'live' : 'baseline',
+      latestEntryPeriod: latestEntryRow
+        ? formatPeriod(latestEntryRow.periodYear, latestEntryRow.periodMonth)
+        : null,
+    };
 
     // MoM trends from metric snapshots
     const now = new Date();
@@ -241,6 +283,11 @@ router.get(
 
       // MoM trends
       trends,
+
+      // Date-basis disclosure (Story 17f.2): whole-scope + per-figure subset bases
+      dataBasis,
+      receivablesBasis: receivablesResult.basis,
+      atRiskBasis: atRiskResult.basis,
     };
 
     res.json({ success: true, data: metrics });

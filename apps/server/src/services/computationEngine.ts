@@ -1,6 +1,7 @@
 import Decimal from 'decimal.js';
 import { addYears, addMonths, min, differenceInMonths } from 'date-fns';
-import type { ComputationParams, ScheduleRow, RepaymentSchedule, AutoSplitResult, BalanceResult, LedgerEntryForBalance, GratuityProjectionResult, SchemeExpectedResult } from '@vlprs/shared';
+import type { ComputationParams, ScheduleRow, RepaymentSchedule, AutoSplitResult, BalanceResult, LedgerEntryForBalance, LedgerDataBasis, GratuityProjectionResult, SchemeExpectedResult } from '@vlprs/shared';
+import { formatPeriod } from '@vlprs/shared';
 
 // Configure decimal.js for financial precision
 Decimal.set({ precision: 20, rounding: Decimal.ROUND_HALF_UP });
@@ -268,6 +269,38 @@ export function computeRemainingServiceMonths(
 }
 
 /**
+ * Derive the date-basis disclosure for a set of ledger entries (Story 17f.2).
+ * Pure function. 'live' when any PAYROLL event contributes; 'baseline' when only
+ * migration/adjustment events do; 'none' when no entries exist. The latest period
+ * is taken from periodYear/periodMonth when the caller's rows carry them.
+ * Exported so subset aggregations (e.g. at-risk / receivables sums) derive their
+ * figure's own basis from the same rule — never a wider scope's basis.
+ */
+export function deriveProvenance(entries: LedgerEntryForBalance[]): LedgerDataBasis {
+  if (entries.length === 0) {
+    return { basis: 'none', latestEntryPeriod: null };
+  }
+  let hasPayroll = false;
+  let latestKey = 0;
+  for (const entry of entries) {
+    if (entry.entryType === 'PAYROLL') hasPayroll = true;
+    if (
+      typeof entry.periodYear === 'number' && typeof entry.periodMonth === 'number' &&
+      entry.periodYear > 0 && entry.periodMonth >= 1 && entry.periodMonth <= 12
+    ) {
+      const key = entry.periodYear * 100 + entry.periodMonth;
+      if (key > latestKey) latestKey = key;
+    }
+  }
+  return {
+    basis: hasPayroll ? 'live' : 'baseline',
+    latestEntryPeriod: latestKey > 0
+      ? formatPeriod(Math.floor(latestKey / 100), latestKey % 100)
+      : null,
+  };
+}
+
+/**
  * Compute outstanding balance from loan parameters and ledger entries.
  * Pure function — no DB access. All arithmetic via decimal.js.
  */
@@ -322,6 +355,7 @@ export function computeBalanceFromEntries(
     installmentsRemaining: Math.max(0, tenureMonths - payrollCount),
     entryCount: entries.length,
     asOfDate,
+    provenance: deriveProvenance(entries),
     derivation: {
       formula: 'totalLoan - sum(entries.amount)',
       totalLoan: totalLoan.toFixed(2),
@@ -409,6 +443,12 @@ export function computeBalanceForLoan(params: {
     installmentsRemaining: Math.max(0, tenureMonths - payrollCount),
     entryCount,
     asOfDate: params.asOfDate ?? null,
+    // Entries path: exact basis. Aggregated totalPaid path: entry types are not
+    // visible here, so the basis is honestly 'unknown' (no chip rendered) rather
+    // than a guessed label — imputed never wears the clothes of observed.
+    provenance: params.entries
+      ? deriveProvenance(params.entries)
+      : { basis: 'unknown', latestEntryPeriod: null },
     derivation: {
       formula: limitedComputation
         ? 'MAX(0, totalLoan - sum(entries)) [limited-computation]'

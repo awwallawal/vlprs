@@ -509,6 +509,10 @@ export async function getLoanDetail(
       principalComponent: e.principalComponent,
       interestComponent: e.interestComponent,
       entryType: e.entryType,
+      // Review fix (17f.2): period fields must reach deriveProvenance or the
+      // loan-detail chip can never render its dated form
+      periodMonth: e.periodMonth,
+      periodYear: e.periodYear,
     })),
     null,
   );

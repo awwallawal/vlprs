@@ -415,6 +415,13 @@ describe('GET /api/loans/:id (enriched detail)', () => {
     expect(typeof detail.balance.totalPrincipalPaid).toBe('string');
     expect(typeof detail.balance.totalInterestPaid).toBe('string');
 
+    // Provenance chip data (17f.2 review fix): period fields must survive the
+    // entry mapping so the DATED disclosure reaches the loan-detail chip
+    expect(detail.balance.provenance).toEqual({
+      basis: 'live',
+      latestEntryPeriod: '2024-05',
+    });
+
     // Repayment schedule
     expect(detail.schedule).toBeDefined();
     expect(detail.schedule.params.principalAmount).toBe('500000.00');

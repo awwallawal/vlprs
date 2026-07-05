@@ -21,3 +21,4 @@ error.txt
 !pnpm-workspace.yaml
 certbot
 scripts
+auditor-station

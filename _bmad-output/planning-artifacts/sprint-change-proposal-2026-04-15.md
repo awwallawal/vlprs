@@ -546,3 +546,17 @@ Authoritative go-live requires Story 17.34 (BIR pilot cycle complete with zero C
 ---
 
 **End of proposal. APPROVED 2026-04-15.**
+
+---
+
+## Addendum 1 — Published 2026-04-18
+
+Following the Reconciliation Inventory v1 (2026-04-16) + v2 (2026-04-18) empirical validation, a formal Addendum to this SCP has been published. It adjusts 13 stories across Epic 17 (9 amended, 3 retired, 5 new) and introduces a new variance class.
+
+**Full text:** [`scp-2026-04-15-addendum-1.md`](./scp-2026-04-15-addendum-1.md)
+**Lessons-learned reduce step:** `C:\Users\DELL\Desktop\VLPRS-Reconciliation-2026-04-18\LESSONS_LEARNED.md`
+**Evidence base:** v1 catalog SHA `fc8b5bcb…` · v2 catalog SHA `4960e273…` · 4 register SHA-256s in Addendum §evidence_chain frontmatter.
+
+**Post-Addendum state:** Epic 17 = 39 stories. New stories: 17.6a (Review Queue capacity), 17.33a (quarterly inventory regen), 17.3c (Beneficiary Register ingest), 17.3d (Employment Event Register ingest), 17.3e (APPROVED_BUT_NO_RECORD sub-class tiering). Retired: 17.19, 17.20, 17.21 (merged into 17.17). New variance class: RESOLVER_ALIAS_MISSING (cross-cuts 17.2).
+
+This SCP body remains unchanged — the Addendum is additive. Where Addendum 1 and the body disagree, Addendum 1 governs (per Agreement 22 pattern).

@@ -1,0 +1,145 @@
+# SQ-2 Auditor Station — OWN sprint status (NOT the app's sprint-status.yaml)
+# This file is intentionally separate. SQ-2 never enters the VLPRS app sprint.
+# Owner-run parallel side quest; gated by owner time, not sprint sequencing.
+
+track: SQ-2
+name: Auditor Station — car-loan analyst (AG office); local-Ollama default, optional cloud-Claude
+# 2026-06-28: added optional Anthropic provider (Haiku 4.5) behind LlmClient — cloud brain reusing
+# all tools/catalog/audit/web; needs ANTHROPIC_API_KEY + DPA/ZDR (the $20 Pro sub is NOT an API).
+# Local Ollama remains the default/no-egress path. src/llm/anthropic.ts; STATION_PROVIDER=anthropic.
+mode: operational-non-authoritative
+owner: Awwal
+brain: ollama (local only)
+fence_record: _bmad-output/planning-artifacts/sprint-change-proposal-2026-06-23.md
+created: 2026-06-23
+
+stories:
+  # Phase 1 — the quick win
+  - id: SQ2-0
+    title: "Gate 0: local model smoke test & selection"
+    phase: 1
+    status: done           # cleared 2026-06-26 on target laptop
+    gates: all             # passed — build work is now unblocked
+    result:
+      ran_on: 2026-06-26
+      laptop_ram_gb: 15.8  # 16 GB tier
+      repeats: 5
+      # all four candidates emitted the tool call 5/5 — fallback router is insurance, not load-bearing
+      candidates:
+        - { model: "qwen2.5:14b", tool_call_rate: "5/5", tok_s: 1.9 }
+        - { model: "qwen2.5:7b",  tool_call_rate: "5/5", tok_s: 3.6 }
+        - { model: "qwen2.5:3b",  tool_call_rate: "5/5", tok_s: 8.1 }
+        - { model: "llama3.2:3b", tool_call_rate: "5/5", tok_s: 7.3 }
+      pinned_default: "qwen2.5:7b"   # best routing + narration of the viable speeds
+      fast_mode: "qwen2.5:3b"        # configurable snappy alternative (8.1 tok/s)
+      log: "D:/audit/gate0-smoke-2026-06-26-114755.txt (on the device)"
+      record: auditor-station/planning/sq2-0-gate0-result.md
+  - id: SQ2-1
+    title: "Folder scaffold + isolation"
+    phase: 1
+    status: done           # 2026-06-26
+    result:
+      scaffold: "src/ data/ audit/ vendor/ web/ + package.json, tsconfig.json, .gitignore, CLAUDE.md"
+      own_lockfile: "auditor-station/pnpm-lock.yaml via `pnpm install --ignore-workspace`"
+      isolation:
+        - "pnpm-workspace.yaml: !auditor-station/** (explicit non-member; root lockfile unchanged)"
+        - "eslint.config.js: auditor-station/ in ignores (root lint = 0 errors, none from station)"
+        - ".dockerignore: auditor-station (out of image build context)"
+      pii_hygiene: "data/ + audit/ contents gitignored; .gitkeep preserves dirs; verified via git check-ignore"
+      proof: "standalone typecheck clean + 3/3 vitest; root frozen-install OK; root lint exit 0"
+  - id: SQ2-2
+    title: "catalog.db build + vendor snapshot"
+    phase: 1
+    status: done           # 2026-06-26
+    result:
+      driver: "better-sqlite3@12 (read-only mode; prebuilt win-x64 native binary)"
+      build_script: "scripts/build-catalog-db.ts (pnpm build:catalog) — atomic temp-swap, idempotent"
+      sync_script: "scripts/sync-from-parent.ts (pnpm sync:parent) — SHA-stamps sources, drift warning"
+      schema: "src/lib/catalog-db.ts — 23 cols, period flattened to year/month, normalizedName + canonicalName"
+      indexes: "normalizedName, canonicalName, mda, (year,month), outstandingBalance"
+      vendored:
+        - "src/lib/normalize.ts: normalizeName + canonicalize (copied from SQ-1 utils) + canonicalKey (composed)"
+        - "vendor/loan-model.ts: 13.33% / ÷60 / ₦50 (authored from WAKEUP.md, parity-noted)"
+        - "vendor/vocabulary.snapshot.ts.txt: verbatim snapshot of packages/shared vocabulary.ts"
+        - "vendor/provenance.json: SHA-256 + date of all 4 parent sources"
+      real_build: "101,602 records; catalog sha a9c7444ffad7… MATCHES WAKEUP.md documented SHA; 35 MB; ~23s"
+      proof: "typecheck clean; 27/27 vitest (incl read-only-handle + idempotency + ALATISHE/ALATISE canary + ₦750k tenure table); catalog.db gitignored"
+      note: "canonicalize (faithful copy) does NOT strip parentheticals; station composes canonicalize(normalizeName()) as the search key instead of forking the vendored fn"
+  - id: SQ2-3
+    title: "The four read-only tools"
+    phase: 1
+    status: done           # 2026-06-26
+    result:
+      tools: "src/tools/ — search_beneficiary, get_mda_summary, verify_loan_computation, query_catalog"
+      contract: "src/tools/types.ts (ToolDef + ToolResult{summary,rows,citations,meta}); index.ts registry + ollamaToolSchemas() + runTool()"
+      mda_resolve: "src/lib/mda-resolve.ts — DB-driven (distinct mda/mdaName), no heavy alias vendor"
+      safety: "parameterized SQL only; ORDER BY from allowlist; injection attempt falls back to default order"
+      citations: "every result carries distinct sourceFiles"
+      no_silent_caps: "search + verify-by-name surface truncation (truncated flag + summary note); query_catalog reports totalMatches vs returned — per 'every number is a doorway'"
+      real_data_smoke: "BADMUS->28 persons/19 MDAs; ALATISHE BOSEDE->1 person 61 recs across BIR+CSC (variant collapsed); BIR->5,325 recs/231 persons/₦56.5M; ₦750k/36mo aligned; balanceBelowZero->1,302"
+      proof: "typecheck clean; 43/43 vitest (16 tool tests incl injection guard + ₦750k tenure + variant-collapse + read-only)"
+  - id: SQ2-4
+    title: "Ollama adapter + deterministic fallback router"
+    phase: 1
+    status: done           # 2026-06-26
+    result:
+      layer: "src/llm/ — types (LlmClient), ollama (real client), stub (tests), router, ask (orchestrator), index"
+      adapter: "OllamaClient: POST localhost:11434/api/chat, chat() + chatStream() (NDJSON), maps tool-call shape; default model qwen2.5:7b, keep_alive 30m"
+      orchestrator: "ask(): model->tools->narrate; routedBy = model|router|none; citations flow from tool results"
+      fallback_router: "routeToTool() keyword-classifies prose-only responses to the right tool + typed args (verify amount/tenure, balance-below-zero, largest+year, mda summary, name search); insurance not load-bearing"
+      safety: "router only chooses tool+typed args; tools stay parameterized/read-only; extractAmount ignores tenure numbers; name fallback drops conversational filler"
+      live_harness: "scripts/smoke-ask.ts (pnpm smoke:ask) for on-laptop real-Ollama check"
+      proof: "typecheck clean; 57/57 vitest (router branches + ask model-path + ROUTER-CATCHES-PROSE path + none path + streaming + schemas-passed)"
+      note: "live Ollama HTTP round-trip not run on dev machine (Ollama is on the auditor laptop) — covered by stub contract tests + smoke:ask deferred to laptop"
+  - id: SQ2-5
+    title: "Local server + system prompt + audit"
+    phase: 1
+    status: done           # 2026-06-26
+    result:
+      layer: "src/server/ — config, auth, audit, system-prompt, handler, server, index + scripts/start-server.ts (pnpm start)"
+      system_prompt: "buildSystemPrompt(db): durable prefix (loan model, pathways, MDA overrides, non-punitive rules, worked example) + volatile suffix (live stats + provenance); getProvenance + provenanceBanner"
+      audit: "append-only JSONL at audit/audit-log.jsonl (gitignored); logs success + blocked + error with ts/question/answer/tools+args/routedBy/citations/model"
+      auth: "optional local PIN gate (checkPin, constant-time compare); configured via .env STATION_PIN (zero-dep process.loadEnvFile); .env gitignored + .env.example committed; unset = open; BitLocker is real at-rest control. Set/change/remove = edit .env + restart."
+      handler: "handleAsk() DI-structured (db/client/config/auditor/now) — auth->ask->audit; unit-testable without HTTP or live Ollama"
+      server: "createStationServer() node:http — GET /api/health|/api/meta, POST /api/ask (JSON; SSE streaming + static web in SQ2-6); localhost only"
+      proof: "typecheck clean; 73/73 vitest incl real HTTP round-trip (server.test fetch), blocked-never-reaches-model, audit success+blocked+error, provenance surfaced"
+      decision: "local-auth = optional shared PIN (off by default) for the standalone quick win; richer per-user roles out of scope"
+  - id: SQ2-6
+    title: "Chat UI + vocabulary lint"
+    phase: 1
+    status: done           # 2026-06-26 — PHASE 1 (quick win) COMPLETE
+    result:
+      vocab_lint: "src/lib/vocab-lint.ts lintNonPunitive() — deterministic backstop rewrites banned terms (anomaly->observation, discrepancy->variance, flagged->marked for review, over-deduction->balance below zero, red flag, culprit/offender); guarantees no banned term rendered; violations audited"
+      chat_ui: "web/ plain page (NOT React): index.html + style.css (amber/gold/grey, no red) + app.js (vanilla, ESM)"
+      streaming: "SSE POST /api/ask/stream — tool-progress events ('searching the catalog…'), incremental text chunks, done event replaces raw with sanitized answer + citation chips + provenance banner"
+      server: "static serving (/ , /app.js, /style.css) + SSE; ask() onTool hook for progress"
+      live_smoke: "real server booted on 127.0.0.1:8717 vs live 101,602-record catalog.db: /api/health + provenance OK, / serves page, /api/ask graceful error w/o Ollama"
+      proof: "typecheck clean; 85/85 vitest incl vocab-lint rewrites, handler sanitize+audit, SSE tool+done events, static page served"
+    note: "PHASE 1 quick win complete — auditor opens page, asks, gets cited non-punitive offline answer with provenance. Live model round-trip (pnpm smoke:ask / chat) validated on the auditor laptop."
+  # Phase 2 — harden (pending, free)
+  - id: SQ2-7
+    title: "At-rest encryption + governance (BitLocker, copy-log, integrity gate)"
+    phase: 2
+    status: done           # 2026-06-26
+    result:
+      encryption: "src/lib/crypto-db.ts — AES-256-GCM (scrypt key from STATION_DB_KEY), zero new deps (chose node:crypto + in-memory Buffer open over swapping to SQLCipher native driver). Decrypts to memory only; no plaintext db on disk at runtime."
+      integrity: "src/lib/integrity.ts — MANIFEST.sha256 written at build, verified at launch; mismatch refuses to open. GCM auth tag is a second cryptographic check for encrypted artifacts."
+      open: "src/server/db-open.ts openConfiguredCatalog() — picks enc vs plain, verifies manifest, decrypts, returns read-only handle (better-sqlite3 Buffer open keeps SQLITE_READONLY)."
+      build: "build-catalog-db.ts encrypts to data/catalog.db.enc + removes plain db + writes MANIFEST.sha256 when STATION_DB_KEY set (loads .env). Plain+manifest in dev."
+      governance: "GOVERNANCE.md (BitLocker mandatory + key-delivered-separately + integrity + copy-log policy); scripts/copy-log.ts (pnpm copy-log) appends audit/copy-log.jsonl."
+      proof: "typecheck clean; 99/99 vitest incl crypto round-trip/wrong-key/tamper, integrity match/mismatch/missing, encrypted build->open (plaintext removed, read-only, wrong key refused, tampered enc refused)."
+      note: "SQLCipher deferred in favor of node:crypto AES-GCM — same at-rest guarantee, no native driver swap. DoD met: copied .enc useless without passphrase; mismatched snapshot refused."
+  # Phase 3 — productionize (pending, free)
+  - id: SQ2-8
+    title: "Packaging & distribution (RAM->model profile, audit export, checksummed bundle; Tauri documented)"
+    phase: 3
+    status: done           # 2026-06-26 — pragmatic subset built+tested; Tauri/signing documented
+    result:
+      ram_profile: "src/lib/model-profile.ts selectModelForRam() — 32GB->14b, 16GB->7b, 8GB->3b floor; start-server auto-selects unless STATION_MODEL pinned"
+      audit_export: "src/server/audit-export.ts auditToCsv() + scripts/export-audit.ts (pnpm audit:export) -> audit/exports/*.csv for AG review"
+      launcher: "run-station.cmd double-click (cd + pnpm start)"
+      bundle: "scripts/package-bundle.ts (pnpm bundle) — clean checksummed distributable (excludes node_modules/.env/plaintext-db/audit/tests; ships encrypted catalog + manifest); BUNDLE.sha256 over every file. Smoke: 62 files, no leaks."
+      refresh_flow: "pnpm refresh (= sync:parent + build:catalog; sync-from-parent refactored to export syncFromParent()) + pnpm stage-data (--drive D:, copies only catalog.db.enc + MANIFEST.sha256 + READ-ME). Smoke verified both end-to-end. SQ-2 never auto-updates from SQ-1 — refresh is deliberate + logged."
+      packaging_doc: "PACKAGING.md — Layer 1 (built today: folder + run-station.cmd + bundle) vs Layer 2 (funded Tauri installer + Ollama sidecar + signed update channel, documented-not-built)"
+      proof: "typecheck clean; 108/108 vitest incl RAM tiers, CSV escaping, bundle exclusion predicate; live bundle smoke verified exclusions + checksum"
+      scoping: "Tauri/Ollama-sidecar/signed-channel deliberately DOCUMENTED not built — needs Rust toolchain + target machine + APEX code-signing cert, not verifiable on build box. Layer 1 already delivers double-click/offline/decrypt/answer/audit. SQLCipher avoided in SQ2-7. Pilot does not need Layer 2."

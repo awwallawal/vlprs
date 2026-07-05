@@ -31,7 +31,11 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
-import type { MdaComplianceRow, SubmissionStatus } from '@vlprs/shared';
+import type { MdaComplianceRow, SubmissionStatus, BalanceProvenance } from '@vlprs/shared';
+
+// Figures derived from registered loan terms (not ledger events) share one
+// declared-basis chip (Story 17f.2; single constant per review finding)
+const DECLARED_BASIS: BalanceProvenance = { basis: 'declared', latestEntryPeriod: null };
 
 const STATUS_BADGE_MAP: Record<SubmissionStatus, { variant: 'complete' | 'pending' | 'review'; label: string; Icon: typeof CheckCircle2; iconColor: string }> = {
   submitted: { variant: 'complete', label: 'Submitted', Icon: CheckCircle2, iconColor: 'text-green-600' },
@@ -190,6 +194,7 @@ function AdminDashboard() {
             trend={metrics.data?.trends?.totalExposure}
             isPending={metrics.isPending}
             helpKey="dashboard.totalExposure"
+            provenance={DECLARED_BASIS}
             onClick={() => navigate('/dashboard/drill-down/total-exposure')}
           />
           {/* Fund Available — conditional rendering for unconfigured state */}
@@ -239,6 +244,7 @@ function AdminDashboard() {
               format="currency"
               isPending={false}
               helpKey="dashboard.fundAvailable"
+              provenance={DECLARED_BASIS}
               onClick={() => navigate('/dashboard/drill-down/fund-available')}
             />
           )}
@@ -252,6 +258,7 @@ function AdminDashboard() {
               trend={metrics.data?.trends?.monthlyRecovery}
               isPending={metrics.isPending}
               helpKey="dashboard.monthlyRecovery"
+              provenance={Number(metrics.data?.monthlyRecovery ?? 0) > 0 ? metrics.data?.dataBasis : DECLARED_BASIS}
               onClick={() => navigate('/dashboard/drill-down/monthly-recovery')}
             />
             {metrics.data?.recoveryPeriod && (
@@ -304,6 +311,7 @@ function AdminDashboard() {
             format="currency"
             isPending={metrics.isPending}
             helpKey="dashboard.outstandingReceivables"
+            provenance={metrics.data?.receivablesBasis}
             onClick={() => navigate('/dashboard/drill-down/outstanding-receivables')}
           />
           <HeroMetricCard
@@ -312,6 +320,7 @@ function AdminDashboard() {
             format="currency"
             isPending={metrics.isPending}
             helpKey="dashboard.collectionPotential"
+            provenance={DECLARED_BASIS}
             onClick={() => navigate('/dashboard/drill-down/collection-potential')}
           />
           <HeroMetricCard
@@ -320,6 +329,7 @@ function AdminDashboard() {
             format="currency"
             isPending={metrics.isPending}
             helpKey="dashboard.atRisk"
+            provenance={metrics.data?.atRiskBasis}
             onClick={() => navigate('/dashboard/drill-down/at-risk')}
           />
           <HeroMetricCard

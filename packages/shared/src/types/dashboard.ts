@@ -1,3 +1,5 @@
+import type { LedgerDataBasis } from './balance.js';
+
 // ─── Drill-Down Types (Story 4.3) ────────────────────────────────────
 
 export type LoanClassification = 'COMPLETED' | 'ON_TRACK' | 'OVERDUE' | 'STALLED' | 'OVER_DEDUCTED';
@@ -73,6 +75,14 @@ export interface DashboardMetrics {
     monthlyRecovery: { direction: 'up' | 'down' | 'flat'; label: string };
     completionRate: { direction: 'up' | 'down' | 'flat'; label: string };
   };
+
+  // Date-basis disclosure for ledger-computed figures (Story 17f.2, D-a).
+  // dataBasis = whole (MDA-)scope; the per-figure bases cover the SUBSET of
+  // loans actually feeding that figure (review finding: a portfolio-wide
+  // 'live' must never caption a baseline-frozen subset figure).
+  dataBasis?: LedgerDataBasis;
+  receivablesBasis?: LedgerDataBasis;
+  atRiskBasis?: LedgerDataBasis;
 }
 
 export type AttentionItemType =

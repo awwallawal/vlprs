@@ -392,4 +392,19 @@ export const UI_COPY = {
   EVENT_FLAG_CORRECTED: 'Event flag correction recorded',
   NO_CORRECTIONS_YET: 'No corrections recorded',
   SUGGEST_CREATE_EVENT: 'Would you like to file a {eventType} employment event for this loan?',
+  // Provenance / date-basis disclosure (Story 17f.2)
+  PROVENANCE_BASELINE: 'As at baseline {period}',
+  PROVENANCE_BASELINE_UNDATED: 'As at migration baseline',
+  PROVENANCE_LIVE: 'Live through {period}',
+  PROVENANCE_LIVE_UNDATED: 'Live',
+  PROVENANCE_DECLARED: 'From registered loan terms',
+  PROVENANCE_NONE: 'No financial events recorded',
+  PROVENANCE_BASELINE_DETAIL:
+    'This figure is computed from migration baseline records. Monthly submissions are not yet posted to the financial ledger, so it reflects the position as at the period shown — not current payroll activity.',
+  PROVENANCE_LIVE_DETAIL:
+    'This figure includes posted payroll deduction events through the period shown.',
+  PROVENANCE_DECLARED_DETAIL:
+    'This figure derives from loan terms as registered at migration or entry — not from posted deduction events.',
+  PROVENANCE_NONE_DETAIL:
+    'No ledger events exist for this record yet.',
 } as const;
