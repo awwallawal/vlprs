@@ -48,3 +48,23 @@ reconciliation-inventory-*/
 .claude/projects/
 .claude/scheduled_tasks.lock
 auditor_app.txt
+
+# ── Working scratch (grandfathered in place per PO disposition 2026-07-05;
+#    NEW scratch goes in _scratch/ — ignored wholesale below)
+_scratch/
+epic_new_7.txt
+fr.txt
+fr_decoded.png
+fra.txt
+frb.txt
+frr.txt
+new_read.txt
+quick_review.txt
+unify_eng.txt
+docs/discussions.txt
+docs/dump_retro_3.txt
+docs/mega_retro.txt
+
+# ── Side-quest documentation (SQ-1 track, same fence as above)
+docs/legacy_cd/
+docs/sq1-discovery-session-lowdown.md
