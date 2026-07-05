@@ -1,4 +1,11 @@
 import { z } from 'zod/v4';
+import { LEDGER_BASIS_VALUES } from '../constants/provenance.js';
+
+// Date-basis disclosure shape (Story 17f.2) — enum values shared with the TS union
+export const ledgerDataBasisSchema = z.object({
+  basis: z.enum(LEDGER_BASIS_VALUES),
+  latestEntryPeriod: z.string().nullable(),
+});
 
 export const dashboardMetricsSchema = z.object({
   // Primary Hero Row
@@ -34,11 +41,10 @@ export const dashboardMetricsSchema = z.object({
     completionRate: z.object({ direction: z.enum(['up', 'down', 'flat']), label: z.string() }),
   }).optional(),
 
-  // Date-basis disclosure (Story 17f.2, D-a)
-  dataBasis: z.object({
-    basis: z.enum(['live', 'baseline', 'none']),
-    latestEntryPeriod: z.string().nullable(),
-  }).optional(),
+  // Date-basis disclosure (Story 17f.2, D-a): whole-scope + per-figure subset bases
+  dataBasis: ledgerDataBasisSchema.optional(),
+  receivablesBasis: ledgerDataBasisSchema.optional(),
+  atRiskBasis: ledgerDataBasisSchema.optional(),
 });
 
 export type DashboardMetricsResponse = z.infer<typeof dashboardMetricsSchema>;

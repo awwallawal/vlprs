@@ -1,6 +1,7 @@
 import Decimal from 'decimal.js';
 import { addYears, addMonths, min, differenceInMonths } from 'date-fns';
-import type { ComputationParams, ScheduleRow, RepaymentSchedule, AutoSplitResult, BalanceResult, LedgerEntryForBalance, GratuityProjectionResult, SchemeExpectedResult } from '@vlprs/shared';
+import type { ComputationParams, ScheduleRow, RepaymentSchedule, AutoSplitResult, BalanceResult, LedgerEntryForBalance, LedgerDataBasis, GratuityProjectionResult, SchemeExpectedResult } from '@vlprs/shared';
+import { formatPeriod } from '@vlprs/shared';
 
 // Configure decimal.js for financial precision
 Decimal.set({ precision: 20, rounding: Decimal.ROUND_HALF_UP });
@@ -272,8 +273,10 @@ export function computeRemainingServiceMonths(
  * Pure function. 'live' when any PAYROLL event contributes; 'baseline' when only
  * migration/adjustment events do; 'none' when no entries exist. The latest period
  * is taken from periodYear/periodMonth when the caller's rows carry them.
+ * Exported so subset aggregations (e.g. at-risk / receivables sums) derive their
+ * figure's own basis from the same rule — never a wider scope's basis.
  */
-function deriveProvenance(entries: LedgerEntryForBalance[]): NonNullable<BalanceResult['provenance']> {
+export function deriveProvenance(entries: LedgerEntryForBalance[]): LedgerDataBasis {
   if (entries.length === 0) {
     return { basis: 'none', latestEntryPeriod: null };
   }
@@ -292,7 +295,7 @@ function deriveProvenance(entries: LedgerEntryForBalance[]): NonNullable<Balance
   return {
     basis: hasPayroll ? 'live' : 'baseline',
     latestEntryPeriod: latestKey > 0
-      ? `${Math.floor(latestKey / 100)}-${String(latestKey % 100).padStart(2, '0')}`
+      ? formatPeriod(Math.floor(latestKey / 100), latestKey % 100)
       : null,
   };
 }

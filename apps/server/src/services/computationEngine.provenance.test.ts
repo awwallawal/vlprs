@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { computeBalanceFromEntries, computeBalanceForLoan } from './computationEngine';
+import { computeBalanceFromEntries, computeBalanceForLoan, deriveProvenance } from './computationEngine';
 import type { LedgerEntryForBalance } from '@vlprs/shared';
 
 const baselineEntry = (over: Partial<LedgerEntryForBalance> = {}): LedgerEntryForBalance => ({
@@ -71,5 +71,22 @@ describe('balance provenance (Story 17f.2)', () => {
       entries: [baselineEntry({ periodMonth: 3, periodYear: 2026 })],
     });
     expect(result.provenance).toEqual({ basis: 'baseline', latestEntryPeriod: '2026-03' });
+  });
+
+  // Review fix: deriveProvenance is exported so subset aggregations
+  // (at-risk / receivables sums) derive their OWN figure's basis — a
+  // portfolio-wide 'live' must never caption a baseline-frozen subset.
+  describe('deriveProvenance (exported, subset semantics)', () => {
+    it('a baseline-only subset stays baseline regardless of what the wider portfolio contains', () => {
+      const subsetEntries = [
+        baselineEntry({ periodMonth: 12, periodYear: 2025 }),
+        baselineEntry({ periodMonth: 1, periodYear: 2026 }),
+      ];
+      expect(deriveProvenance(subsetEntries)).toEqual({ basis: 'baseline', latestEntryPeriod: '2026-01' });
+    });
+
+    it('an empty subset reports none, not the portfolio basis', () => {
+      expect(deriveProvenance([])).toEqual({ basis: 'none', latestEntryPeriod: null });
+    });
   });
 });

@@ -8,17 +8,28 @@ export interface LedgerEntryForBalance {
   periodYear?: number | null;
 }
 
+import type { LedgerBasis } from '../constants/provenance.js';
+
+/**
+ * Date-basis derived strictly from ledger entries (Story 17f.2):
+ * 'live' — a posted PAYROLL event contributes; 'baseline' — only
+ * migration/adjustment events do; 'none' — no entries. This is what
+ * deriveProvenance() and every server dataBasis field return.
+ */
+export interface LedgerDataBasis {
+  basis: LedgerBasis;
+  latestEntryPeriod: string | null;  // "YYYY-MM" of the newest contributing entry, when known
+}
+
 /**
  * Date-basis disclosure for a computed money figure (Story 17f.2, D-a).
- * - 'live'     — at least one posted PAYROLL event feeds this figure
- * - 'baseline' — only migration-baseline / adjustment events feed it (frozen as at the latest period)
+ * Superset of LedgerDataBasis for non-ledger surfaces:
  * - 'declared' — derives from registered/declared loan terms, not ledger events
- * - 'none'     — no ledger events exist for this record
  * - 'unknown'  — basis not determinable on this computation path (no chip rendered)
  */
 export interface BalanceProvenance {
-  basis: 'live' | 'baseline' | 'declared' | 'none' | 'unknown';
-  latestEntryPeriod: string | null;  // "YYYY-MM" of the newest contributing entry, when known
+  basis: LedgerBasis | 'declared' | 'unknown';
+  latestEntryPeriod: string | null;
 }
 
 /** Result of an outstanding balance computation */

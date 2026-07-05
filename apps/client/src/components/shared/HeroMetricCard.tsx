@@ -132,7 +132,9 @@ export function HeroMetricCard({
     >
       <p className="text-sm text-text-secondary mb-1 min-h-[2.5rem] flex items-end flex-wrap">{label}{helpKey && <MetricHelp metric={helpKey} />}</p>
       <div className="mb-1 min-w-0 overflow-hidden">{displayValue()}</div>
-      {provenance && <div className="mb-1"><ProvenanceChip provenance={provenance} /></div>}
+      {provenance && provenance.basis !== 'unknown' && (
+        <div className="mb-1"><ProvenanceChip provenance={provenance} /></div>
+      )}
       {trend && (
         <p className={cn('text-xs', trendConfig[trend.direction].color)}>
           <span aria-hidden="true">{trendConfig[trend.direction].arrow}</span>{' '}

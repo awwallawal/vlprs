@@ -45,7 +45,9 @@ export type { ObservationType, ObservationStatus, ObservationContext, SourceRefe
 export type { ThreeWayMatchStatus, ThreeWayVarianceCategory, ThreeWayReconciliationRow, ThreeWayReconciliationSummary, ThreeWayDashboardMetrics } from './types/threeWayReconciliation.js';
 export type { LedgerEntryType, LedgerEntry } from './types/ledger.js';
 export type { ComputationParams, ScheduleRow, RepaymentSchedule, AutoSplitResult, SchemeExpectedResult } from './types/computation.js';
-export type { BalanceResult, LedgerEntryForBalance, BalanceProvenance } from './types/balance.js';
+export type { BalanceResult, LedgerEntryForBalance, BalanceProvenance, LedgerDataBasis } from './types/balance.js';
+export { LEDGER_BASIS_VALUES, type LedgerBasis } from './constants/provenance.js';
+export { formatPeriod } from './utils/period.js';
 export type { ServiceStatusVerificationRow, ServiceStatusVerificationSummary, ServiceStatusVerificationReport, ExecutiveSummaryReportData, MdaComplianceReportData, MdaComplianceReportRow, MdaComplianceReportSummary, SchemeOverview, PortfolioStatusRow, MdaScorecardRow, ReceivablesRankingRow, RecoveryTier, RecoveryTierKey, SubmissionCoverageSummary, OnboardingPipelineSummary, ExceptionSummary, TopVarianceRow, TrendMetric, MonthOverMonthTrend, VarianceReportRow, VarianceReportData, OverdueRegisterRow, StalledRegisterRow, OverDeductedRegisterRow, LoanSnapshotRow, LoanSnapshotReportData, WeeklyAgReportData, WeeklyExecutiveSummary, WeeklyComplianceStatus, WeeklySubmissionRow, WeeklyResolvedException, QuickRecoveryRow, ObservationActivitySummary, PortfolioSnapshotRow, PdfReportType, PdfReportMeta, ShareReportRequest } from './types/report.js';
 export type { TraceReportData, TraceLoanCycle, BalanceEntry, RateAnalysis, TraceReportMetadata, TraceReportSummary, DataCompletenessScore } from './types/traceReport.js';
 export type { SystemHealthResponse, HealthMetric, HealthGroup, HealthGroupName, MetricStatus } from './types/systemHealth.js';
