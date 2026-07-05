@@ -36,3 +36,15 @@ error.txt
 
 # TypeScript
 *.tsbuildinfo
+
+# ── Side-quest fence (SQ-1 analysis track — uncommitted by convention;
+#    see scripts/legacy-report/CLAUDE.md). Tracked files inside these
+#    paths are unaffected by ignore rules.
+scripts/legacy-report/
+docs/Car_Loan/
+reconciliation-inventory-*/
+
+# ── Cross-agent session machinery & relay transcripts (working state, not repo content)
+.claude/projects/
+.claude/scheduled_tasks.lock
+auditor_app.txt
