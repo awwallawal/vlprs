@@ -4024,6 +4024,8 @@ As the **Accountant General**, I want aggregate stability metrics and trend char
 > **Added per Sprint Change Proposal 2026-04-15** following Multi-MDA UAT 2026-04-12 findings and the Alatise Bosede Susainah forensic audit (51 records, 8 observations) + Lamidi Morufu overdeduction discovery (36 records, cumulative ₦13,766 overpayment). **Blocks authoritative go-live.**
 >
 > **Amended per Addendum 1 2026-04-18** following the Reconciliation Inventory v1 (2026-04-16) + v2 (2026-04-18) empirical validation. **Post-amendment: 39 stories** (+2 net: 17.6a + 17.33a + 17.3c + 17.3d + 17.3e added; 17.19 + 17.20 + 17.21 retired, merged into 17.17). New variance class `RESOLVER_ALIAS_MISSING` (cross-cuts 17.2). New Pass 0.5 register cross-check adds 4 register-driven variance classes consuming authoritative scheme registers.
+>
+> **✍ AUTHORISED — Deputy AG signed the two-line pack 2026-07-05** (`deputy-ag-signature-pack-2026-07-04-DRAFT.md`; paper-trail pin git `7ef91fd`; ledger §F SIGNATURE RECORD). **Line 1: Epic 17a (BIR Identity Pilot) is ACTIVE** — six stories per Addendum 2 (published 2026-07-06), with the persons-table schema governed by the PO-approved W2-amended design (`architect-winston-17a-schema-2026-07-04-W2-AMENDED.md`). **Line 2: the consolidated scope is authorised** — sub-epic **17f Foundation Repair** (below), the story-amendment sets of Addenda 3+4 (published 2026-07-06), Epics 19/20/21 charters (below), Team Agreements 23–30, PRD delta FR103–116 + FR91–92 repair. **Binding sequence: 17a → 17f → 17b → 17c** (foundation repairs before the retrofit multiplies consumers). 17b/17c retain their own post-pilot authorisation gates. Story-level amendment truth: `scp-consolidation-ledger.md` §A fold chains → consolidated story files at the Step-5 fold (from each story's FOLDED moment, the story file is the single truth).
 
 **Full specification:** `_bmad-output/planning-artifacts/sprint-change-proposal-2026-04-15.md`
 **Published addendum (2026-04-18):** `_bmad-output/planning-artifacts/scp-2026-04-15-addendum-1.md`
@@ -4081,6 +4083,14 @@ The audit evidence is concrete and reproducible. Deferring the architectural red
 | 20 | **Pilot before portfolio** — single-MDA pilot cycle before expansion (BIR is pilot MDA) |
 | 21 | **Dept Admin escape hatch** — engine proposes, humans dispose, audit trail mandatory |
 | 22 | **App is the source of truth** — bank statements corroborate, do not override |
+| 23 | **Shadow-mode validation gate** — every inference pipeline ships a real-data test-report phase + human review before production activation *(Addendum 2 §6.1)* |
+| 24 | **Golden fixtures as regression gates** — Alatise / Lamidi / ADELEKE / CDU (+ TRANSFER-01 per the W2-amended design; + Kolade/Oke queued via A5) pass on every rule change; failure blocks deployment *(Addendum 2 §6.1)* |
+| 25 | **Pilot before portfolio — strict sequencing** — BIR before Agriculture-scale MDAs; failure is recoverable at pilot scale only *(Addendum 2 §6.1)* |
+| 26 | **Single-source-of-truth folder pattern** — every deliverable bundle ships a Section-0 topology table *(Addendum 2 §6.1)* |
+| 27 | **Journeys must compile into FRs** — no load-bearing behaviour lives only in a user journey *(Addendum 3 §8, TA-A; adopted at signature 2026-07-05)* |
+| 28 | **Adversarial review discipline** — findings labelled independent vs post-contact; disagreements resolved by falsification test; every review closes on a bounded, enumerated verification pass *(Addendum 3 §8, TA-B; adopted 2026-07-05)* |
+| 29 | **Imputed never wears the clothes of observed** — every projected/backfilled/inferred value visually and structurally distinct from observed, at every altitude *(Addendum 3 §8, TA-C; adopted 2026-07-05)* |
+| 30 | **Allocation registry + one open addendum** — every numbered artifact is allocated in the Consolidation Ledger §C before any document uses the number; an addendum closes by consolidation into story files before the next opens *(Ledger §C; adopted 2026-07-05, in force)* |
 
 ### Authority model (codified in SCP §7)
 
@@ -4144,3 +4154,33 @@ Full story list and dependency graph in `_bmad-output/implementation-artifacts/s
 
 Retro 1 (Foundation) covers E15 Prep + Multi-MDA UAT 2026-04-12 + Epic 17 + BIR pilot. Scheduled post-K-gate. Retro 2 (Enhancement Cycle) and Retro 3 (Go-Live Meta) follow per SCP §7.
 
+
+## Epic 17f: Foundation Repair (sub-epic of the Epic 17 family)
+
+> **Created per SCP Addendum 3 (published 2026-07-06; authorised by Deputy AG signature 2026-07-05, Line 2).** The frozen dual-audit verdict (harmonised findings H1–H26): the app's skeleton is sound; three structural gaps must close **before Epic 17b multiplies consumers on the current foundation**. Binding sequence: **17a → 17f → 17b → 17c**. Every story cites its H## per the anti-drift contract (harmonised §10.2#1). Consolidated story texts: Step-5 fold per `scp-consolidation-ledger.md` §A.
+
+### Stories (7)
+
+| Story | Substance | Evidence key |
+|---|---|---|
+| **17f.1** — Post the loop | Submissions/payroll → PAYROLL ledger events with provenance + confidence (implements FR103); keys per the W2 rule; **supersede-safety AC**: posted PAYROLL events must survive upload supersede (`migrationService.ts:903–934`) — block, archive-and-replay, or equivalent | H1, H2; W2 rider (ii) |
+| **17f.2** — Staleness-disclosure chip | **SHIPPED 2026-07-05 pre-authorisation under PO decision D-a (ship-and-tell)**, disclosed in the signed cover note; adversarially reviewed (2 CONFIRMED disclosure defects fixed pre-merge); story text at the fold = formalisation of shipped work. Commits `1826c6d` + `660563e` | H1 |
+| **17f.3** — Open-world quarantine intake | Unknown rows → `pending_verification` (FR96 anchor) instead of whole-file 422; quarantined rows enter the For-Review worklist | H4 |
+| **17f.4** — Computation-engine unification | Lift to `packages/shared`; single scheme path; calendar anchor; ends the 3-way fork; thereafter SQ-1 consumes the shared engine (merge point b) | H6 |
+| **17f.5** — Reconciliation unify + persist | One variance taxonomy; fresh scheme recomputation; variances persist with accounting force | H16 |
+| **17f.6** — Conservation & terminal states | No loan vanishes silently; evented terminal states; absorbs the SQ-1 standing register at go-live (merge point c) incl. the proactive Species-A worklist | H12 |
+| **17f.7** — "For Review" worklist unification | Exception + Observation → one non-punitive worklist; restores FR22; build home for UX/IA cluster 3 | H9 |
+
+**K-gate:** all seven done + golden harness PASS + provenance chip live on every computed money surface. **Gate-carrying stories for 17b:** 17f.1 + 17f.3 (with the 17a schema's W2 amendment, these are W1/W2/W3 of the frozen verdict).
+
+## Epic 19: E-issuance — Statement Issuance to MDAs (DESTINATION)
+
+> **Chartered per SCP Addendum 3 §5.1 [H13]; authorised 2026-07-05 (Line 2) as a charter — story decomposition follows the 17f K-gate.** VLPRS issues pre-filled per-MDA statements each period; the MDA confirms or annotates. Inverts the intake relationship: the system states, the MDA attests (FR105). Explicitly sequenced behind W1 (17f.1) — statements over a starved ledger would issue baseline-frozen numbers as positions.
+
+## Epic 20: F-attestation — Borrower Statements & Dispute Intake (DESTINATION)
+
+> **Chartered per SCP Addendum 3 §5.2 [H14]; authorised 2026-07-05 (Line 2) as a charter.** Every borrower can obtain their statement and dispute a line; dispute intake feeds the For-Review worklist (17f.7) and refund rails (17.26). Extends the PRD's planned Phase-2 Beneficiary Dashboard; realises the NDPR right-of-access principle (FR106). Sequenced behind W1 and E-issuance pilot learning (PO decision D-b: charter now, build post-W1).
+
+## Epic 21: UX/IA — One Spine, Five Altitudes
+
+> **Chartered per SCP Addendum 3 §5.3 [H9 + merged direction, harmonised §5]; authorised 2026-07-05 (Line 2). Direction PO-approved 2026-07-03** (Fable critique §7): one spine (Person → Loan → Ledger events → Computed position → Variance → Action), five role altitudes, six primitives (the shipped 17f.2 provenance chip is primitive #2). **9 story clusters** per session-log §9.8, AC-governed by Sally's Role–Job–Screen matrix (routes named after matrix row IDs; time-to-answer UAT criteria). **Truth-type sequencing:** screens presenting computed money cannot ship as "live" before W1 (17f.1) lands. Sally's UX spec proceeds in parallel with 17a Sprint 1 per §I step 6.

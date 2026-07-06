@@ -29,7 +29,7 @@ Two scope boundaries are stated plainly here rather than discovered later. **Fir
 
 **Consequence of signing Line 1:** Sprint 1 starts at T+0 per the sprint plan, with the approved schema design (Appendix W) governing the identity migrations from day one — the design critical path has already been cleared.
 
-**Signature — Line 1:** ______________________________  Date: ____________
+**Signature — Line 1:** Approved ______________________________  Date: 05/07/2026____________
 
 ---
 
