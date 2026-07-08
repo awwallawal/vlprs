@@ -224,3 +224,39 @@ docker compose -f compose.prod.yaml pull
 docker compose -f compose.prod.yaml up -d
 docker image prune -f
 ```
+
+---
+
+## Production prerequisites (added 2026-07-08 after the 2026-07-05 outage)
+
+The CI/CD pipeline (`.github/workflows/ci.yml`) builds + pushes images, deploys over SSH to the droplet, then verifies `https://oyocarloan.com.ng/api/health`. Two environment prerequisites must hold or the deploy fails — one loudly, one (historically) silently:
+
+### 1. DigitalOcean cloud firewall — inbound TCP 22, 80, 443
+
+The droplet's attached DO cloud firewall **must allow inbound 80 and 443 from all sources** (plus 22 for SSH). DO firewalls are default-deny allow-lists applied at DO's network edge — a firewall that lists only SSH silently **black-holes** 80/443 (no RST; external `curl` hangs on connect). This is invisible to `ufw`/`iptables` on the box (the container stays healthy, local `curl https://localhost/...` returns 200). Fix in the DO console (Networking → Firewalls), **not** on the droplet. This is a per-droplet setting — if you run more than one droplet, do not share an SSH-only firewall onto the web droplet.
+
+### 2. Registry pull credential on the droplet
+
+The droplet pulls private images from `ghcr.io`, which needs a valid login. Provide it either way:
+- **Preferred:** set repo secret **`GHCR_PAT`** = a GitHub PAT (classic) with **`read:packages`**. The deploy step logs in with it each run, so it never drifts.
+- **Fallback:** a cached `docker login` on the droplet (`echo <PAT> | docker login ghcr.io -u <owner> --password-stdin`). This **expires** — an expired credential is what silently no-op'd the 2026-07-05 deploy. Note: ghcr wants a **PAT**, never your GitHub account password.
+
+The deploy script now runs `set -eu`, so a failed pull/login **aborts loudly** instead of falling through to `docker image prune` and reporting green while the containers stay on the old image.
+
+### Diagnosing "site down / deploy didn't land"
+
+| Symptom | Likely cause | Where to fix |
+|---|---|---|
+| External `curl https://oyocarloan.com.ng/api/health` hangs (connect never completes), but SSH works and `curl https://localhost/api/health` on the droplet returns 200 | DO cloud firewall dropping 80/443 | DO console |
+| CI "Verify deployment" fails; `/api/health` `.version` ≠ commit SHA (containers `Up N weeks` on an old image) | droplet ghcr credential expired → `docker compose pull` denied | `docker login` / set `GHCR_PAT` |
+| CI "Deploy to Droplet" green but nothing changed | (pre-2026-07-08) deploy script had no `set -eu` — now fixed | n/a (hardened) |
+
+**Manual recovery** (both fixes, on the droplet):
+```
+cd /opt/vlprs
+echo '<PAT>' | docker login ghcr.io -u <owner> --password-stdin   # if creds expired
+git pull origin main
+export IMAGE_TAG=$(git rev-parse HEAD)
+docker compose -f compose.prod.yaml pull
+docker compose -f compose.prod.yaml up -d --force-recreate --remove-orphans
+```

@@ -121,14 +121,32 @@ jobs:
             VITE_API_URL=https://oyocarloan.com.ng/api
             BUILD_SHA=${{ github.sha }}
 
+      # Droplet/DO prerequisites (see docs/deployment.md):
+      #  - DO cloud firewall inbound must allow TCP 22, 80, 443 from all sources.
+      #    A restrictive firewall silently black-holes 80/443 (SSH still works) — the
+      #    2026-07-05 outage. NOT visible to ufw/iptables on the box; it's at DO's edge.
+      #  - a valid ghcr pull credential. Provided here via the optional GHCR_PAT repo
+      #    secret (a PAT with read:packages). If unset, the droplet's cached
+      #    `docker login` is used — but that expires; an expired credential is what
+      #    silently no-op'd the 2026-07-05 deploy (below, `set -eu` now makes it fail loud).
       - name: Deploy to Droplet
         uses: appleboy/ssh-action@v1
+        env:
+          GHCR_PAT: ${{ secrets.GHCR_PAT }}
+          GHCR_USER: ${{ github.repository_owner }}
         with:
           host: ${{ secrets.DROPLET_IP }}
           username: ${{ secrets.DROPLET_USER }}
           key: ${{ secrets.DROPLET_SSH_KEY }}
+          envs: GHCR_PAT,GHCR_USER
           script: |
+            set -eu
             cd /opt/vlprs
+            # Refresh registry auth so an expired droplet credential fails LOUD here,
+            # not silently mid-pull. Skips cleanly when GHCR_PAT is not configured.
+            if [ -n "${GHCR_PAT:-}" ]; then
+              echo "$GHCR_PAT" | docker login ghcr.io -u "$GHCR_USER" --password-stdin
+            fi
             git pull origin main
             export IMAGE_TAG=${{ github.sha }}
             docker compose -f compose.prod.yaml pull
@@ -139,13 +157,19 @@ jobs:
         run: |
           echo "Verifying deployed version matches ${{ github.sha }}..."
           for i in $(seq 1 12); do
-            DEPLOYED=$(curl -sf https://oyocarloan.com.ng/api/health | jq -r '.version')
+            # --connect-timeout/--max-time cap each attempt: an unreachable site now
+            # fails this loop in minutes, not the 30-min connect-hang of 2026-07-05.
+            DEPLOYED=$(curl -sf --connect-timeout 10 --max-time 15 https://oyocarloan.com.ng/api/health | jq -r '.version' || true)
             if [ "$DEPLOYED" = "${{ github.sha }}" ]; then
               echo "Deployment verified: $DEPLOYED"
               exit 0
             fi
-            echo "Expected ${{ github.sha }}, got $DEPLOYED — retrying in 15s..."
+            if [ -z "$DEPLOYED" ]; then
+              echo "Health endpoint unreachable (attempt $i/12) — retrying in 15s..."
+            else
+              echo "Expected ${{ github.sha }}, got $DEPLOYED (attempt $i/12) — retrying in 15s..."
+            fi
             sleep 15
           done
-          echo "DEPLOYMENT VERIFICATION FAILED"
+          echo "DEPLOYMENT VERIFICATION FAILED — site unreachable, or serving a different version (deploy may have silently no-op'd)"
           exit 1
