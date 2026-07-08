@@ -397,6 +397,7 @@ development_status:
   15-4-onboarding-pipeline-dashboard-report: backlog  # blocked-by: epic-17.17; extends dual-truth for onboarding view
   15-5-retirement-deceased-verification-report: backlog  # blocked-by: epic-17.9 + 17.31 death-in-service policy + 17.32 external-auditor role
   15-6-attention-items-observation-integration: backlog  # blocked-by: epic-17.14; rescope smaller
+  15-7-filename-hygiene-validation-at-submit: backlog  # NEW per Addendum 4 §2 [L5]: filename-pattern validation before upload + FILENAME_RESOLVER_CONFIDENCE flag + pattern-guide panel on 15.0e surface. Extension story — 15.0f is DONE and done stories are never amended (ledger X-6)
   epic-15-retrospective: optional  # will be consolidated into Retro 1 (Foundation) post-Epic 17 K-gate per SCP 2026-04-15
 
   # Epic 12: Early Exit Processing (Sprint 12)
@@ -509,13 +510,38 @@ development_status:
   # CERTIFICATE-WITH-COMMENT pattern: issue certificate when scheme total paid + include
   # Scheme Observations section if overdeduction present; reissue clean v2 on refund confirmation.
   #
-  epic-17: backlog  # target start: post Deputy AG authorisation
+  # ✍ AUTHORISED 2026-07-05: Deputy AG signed the two-line pack (ledger §F SIGNATURE RECORD; pin 7ef91fd).
+  # Line 1 → 17a ACTIVE (Sprint 1 = 17-2 + 17-4b + 17-3b per sm-bob-17a-sprint-plan-2026-04-20; persons-table
+  # migrations governed by architect-winston-17a-schema-2026-07-04-W2-AMENDED.md — approved design).
+  # Line 2 → consolidated scope incl. sub-epic 17f below. BINDING SEQUENCE (Addendum 3 §6): 17a → 17f → 17b → 17c —
+  # no 17b retrofit story leaves backlog before 17f-1 + 17f-3 are done and the 17a schema carries the W2 amendment.
+  # SUB-EPIC TAGS (Addendum 2 §6.3): [17a] 17-2, 17-3b, 17-4, 17-4b, 17-4d, 17-obs · [17c-parked] 17-4c, 17-4e,
+  # 17-x, 17-y, 17-11b + 17-3c/17-3d schema fanout + 17-11 sweep amendment · [17b] Epic 2/5/7/8/14 retrofits
+  # (placeholders in ledger §A.3; full story text = Winston, post-pilot authorisation) · remainder = core Epic 17,
+  # sub-epic assignment resolved at the Step-5 fold.
+  # ✅ STEP-5 FOLD EXECUTED (Bob, 2026-07-06; pending §I.1 fold verification by Fable): every amended story below
+  # now has a CONSOLIDATED STORY FILE = implementation-artifacts/<story-key>.md (key IS the filename), carrying a
+  # provenance footer that mirrors ledger §A.5. From each story's FOLDED mark the story file is the single truth;
+  # addenda are journal history (Agreement 30). Fold plan/spec: implementation-artifacts/fold-manifest-2026-07-06.md.
+  # 17a-schema consolidates by delivery: architect-winston-17a-schema-2026-07-04-W2-AMENDED.md. 17f-1 + 17f-2 also
+  # carry story files (creation texts formalised; 17f-2 = record of shipped work).
+  # AMENDED STORIES (consolidated text = Step-5 fold per scp-consolidation-ledger.md §A): 17-2 [A1+A2+A3+A4, X-1],
+  # 17-4 [A1+A2+A4], 17-3b [A2+A4/X-3], 17-5 [A1+A4 + A5-queued continuity guard — enters NO sprint before that
+  # guard lands in its story text], 17-13 [A4 ×6], 17-16 [A4+harness treaty], 17-17 [A1+A3+A4+W2-design §5, X-4],
+  # 17-18 [A4], 17-26 [A3: REFUND/REVERSAL entry types + Bakare month-count rule + settlement-path blocking AC +
+  # ghost-≠-claimant AC], 17-33 [A1+A3: attestation seal + materiality + %-attested termination metric],
+  # 17-10/17-11/17-12/17-15/17-22/17-32/17-7 [single-addendum touches per ledger §A.2].
+  epic-17: in-progress  # Line-1 scope active 2026-07-05; consolidated story files created at Step-5 fold 2026-07-06 (Bob)
 
   # Sub-theme A — CI Hardening (enforced from day one)
   17-0-lint-ratchet-any-warnings: backlog  # Prod code: commit-blocking ratchet. Test code: parallel non-blocking countdown (PR comment only). SCP amendment 2026-04-15.
   17-0b-dry-run-infrastructure: backlog  # DRY_RUN=1 mode for all writing engines (PRP, fingerprint assignment, backfill, re-attribution, overdeduction, certificate issuance). Cross-cutting, precedes any writing story. SCP amendment 2026-04-15.
 
   # Sub-theme B — Discovery & utility port
+  # NEW 17a stories per Addendum 2 §2.5 (published 2026-07-06); Sprint 1/2 allocation per sm-bob-17a-sprint-plan:
+  17-4b-yoruba-name-canonicalizer: backlog  # [17a] Sprint 1, parallel with 17-2. 9 rules + A4 §3.2: token-sort (L13) + diminutive map ~30 pairs ops-editable JSON (L14). G5 native-speaker review re-scoped to BOTH rule sets (staging option: 9 rules for activation, map as fast-follow — ledger §E)
+  17-4d-namesake-disambiguation-modal: backlog  # [17a] Sprint 2, component-only (Epic 8 cert wire-in = 17b)
+  17-obs-pis-observability-dashboard: backlog  # [17a] Sprint 2, minimal pilot subset (full = 17c)
   17-1-discovery-spike-prevalence-survey: backlog  # Q1 collision rate, Q2 first-deduction-date coverage, Q3 zero-crossing vs gap rate, Q4 concurrent-loan prevalence, Q5 performance budget, Q6 variance contamination, Q7 haphazard-upload distribution, Q8 overpayment prevalence. Output gates sizing of remaining Epic 17 stories.
   17-2-port-side-quest-utilities: backlog  # name-match, mda-resolve, number-parse, column-map, header-detect, period-extract into packages/shared with regression suite from March 2026 side-quest refinements. ADDENDUM 1 (2026-04-18): + content-level MDA verification at ingest as hard gate + folder-aware resolver fallback layer (4th resolution layer) + RESOLVER_ALIAS_MISSING observation on fuzzy-wins-over-absent-alias (WCOS→BCOS class caught in v2).
 
@@ -526,7 +552,7 @@ development_status:
   17-3d-employment-event-register-ingest: backlog  # ADDENDUM 1 (2026-04-18): NEW. Ingest Scheme Secretariat's retired/deceased register. employment_event_register table. Pass 0.5b cross-check: emits RETIRED_BUT_STILL_DEDUCTED (CRITICAL) + DECEASED_BUT_STILL_DEDUCTED (CRITICAL). v2 evidence: 202 events ingested (188 retired + 14 deceased); 10 RETIRED_BUT_STILL_DEDUCTED + 0 DECEASED_BUT_STILL_DEDUCTED — adjudication-ready pre-Epic-17.
   17-3e-register-to-catalog-match-tiering: backlog  # ADDENDUM 1 (2026-04-18): NEW. Sub-classifier for APPROVED_BUT_NO_RECORD. Five sub-classes: FUZZY_MATCH_WITHIN_MDA (PIS merge candidate, ~17%) / NAMESAKE_CROSS_MDA / MDA_COVERAGE_GAP (MDA compliance flag, ~67%) / POSSIBLE_AWAITING_DISBURSEMENT / NO_TRACE (true AG red flag, ~16%). Drives Review Queue partitioning + dashboard sub-class colour. Required — flat count misrepresents governance concern.
   17-4-person-identity-service: backlog  # SCP amendment round 3 (2026-04-15): SEARCH + MATCH split APIs. Fuzzy-Jaccard comparator with per-token Levenshtein <=2 for token equivalence (primary gate); Jaro-Winkler tiebreaker. Bands: Jaccard<0.5=NOT_MATCH; Lev=0 HIGH auto-link; Lev=1 HIGH_WITH_TYPO_FLAG; Lev=2-4 MEDIUM review; Lev>=5 NOT_MATCH. Namesake frequency guard on top. ADELEKE fixture signed off by Awwal 2026-04-15 at tests/fixtures/identity-continuity/adeleke-namesake/expected.json. ADDENDUM 1 (2026-04-18): + enumerate 5 cross-MDA verdicts explicitly (LOAN_CONTINUATION_CONSISTENT / VARIANT / FRESH_PRINCIPAL / OVERLAPPING_MDA_PRESENCE / AMBIGUOUS) + bidirectional signature continuity test + namesake-frequency starter bound N≥3 from catalog+register union.
-  17-5-person-link-candidates-transfer-handshake-wiring: backlog  # proactive Pending Handshake surfacing to both MDAs; wired to existing Transfer Handshake workflow. ADDENDUM 1 (2026-04-18): + distinct workflow for OVERLAPPING_MDA_PRESENCE (namesake check + MDA hierarchy check; NOT Pending Handshake — overlap means same person in two MDAs at same time, never a transfer).
+  17-5-person-link-candidates-transfer-handshake-wiring: backlog  # ⛔ SPRINT-BLOCKED pending A5 §H#3 continuity guard (see story file banner). proactive Pending Handshake surfacing to both MDAs; wired to existing Transfer Handshake workflow. ADDENDUM 1 (2026-04-18): + distinct workflow for OVERLAPPING_MDA_PRESENCE (namesake check + MDA hierarchy check; NOT Pending Handshake — overlap means same person in two MDAs at same time, never a transfer).
   17-6-review-queue-ui-merged: backlog  # merged with existing Exception Queue. Dept Admin approves merges; MDA Officer confirms medium-confidence matches. SCP amendment 2026-04-15: adds search-then-confirm pattern — when user picks a candidate from searchPersons results, confirmation step shows match score + evidence before commit.
   17-6a-review-queue-capacity-planning: backlog  # ADDENDUM 1 (2026-04-18): NEW. Queue partitioning (9 verdict classes) + SLA matrix (CRITICAL 14d, HIGH 14d, MEDIUM 30d; widened CRITICAL from 7d given +53% volume) + staffing model sized to ~53,518 backfill items (48,518 catalog variances + 5,000 register exceptions) + escalation paths + per-MDA queue-throughput KPI (Agreement 21 override rate).
   17-7-loan-detail-page-unified: backlog  # Identity | Timeline (blank months explicit) | Variance | Certificates | Activity Log tabs. Scoped by role. Staff self-service view = Phase 2.
@@ -539,7 +565,8 @@ development_status:
 
   # Sub-theme E — Reconciliation & Truth State
   17-12-person-reconciliation-pass-prp: backlog  # set-based, idempotent, per-person recompute. Triggered by upload/correction/handshake. Output is function of input set, not input order. ADDENDUM 1 (2026-04-18): + explicit DRY_RUN=true mode (PRP runs all passes against proposed input, produces diff report, emits no writes). Cross-reference with 17.0b DRY_RUN infrastructure — reconcile scope at implementation: if 17.0b covers engine-wide dry-run, 17.12 conforms to that contract.
-  17-13-upload-pipeline-integration-content-validation: backlog  # rejects non-car-loan files at boundary (OYSHMB class). Rate limiter Redis migration (UAT #44) integrated here — ICR pipeline multiplies request volume.
+  17-13-upload-pipeline-integration-content-validation: backlog  # rejects non-car-loan files at boundary (OYSHMB class). Rate limiter Redis migration (UAT #44) integrated here — ICR pipeline multiplies request volume. AMENDED per A4 §3.1 (consolidated ingest: multi-month/mid-sheet, stale markers, ghost rows, filename-year mismatch, year-aggregate, content-hash archives)
+  17-13b-template-fingerprint-drift-detection: backlog  # NEW per Addendum 4 §2 [L2]: engine learns each MDA's template shape; drift flagged for review, never silently dropped; L2 defect classes become regression fixtures
   17-14-truth-state-model: backlog  # per-record: CLEAN, IN_VARIANCE, LIFECYCLE_REVIEW, OVERPAYMENT_ADJUDICATION, PENDING_COMPLETION_EVIDENCE, RESOLVED_OUT_OF_SYSTEM, CERTIFICATE_WITH_OBSERVATION_NOTE, CERTIFICATE_CLEAN, APP_BANK_STATEMENT_VARIANCE. Per-person: SETTLED, PROVISIONAL, IN_TRANSFER.
   17-15-monthly-dashboard-snapshots: backlog  # preserve historical figures despite re-attribution
   17-16-idempotency-property-test-framework: backlog  # 24-permutation test for Alatise + Lamidi + ADELEKE + CDU fixtures. Final state must be byte-identical across all orderings.
@@ -576,5 +603,24 @@ development_status:
   17-34-bir-pilot-one-reconciliation-cycle: backlog  # pilot with Board of Internal Revenue. Cycle defined: monthly BIR upload → PRP → dual-truth dashboard → AG review → sign-off or findings log. Time-boxed per 17.31 policy. CRITICAL precisely defined per SCP §7. K-gate = Epic 17 complete.
   17-34a-shadow-dashboard-pre-pilot: backlog  # 14 days pre-cutover: dual-truth dashboard runs in production against real data, AG+PO visible only. Daily divergence report vs legacy. Catches integration issues before BIR officer sees new UI. SCP amendment 2026-04-15.
 
-  epic-17-retrospective: optional  # Retro 1 (Foundation) — covers E15 Prep + Multi-MDA UAT 2026-04-12 + Epic 17 (all 34 stories + BIR pilot). Scheduled for post-Epic 17 K-gate per SCP 2026-04-15.
+  # ── Sub-epic 17f: Foundation Repair (Addendum 3 §3, published 2026-07-06; authorised Line 2, 2026-07-05) ──
+  # Sequenced AFTER 17a, BEFORE any 17b retrofit (binding, Addendum 3 §6). Gate-carriers for 17b: 17f-1 + 17f-3.
+  # K-gate: all seven done + golden harness PASS + provenance chip on every computed money surface.
+  epic-17f: in-progress  # 17f-2 shipped pre-signature under PO decision D-a
+  17f-1-post-the-loop-ledger-posting: backlog  # [H1, H2] submissions/payroll → PAYROLL events w/ provenance+confidence (FR103); W2-rule keys; SUPERSEDE-SAFETY AC [W2 rider (ii)]: posted events survive upload supersede (migrationService.ts:903–934)
+  17f-2-staleness-disclosure-chip: done  # [H1] SHIPPED 2026-07-05 pre-authorisation (D-a ship-and-tell, disclosed in signed cover note). Commits 1826c6d + 660563e; adversarially reviewed (8 angles; 2 CONFIRMED disclosure defects fixed pre-merge: loan-detail dated form, per-figure subset basis); 16+ new tests, integration-verified. Story text at Step-5 fold = formalisation of shipped work
+  17f-3-open-world-quarantine-intake: backlog  # [H4] unknown rows → pending_verification (FR96 anchor), never whole-file 422; quarantine feeds the For-Review worklist
+  17f-4-computation-engine-unification: backlog  # [H6] lift to packages/shared; single scheme path; calendar anchor; ends 3-way fork (merge point b — SQ-1 consumes shared engine after)
+  17f-5-reconciliation-unify-persist: backlog  # [H16] one taxonomy; fresh scheme recomputation; variances persist with accounting force; consumes 17f-4
+  17f-6-conservation-terminal-states: backlog  # [H12] no silent vanishing; evented terminal states; absorbs SQ-1 standing register at go-live (merge point c) incl. proactive Species-A worklist
+  17f-7-for-review-worklist-unification: backlog  # [H9] Exception + Observation → one non-punitive worklist; restores FR22; build home for UX/IA cluster 3
+
+  epic-17-retrospective: optional  # Retro 1 (Foundation) — covers E15 Prep + Multi-MDA UAT 2026-04-12 + Epic 17 (17a scope + BIR pilot; sub-epic K-gates per Addendum 2 §6.3). Triggers post-17a K-gate.
   epic-13-retrospective: optional
+
+  # ──────────────────────────────────────────────────────────────────────
+  # Epics 19–21: chartered per Addendum 3 §5 (published 2026-07-06; authorised Line 2, 2026-07-05)
+  # ──────────────────────────────────────────────────────────────────────
+  epic-19: backlog  # E-issuance — statements issued to MDAs, confirm/annotate [H13, FR105]. DESTINATION: story decomposition follows the 17f K-gate; behind W1 (17f-1)
+  epic-20: backlog  # F-attestation — borrower statements + dispute intake [H14, FR106]. DESTINATION: behind W1 + E-issuance pilot learning (PO decision D-b: charter now, build post-W1)
+  epic-21: backlog  # UX/IA — one spine, five altitudes [H9 + harmonised §5]. 9 clusters per session-log §9.8; stories created by Bob after Sally's Role–Job–Screen matrix lands; truth-type sequencing behind W1; Sally's spec runs parallel with 17a Sprint 1 (§I step 6)

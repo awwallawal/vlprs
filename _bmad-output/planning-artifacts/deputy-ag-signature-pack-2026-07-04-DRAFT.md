@@ -29,7 +29,7 @@ Two scope boundaries are stated plainly here rather than discovered later. **Fir
 
 **Consequence of signing Line 1:** Sprint 1 starts at T+0 per the sprint plan, with the approved schema design (Appendix W) governing the identity migrations from day one — the design critical path has already been cleared.
 
-**Signature — Line 1:** ______________________________  Date: ____________
+**Signature — Line 1:** Approved ______________________________  Date: 05/07/2026____________
 
 ---
 
@@ -47,7 +47,9 @@ One signature covering four amendment documents, consolidated in `scp-consolidat
 
 **The binding sequencing rule inside Line 2:** foundation repairs (posting, re-keying, quarantine intake) land **before** the 17b retrofit multiplies consumers on the current foundation. Order: 17a → 17f → 17b → 17c.
 
-**Signature — Line 2:** ______________________________  Date: ____________
+**Signature — Line 2:** Approved ______________________________  Date: 05/07/2026____________
+
+> *Transcription note (SM Bob, 2026-07-06): the Deputy AG signed both lines on the physical pack 2026-07-05. Line 1 was transcribed at §I step 2; Line 2 was found untranscribed during the step-3 pre-fold verification and completed here on PO confirmation (Awwal, 2026-07-06). No content of the pack has been altered — signature blocks only.*
 
 ---
 

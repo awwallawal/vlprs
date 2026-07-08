@@ -1,15 +1,15 @@
 ---
-title: Sprint Change Proposal — Addendum 4 to SCP 2026-04-15 (DRAFT)
+title: Sprint Change Proposal — Addendum 4 to SCP 2026-04-15 (PUBLISHED)
 subtitle: AG 2024-2025 Report Cycle Lessons — routing the 20-lesson field register (L1–L20) into FR deltas, story amendments, new stories, and CI policy
 date_drafted: 2026-07-04
 author: PM John (drafted) — for Awwal Lawal (Product Owner) review and Deputy AG authorisation
 parent_scp: sprint-change-proposal-2026-04-15.md (approved 2026-04-15, Round 5)
 parent_addenda:
   - scp-2026-04-15-addendum-1.md (published 2026-04-18)
-  - scp-addendum-2-2026-04-20-DRAFT.md (PO-approved structure; Deputy AG signature pending)
-  - scp-addendum-3-2026-07-04-DRAFT.md (ledger-reframe package, H1–H26)
+  - scp-2026-04-15-addendum-2.md (published 2026-07-06; formerly scp-addendum-2-2026-04-20-DRAFT.md)
+  - scp-addendum-3-2026-07-04.md (published 2026-07-06; ledger-reframe package, H1–H26)
 scope_classification: MODERATE — no new epics, no sequencing changes; 3 new FRs, 2 new stories, ~14 story amendments (mostly ingest/identity hardening), 1 CI policy
-status: DRAFT — REQUESTS Deputy AG authorisation via the consolidated signature pack (Line 2); nothing in it authorises itself
+status: PUBLISHED 2026-07-06 — authorised by Deputy AG signature on the two-line pack, 2026-07-05 (Line 2; ledger §F SIGNATURE RECORD). Formerly scp-addendum-4-2026-07-04-DRAFT.md. Journal entry — corrections are new entries, never edits.
 single_input: _bmad-output/implementation-artifacts/ag-2024-2025-session-lessons-2026-05-04.md (v2, 20 lessons, re-keyed to Addendum 4 on 2026-07-04)
 naming_note: originally earmarked "Addendum 3" (2026-05-07); re-keyed to Addendum 4 after the ledger-reframe package took that number. Root cause + fix = allocation registry, scp-consolidation-ledger.md §C / proposed Agreement 30.
 evidence_chain:
@@ -21,13 +21,13 @@ evidence_chain:
 routing_rule: every item cites its L## (the lessons register is this Addendum's foreign key, exactly as H## is Addendum 3's). An item with no L## does not enter this Addendum.
 ---
 
-# Sprint Change Proposal — Addendum 4 to SCP 2026-04-15 (DRAFT)
+# Sprint Change Proposal — Addendum 4 to SCP 2026-04-15 (PUBLISHED)
 
 ## AG 2024-2025 Report Cycle Lessons — field-validated ingest and identity hardening
 
-- **Date drafted:** 2026-07-04 (source lessons finalised 2026-05-07; formalisation deferred by the naming collision, now resolved)
+- **Date drafted:** 2026-07-04 (source lessons finalised 2026-05-07; formalisation deferred by the naming collision, now resolved) · **Published:** 2026-07-06
 - **Author:** PM John — for Awwal Lawal (PO) review and Deputy AG authorisation
-- **Status:** **DRAFT — REQUESTS authorisation** on Line 2 of the consolidated signature pack. One item touches the already-authorised 17a envelope as design input (§4, same treatment as Addendum 3's W2 gate) — flagged, not assumed.
+- **Status:** **PUBLISHED — AUTHORISED.** Deputy AG signed the two-line pack 2026-07-05; Line 2 covers this Addendum in full (ledger §F SIGNATURE RECORD). Takes effect through the §I runbook: change-list applied at step 2 (this publication); story texts consolidate at the Step-5 fold.
 
 ---
 

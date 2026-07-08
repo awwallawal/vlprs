@@ -1,14 +1,14 @@
 ---
-title: Sprint Change Proposal — Addendum 3 to SCP 2026-04-15 (DRAFT)
+title: Sprint Change Proposal — Addendum 3 to SCP 2026-04-15 (PUBLISHED)
 subtitle: Ledger Reframe — routing the harmonised findings register (H1–H26) into PRD delta, foundation-repair stories, story amendments, and new epic charters
 date_drafted: 2026-07-04
 author: PM John (drafted) — for Awwal Lawal (Product Owner) review and Deputy AG authorisation
 parent_scp: sprint-change-proposal-2026-04-15.md (approved 2026-04-15, Round 5)
 parent_addenda:
   - scp-2026-04-15-addendum-1.md (published 2026-04-18)
-  - scp-addendum-2-2026-04-20-DRAFT.md (PO-approved structure; Deputy AG signature pending)
+  - scp-2026-04-15-addendum-2.md (published 2026-07-06; formerly scp-addendum-2-2026-04-20-DRAFT.md)
 scope_classification: MAJOR — new foundation-repair sub-epic (17f) sequenced before 17b; PRD delta plan (7 new FR items); 5 story amendments; 3 new epic charters; 3 team agreements
-status: DRAFT — this Addendum REQUESTS Deputy AG authorisation; nothing in it authorises itself
+status: PUBLISHED 2026-07-06 — authorised by Deputy AG signature on the two-line pack, 2026-07-05 (Line 2; ledger §F SIGNATURE RECORD). Formerly scp-addendum-3-2026-07-04-DRAFT.md. Journal entry — corrections are new entries, never edits.
 single_input: _bmad-output/implementation-artifacts/harmonised-findings-2026-07-04.md (§1–§9 FROZEN, H1–H26; §10 two-track execution contract, binding)
 evidence_chain:
   harmonised_register: _bmad-output/implementation-artifacts/harmonised-findings-2026-07-04.md
@@ -23,13 +23,13 @@ evidence_chain:
 routing_rule: harmonised §2 Provenance column — SPEC → PRD delta · BUILD → repair stories · PLAN → story amendments / new charters · DATA → memos (note only)
 ---
 
-# Sprint Change Proposal — Addendum 3 to SCP 2026-04-15 (DRAFT)
+# Sprint Change Proposal — Addendum 3 to SCP 2026-04-15 (PUBLISHED)
 
 ## The Ledger Reframe — foundation repair before consumer multiplication
 
-- **Date drafted:** 2026-07-04
+- **Date drafted:** 2026-07-04 · **Published:** 2026-07-06
 - **Author:** PM John — for Awwal Lawal (PO) review and Deputy AG authorisation
-- **Status:** **DRAFT — REQUESTS authorisation.** The only movements preceding signature are the two DATA memos (§7), which need no authorisation, and — subject to PO decision D-a (§10) — the W1 staleness-disclosure story.
+- **Status:** **PUBLISHED — AUTHORISED.** Deputy AG signed the two-line pack 2026-07-05; Line 2 covers this Addendum in full (ledger §F SIGNATURE RECORD; paper-trail pin `7ef91fd`). The pre-signature movements it anticipated (two DATA memos; the D-a staleness chip, PO-decided ship-and-tell) occurred as recorded. Takes effect through the §I runbook: change-list applied at step 2 (this publication); story texts consolidate at the Step-5 fold.
 
 ---
 

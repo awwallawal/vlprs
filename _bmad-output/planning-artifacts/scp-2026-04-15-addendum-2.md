@@ -1,12 +1,12 @@
 ---
-title: Sprint Change Proposal — Addendum 2 to SCP 2026-04-15 (DRAFT, reorganised by sub-epic)
+title: Sprint Change Proposal — Addendum 2 to SCP 2026-04-15 (PUBLISHED, reorganised by sub-epic)
 subtitle: Identity Foundation hardening — BIR backfill, Yoruba canonicalizer, Epic 17 split (Option B approved), 17a pilot activation
 date_drafted: 2026-04-20
 author: PM John (drafted) — for Awwal Lawal (Product Owner) review and Deputy AG authorisation
 parent_scp: sprint-change-proposal-2026-04-15.md (approved 2026-04-15, post Round 5)
 parent_addendum: scp-2026-04-15-addendum-1.md (published 2026-04-18)
 scope_classification: MAJOR — Epic 17 split (Option B approved by PO); 17a in pilot scope (authorised); 17b / 17c / Epic 18 deferred (pending authorisation)
-status: DRAFT — pending Deputy AG authorisation on the Pause-Exit Brief (`DEPUTY_AG_BRIEF_2026-04-20.md`)
+status: PUBLISHED 2026-07-06 — finalisation gate satisfied per its own terms; the Deputy AG signed the two-line pack 2026-07-05 (Line 1 = the 17a activation this document defined, carrying the April brief unchanged; Line 2 = its residual structure). Formerly implementation-artifacts/scp-addendum-2-2026-04-20-DRAFT.md.
 supersedes: none
 evidence_chain:
   session_folder: C:\Users\DELL\Desktop\VLPRS-Reconciliation-2026-04-18\
@@ -21,16 +21,16 @@ evidence_chain:
   per_staff_drilldown: C:\Users\DELL\Desktop\VLPRS-Reconciliation-2026-04-18\by-staff-id\ (1,536 pages + 1 index)
 ---
 
-# Sprint Change Proposal — Addendum 2 to SCP 2026-04-15 (DRAFT)
+# Sprint Change Proposal — Addendum 2 to SCP 2026-04-15 (PUBLISHED)
 
 ## Identity Foundation hardening — Epic 17 split (Option B approved), 17a BIR-pilot scope authorised, 17b/17c/Epic 18 deferred
 
-- **Date drafted:** 2026-04-20
+- **Date drafted:** 2026-04-20 · **Published:** 2026-07-06
 - **Author:** PM John (drafted) — for Awwal Lawal (PO) review and Deputy AG authorisation
 - **Parent SCP:** `sprint-change-proposal-2026-04-15.md` (approved 2026-04-15, Round 5)
 - **Parent Addendum:** `scp-2026-04-15-addendum-1.md` (published 2026-04-18)
-- **Scope classification:** **MAJOR** — Option B (Epic 17 split) approved by PO; 17a pilot scope in activation path; 17b / 17c / Epic 18 remain paused pending separate authorisation.
-- **Status:** **DRAFT** — the structural decision is PO-approved; Deputy AG authorisation on the Pause-Exit Brief (`DEPUTY_AG_BRIEF_2026-04-20.md`) is the finalisation gate.
+- **Scope classification:** **MAJOR** — Option B (Epic 17 split); **17a ACTIVATED by Line-1 signature 2026-07-05**; 17b / 17c / Epic 18 remain paused pending their own post-pilot authorisations, exactly as this document specified.
+- **Status:** **PUBLISHED — the finalisation gate is satisfied per this document's own terms.** The Deputy AG signed the two-line pack on 2026-07-05: Line 1 is the 17a activation defined here (the April Pause-Exit Brief, carried unchanged into the pack); Line 2 covers the residual structure. The 17a schema design was amended pre-implementation per Addendum 3 §4.5 (W2 gate — satisfied and released 2026-07-04 via `architect-winston-17a-schema-2026-07-04-W2-AMENDED.md`); the G5 native-speaker review is re-scoped per Addendum 4 §3.2, with the staged option recorded in ledger §E.
 
 ---
 
