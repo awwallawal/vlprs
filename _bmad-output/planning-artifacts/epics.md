@@ -4073,7 +4073,7 @@ The audit evidence is concrete and reproducible. Deferring the architectural red
 | J. Data Remediation & Policy | 17.30 remediation workflow, 17.31 scheme policy clarifications | Structured re-declaration path; Scheme Secretariat deliverables |
 | K. Backfill & Pilot | 17.32 external-auditor role, 17.33 retroactive backfill, 17.34 BIR pilot (cycle defined, CRITICAL precisely defined), 17.34a shadow dashboard pre-pilot | Historical data reconciled; pilot validates with precise acceptance criteria; K-gate = Epic 17 complete |
 
-### Key governance principles (Team Agreements 17–22, codified in SCP §4.3)
+### Key governance principles (Team Agreements 17–30; 17–22 codified in SCP §4.3, 23–26 per Addendum 2, 27–30 adopted at signature 2026-07-05)
 
 | # | Agreement |
 |---|---|

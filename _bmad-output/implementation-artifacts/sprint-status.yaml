@@ -519,13 +519,19 @@ development_status:
   # 17-x, 17-y, 17-11b + 17-3c/17-3d schema fanout + 17-11 sweep amendment · [17b] Epic 2/5/7/8/14 retrofits
   # (placeholders in ledger §A.3; full story text = Winston, post-pilot authorisation) · remainder = core Epic 17,
   # sub-epic assignment resolved at the Step-5 fold.
+  # ✅ STEP-5 FOLD EXECUTED (Bob, 2026-07-06; pending §I.1 fold verification by Fable): every amended story below
+  # now has a CONSOLIDATED STORY FILE = implementation-artifacts/<story-key>.md (key IS the filename), carrying a
+  # provenance footer that mirrors ledger §A.5. From each story's FOLDED mark the story file is the single truth;
+  # addenda are journal history (Agreement 30). Fold plan/spec: implementation-artifacts/fold-manifest-2026-07-06.md.
+  # 17a-schema consolidates by delivery: architect-winston-17a-schema-2026-07-04-W2-AMENDED.md. 17f-1 + 17f-2 also
+  # carry story files (creation texts formalised; 17f-2 = record of shipped work).
   # AMENDED STORIES (consolidated text = Step-5 fold per scp-consolidation-ledger.md §A): 17-2 [A1+A2+A3+A4, X-1],
   # 17-4 [A1+A2+A4], 17-3b [A2+A4/X-3], 17-5 [A1+A4 + A5-queued continuity guard — enters NO sprint before that
   # guard lands in its story text], 17-13 [A4 ×6], 17-16 [A4+harness treaty], 17-17 [A1+A3+A4+W2-design §5, X-4],
   # 17-18 [A4], 17-26 [A3: REFUND/REVERSAL entry types + Bakare month-count rule + settlement-path blocking AC +
   # ghost-≠-claimant AC], 17-33 [A1+A3: attestation seal + materiality + %-attested termination metric],
   # 17-10/17-11/17-12/17-15/17-22/17-32/17-7 [single-addendum touches per ledger §A.2].
-  epic-17: in-progress  # Line-1 scope active 2026-07-05; story files created at Step-5 fold (Bob)
+  epic-17: in-progress  # Line-1 scope active 2026-07-05; consolidated story files created at Step-5 fold 2026-07-06 (Bob)
 
   # Sub-theme A — CI Hardening (enforced from day one)
   17-0-lint-ratchet-any-warnings: backlog  # Prod code: commit-blocking ratchet. Test code: parallel non-blocking countdown (PR comment only). SCP amendment 2026-04-15.
@@ -546,7 +552,7 @@ development_status:
   17-3d-employment-event-register-ingest: backlog  # ADDENDUM 1 (2026-04-18): NEW. Ingest Scheme Secretariat's retired/deceased register. employment_event_register table. Pass 0.5b cross-check: emits RETIRED_BUT_STILL_DEDUCTED (CRITICAL) + DECEASED_BUT_STILL_DEDUCTED (CRITICAL). v2 evidence: 202 events ingested (188 retired + 14 deceased); 10 RETIRED_BUT_STILL_DEDUCTED + 0 DECEASED_BUT_STILL_DEDUCTED — adjudication-ready pre-Epic-17.
   17-3e-register-to-catalog-match-tiering: backlog  # ADDENDUM 1 (2026-04-18): NEW. Sub-classifier for APPROVED_BUT_NO_RECORD. Five sub-classes: FUZZY_MATCH_WITHIN_MDA (PIS merge candidate, ~17%) / NAMESAKE_CROSS_MDA / MDA_COVERAGE_GAP (MDA compliance flag, ~67%) / POSSIBLE_AWAITING_DISBURSEMENT / NO_TRACE (true AG red flag, ~16%). Drives Review Queue partitioning + dashboard sub-class colour. Required — flat count misrepresents governance concern.
   17-4-person-identity-service: backlog  # SCP amendment round 3 (2026-04-15): SEARCH + MATCH split APIs. Fuzzy-Jaccard comparator with per-token Levenshtein <=2 for token equivalence (primary gate); Jaro-Winkler tiebreaker. Bands: Jaccard<0.5=NOT_MATCH; Lev=0 HIGH auto-link; Lev=1 HIGH_WITH_TYPO_FLAG; Lev=2-4 MEDIUM review; Lev>=5 NOT_MATCH. Namesake frequency guard on top. ADELEKE fixture signed off by Awwal 2026-04-15 at tests/fixtures/identity-continuity/adeleke-namesake/expected.json. ADDENDUM 1 (2026-04-18): + enumerate 5 cross-MDA verdicts explicitly (LOAN_CONTINUATION_CONSISTENT / VARIANT / FRESH_PRINCIPAL / OVERLAPPING_MDA_PRESENCE / AMBIGUOUS) + bidirectional signature continuity test + namesake-frequency starter bound N≥3 from catalog+register union.
-  17-5-person-link-candidates-transfer-handshake-wiring: backlog  # proactive Pending Handshake surfacing to both MDAs; wired to existing Transfer Handshake workflow. ADDENDUM 1 (2026-04-18): + distinct workflow for OVERLAPPING_MDA_PRESENCE (namesake check + MDA hierarchy check; NOT Pending Handshake — overlap means same person in two MDAs at same time, never a transfer).
+  17-5-person-link-candidates-transfer-handshake-wiring: backlog  # ⛔ SPRINT-BLOCKED pending A5 §H#3 continuity guard (see story file banner). proactive Pending Handshake surfacing to both MDAs; wired to existing Transfer Handshake workflow. ADDENDUM 1 (2026-04-18): + distinct workflow for OVERLAPPING_MDA_PRESENCE (namesake check + MDA hierarchy check; NOT Pending Handshake — overlap means same person in two MDAs at same time, never a transfer).
   17-6-review-queue-ui-merged: backlog  # merged with existing Exception Queue. Dept Admin approves merges; MDA Officer confirms medium-confidence matches. SCP amendment 2026-04-15: adds search-then-confirm pattern — when user picks a candidate from searchPersons results, confirmation step shows match score + evidence before commit.
   17-6a-review-queue-capacity-planning: backlog  # ADDENDUM 1 (2026-04-18): NEW. Queue partitioning (9 verdict classes) + SLA matrix (CRITICAL 14d, HIGH 14d, MEDIUM 30d; widened CRITICAL from 7d given +53% volume) + staffing model sized to ~53,518 backfill items (48,518 catalog variances + 5,000 register exceptions) + escalation paths + per-MDA queue-throughput KPI (Agreement 21 override rate).
   17-7-loan-detail-page-unified: backlog  # Identity | Timeline (blank months explicit) | Variance | Certificates | Activity Log tabs. Scoped by role. Staff self-service view = Phase 2.
