@@ -8,7 +8,7 @@ As the **PersonIdentityService and the reconciliation layer**,
 I want MDA-level monthly payroll rosters ingested as identity anchors (PIS seed) — BIR-only for the 17a pilot,
 So that identity resolution runs OYSG-ID-anchored where a roster exists, and payroll-vs-MDA variance is observable from the roster evidence layer.
 
-**Origin:** SCP 2026-04-15 round 5 (base, as "MDA Payroll Snapshot"). Amended ×2: Addendum 2 §2.4 (retitle + reframe; published 2026-07-06) → Addendum 4 (X-3 shared-check consumption; published 2026-07-06). Ledger row X-3.
+**Origin:** SCP 2026-04-15 round 5 (base, as "MDA Payroll Snapshot"). Amended ×3: Addendum 2 §2.4 (retitle + reframe; published 2026-07-06) → Addendum 4 (X-3 shared-check consumption; published 2026-07-06) → Addendum 5 §3.3 (master-resolver role; folded 2026-07-09). Ledger row X-3.
 
 **Priority:** [17a] Sprint 1, Large (8 pts), starts after the 17.2 mid-checkpoint. **Hard-blocked by 17.2** (A2 §2.6: the 21-file `_MULTI-MDA/` counter must be zero before this story activates in production).
 
@@ -26,6 +26,9 @@ So that identity resolution runs OYSG-ID-anchored where a roster exists, and pay
 
 **W1 relationship (A3 context):** payroll evidence is ledger-bound under the reframe — 17f.1 (W1) posts submissions/payroll as PAYROLL ledger events [H1, H2]. This story's roster ingest is the identity-anchor half; the value-posting half is 17f.1. The two must not be conflated: 17.3b moves knowledge (identity anchors, variance observations); 17f.1 moves value onto the ledger.
 
+**+ A5 §3.3 — master-resolver framing + worklist consumption [P7]:**
+17.3b is the **master resolver** for the three-species finding portfolio: its payroll data closes A-confirmation (below-zero), B (frozen-balance projection), and C (transfer restatement). The three proactive worklists (Species A/B/C, built on 16.1 + conservation 17f.6 per A5 §4.1) are its **consumers** — each emits a structured payroll ask (FR118: person, MDA, month-range — never a refund figure) that 17.3b's ingested snapshots answer. This reaffirms 17.3b's existing Sprint-1 sequencing priority (already first for identity anchoring) and adds the resolver role on top; it introduces no new ingest mechanism.
+
 ## Acceptance Criteria
 
 1. **Given** a BIR payroll roster (CSV) or OYSIPA-pattern xls, **When** uploaded via the roster path, **Then** rows land in `payroll_snapshots` and produce HR_ROSTER aliases on `person_aliases` (highest confidence class). [Base]
@@ -35,6 +38,7 @@ So that identity resolution runs OYSG-ID-anchored where a roster exists, and pay
 5. **Given** the roster-month limitation, **When** identity anchoring runs, **Then** records outside the roster month's coverage (retired-before / joined-after / on-leave) remain name-matched with their unanchored status visible — the 14% unanchored figure is reportable, not hidden. [A2]
 6. **Given** 17.2's `_MULTI-MDA/` operational-debt counter, **When** this story is proposed for production activation, **Then** the counter shows zero — hard sequencing gate. [A2 §2.6]
 7. **Given** roster ingest completes for a month, **When** PIS (17.4) runs, **Then** OYSG-anchored matching is available for anchored records (the 24% case at portfolio scale; ~86% within BIR), with name-only matching the explicit fallback. [A2]
+8. **Given** a structured payroll ask (FR118) emitted by a Species A/B/C worklist (person, MDA, month-range), **When** 17.3b has ingested the matching roster snapshot, **Then** the ask is answered from snapshot data — 17.3b acts as the master resolver closing A-confirmation, B, and C; no refund figure is produced by this story. [A5 §3.3, P7]
 
 ## Sequencing
 
@@ -53,8 +57,9 @@ reopen; additions queue to A5+ as new ledger fold rows.
 | 1 | Base — SCP 2026-04-15 round 5 | payroll_snapshots + HR_ROSTER aliases + PAYROLL_VS_MDA_VARIANCE; BIR evidence (249×134×₦1.67M) |
 | 2 | A2 §2.4 (`scp-2026-04-15-addendum-2.md`) | Retitle → Identity Anchor Ingest; PIS-seed framing; BIR-only config; content-vs-filename fix; roster-month limitation (765/5,325 unanchored) |
 | 3 | A4 §3.1#3 (`scp-addendum-4-2026-07-04.md`) | X-3 consumption: shared content-vs-filename check built in 17.2, consumed here — no separate build |
+| 4 | A5 §3.3 (`scp-addendum-5-2026-07-09-DRAFT.md`), folded 2026-07-09 | P7 master-resolver role — payroll data closes A-confirm/B/C; consumes structured payroll asks (FR118) from the Species A/B/C worklists; no new ingest mechanism |
 
-Evidence keys carried: L2, L6, L16 (via X-3); H1/H2 boundary note (value-posting = 17f.1, not this story)
+Evidence keys carried: L2, L6, L16 (via X-3); P7; H1/H2 boundary note (value-posting = 17f.1, not this story)
 Collision resolution: X-3 (one implementation home in 17.2; 17.3b + 17.13 consume)
 Engine status (per ledger §A): Partial
-Pending amendments: none — additions queue to A5+
+Pending amendments: none — additions queue to A6

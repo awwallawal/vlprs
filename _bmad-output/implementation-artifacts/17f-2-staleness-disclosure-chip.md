@@ -31,7 +31,7 @@ So that until 17f.1 posts the loop, no figure wears more freshness than its data
 ## Sequencing
 
 - **Shipped pre-17f.1** by design (the stopgap IS the story). Epic 21 absorbs the chip as a component story at UX/IA build.
-- **Extends forward:** A5 §H#1 (evidence-graded finding model) extends the provenance concept from balances to findings — queued, separate story surface.
+- **Extends forward (concept-lineage, folded A5 §3.4 2026-07-09):** the evidence-graded finding model extends 17f.2's shipped provenance primitive (`BalanceProvenance` / `deriveProvenance` / `dataBasis`) from **balances** to **reconciliation findings** — the grade enum gains finding-level values `proven` / `projected` / `rewound` plus a `resolver` field (FR117). This is lineage only: 17f.2 stays a shipped, done story; the extension BUILDS under the Species A/B/C worklist stories (A5 §4.1), reusing the shipped primitive — not a reopen of the chip.
 
 ---
 ## Provenance (Step-5 fold, 2026-07-06)
@@ -43,8 +43,9 @@ reopen; additions queue to A5+ as new ledger fold rows.
 |---|---|---|
 | 1 | A3 §3 — 17f.2 (`scp-addendum-3-2026-07-04.md`) | Story creation: disclosure chip as stopgap [H1]; D-a timing decision |
 | 2 | PO decision D-a (2026-07-04) + ledger §F step-4 shipped record | Ship-and-tell authorisation; shipped scope, commits `1826c6d`+`660563e`, adversarial-review record, test counts |
+| 3 | A5 §3.4 (`scp-addendum-5-2026-07-09-DRAFT.md`), folded 2026-07-09 | P1 concept-lineage: evidence-graded findings extend the shipped provenance primitive (`proven`/`projected`/`rewound` + `resolver`, FR117) from balances to findings — **build lands in the A5 §4.1 worklist stories, NOT here**; 17f.2 status stays `done` |
 
-Evidence keys carried: H1 (+ TA-C / Agreement 29; Fable critique §7.3 primitive #2)
+Evidence keys carried: H1, P1 (+ TA-C / Agreement 29; Fable critique §7.3 primitive #2)
 Collision resolution: none
 Engine status: SHIPPED app-side 2026-07-05 (uncommitted→committed on `dev`; PO commit call recorded)
-Pending amendments: none — additions queue to A5+ (A5 §H#1 extends the concept to findings)
+Pending amendments: none — A5 §3.4 folded 2026-07-09 as concept-lineage (build in worklist stories); additions queue to A6

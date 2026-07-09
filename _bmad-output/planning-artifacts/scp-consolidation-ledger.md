@@ -16,12 +16,12 @@ Fold order is strictly chronological: base SCP → A1 → A2 → A3 → A4. "Eng
 | Target | Fold chain (in order) | Engine | Flag |
 |---|---|---|---|
 | **17.2** utility port | Base → A1 §3 (content-level MDA verification; folder-aware resolver 4th layer; RESOLVER_ALIAS_MISSING) → A2 §2.4 (hard-block before 17.3b; mid-sheet recurrence scan; 21-file counter) → A3 §4.4 (H5 priority evidence; thread-segmentation utility, merge point (a)) → A4 §3.12 (L2 alias catalogue as fixtures; L11 period markers; L15/L17 record-picker; L10 editable JSON maps) | YES (all A4 items + segmentation) | **X-1** |
-| **17.4** PIS | Base → A1 §3 (5 cross-MDA verdicts; bidirectional continuity; N≥3 guard) → A2 §2.4 (canonicalizer hard dep; canonical-exact before Lev; BIR-only pilot; pessimistic 76% name-only framing) → A4 §3.2 (L18 namesake guard + sequential-loans policy; L10 known-variants table) | YES (namesake guard, variant maps) | X-8 |
+| **17.4** PIS | Base → A1 §3 (5 cross-MDA verdicts; bidirectional continuity; N≥3 guard) → A2 §2.4 (canonicalizer hard dep; canonical-exact before Lev; BIR-only pilot; pessimistic 76% name-only framing) → A4 §3.2 (L18 namesake guard + sequential-loans policy; L10 known-variants table) → A5 §3.2 (P4 identity-side consumer-tie for the 17.5 continuity guard — confident-ID + principal-segmentation; no new logic) | YES (namesake guard, variant maps) | X-8 |
 | **17.4b** canonicalizer | A2 §2.5.1 (created; 9 rules; G5 native-speaker gate) → A4 §3.2 (L13 token-sort; L14 diminutive map ~30 pairs, ops-editable JSON; G5 re-scoped to both rule sets) | YES (both) | **X-2** |
-| **17.3b** Identity Anchor Ingest | Base (as MDA Payroll Snapshot) → A2 §2.4 (retitle; PIS-seed framing; BIR-only config; content-vs-filename fix; roster-month limitation) → A4 (consumes the X-3 shared check — no separate build) | Partial | **X-3** |
-| **17.5** link candidates / handshake | Base → A1 §3 (OVERLAPPING_MDA_PRESENCE distinct workflow) → A4 §3.6 (L1 native LPC Out; L9 parent/child bypass — same valve as A1's, field-confirmed) | YES (LPC Out extraction) | X-9 |
+| **17.3b** Identity Anchor Ingest | Base (as MDA Payroll Snapshot) → A2 §2.4 (retitle; PIS-seed framing; BIR-only config; content-vs-filename fix; roster-month limitation) → A4 (consumes the X-3 shared check — no separate build) → A5 §3.3 (P7 master-resolver role — closes A-confirm/B/C; consumes FR118 payroll asks) | Partial | **X-3** |
+| **17.5** link candidates / handshake | Base → A1 §3 (OVERLAPPING_MDA_PRESENCE distinct workflow) → A4 §3.6 (L1 native LPC Out; L9 parent/child bypass — same valve as A1's, field-confirmed) → A5 §3.1 (P4 transfer continuity guard [blocking] + P5 collector/parent-MDA registry seed; **lifts SPRINT-BLOCKED**) | YES (LPC Out + transfer-restatement) | X-9 |
 | **17.13** upload content validation | Base → A4 §3.1 (consolidated ingest amendment: L4/L11 multi-month, L12 stale markers, L15 ghost rows, L16 year mismatch, L19 year-aggregate, L20 content-hash archives) | YES (all six) | X-3 consumer |
-| **17.16** property tests / CI | Base → A4 §3.3 (corpus invariants; BEFORE→AFTER delta gate; content-hash invariant; fixture extensions) + A3 contract §10.2#3 (golden harness as treaty) | YES (6 scripts + harness) | **X-5** |
+| **17.16** property tests / CI | Base → A4 §3.3 (corpus invariants; BEFORE→AFTER delta gate; content-hash invariant; fixture extensions) + A3 contract §10.2#3 (golden harness as treaty) → A5 §3.5 (P9 Kolade [Species B] + Oke [Species C] golden-set fixtures) | YES (6 scripts + harness) | **X-5** |
 | **17.17** dual-truth dashboard | Base → A1 §3 (absorbs 17.19/20/21; 6-tile participation block; ₦-weighted severity; register panel) → A3 §4.3 (instrument-grading gate — "no refund tier without instrument grading"; PARSER_BLIND with H10 verification as AC #1; month-0 metric) → A4 §3.4 (L19 year-aggregate tier indicator; L6 three-click drill AC; L3 evidence base — state itself NOT re-routed) → W2-approved design §5 note (transfer-month owner-expected vs collector-collected divergence is *signal*, presented as an observation with explanation, never an error) | Partial (grading logic engine-side) | **X-4** |
 | **17.18** variance badge | Base → A4 §3.5 (PARSER_BLIND 4th badge state — the L3 residual A3 did not cover) | — | X-4 residual |
 | **17.26** refund workflow | Base → A3 §4.1 (REFUND/REVERSAL entry types [H7]; Bakare month-count rule AC [H25]; H8 authority restated) | — | clean |
@@ -46,7 +46,7 @@ Fold order is strictly chronological: base SCP → A1 → A2 → A3 → A4. "Eng
 | Created | By | Notes |
 |---|---|---|
 | 17.6a, 17.3c, 17.3d, 17.3e, **17.33a** (Quarterly Reconciliation Inventory auto-regen) | A1 §3 | A1's five creations (net 37→39; 17.19/17.20/17.21 retired into 17.17). **17.33a restored per §G C1** — quarterly cron + diff-to-previous + AG heartbeat + per-MDA CRITICAL trend + engine-SHA versioning. A2 §4.2 parks 17.3c/d schema fanout in 17c |
-| 17f.1–17f.7 (Foundation Repair) | A3 §3 | Sub-epic gate: 17a → **17f** → 17b → 17c; 17f.2 timing = PO decision D-a. **17f.1 carries the supersede-safety AC [W2 rider (ii)]** (posted PAYROLL events must survive upload supersede — `migrationService.ts:903–934`), added pre-signature 2026-07-04 |
+| 17f.1–17f.7 (Foundation Repair) | A3 §3 | Sub-epic gate: 17a → **17f** → 17b → 17c; 17f.2 timing = PO decision D-a. **17f.1 carries the supersede-safety AC [W2 rider (ii)]** (posted PAYROLL events must survive upload supersede — `migrationService.ts:903–934`), added pre-signature 2026-07-04. **17f.2 gains an A5 §3.4 concept-lineage fold row (2026-07-09):** evidence-graded findings (`proven`/`projected`/`rewound` + resolver, FR117) extend its shipped provenance primitive from balances to findings — build lands in the A5 §4.1 worklist stories; 17f.2 status stays `done` |
 | 17.4b, 17.4d, 17.obs | A2 §2.5 | 17a scope |
 | 17.4c, 17.4e, 17.x, 17.y, 17.11b | A2 §4.1 | 17c scope (parked) |
 | **17b retrofit amendments — Epics 2 / 5 / 7 / 8 / 14** | A2 §3.1 | DEFERRED placeholders *(added per §G C5)*: person_id staged migration; post-parse inference review; identity exception classes; ID-anchored certs + 17.4d wire-in (highest legal stakes); public-lookup privacy decision. Full story text = Winston, post-pilot authorisation. Listed so the Step-5 fold cannot drop them |
@@ -78,12 +78,12 @@ Fold order is strictly chronological: base SCP → A1 → A2 → A3 → A4. "Eng
 |---|---|---|---|
 | 17.2 | `17-2-port-side-quest-utilities.md` | Base → A1 §3 → A2 §2.4/§2.6 → A3 §4.4 → A4 §3.12 [X-1, X-3 host] | ✅ 2026-07-06 |
 | 17.17 | `17-17-dual-truth-dashboard-rendering.md` | Base → A1 §3 → A3 §4.3 (grading gate verbatim) → A4 §3.4 → W2 §5 [X-4] | ✅ 2026-07-06 |
-| 17.4 | `17-4-person-identity-service.md` | Base → A1 §3 → A2 §2.4 → A4 §3.2#3–4 [X-8 consumer] | ✅ 2026-07-06 |
+| 17.4 | `17-4-person-identity-service.md` | Base → A1 §3 → A2 §2.4 → A4 §3.2#3–4 → **A5 §3.2 [P4]** [X-8 consumer] | ✅ 2026-07-06 · **+A5 2026-07-09** |
 | 17.4b | `17-4b-yoruba-name-canonicalizer.md` | A2 §2.5.1 (base) → A4 §3.2#1–2 → W2 rule/data split [X-2] | ✅ 2026-07-06 |
-| 17.3b | `17-3b-mda-payroll-snapshot-ingestion.md` | Base → A2 §2.4 → A4 §3.1#3 [X-3 consumer] | ✅ 2026-07-06 |
-| 17.5 | `17-5-person-link-candidates-transfer-handshake-wiring.md` | Base → A1 §3 → A4 §3.6 [X-9] + **A5 §H#3 guard banner + placeholder AC (sprint-blocked)** | ✅ 2026-07-06 |
+| 17.3b | `17-3b-mda-payroll-snapshot-ingestion.md` | Base → A2 §2.4 → A4 §3.1#3 → **A5 §3.3 [P7]** [X-3 consumer] | ✅ 2026-07-06 · **+A5 2026-07-09** |
+| 17.5 | `17-5-person-link-candidates-transfer-handshake-wiring.md` | Base → A1 §3 → A4 §3.6 [X-9] → **A5 §3.1 [P4/P5] — continuity guard (blocking AC #6) + collector registry seed (AC #7); SPRINT-BLOCKED LIFTED** | ✅ 2026-07-06 · **+A5 2026-07-09 (guard landed, sprint-eligible)** |
 | 17.13 | `17-13-upload-pipeline-integration-content-validation.md` | Base → A4 §3.1 (six items) [X-3 consumer] | ✅ 2026-07-06 |
-| 17.16 | `17-16-idempotency-property-test-framework.md` | Base → A4 §3.3 + A3 §10.2#3 treaty [X-5] | ✅ 2026-07-06 |
+| 17.16 | `17-16-idempotency-property-test-framework.md` | Base → A4 §3.3 + A3 §10.2#3 treaty → **A5 §3.5 [P9] Kolade/Oke fixtures** [X-5] | ✅ 2026-07-06 · **+A5 2026-07-09** |
 | 17.18 | `17-18-variance-badge-direction-explicit.md` | Base → A4 §3.5 [X-4 residual] | ✅ 2026-07-06 |
 | 17.26 | `17-26-overdeduction-refund-workflow.md` | Base → A3 §4.1 (incl. §14-folded blocking ACs) | ✅ 2026-07-06 |
 | 17.33 | `17-33-retroactive-backfill-74k-records.md` | Base → A1 §3 → A3 §4.2 | ✅ 2026-07-06 |
@@ -96,9 +96,11 @@ Fold order is strictly chronological: base SCP → A1 → A2 → A3 → A4. "Eng
 | 17.22 | `17-22-settlement-pathway-3-event-car-loan-dept-ux.md` | Base → A4 §3.8 | ✅ 2026-07-06 |
 | 17.32 | `17-32-external-auditor-read-only-role.md` | Base → A4 §3.14 | ✅ 2026-07-06 |
 | 17f.1 | `17f-1-post-the-loop-ledger-posting.md` | Creation A3 §3 [H1,H2] + W2 rider (ii) supersede AC verbatim | ✅ 2026-07-06 (creation text formalised) |
-| 17f.2 | `17f-2-staleness-disclosure-chip.md` | Creation A3 §3 [H1] + D-a shipped record (commits `1826c6d`+`660563e`) | ✅ 2026-07-06 (formalisation of shipped work; Status: done) |
+| 17f.2 | `17f-2-staleness-disclosure-chip.md` | Creation A3 §3 [H1] + D-a shipped record (commits `1826c6d`+`660563e`) → **A5 §3.4 [P1] concept-lineage (evidence-graded findings, FR117; build in worklist stories)** | ✅ 2026-07-06 (formalisation of shipped work; Status: done) · **+A5 2026-07-09 (lineage row; still done)** |
 
 **Count for step-4 checksum: 21 marks** (20 files + 1 fold-by-delivery). Out-of-scope §A rows (unfolded by design, reasons in manifest §1): other §A.3 creations (story files at create-story time) + §A.4 FR rows (PRD-delta, PM). **A1–A4 are CLOSED by consolidation per Agreement 30 upon §I.1 sign-off.**
+
+**A5 fold (2026-07-09, SM Bob — the last fold of the cycle):** 5 A5 fold rows appended to their consolidated files' chains, marked above with **+A5 2026-07-09** — 17.5 [A5 §3.1, P4/P5, the one file with a deletion: placeholder AC #6 → real blocking AC + AC #7 + banner lifted], 17.4 [A5 §3.2, P4 consumer-tie], 17.3b [A5 §3.3, P7 master-resolver], 17f.2 [A5 §3.4, P1 concept-lineage — status stays `done`], 17.16 [A5 §3.5, P9 Kolade/Oke fixtures]. Non-fold-row routing (recorded, reconciles): Species A/B/C proactive worklists → 16.1 + 17f.6 at story-creation; FR117/FR118 → PRD Delta Addendum (John). **Self-verified per §I.1 checklist (see below); handed to Fable for the §J.3 final fold-verify.** On §J.3 PASS: chain-closed marker lands in §F; A1–A5 fully consolidated.
 
 ---
 
@@ -129,7 +131,7 @@ Nine rows, X-1 … X-9 — resolutions authored in A4 §6, cross-recorded here v
 
 | Range | Allocated | Next free |
 |---|---|---|
-| SCP Addenda | A1–A4 (published) · **A5 (DRAFT 2026-07-09: `scp-addendum-5-2026-07-09-DRAFT.md`; SQ-1 Part-2 three-species package, P1–P9; pending Fable second-read + fold)** | **A6 (Agreement 30: opens only after A5 consolidates)** |
+| SCP Addenda | A1–A5 **all PUBLISHED**. A5 = `scp-addendum-5-2026-07-09.md` (renamed from `-DRAFT` at publish 2026-07-09; SQ-1 Part-2 three-species package, P1–P9; §J–§J.3 all PASS, folded + CHAIN CLOSED). Fold-row citations in the 5 story files retain the `-DRAFT` fold-source filename as the historical record of what was folded (journal doctrine; sealed files untouched). | **A6 (Agreement 30: a fresh cycle; chain A1–A5 is now closed)** |
 | FRs | …FR102 (PRD) · FR103–107 (A3) · FR108–110 (A4) · FR111–116 (A1's six, retroactive per §G C3) · **FR117 evidence-graded findings [P1] + FR118 structured payroll-request worklists [P8] (A5)** | **FR119** |
 | Epics | 1–17 (+17a/17b/17c/**17f**) · 18 (input-only) · 19 · 20 · 21 | **22** |
 | Stories | A1's 17.6a/17.3c/17.3d/17.3e/**17.33a** · 17f.1–7 · 15.7 · 17.13b (plus A2's 17.4b/c/d/e, 17.obs, 17.x, 17.y, 17.11b) | per-epic next slot |
@@ -174,7 +176,8 @@ Rule: a document cites its pin; divergence between pinned artifacts is *expected
 | 5 Post-signature fold (Bob: consolidated story files + sprint-status wiring) | ✅ **VERIFIED + SIGNED OFF (§I.1, Fable, 2026-07-07)** — step-4 all-PASS (fold-order ×4 stacks; 21-row checksum; verbatim gates; conservation; boundary checks incl. 5b immutable-after-FOLDED = 17-4b untouched post-G5). A1–A4 CLOSED by consolidation; Sprint-1 plan activated; A5 unblocked. *(Fold-execution record retained below.)* — 🟡 **FOLD EXECUTED (Bob, 2026-07-06).** Pre-fold verification of step 2: PASS with findings — F1: pack Line-2 signature block untranscribed (PO confirmed both lines signed; transcription completed with dated note, signature blocks only); F2: step-2 handoff block was chat-only (fix: persisted `fold-manifest-2026-07-06.md` as the standing fold plan); F3: governance-table heading corrected 17–22 → 17–30. Fold record: **§A.5 — 21 marks** (20 consolidated story files + 17a-schema fold-by-delivery); 17.17 instrument-grading gate + 17f.1 supersede-safety AC carried verbatim; 17.5 carries the A5 §H#3 guard banner + placeholder AC and is marked sprint-blocked. Sprint-status wired (key = filename rule + block pointer). 17a Sprint-1 plan drafted DRAFT-gated on §I.1. — **§I step 2 ✅ COMPLETE (John, 2026-07-06):** A2/A3/A4 flipped DRAFT → PUBLISHED (A2 → `planning-artifacts/scp-2026-04-15-addendum-2.md` per its own terms; A3/A4 renamed sans -DRAFT, git-mv history preserved; signed pack untouched as historical record); A3 §9 change-list APPLIED to epics.md (Epic 17 signature banner; Agreements 23–30 in the governance table; Epic 17f section + Epics 19/20/21 charters) and sprint-status.yaml (epic-17 in-progress w/ sub-epic tags + amended-story map; 17f block w/ 17f-2 done; new entries 17-4b/17-4d/17-obs/17-13b/15-7; epic-19/20/21 stubs; binding-sequence + 17.5-guard comments). **Next: Bob executes §I step 3 per John's handoff block** |
 | 6 Agreement 30 adopted | ✅ **IN FORCE — formally recorded 2026-07-06** in the epics.md governance table (Agreements 23–30 adopted; 27–30 effective from signature) |
 | ✍ | **SIGNATURE RECORD:** Deputy AG signed the full pack 2026-07-05. Authorisation in force: **Line 1** — 17a activation (W2-amended schema approved; G5 staging option available) · **Line 2** — consolidated scope (17f Foundation Repair; PRD delta FR103–110 + FR91–92 + IA section + epistemics; the story-amendment sets of A3+A4; Epics 19/20/21 charters; Agreements 27–30; A1 FR reconciliation FR111–116; W1-before-17b rule; D-c portfolio sweep with guardrails). Next actions per §I: step 2 John, step 3 Bob, step 4 Fable, step 5 A5 opens from §H |
-| §I step 5 A5 | 🟡 **A5 DRAFTED (John, 2026-07-09): `planning-artifacts/scp-addendum-5-2026-07-09-DRAFT.md`** — P1–P9 keys appended to the handoff (§9); routes: FR117 evidence-graded findings [P1] + FR118 structured payroll-request worklists [P8] + payroll-master-resolver scope [P7] (PRD delta); 5 proposed fold rows on consolidated 17.5/17.4/17.3b/17f.2/17.16 (§6 — appends, NOT rewrites); Species B/C proactive worklists → 16.1/17f.6; PO decision list R-1…R-4 (Fable §H recs). **Next: (a) PO ratifies R-1…R-4; (b) Fable second-read (A5 §7); (c) Bob folds the §6 rows + fold-verify; (d) chain-closed marker.** A6 stays closed (Agreement 30). |
+| §I step 5 A5 | ✅ **CHAIN CLOSED (2026-07-09).** A5 (`scp-addendum-5-2026-07-09`) second-read PASS (§J) → R-1…R-4 ratified (§J.1) → diff-re-read PASS (§J.2) → Bob folded the 5 rows (17.5/17.4/17.3b/17f.2/17.16) → **Fable §J.3 final fold-verify PASS**. **SCP 2026-04-15 amendment chain A1–A5 fully consolidated; story files are the single truth; new work opens at A6** (Agreement 30). 17.5 SPRINT-BLOCKED lifted (guard landed). FR117/FR118 allocated (next-free FR119). Remaining = John's single close-out commit (A5→PUBLISHED, one verify-then-commit, A1–A5 paper-trail pin, builder's entry note) — no further second-read. |
+| ✅ CHAIN CLOSED | **The SCP 2026-04-15 governance cycle (A1–A5) is complete.** Opened at the 2026-07-02 crash recovery; closed 2026-07-09 at §J.3. Every addendum second-read by the non-authoring agent; every dispute resolved by test; author≠verifier held through the final fold. Build proceeds from the consolidated story files; the addenda are journal history. |
 
 ---
 
@@ -231,6 +234,7 @@ Rule: a document cites its pin; divergence between pinned artifacts is *expected
 2. **Species A+B proactive worklists** (BUILD) — 16.1/conservation stories emit payslip-request worklists (structured asks: person, MDA, month-range), never refund figures; DELTA watches crossings and resolutions.
 3. **Species-C transfer continuity guard** (PLAN, **blocking AC on 17.5/transfer handshake**) — receiving MDA must carry forward true installments-paid; a backward restatement is a blocking reconciliation event, not a silent overwrite; ties to W2 `loan_mda_reassignments` + `person_loans`. **Sequencing note for Bob at Step-5: 17.5 build must not enter a sprint before this A5 guard lands in its story text** (17.5 is post-signature work anyway — the note makes the dependency explicit rather than lucky).
 4. **Collector/parent MDA registry** (BUILD, seed-data not schema) — **NOT net-new**: `mdas.parentMdaId` exists and the 17.21 fragment (`is_autonomous` + `reporting_parent_mda`) shipped under parent-SCP Round 3; A5 seeds CDU/AANFE collector semantics so reporting-layer variance never enters the transfer queue. Cohort/batch detection (one handoff fix, not N cases) rides the same stories.
+   > **⚠ Justification correction (fold-time, append-only, 2026-07-09 — §J.1):** `mdas.parentMdaId` is confirmed in `schema.ts:44`, but **`is_autonomous` / `reporting_parent_mda` are NOT in the current schema** (grep 2026-07-09) — this row propagated an unverified column claim from A5 §3.1 (TA-C applies to the ledger too). The **decision is unchanged** (`parentMdaId` is a valid carrier; "seed, not net-new" holds); only the justification is corrected. Whether 17.21's fragment shipped those names under other spellings or is still to add = build-time confirmation. Carried into A5 §3.1 + §5 R-3.
 5. **Fixture additions** — Kolade (Species B) and Oke (Species C) join the golden set as canonical anchors (Agreement 15/24 parity).
 
 **Answers to the Part-2 §7 open questions (Fable recommendations, PO to ratify at A5):**
@@ -291,3 +295,85 @@ The addenda are journal entries; they "take effect" only through this sequence. 
 - **§I step 5 UNBLOCKS** — John may open A5 from the §H queue (P1–P9 keying first; single evidence input `sq1-track-handoff-to-bmad-2026-07-05.md`; A5 amendments land as new fold rows on the *consolidated* files).
 
 **Note for John (do not execute here):** one clean commit should sweep the fold batch (20 files) + `fold-manifest-2026-07-06.md` + both G5 docs + `sm-bob-17a-sprint1-plan-2026-07-06.md` + the ledger/sprint-status/pack updates as a single verified unit — the verify-then-commit order was chosen precisely so the history shows one verified fold rather than a trickle. Align the §F step-2 "untouched" wording (5a note) in that commit.
+
+---
+
+## §J — A5 second-read record (adversarial pass, Fable non-authoring reader, 2026-07-09)
+
+**Object:** `scp-addendum-5-2026-07-09-DRAFT.md` (John drafted; I did not). Bounded to A5 per TA-28 — did not re-litigate the §I.1-verified consolidated files. Verified from source.
+
+### Verdict: ✅ PASS — ready to fold. No corrections required.
+
+### Checklist (A5 §7 mandate)
+1. **P## routing — PASS.** P1–P9 each route once. P4 legitimately spans two layers (17.5 = the blocking-AC build home; 17.4 = identity-side consumer-tie, "no new matching logic — reuses PIS", A5 §3.2) — the X-8 precedent (one design, dual citation, single build), not a dual-route. P2/P3 share destination story 16.1/17f.6 as two distinct findings' ACs (allowed). No P routes to two independent builds.
+2. **Appends, not rewrites — PASS (verified two ways).** `git status` on all five fold-target files = empty (committed at 07-06 fold, zero modifications); mtimes 07-06. A5 frontmatter `critical_discipline` + §6 propose fold rows only; closing line "edits no consolidated story file and no published addendum." Confirmed A5 touches zero story-file bodies.
+3. **P4 blocking-AC coherence — PASS.** A5 §3.1 guard text fulfils 17.5's placeholder AC #6 verbatim-in-intent and lifts the `SPRINT-BLOCKED` banner; ties to W2 `loan_mda_reassignments`/`person_loans` (continuity check runs at the reassignment event — coherent with the single-mutator design); arithmetic guard (balance jumps ~Δ×monthly, rejects new-loan-same-principal) matches `transfer-restatement.ts` (Oke: paid 38→35, +₦33,999 = 3×₦11,333, source-verified at pin 667ebdd8 on 2026-07-05; pin unchanged).
+4. **Scope — PASS, defensively.** All items sit inside Line-2-signed reconciliation-detection scope. The two new-authority risks the mandate names are *explicitly forbidden* by A5: R-4 (no B/C finding posts to the ledger — knowledge, not value) and R-1 (nothing auto-acts; reviewed consumption). FR117/FR118 refine signed capability (presentation constraint + standing worklist surface), add no epic/authority.
+5. **FR registry — PASS.** §C next-free = FR117; A5 allocates FR117 + FR118; no collision with FR103–116. New next-free = **FR119** (registry to update at fold).
+6. **Stop-guard — PASS.** A5 declares itself the last queued addendum; A6 stays closed; post-A5 arrivals queue to A6.
+
+### Three green clarity notes (fold-time, non-blocking)
+- P4: keep 17.4's fold-row text as consumer-tie ("no independent guard logic in 17.4") per the X-8 precedent — the draft already does.
+- 17f.2 fold row is **concept-lineage**, not a reopen of the done chip story: FR117 builds in the §4 worklist stories reusing 17f.2's shipped primitive (draft §3.4 words it correctly).
+- At fold: update §C registry (FR117/118 allocated, next-free FR119).
+
+### R-1…R-4 pressure-test (endorse/flag — PO decides, not me)
+- **R-1 (proactive gen, reviewed consumption): ENDORSE** — the non-punitive posture; asks not accusations. *Build-time note for PO:* ~540 total findings (202 A + 311 B + 29 C) need a **priority order** in the review queue (proven-A first, then B/C by ceiling/age), else the queue is un-triaged — an AC detail, not a scope issue.
+- **R-2 (ops-editable versioned config + `detector_ruleset_version` stamp): ENDORSE** — Winston §7.2 pattern. *Note:* pair edits with the same log+batch-review policy adopted for the G5 diminutive map, so a threshold change can't silently suppress findings.
+- **R-3 (seed on existing schema, not net-new): ENDORSE** — verified `mdas.parentMdaId` + 17.21 fragment exist. *Note:* validate the collector list for **completeness** (not only CDU/AANFE) — a missing collector leaks reporting-layer cases into the transfer queue.
+- **R-4 (B/C findings do NOT post to the ledger): ENDORSE — strongly, no flag.** The load-bearing scope-safety line: "moves value → posts; moves knowledge → decides." Keeps the ledger free of estimates.
+
+### Confirmed §6 fold-row list (exactly what Bob/John apply — zero drift)
+1. `17-5-…` ← A5 §3.1 [P4/P5]: continuity guard (blocking) + collector registry seed; lifts SPRINT-BLOCKED.
+2. `17-4-…` ← A5 §3.2 [P4]: identity-side consumer-tie (confident-ID + principal-segmentation; no new logic).
+3. `17-3b-…` ← A5 §3.3 [P7]: master-resolver role; consumes FR118 asks.
+4. `17f-2-…` ← A5 §3.4 [P1]: evidence-graded findings (concept-lineage; builds in §4 stories).
+5. `17-16-…` ← A5 §3.5 [P9]: Kolade (B) + Oke (C) golden-set fixtures.
+Plus non-fold-row routing (recorded, reconciles): FR117/FR118 → PRD Delta Addendum (John); Species A/B/C proactive worklists → 16.1 + 17f.6 at story-creation.
+
+**On PASS:** PO ratifies R-1…R-4 → John records ratification into A5 §5 (+ my three fold-time notes) → Bob folds the 5 rows + §I-style fold-verify → **chain-closed marker** in §F. No corrections cycle needed.
+
+### §J.1 — PO ratification of R-1…R-4 (Awwal, 2026-07-09) + R-3 clarification
+
+**RATIFIED:** Awwal approved R-1, R-2, R-3, R-4 with the Fable §J endorsements. John carries this into A5 §5 when recording ratification; the three §J fold-time notes ride along.
+
+**R-3 clarified (PO asked "do we reinvent the wheel?") — answer: NO, and also do NOT keep the wheel as-is.** Source check 2026-07-09:
+- The "working mechanism" is a **hard-coded two-name list** in SQ-1: `transfer-restatement.ts:32` — `isCollector = m => m==='CDU' || /A*ANFE/.test(m)`. Fine for the analysis engine; a landmine in the app (it gates a *blocking* reconciliation event, is invisible in code, can't be edited without a deploy, and is only as complete as its author knew).
+- R-3 = **promote that hard-coded knowledge into seed DATA on the existing hierarchy edge** `mdas.parentMdaId` (schema.ts:44, confirmed). Not a new registry (no reinvention); not a copied hard-coded list (no hidden landmine). Reference data on existing schema — exactly "seed, not net-new."
+- **Completeness** (the §J R-3 note) is cross-checking the seed against the **21 reporting-layer cases the detector already surfaced**, not a guess — and it's the one thing the 2-entry hard-coded list cannot self-guarantee.
+
+**⚠ SOURCE CORRECTION (fold-time, bounded — verdict PASS stands):** A5 §3.1/§5 R-3 and ledger §H cite `is_autonomous`/`reporting_parent_mda` as "shipped 17.21 fragment" columns. **schema.ts confirms ONLY `mdas.parentMdaId`** — those two column names are NOT in the current schema (grep 2026-07-09). My own §H/§J propagated the same unverified claim (TA-C applies to me too). Decision unchanged (`parentMdaId` is a valid existing carrier for the collector edge); **John fixes the column citation at fold** and build confirms whether 17.21's fragment shipped under other names or is still to add. This is a justification correction, not a structural A5 defect — no re-do.
+
+### §J.2 — A5 bounded diff re-read: ✅ PASS — clear to fold (Fable, 2026-07-09, TA-28 diff-only)
+
+Re-read of John's two fold-time edits after §J PASS + §J.1 ratification. Did NOT re-litigate the §J verdict, the rest of A5, or the §I.1-verified story files. Verified from source.
+
+1. **R-3 correction faithful — PASS.** A5 §3.1 (line 97) + §5 R-3 (line 137): the false column names removed from the assertion; carrier is now `mdas.parentMdaId` (`schema.ts:44`, re-confirmed — and `is_autonomous`/`reporting_parent_mda` re-confirmed ABSENT this session); 17.21-fragment names framed as build-time confirmation, not asserted fact; **decision unchanged** ("seed, not net-new"). Exactly the §J.1 dictation.
+2. **Promote-to-data build note — PASS.** A5 §3.1 records it as a fold-row build principle (cites `transfer-restatement.ts:32` `CDU || /A*ANFE/` as the current hard-coded carrier; landmine because it gates a *blocking* event; "record, do NOT implement here"). No overreach.
+3. **Ratification faithful, no drift — PASS.** A5 §5: R-1…R-4 marked RATIFIED (Awwal, 2026-07-09), each with the Fable §J ENDORSE + the three build-time notes, verbatim to §J. No new decision/scope/authority.
+4. **Bounded — PASS.** `git status` on the five fold targets = clean (no story file touched); only A5 draft + ledger modified; the five §6 fold rows unchanged (zero drift); FR117/FR118 routing intact (§C registry update is a fold-step action, correctly still pending). Edits are surgical — only A5 §3.1 collector paragraph, A5 §5, and ledger §H item 4 (append-only correction note, §H:234).
+
+**Green note (optional polish, non-blocking):** the append-only corrections live adjacent to the original claims (§H:233→234; §J:320→§J.1:342) — correct under the journal doctrine. For a pristine final audit trail, John may append a 3-word "(corrected — §J.1)" pointer to the two original lines in the fold commit (append-only-compatible; not required).
+
+**Clear to fold.** John/Bob append the five §J-confirmed rows to the five consolidated files, land the chain-closed marker in §F, flip A5 DRAFT → PUBLISHED, and commit corrections + fold + chain-close as ONE clean verify-then-commit. No further second-read needed.
+
+---
+
+## §J.3 — A5 final fold-verify: ✅ PASS · CHAIN CLOSED (Fable, non-authoring reader, 2026-07-09)
+
+Independent re-check of Bob's A5 fold (author≠verifier — I re-ran every diff, did not take the self-verify at face value). Bounded to the 5 fold files + the ledger fold-record (TA-28). The last verification of the SCP 2026-04-15 cycle.
+
+**1. Appends-not-rewrites (the numstat gotcha) — PASS.** `git diff -U0` on each of the four non-17.5 files: every deleted line is an in-place metadata refresh — Origin "Amended ×N" bump, evidence-keys line, collision-note line, footer Pending line (17-4, 17-3b, 17-16), plus 17f-2's "Extends forward" scope-bullet updated queued→folded (Bob-declared, enriched not removed). **No AC, scope item, or verified sentence removed from any of the four.** The numstat "deletions" are line-modifications, not content loss — the rule held.
+
+**2. 17.5 diff = the intended set, nothing more — PASS (highest-signal check).** The only substantive removal in the whole fold is 17.5's placeholder AC #6, correctly replaced by the real blocking AC. All other 17.5 removals are the mandated lifts (SPRINT-BLOCKED status suffix, ⛔ banner, Origin ×2→×3, "sprint entry blocked" priority, "Blocked by A5 §H#3" line, old footer). New **blocking AC #6 matches A5 §3.1 property-for-property**: carry-forward true installments-paid; backward restatement (receiving<sending, balance jump ~Δ×monthly) = BLOCKING event, halts for adjudication, never silently overwrites; Δ×monthly guard rejects new-loan-same-principal; ties W2 `loan_mda_reassignments`/`person_loans`; Oke fixture (38→35, +₦33,999 = 3×₦11,333). **SPRINT-BLOCKED lifted in all five locations** (status · banner · priority · sequencing "Blocked by" · footer Pending). AC #7 collector seed cites **`mdas.parentMdaId`** with the §J.1 correction inline (no `is_autonomous`/`reporting_parent_mda` asserted as fact) + the promote-to-data build principle.
+
+**3. Footer-vs-ledger checksum — PASS.** Each file's new A5 footer row matches its §A fold-chain row and its §A.5 +A5 mark: P4/P5→17.5, P4→17.4, P7→17.3b, P1→17f.2, P9→17.16. §C registry updated: FR117 (evidence-graded findings) + FR118 (structured payroll worklists) allocated, **next-free FR119**. §A.5 A5-fold summary + §A.3 17f concept-lineage note consistent.
+
+**4. 17f.2 still `done` — PASS.** Status line untouched; the A5 row is concept-lineage (FR117 build lands in the A5 §4.1 worklist stories, not here); no AC added. Not a reopen of the shipped chip.
+
+**5. Conservation — PASS.** `git status`: exactly the 5 story files + the ledger changed by the fold. The A5 DRAFT shows modified from John's pre-existing §J.1/§J.2 edits (already verified), not Bob's fold. No sixth story file touched.
+
+### ✅ CHAIN CLOSED — SCP 2026-04-15 amendment chain A1–A5 fully consolidated.
+Story files are the single truth; the addenda are journal history (Agreement 30). New work opens at **A6**. This is the final verification of the governance cycle that opened with the 2026-07-02 crash recovery.
+
+**Hand to John (do NOT do here):** (1) flip A5 DRAFT → PUBLISHED (`scp-addendum-5-2026-07-09.md`); (2) commit the corrections + A5 fold + chain-close as **ONE clean verify-then-commit**; (3) snapshot the resulting SHA as the **A1–A5 fully-consolidated paper-trail pin** (the counterpart to `7ef91fd`) and add it to §D pins; (4) add the 4-line builder's entry note at the top of the fold directory ("A1–A5 consolidated as of <SHA>; build from the story files, not the addenda; Sprint 1 = 17-2 + 17-4b + 17-3b against the W2-AMENDED schema; harness gates detection work"). No further second-read needed — the cycle is verified closed.

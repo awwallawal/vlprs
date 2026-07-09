@@ -1,5 +1,5 @@
 ---
-title: Sprint Change Proposal — Addendum 5 to SCP 2026-04-15 (DRAFT)
+title: Sprint Change Proposal — Addendum 5 to SCP 2026-04-15 (PUBLISHED)
 subtitle: The three-species reconciliation framework — evidence-graded findings, Species B/C detection layers, and the transfer continuity guard
 date_drafted: 2026-07-09
 author: PM John (drafted) — for Awwal Lawal (Product Owner) ratification, then Fable second-read
@@ -10,20 +10,20 @@ parent_addenda:
   - scp-addendum-3-2026-07-04.md (published 2026-07-06)
   - scp-addendum-4-2026-07-04.md (published 2026-07-06)
 scope_classification: MODERATE — refines Line-2-signed scope; 2 new FRs (FR117–118); 1 blocking AC + 4 fold-row amendments to CONSOLIDATED story files; 2 proactive-detection build items; fixture additions. No new epics, no sequencing changes to the 17a→17f→17b→17c rule.
-status: DRAFT — the LAST queued addendum (Agreement 30). Refines already-signed Line-2 scope; anything exceeding it is flagged (§5). Nothing arriving after A5 enters A5 — it queues to A6.
+status: PUBLISHED 2026-07-09 — the LAST addendum of the SCP 2026-04-15 chain (Agreement 30). Fable second-read PASS (ledger §J), PO ratified R-1…R-4 (§J.1), corrections diff-re-read PASS (§J.2), 5-row fold verified PASS (§J.3) → chain closed. Renamed from `scp-addendum-5-2026-07-09-DRAFT.md` at publish (fold-row citations in the 5 story files retain the `-DRAFT` fold-source name as the historical record of what was folded). Nothing arriving after A5 enters A5 — it queues to A6.
 single_input: _bmad-output/implementation-artifacts/sq1-track-handoff-to-bmad-2026-07-05.md (§0–§8 FROZEN as delivered; §9 = the P1–P9 key table John appended)
 routing_rule: every item cites its P## (the Part-2 handoff is A5's foreign key, exactly as H## is A3's and L## is A4's). An item with no P## does not enter this Addendum.
 critical_discipline: A5 amends CONSOLIDATED story files (17.5, 17.4, 17.3b, 17f.2, 17.16). It does NOT rewrite them. Each amendment lands as a NEW ledger §A fold row appended to that story's chain; SM Bob folds only those files at the A5 fold step. Corrections reopen; additions queue — these are additions.
 evidence_pin: catalog SHA 667ebdd8 (104,396 records) — no rebuild; both detectors reproduce their worked cases (Kolade B, Oke C) at this pin.
 ---
 
-# Sprint Change Proposal — Addendum 5 to SCP 2026-04-15 (DRAFT)
+# Sprint Change Proposal — Addendum 5 to SCP 2026-04-15 (PUBLISHED)
 
 ## The three-species reconciliation framework — grading findings, not accusing
 
 - **Date drafted:** 2026-07-09
 - **Author:** PM John — for Awwal Lawal (PO) ratification, then Fable second-read
-- **Status:** **DRAFT — the last queued addendum.** Refines Line-2-signed scope; requests PO ratification of four routing decisions (§5); no authorisation gate of its own beyond that (the signed envelope already covers reconciliation detection). Second-read by the non-authoring agent (Fable) before any fold.
+- **Status:** **PUBLISHED 2026-07-09 — the last addendum of the chain; consolidated and closed.** Refines Line-2-signed scope; PO ratified the four routing decisions (§5); Fable second-read + diff-re-read + fold-verify all PASS (ledger §J–§J.3); the five fold rows are folded into the consolidated story files and the chain-closed marker is landed (§F). New work opens at A6.
 
 ---
 
@@ -94,7 +94,7 @@ Extends A3 §1's detection-ceiling statement: **payroll-cash ingestion (17.3b / 
 
 **The blocking AC (P4)** — replaces 17.5's placeholder AC (the `SPRINT-BLOCKED` banner lifts on this text): *On any cross-MDA reassignment, the receiving MDA MUST carry forward the sending MDA's true installments-paid. A **backward restatement** (receiving paid-count < sending paid-count, with the balance jumping up by ~Δ×monthly) is a **blocking reconciliation event** — it halts the handshake for adjudication, never silently overwrites the loan's progress.* Arithmetic guard: the balance must jump by ~Δ×monthly (rejects new-loan-of-same-principal false positives — Species C's own guard). Ties to the W2 schema's `loan_mda_reassignments` + `person_loans` (the reassignment is evented; the continuity check runs at that event). Evidence: Oke Elizabeth (Agriculture paid 38 → Education resumed paid 35, +₦33,999 = 3×₦11,333).
 
-**Collector/parent-MDA registry (P5)** — seed, not schema (the schema exists: `mdas.parentMdaId` + the shipped 17.21 fragment `is_autonomous` / `reporting_parent_mda`). Flag CDU / AANFE(ANFE) as **collecting units** so a "receiving MDA" that is actually a central collector produces a **reporting-layer** classification, never a physical-transfer / duplicate-deduction finding. PO-confirmed 2026-07-05: Agriculture↔CDU is exactly this pair. The 21 reporting-layer cases must never enter the transfer queue.
+**Collector/parent-MDA registry (P5)** — **seed data on existing schema, not net-new.** The existing carrier is `mdas.parentMdaId` (`schema.ts:44`, source-confirmed 2026-07-09). *(Source correction, ledger §J.1: earlier drafts cited `is_autonomous` / `reporting_parent_mda` as "shipped 17.21 fragment" columns — those two names are **not** in the current schema; whether 17.21's fragment shipped under other names or is still to add is a **build-time confirmation, not an asserted fact**. The decision is unchanged — `parentMdaId` is a valid carrier for the collector edge.)* Flag CDU / AANFE(ANFE) as **collecting units** so a "receiving MDA" that is actually a central collector produces a **reporting-layer** classification, never a physical-transfer / duplicate-deduction finding. PO-confirmed 2026-07-05: Agriculture↔CDU is exactly this pair; the **21 detector-surfaced reporting-layer cases are the completeness cross-check** for the seed (Fable §J note), the one thing a short hard-coded list cannot self-guarantee. **Build principle (record in the fold-row, do NOT implement here):** the collector knowledge currently lives as a hard-coded two-name list in SQ-1 (`transfer-restatement.ts:32` — `CDU || /A*ANFE/`); the app must read it as **seed data on the schema, never hard-code it** — it gates a *blocking* reconciliation event, so a hidden, undeployable, or incomplete list is a landmine. *Promote-to-data; never hard-code a person-facing gate.*
 
 ### 3.2 Story 17.4 — Identity-side tie for the continuity guard [P4]
 
@@ -126,16 +126,16 @@ Seeded on existing schema; noted here so the BUILD list is complete. The seed is
 
 ---
 
-## Section 5 — PO decision list (the four Part-2 §7 ratifications)
+## Section 5 — PO decision list — ✅ RATIFIED (Awwal, 2026-07-09)
 
-Each carries the Fable §H recommendation as PM John's recommendation, for one-pass ratification:
+**All four decisions ratified by the PO on 2026-07-09** (ledger §J.1), each carrying the **Fable §J endorsement (ENDORSE, no flags)**. The three build-time notes are recorded here so they reach story-creation, not lost in chat.
 
-| # | Question [P#] | Recommendation |
-|---|---|---|
-| R-1 | **Proactive vs on-demand** for B/C (311 / 50 cases) [P2/P3] | **Proactive generation, reviewed consumption** — sweeps run per catalog refresh (cheap), but findings land in a payslip-request review queue gated by the evidence grade; nothing auto-acts. Large worklists are fine because they are *asks*, not accusations. |
-| R-2 | **Threshold governance** — B's "≤6 deductions remaining", C's rewind guards [P2/P3] | **Ops-editable versioned config** (the Winston W2 §7.2 pattern — same as the diminutive/typo maps), with a `detector_ruleset_version` stamp on every worklist row, so threshold changes are detectable and never silent. |
-| R-3 | **Collector registry** — CDU/AANFE modelled or net-new? [P5] | **Seed on existing schema** — `mdas.parentMdaId` + the shipped 17.21 fragment already model parent/child; A5 seeds the collector semantics. Not net-new reference data. |
-| R-4 | **Do B/C findings post to the ledger?** [P1] | **No** — "moves value → posts; moves knowledge → decides." Projected/rewound findings are *knowledge*: they live as evidence-graded observations in the review surface until a payslip confirms. Only an AG-authorised refund posts (the H7 REFUND/REVERSAL entry types via 17.26). The ledger never carries an estimate. |
+| # | Question [P#] | Decision — **RATIFIED 2026-07-09 · Fable §J: ENDORSE** | Build-time note (Fable §J) |
+|---|---|---|---|
+| R-1 | Proactive vs on-demand for B/C [P2/P3] | **Proactive generation, reviewed consumption** — sweeps per catalog refresh; findings land in a review queue gated by evidence grade; nothing auto-acts (asks, not accusations). | ~540 findings (202 A + 311 B + 29 C) need a **priority order** — proven-A first, then B/C by ceiling/age — else the queue is un-triaged (an AC detail, not scope). |
+| R-2 | Threshold governance [P2/P3] | **Ops-editable versioned config** (Winston W2 §7.2 pattern) + a `detector_ruleset_version` stamp on every worklist row, so a threshold change is never silent. | Pair edits with the same **log + batch-review** policy adopted for the G5 diminutive map, so a threshold change cannot silently suppress findings. |
+| R-3 | Collector registry — reinvent or reuse? [P5] | **Seed on existing schema, not net-new** — carrier is `mdas.parentMdaId` (schema.ts:44). NOT a new registry (no reinvention), NOT a copied hard-coded list (no landmine). *(Column citation corrected — §3.1, §J.1.)* | Validate the collector list for **completeness** against the 21 detector-surfaced reporting-layer cases — the guarantee a short hard-coded list cannot give. |
+| R-4 | Do B/C findings post to the ledger? [P1] | **No — strongly.** "Moves value → posts; moves knowledge → decides." Projected/rewound = knowledge; they live as evidence-graded observations until a payslip confirms. Only an AG-authorised refund posts (H7 via 17.26). The ledger never carries an estimate. | The load-bearing scope-safety line — keeps the ledger free of estimates. |
 
 ---
 
