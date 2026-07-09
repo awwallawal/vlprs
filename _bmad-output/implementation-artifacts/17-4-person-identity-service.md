@@ -43,6 +43,9 @@ So that the same beneficiary appearing across months, MDAs, and name spellings r
 
 **Collision home (ledger §B) — X-8:** L18 sequential-loans and A3's H21 LOAN_CYCLE are the same phenomenon. The shared zero-reset segmentation utility (A3 §4.4 — built in 17.2) and the 17.8 sequential-vs-concurrent schema question serve both. **Single design; 17.4 consumes the segmentation utility, it does not build it.**
 
+**+ A5 §3.2 — identity-side tie for the continuity guard [P4]:**
+The Species-C transfer continuity guard (built in 17.5, A5 §3.1) resolves the transferring person by **confident identity** — OYSG ID, else name + principal + monthly — and **segments loans by principal** so sequential loans are never fused into a false restatement. This is the identity-layer half of P4; it consumes 17.4's PIS resolution and the W2 `person_loans` linkage. **No new matching logic** — it reuses PIS and the principal-segmentation guard already proven in `transfer-restatement.ts` (the X-8 single-design precedent: one design, dual citation, the build lives in 17.5).
+
 ## Acceptance Criteria
 
 1. **Given** the SEARCH and MATCH APIs, **When** invoked, **Then** matching runs `canonicalize() → exact` first, `canonicalize() → Lev≤2` second, with no raw-Levenshtein path anywhere. [A2]
@@ -55,6 +58,7 @@ So that the same beneficiary appearing across months, MDAs, and name spellings r
 8. **Given** the known-variants table, **When** ops edits the JSON, **Then** the change applies without deploy; explicit map hits outrank fuzzy scores in their domains. [A4, L10]
 9. **Given** the golden fixtures (Alatise, Lamidi, ADELEKE, CDU), **When** any rule changes, **Then** all fixtures pass or the change is blocked. [A2, Agreement 24]
 10. **Given** pilot-scale operation, **When** PIS runs, **Then** per-call canonicalizer latency and rule-trace metrics are observable and a caching hook is available; scope is BIR only for 17a. [A2]
+11. **Given** the 17.5 transfer continuity guard needs to identify a transferring person, **When** it calls PIS, **Then** PIS resolves by confident identity (OYSG ID, else name + principal + monthly) and segments loans by principal so sequential loans are never fused — reusing existing PIS resolution + `person_loans`, adding no new matching logic. [A5 §3.2, P4]
 
 ## Sequencing
 
@@ -73,8 +77,9 @@ reopen; additions queue to A5+ as new ledger fold rows.
 | 2 | A1 §3 (`scp-2026-04-15-addendum-1.md`) | 5 cross-MDA verdicts enumerated; bidirectional continuity test; N≥3 namesake bound, catalog+register union |
 | 3 | A2 §2.4 (`scp-2026-04-15-addendum-2.md`) | Canonicalizer hard dep; canonical-exact before Lev; BIR-only pilot; pessimistic 76% name-only framing; perf observability |
 | 4 | A4 §3.2 items 3–4 (`scp-addendum-4-2026-07-04.md`) | L18 namesake guard by principal agreement + sequential-loans policy; L10 known-variants table |
+| 5 | A5 §3.2 (`scp-addendum-5-2026-07-09-DRAFT.md`), folded 2026-07-09 | P4 identity-side consumer-tie for the 17.5 continuity guard — confident-identity resolution + principal-segmentation; reuses PIS + `person_loans`, no new matching logic |
 
-Evidence keys carried: L10, L18 (+ H21 via X-8 consumption)
-Collision resolution: X-8 (sequential-loans ≡ LOAN_CYCLE; shared segmentation utility built in 17.2, consumed here; single design)
+Evidence keys carried: L10, L18, P4 (+ H21 via X-8 consumption)
+Collision resolution: X-8 (sequential-loans ≡ LOAN_CYCLE; shared segmentation utility built in 17.2, consumed here; single design). A5 P4 = consumer-tie only (guard build in 17.5; X-8 precedent)
 Engine status (per ledger §A): YES — namesake guard, variant maps landed engine-side
-Pending amendments: none — additions queue to A5+
+Pending amendments: none — additions queue to A6

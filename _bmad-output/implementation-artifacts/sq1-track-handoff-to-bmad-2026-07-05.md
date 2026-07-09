@@ -101,3 +101,23 @@ Everything above is live in the auditor **Query Station** (headless-Claude Q&A +
 ---
 
 *Prepared by the SQ-1 track, continuing Part 1. Every claim reproducible from snapshot `667ebdd8` via the named scripts. The three-species framework + its resolver-payroll dependency are the substantive inputs for SCP Addendum 3/4. Over to the BMAD track.*
+
+---
+
+## 9. P-key allocation (appended by PM John, 2026-07-09 — body above unedited)
+
+This handoff is Addendum 5's single evidence input. Per contract §10.2#1 (one-doc-one-namespace, the A4/L## pattern), each Part-2 finding gets a stable **P##** foreign key. Nothing enters A5 without a P## behind it.
+
+| Key | Finding | §ref | Provenance | A5 destination |
+|---|---|---|---|---|
+| **P1** | Evidence-graded finding model — every reconciliation finding carries a grade (proven / projected / rewound) + a named resolver document; extends 17f.2 `BalanceProvenance` from balances to findings | §1, §6.1 | SPEC | PRD delta (new FR) + fold row on 17f.2 |
+| **P2** | Species B — frozen-balance projection detector + worklist (311 cases, ₦11.6M ceiling; Kolade Taiwo Amos worked case) | §2 | BUILD + SPEC | 16.1 / conservation (17f.6) — proactive payslip-request worklist |
+| **P3** | Species C — cross-MDA transfer restatement detector + physical-transfer worklist (29 cases, ₦3.27M ceiling; Oke Elizabeth worked case) | §3 | BUILD | proactive app layer (16.1 / conservation) |
+| **P4** | Transfer continuity guard (**blocking**) — receiving MDA must carry forward true installments-paid; a backward restatement is a blocking reconciliation event, not a silent overwrite | §3, §6.3 | PLAN | **blocking AC** — fold rows on 17.5 (+ 17.4) |
+| **P5** | Collector / parent-MDA registry — CDU/AANFE flagged as collecting units so reporting-layer timing variance never enters the transfer queue | §3 | BUILD (seed on existing schema) | fold row on 17.5 / 17.21-fragment seed |
+| **P6** | Cohort / batch detection — surface batch re-baselining (BIR→Works ×4, Gov Office→Works ×3) so remediation is one handoff fix, not N cases | §3 | BUILD | rides the Species-C worklist story |
+| **P7** | Payroll ingestion as the **master resolver** — 17.3b / pillar-C / W1 is the single resolver for the whole finding portfolio (A-confirm, B, C); sequence it first | §4, §6.4 | SPEC / sequencing | scope statement (PRD delta) + fold row on 17.3b |
+| **P8** | Structured payroll-ask worklist output — data-request workflow emits `{person, MDA, month-range}` asks (the detectors already produce this shape) | §4 | BUILD | rides 17.3b / the worklist stories |
+| **P9** | Kolade (B) + Oke (C) join the golden set as canonical B/C regression anchors (Agreement 15/24 parity) | §6.5 | fixtures | fold rows on 17.16 (harness) |
+
+*P-keying is additive metadata; the findings body (§0–§8) is frozen as the SQ-1 track delivered it.*
