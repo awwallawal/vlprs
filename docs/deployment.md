@@ -237,11 +237,13 @@ The droplet's attached DO cloud firewall **must allow inbound 80 and 443 from al
 
 ### 2. Registry pull credential on the droplet
 
-The droplet pulls private images from `ghcr.io`, which needs a valid login. Provide it either way:
-- **Preferred:** set repo secret **`GHCR_PAT`** = a GitHub PAT (classic) with **`read:packages`**. The deploy step logs in with it each run, so it never drifts.
-- **Fallback:** a cached `docker login` on the droplet (`echo <PAT> | docker login ghcr.io -u <owner> --password-stdin`). This **expires** — an expired credential is what silently no-op'd the 2026-07-05 deploy. Note: ghcr wants a **PAT**, never your GitHub account password.
+The droplet pulls private images from `ghcr.io`, which needs a valid login. The deploy logs in **every run** via a two-tier fallback so CI auth can never silently expire:
+1. **`GHCR_PAT` repo secret** (preferred) — a GitHub PAT (classic) with **`read:packages`**, set no-expiry (2026-07-09). Durable, and the *same* credential is what you use for manual `docker login` on the droplet.
+2. **`GITHUB_TOKEN` fallback** — if `GHCR_PAT` is ever unset/empty, the deploy authenticates with the run's ephemeral, auto-provided `GITHUB_TOKEN` (packages:read via the job's `packages: write` permission). Nothing to store, fresh every run.
 
-The deploy script now runs `set -eu`, so a failed pull/login **aborts loudly** instead of falling through to `docker image prune` and reporting green while the containers stay on the old image.
+The deploy script runs `set -eu`, so a failed login/pull **aborts loudly** instead of falling through to `docker image prune` and reporting green while the containers stay on the old image (the 2026-07-05 silent no-op). ghcr wants a **PAT**, never your GitHub account password.
+
+> Note: the `GITHUB_TOKEN` login overwrites the droplet's cached docker credential for the run. For **manual** pulls between deploys, re-run `docker login ghcr.io` with the PAT (below).
 
 ### Diagnosing "site down / deploy didn't land"
 
