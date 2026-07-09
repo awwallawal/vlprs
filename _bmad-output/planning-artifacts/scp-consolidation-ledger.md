@@ -151,6 +151,7 @@ Nine rows, X-1 … X-9 — resolutions authored in A4 §6, cross-recorded here v
 | Reconciliation Inventory v2 (A1 evidence) | catalog SHA **4960e273…** | Historical pin |
 | Reconciliation Inventory v1 | catalog SHA **fc8b5bcb…** | Historical pin |
 | **Signature paper trail** — the 33 governance docs presented to (and signed by) the Deputy AG | git commit **`7ef91fd`** on `dev` (pushed) | ✍ SIGNED 2026-07-05 — one SHA identifies exactly what was signed |
+| **A1–A5 fully-consolidated chain** — story files are the single truth as of this commit | git commit **`eca8a3f`** on `dev` | ✅ CHAIN CLOSED 2026-07-09 — the counterpart to `7ef91fd`: `7ef91fd` pins what was signed, `eca8a3f` pins what it consolidated into. New work opens at A6. |
 
 Rule: a document cites its pin; divergence between pinned artifacts is *expected across time* and is only an issue if two artifacts claim the same pin with different content.
 
