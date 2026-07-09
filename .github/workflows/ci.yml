@@ -125,27 +125,35 @@ jobs:
       #  - DO cloud firewall inbound must allow TCP 22, 80, 443 from all sources.
       #    A restrictive firewall silently black-holes 80/443 (SSH still works) — the
       #    2026-07-05 outage. NOT visible to ufw/iptables on the box; it's at DO's edge.
-      #  - a valid ghcr pull credential. Provided here via the optional GHCR_PAT repo
-      #    secret (a PAT with read:packages). If unset, the droplet's cached
-      #    `docker login` is used — but that expires; an expired credential is what
-      #    silently no-op'd the 2026-07-05 deploy (below, `set -eu` now makes it fail loud).
+      #  - a valid ghcr pull credential. Belt-and-suspenders (2026-07-09):
+      #      1. GHCR_PAT repo secret (a no-expiry PAT with read:packages) — durable,
+      #         and the same credential works for manual `docker login` on the droplet.
+      #      2. if GHCR_PAT is ever unset/empty, fall back to this run's ephemeral
+      #         GITHUB_TOKEN (packages:read via the job permissions) — so CI auth can
+      #         NEVER silently expire, secret or no secret.
+      #    Either way the login runs every deploy and, under `set -eu`, a failed login
+      #    aborts loudly (the 2026-07-05 deploy no-op'd silently on an expired cred).
       - name: Deploy to Droplet
         uses: appleboy/ssh-action@v1
         env:
           GHCR_PAT: ${{ secrets.GHCR_PAT }}
           GHCR_USER: ${{ github.repository_owner }}
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GHCR_ACTOR: ${{ github.actor }}
         with:
           host: ${{ secrets.DROPLET_IP }}
           username: ${{ secrets.DROPLET_USER }}
           key: ${{ secrets.DROPLET_SSH_KEY }}
-          envs: GHCR_PAT,GHCR_USER
+          envs: GHCR_PAT,GHCR_USER,GHCR_TOKEN,GHCR_ACTOR
           script: |
             set -eu
             cd /opt/vlprs
-            # Refresh registry auth so an expired droplet credential fails LOUD here,
-            # not silently mid-pull. Skips cleanly when GHCR_PAT is not configured.
+            # Refresh registry auth every deploy: prefer the durable GHCR_PAT,
+            # else the run's ephemeral GITHUB_TOKEN. Never silently no-ops.
             if [ -n "${GHCR_PAT:-}" ]; then
               echo "$GHCR_PAT" | docker login ghcr.io -u "$GHCR_USER" --password-stdin
+            else
+              echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_ACTOR" --password-stdin
             fi
             git pull origin main
             export IMAGE_TAG=${{ github.sha }}
